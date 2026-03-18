@@ -1,0 +1,77 @@
+name: Deploy to Google Apps Script (WIF Flow)
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+jobs:
+  deploy:
+    if: (github.event_name == 'push') || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          workload_identity_provider: projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/${{ secrets.WIP_POOL_ID }}/providers/${{ secrets.WIP_PROVIDER_ID }}
+          service_account: ${{ secrets.GCP_SA_EMAIL }}
+
+      - name: Setup Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Install clasp
+        run: npm install -g @google/clasp
+      
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
+      - name: Authenticate and Create .clasprc.json
+        run: |
+          # Lấy access token từ gcloud (đã authenticated qua WIF)
+          ACCESS_TOKEN=$(gcloud auth print-access-token)
+          
+          # Đọc scriptId từ .clasp.json
+          SCRIPT_ID=$(jq -r .scriptId .clasp.json)
+          if [ -z "$SCRIPT_ID" ] || [ "$SCRIPT_ID" = "null" ]; then
+            echo "ERROR: Khong tim thay scriptId trong .clasp.json"
+            exit 1
+          fi
+          
+          # Tạo .clasprc.json với access token
+          jq -n \
+            --arg token "$ACCESS_TOKEN" \
+            '{
+              "token": {
+                "access_token": $token,
+                "refresh_token": "",
+                "scope": "https://www.googleapis.com/auth/script.projects https://www.googleapis.com/auth/script.deployments https://www.googleapis.com/auth/script.webapp.deploy https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata",
+                "token_type": "Bearer",
+                "expiry_date": (now + 3600 | floor * 1000)
+              },
+              "oauth2ClientSettings": {
+                "clientId": "",
+                "clientSecret": "",
+                "redirectUrl": "http://localhost"
+              },
+              "isLocalCreds": true
+            }' > .clasprc.json
+          
+          echo "✓ Đã tạo .clasprc.json từ WIF authentication"
+
+      - name: Deploy to Apps Script
+        run: clasp push -f
