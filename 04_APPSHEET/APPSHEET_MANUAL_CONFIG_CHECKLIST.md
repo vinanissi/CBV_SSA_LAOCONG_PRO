@@ -16,11 +16,11 @@ Complete before starting configuration.
 
 ### 1.2 Required Sheets (must exist)
 
-- [ ] HO_SO_MASTER
-- [ ] HO_SO_FILE
-- [ ] HO_SO_RELATION
-- [ ] TASK_MAIN
-- [ ] TASK_CHECKLIST
+- [x] HO_SO_MASTER
+- [x] HO_SO_FILE
+- [x] HO_SO_RELATION
+- [x] TASK_MAIN
+- [x] TASK_CHECKLIST
 - [ ] TASK_UPDATE_LOG
 - [ ] TASK_ATTACHMENT
 - [ ] FINANCE_TRANSACTION
@@ -241,6 +241,7 @@ For each table, go to **Data → Columns → [Table name]** and configure.
 - ID → Text (Key)
 - TASK_ID → **Ref** → TASK_MAIN (Display: TITLE)
 - ITEM_NO → Number
+- SORT_ORDER → Number
 - TITLE, NOTE → Text
 - IS_REQUIRED, IS_DONE → Yes/No
 - DONE_AT → Date
@@ -562,7 +563,7 @@ For each form view, set column order and visibility.
 
 ### 7.5 TASK_CHECKLIST_FORM
 
-- [ ] Order: ITEM_NO, TITLE, IS_REQUIRED, NOTE
+- [ ] Order: ITEM_NO, SORT_ORDER, TITLE, IS_REQUIRED, NOTE
 - [ ] Hide: ID, TASK_ID, IS_DONE, DONE_AT, DONE_BY, CREATED_AT, CREATED_BY
 
 ### 7.6 TASK_ATTACHMENT_FORM
@@ -602,7 +603,7 @@ For each Related/Inline section under parent Detail, configure visible columns.
 
 ### 8.3 TASK_CHECKLIST (under TASK_DETAIL)
 
-- [ ] Show: ITEM_NO, TITLE, IS_REQUIRED, IS_DONE, NOTE
+- [ ] Show: ITEM_NO, SORT_ORDER, TITLE, IS_REQUIRED, IS_DONE, NOTE
 - [ ] Hide: ID, TASK_ID, DONE_AT, DONE_BY, CREATED_AT, CREATED_BY
 
 ### 8.4 TASK_ATTACHMENT (under TASK_DETAIL)
@@ -675,7 +676,7 @@ For each Related/Inline section under parent Detail, configure visible columns.
 
 1. [ ] Open task → Related TASK_CHECKLIST
 2. [ ] Tap "+"
-3. [ ] Enter ITEM_NO, TITLE, IS_REQUIRED
+3. [ ] Enter ITEM_NO, SORT_ORDER (optional), TITLE, IS_REQUIRED
 4. [ ] Save
 5. [ ] Confirm checklist item appears (IS_DONE = No)
 

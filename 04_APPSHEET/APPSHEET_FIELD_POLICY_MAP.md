@@ -232,6 +232,7 @@ Complete field policy classification for Phase 1 deployment. Use for Show?, Edit
 | ID | SYSTEM_KEY | HIDDEN_READONLY | OFF | OFF | — | FALSE | SYSTEM | | |
 | TASK_ID | REF_FIELD | VISIBLE_READONLY | ON | OFF | — | FALSE | REF | Set by parent | |
 | ITEM_NO | BUSINESS_INPUT | VISIBLE_EDITABLE | ON | ON | — | TRUE | BUSINESS | | |
+| SORT_ORDER | BUSINESS_INPUT | VISIBLE_EDITABLE | ON | ON | — | TRUE | BUSINESS | Display order | |
 | TITLE | BUSINESS_INPUT | VISIBLE_EDITABLE | ON | ON | — | TRUE | BUSINESS | | |
 | IS_REQUIRED | BUSINESS_INPUT | VISIBLE_EDITABLE | ON | ON | — | TRUE | BUSINESS | Yes/No | |
 | IS_DONE | WORKFLOW_FIELD | VISIBLE_CONTROLLED | ON | OFF | — | Via GAS markChecklistDone | BUSINESS | | |

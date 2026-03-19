@@ -139,9 +139,10 @@ ID, DONE_AT, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY, IS_DELETED
 | Order | Field | Visible | Editable | Notes |
 |-------|-------|---------|----------|-------|
 | 1 | ITEM_NO | Yes | Yes | |
-| 2 | TITLE | Yes | Yes | |
-| 3 | IS_REQUIRED | Yes | Yes | Yes/No |
-| 4 | NOTE | Yes | Yes | |
+| 2 | SORT_ORDER | Yes | Yes | Display order |
+| 3 | TITLE | Yes | Yes | |
+| 4 | IS_REQUIRED | Yes | Yes | Yes/No |
+| 5 | NOTE | Yes | Yes | |
 
 ### Hidden (inline)
 

@@ -69,7 +69,8 @@ ID, END_DATE, STATUS, CREATED_AT, CREATED_BY
 
 | Column | Show | Purpose |
 |--------|------|---------|
-| ITEM_NO | Yes | Order |
+| ITEM_NO | Yes | Item number |
+| SORT_ORDER | Yes | Display order |
 | TITLE | Yes | Item title |
 | IS_REQUIRED | Yes | Yes/No |
 | IS_DONE | Yes | Yes/No (GAS or action) |
