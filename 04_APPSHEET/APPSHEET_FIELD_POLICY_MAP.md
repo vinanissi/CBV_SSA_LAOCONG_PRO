@@ -8,7 +8,7 @@ Complete field policy classification for Phase 1 deployment. Use for Show?, Edit
 
 ## Pre-Generation Lists
 
-### Tables Discovered (12)
+### Tables Discovered (13)
 
 | # | Table | Source |
 |---|-------|--------|
@@ -22,8 +22,9 @@ Complete field policy classification for Phase 1 deployment. Use for Show?, Edit
 | 8 | TASK_CHECKLIST | schema_manifest.json |
 | 9 | TASK_UPDATE_LOG | schema_manifest.json |
 | 10 | TASK_ATTACHMENT | schema_manifest.json |
-| 11 | FINANCE_TRANSACTION | schema_manifest.json |
-| 12 | FINANCE_LOG | schema_manifest.json |
+| 11 | FINANCE_ATTACHMENT | schema_manifest.json |
+| 12 | FINANCE_TRANSACTION | schema_manifest.json |
+| 13 | FINANCE_LOG | schema_manifest.json |
 
 ### Always-Hidden Fields (Global)
 
@@ -54,6 +55,8 @@ Complete field policy classification for Phase 1 deployment. Use for Show?, Edit
 | TASK_CHECKLIST | IS_REQUIRED | — | Yes/No; VISIBLE_EDITABLE |
 | TASK_CHECKLIST | IS_DONE | — | Yes/No; VISIBLE_CONTROLLED (GAS or action) |
 | TASK_UPDATE_LOG | ACTION | UPDATE_TYPE | VISIBLE_READONLY |
+| TASK_ATTACHMENT | ATTACHMENT_TYPE | TASK_ATTACHMENT_TYPE | VISIBLE_CONTROLLED |
+| FINANCE_ATTACHMENT | ATTACHMENT_TYPE | FINANCE_ATTACHMENT_TYPE | VISIBLE_CONTROLLED |
 | FINANCE_TRANSACTION | TRANS_TYPE | FINANCE_TYPE | VISIBLE_CONTROLLED (readonly when CONFIRMED) |
 | FINANCE_TRANSACTION | STATUS | FINANCE_STATUS | VISIBLE_CONTROLLED (GAS action only) |
 | FINANCE_TRANSACTION | CATEGORY | FIN_CATEGORY | VISIBLE_CONTROLLED (readonly when CONFIRMED) |
@@ -256,10 +259,27 @@ Complete field policy classification for Phase 1 deployment. Use for Show?, Edit
 | COLUMN_NAME | FIELD_ROLE | POLICY_TYPE | SHOW_DEFAULT | EDITABLE_DEFAULT | SHOW_IF | EDITABLE_IF | DATA_SOURCE | RISK_NOTE | APPSHEET_NOTE |
 |-------------|------------|-------------|--------------|------------------|---------|-------------|-------------|------------|----------------|
 | ID | SYSTEM_KEY | HIDDEN_READONLY | OFF | OFF | — | FALSE | SYSTEM | | |
-| TASK_ID | REF_FIELD | VISIBLE_READONLY | ON | OFF | — | FALSE | REF | | |
+| TASK_ID | REF_FIELD | VISIBLE_READONLY | ON | OFF | — | FALSE | REF | Set by parent | |
+| ATTACHMENT_TYPE | ENUM_FIELD | VISIBLE_CONTROLLED | ON | ON | — | TRUE | ENUM | Valid_If TASK_ATTACHMENT_TYPE | |
+| TITLE | BUSINESS_INPUT | VISIBLE_EDITABLE | ON | ON | — | TRUE | BUSINESS | Label column | |
 | FILE_NAME | BUSINESS_INPUT | VISIBLE_EDITABLE | ON | ON | — | TRUE | BUSINESS | | |
-| FILE_URL | BUSINESS_INPUT | VISIBLE_EDITABLE | ON | ON | — | TRUE | BUSINESS | | |
-| DRIVE_FILE_ID | BUSINESS_INPUT | VISIBLE_READONLY | ON | OFF | — | FALSE | BUSINESS | Set by GAS | |
+| FILE_URL | BUSINESS_INPUT | VISIBLE_EDITABLE | ON | ON | — | TRUE | BUSINESS | Type = File | |
+| DRIVE_FILE_ID | BUSINESS_INPUT | VISIBLE_READONLY | ON | OFF | — | FALSE | BUSINESS | Set by GAS/upload | |
+| NOTE | BUSINESS_INPUT | VISIBLE_EDITABLE | ON | ON | — | TRUE | BUSINESS | | |
+| CREATED_AT | AUDIT_FIELD | HIDDEN_READONLY | OFF | OFF | — | FALSE | AUDIT | | |
+| CREATED_BY | AUDIT_FIELD | HIDDEN_READONLY | OFF | OFF | — | FALSE | AUDIT | | |
+
+### FINANCE_ATTACHMENT
+
+| COLUMN_NAME | FIELD_ROLE | POLICY_TYPE | SHOW_DEFAULT | EDITABLE_DEFAULT | SHOW_IF | EDITABLE_IF | DATA_SOURCE | RISK_NOTE | APPSHEET_NOTE |
+|-------------|------------|-------------|--------------|------------------|---------|-------------|-------------|------------|----------------|
+| ID | SYSTEM_KEY | HIDDEN_READONLY | OFF | OFF | — | FALSE | SYSTEM | | |
+| FINANCE_ID | REF_FIELD | VISIBLE_READONLY | ON | OFF | — | FALSE | REF | Set by parent | |
+| ATTACHMENT_TYPE | ENUM_FIELD | VISIBLE_CONTROLLED | ON | ON | — | TRUE | ENUM | Valid_If FINANCE_ATTACHMENT_TYPE | |
+| TITLE | BUSINESS_INPUT | VISIBLE_EDITABLE | ON | ON | — | TRUE | BUSINESS | Label column | |
+| FILE_NAME | BUSINESS_INPUT | VISIBLE_EDITABLE | ON | ON | — | TRUE | BUSINESS | | |
+| FILE_URL | BUSINESS_INPUT | VISIBLE_EDITABLE | ON | ON | — | TRUE | BUSINESS | Type = File | |
+| DRIVE_FILE_ID | BUSINESS_INPUT | VISIBLE_READONLY | ON | OFF | — | FALSE | BUSINESS | Set by GAS/upload | |
 | NOTE | BUSINESS_INPUT | VISIBLE_EDITABLE | ON | ON | — | TRUE | BUSINESS | | |
 | CREATED_AT | AUDIT_FIELD | HIDDEN_READONLY | OFF | OFF | — | FALSE | AUDIT | | |
 | CREATED_BY | AUDIT_FIELD | HIDDEN_READONLY | OFF | OFF | — | FALSE | AUDIT | | |
@@ -383,6 +403,7 @@ Editable_If: AND([IS_SYSTEM] = FALSE, [ALLOW_EDIT] = TRUE)
 | TASK_CHECKLIST | All business | ID, CREATED_*, CREATED_BY | IS_DONE, DONE_AT, DONE_BY | IS_DONE via GAS | No |
 | TASK_UPDATE_LOG | All | ID | All | Read-only table | No |
 | TASK_ATTACHMENT | All business | ID, CREATED_*, CREATED_BY | DRIVE_FILE_ID | | No |
+| FINANCE_ATTACHMENT | All business | ID, CREATED_*, CREATED_BY | DRIVE_FILE_ID | | No |
 | FINANCE_TRANSACTION | Business fields, STATUS (readonly) | ID, CREATED_*, UPDATED_*, IS_DELETED, CONFIRMED_* | STATUS; lock AMOUNT etc when CONFIRMED | Lock when CONFIRMED | No |
 | FINANCE_LOG | FIN_ID, ACTION, NOTE, ACTOR_ID, CREATED_AT | ID, BEFORE_JSON, AFTER_JSON | All | Read-only table | No |
 

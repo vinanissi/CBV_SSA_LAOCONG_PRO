@@ -1,17 +1,34 @@
 # STORAGE STRUCTURE
 
-## Gốc
+## Root
 CBV_STORAGE/
 - 01_HO_SO/
   - HTX/
   - XA_VIEN/
   - XE/
   - TAI_XE/
+  - MISC/   (fallback when HO_SO_TYPE unknown)
 - 02_TASK_ATTACHMENTS/
 - 03_FINANCE_EVIDENCE/
 - 99_ARCHIVE/
 
-## Quy tắc
-- File phải vào đúng nhóm.
-- Tên file có tiền tố ngày hoặc mã hồ sơ nếu phù hợp.
-- Sheet chỉ lưu URL / FILE_ID.
+## Module-Based Paths
+
+| Module | Base Path | Entity Subfolder |
+|--------|-----------|------------------|
+| HO_SO | CBV_STORAGE/01_HO_SO/{HO_SO_TYPE}/ | Optional: {HO_SO_ID}/ |
+| TASK | CBV_STORAGE/02_TASK_ATTACHMENTS/ | Optional: {TASK_ID}/ |
+| FINANCE | CBV_STORAGE/03_FINANCE_EVIDENCE/ | Optional: {FINANCE_ID}/ |
+
+## Path Logic
+
+- **Static default:** Use base path only. Simple; no entity-specific subfolders.
+- **Entity-based (optional):** Add subfolder per parent ID for organization. Use when volume grows.
+- **GAS helpers:** buildHoSoStoragePath(), buildTaskStoragePath(), buildFinanceStoragePath() — return recommended paths; do not create folders.
+
+## Rules
+
+- Files must go to correct module folder.
+- File names: prefix with date or entity code when useful.
+- Sheets store URL / DRIVE_FILE_ID only; no binary in Sheets.
+- AppSheet handles upload; GAS does not move or create files.

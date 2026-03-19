@@ -195,7 +195,7 @@ Behavior, schema, GAS/AppSheet mapping, enum/master-code layers, and admin gover
 - ADMIN_AUDIT_LOG, MASTER_CODE, ENUM_DICTIONARY (enum by seed)
 - HO_SO_MASTER, HO_SO_FILE, HO_SO_RELATION
 - TASK_MAIN, TASK_CHECKLIST, TASK_UPDATE_LOG, TASK_ATTACHMENT
-- FINANCE_TRANSACTION, FINANCE_LOG
+- FINANCE_ATTACHMENT, FINANCE_TRANSACTION, FINANCE_LOG
 
 ## 8. Final Callable Function List (by layer)
 
@@ -233,9 +233,9 @@ Behavior, schema, GAS/AppSheet mapping, enum/master-code layers, and admin gover
 ### Module (HoSo, Task, Finance)
 | Function | File | Purpose |
 |----------|------|---------|
-| createHoSo, updateHoSo, setHoSoStatus | 10_HOSO_SERVICE | HoSo CRUD |
-| createTask, setTaskStatus | 20_TASK_SERVICE | Task CRUD |
-| createTransaction, setFinanceStatus | 30_FINANCE_SERVICE | Finance CRUD |
+| createHoSo, updateHoSo, setHoSoStatus, attachHoSoFile | 10_HOSO_SERVICE | HoSo CRUD + attachments |
+| createTask, setTaskStatus, createTaskAttachment | 20_TASK_SERVICE | Task CRUD + attachments |
+| createTransaction, setFinanceStatus, createFinanceAttachment | 30_FINANCE_SERVICE | Finance CRUD + attachments |
 
 ### Audit
 | Function | File | Purpose |

@@ -77,6 +77,28 @@ function updateDraftTransaction(id, patch) {
   return cbvResponse(true, 'FIN_UPDATED', 'Đã cập nhật draft', current, []);
 }
 
+function createFinanceAttachment(data) {
+  ensureRequired(data.FINANCE_ID, 'FINANCE_ID');
+  ensureRequired(data.FILE_URL, 'FILE_URL');
+  cbvAssert(_findById(CBV_CONFIG.SHEETS.FINANCE_TRANSACTION, data.FINANCE_ID), 'Finance transaction not found');
+  assertValidEnumValue('FINANCE_ATTACHMENT_TYPE', data.ATTACHMENT_TYPE || 'OTHER', 'ATTACHMENT_TYPE');
+
+  var record = {
+    ID: cbvMakeId('FATT'),
+    FINANCE_ID: data.FINANCE_ID,
+    ATTACHMENT_TYPE: data.ATTACHMENT_TYPE || 'OTHER',
+    TITLE: data.TITLE || data.FILE_NAME || '',
+    FILE_NAME: data.FILE_NAME || '',
+    FILE_URL: data.FILE_URL,
+    DRIVE_FILE_ID: data.DRIVE_FILE_ID || '',
+    NOTE: data.NOTE || '',
+    CREATED_AT: cbvNow(),
+    CREATED_BY: cbvUser()
+  };
+  _appendRecord(CBV_CONFIG.SHEETS.FINANCE_ATTACHMENT, record);
+  return cbvResponse(true, 'FINANCE_ATTACHMENT_ADDED', 'Đã gắn chứng từ', record, []);
+}
+
 function setFinanceStatus(id, newStatus, note) {
   const current = _findById(CBV_CONFIG.SHEETS.FINANCE_TRANSACTION, id);
   cbvAssert(current, 'Transaction not found');

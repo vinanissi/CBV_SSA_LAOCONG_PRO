@@ -45,6 +45,11 @@
 | CREATED_BY         | User (email)           | Not a table ref          |
 | CONFIRMED_BY       | User (email)           | Not a table ref          |
 
+## FINANCE_ATTACHMENT
+| Column     | Ref Table           |
+|------------|---------------------|
+| FINANCE_ID | FINANCE_TRANSACTION |
+
 ## FINANCE_LOG
 | Column | Ref Table           |
 |--------|---------------------|

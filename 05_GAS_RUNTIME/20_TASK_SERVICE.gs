@@ -98,6 +98,28 @@ function addChecklistItem(data) {
   return cbvResponse(true, 'TASK_CHECKLIST_ADDED', 'Checklist item added', record, []);
 }
 
+function createTaskAttachment(data) {
+  ensureRequired(data.TASK_ID, 'TASK_ID');
+  ensureRequired(data.FILE_URL, 'FILE_URL');
+  cbvAssert(_findById(CBV_CONFIG.SHEETS.TASK_MAIN, data.TASK_ID), 'Task not found');
+  assertValidEnumValue('TASK_ATTACHMENT_TYPE', data.ATTACHMENT_TYPE || 'OTHER', 'ATTACHMENT_TYPE');
+
+  var record = {
+    ID: cbvMakeId('TATT'),
+    TASK_ID: data.TASK_ID,
+    ATTACHMENT_TYPE: data.ATTACHMENT_TYPE || 'OTHER',
+    TITLE: data.TITLE || data.FILE_NAME || '',
+    FILE_NAME: data.FILE_NAME || '',
+    FILE_URL: data.FILE_URL,
+    DRIVE_FILE_ID: data.DRIVE_FILE_ID || '',
+    NOTE: data.NOTE || '',
+    CREATED_AT: cbvNow(),
+    CREATED_BY: cbvUser()
+  };
+  _appendRecord(CBV_CONFIG.SHEETS.TASK_ATTACHMENT, record);
+  return cbvResponse(true, 'TASK_ATTACHMENT_ADDED', 'Đã gắn file', record, []);
+}
+
 function markChecklistDone(checklistId, note) {
   const current = _findById(CBV_CONFIG.SHEETS.TASK_CHECKLIST, checklistId);
   cbvAssert(current, 'Checklist item not found');

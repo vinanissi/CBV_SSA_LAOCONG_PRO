@@ -124,6 +124,20 @@
   "TASK_ATTACHMENT": [
     "ID",
     "TASK_ID",
+    "ATTACHMENT_TYPE",
+    "TITLE",
+    "FILE_NAME",
+    "FILE_URL",
+    "DRIVE_FILE_ID",
+    "NOTE",
+    "CREATED_AT",
+    "CREATED_BY"
+  ],
+  "FINANCE_ATTACHMENT": [
+    "ID",
+    "FINANCE_ID",
+    "ATTACHMENT_TYPE",
+    "TITLE",
     "FILE_NAME",
     "FILE_URL",
     "DRIVE_FILE_ID",

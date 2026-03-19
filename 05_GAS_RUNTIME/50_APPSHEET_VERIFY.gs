@@ -44,7 +44,8 @@ function verifyAppSheetReadiness() {
     TASK_MAIN: { key: 'ID', label: 'TITLE' },
     TASK_CHECKLIST: { key: 'ID', label: 'TITLE' },
     TASK_UPDATE_LOG: { key: 'ID', label: 'ACTION' },
-    TASK_ATTACHMENT: { key: 'ID', label: 'FILE_NAME' },
+    TASK_ATTACHMENT: { key: 'ID', label: 'TITLE' },
+    FINANCE_ATTACHMENT: { key: 'ID', label: 'TITLE' },
     FINANCE_TRANSACTION: { key: 'ID', label: 'TRANS_CODE' },
     FINANCE_LOG: { key: 'ID', label: 'ACTION' }
   };
@@ -74,6 +75,8 @@ function verifyAppSheetReadiness() {
     { table: 'HO_SO_MASTER', ref: 'HTX_ID' },
     { table: 'HO_SO_FILE', ref: 'HO_SO_ID' },
     { table: 'TASK_CHECKLIST', ref: 'TASK_ID' },
+    { table: 'TASK_ATTACHMENT', ref: 'TASK_ID' },
+    { table: 'FINANCE_ATTACHMENT', ref: 'FINANCE_ID' },
     { table: 'FINANCE_LOG', ref: 'FIN_ID' }
   ];
 
