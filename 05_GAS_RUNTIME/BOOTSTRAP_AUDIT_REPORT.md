@@ -10,7 +10,7 @@
 **PASS** – Data rows are never modified. Header extension only adds columns at the end when current headers are a prefix of expected.
 
 ## 4. Follow locked CBV sheet names and field names?
-**PASS** – `CBV_SCHEMA_MANIFEST` matches `06_DATABASE/schema_manifest.json` exactly. `config.gs` SHEETS match.
+**PASS** – `CBV_SCHEMA_MANIFEST` matches `06_DATABASE/schema_manifest.json` exactly. `00_CORE_CONFIG.gs` SHEETS match.
 
 ## 5. Every public init function returns structured results?
 **PASS** – `initAll`, `initCoreSheets`, `initEnumData`, `initSystemConfig`, `installTriggers`, `selfAuditBootstrap` all return `{ ok, code, message, data, errors }`.
@@ -19,7 +19,7 @@
 **PASS** – `ensureNoDuplicateTrigger` checks before creating; `installTriggers` skips when handler exists.
 
 ## 7. Separate config / util / repository / validation / service / bootstrap concerns?
-**PASS** – config.gs (config), util.gs (helpers), repository.gs (data access), validation_service.gs (validation), schema_manifest.gs (schema), init_schema.gs (bootstrap), install.gs (triggers), audit_service.gs (audit), bootstrap_menu.gs (UI).
+**PASS** – 00_CORE_CONFIG (config), 00_CORE_UTILS (helpers), 03_SHARED_REPOSITORY (data access), 03_SHARED_VALIDATION (validation), 90_BOOTSTRAP_SCHEMA (schema), 90_BOOTSTRAP_INIT (bootstrap), 90_BOOTSTRAP_INSTALL (triggers), 90_BOOTSTRAP_AUDIT (audit), 90_BOOTSTRAP_MENU (UI).
 
 ## 8. Avoid moving business logic into AppSheet?
 **PASS** – No AppSheet-specific logic in bootstrap; all logic in GAS.
@@ -36,18 +36,18 @@
 
 | File | Issue | Severity |
 |------|-------|----------|
-| init_schema.gs | `enumResult`, `configResult` assigned but unused in `initAll` | Minor |
-| init_schema.gs | `buildStructuredBootstrapReport` duplicated in scope – used by install.gs, audit_service.gs | Refactor |
-| init_schema.gs | `ensureEnumRows` unused (no enum sheets) | Keep for API |
-| audit_service.gs | `existingSheets` unused variable | Minor |
+| 90_BOOTSTRAP_INIT.gs | `enumResult`, `configResult` assigned but unused in `initAll` | Minor |
+| 90_BOOTSTRAP_INIT.gs | `buildStructuredBootstrapReport` in 00_CORE_UTILS, used by install, audit | Refactor |
+| 90_BOOTSTRAP_INIT.gs | `ensureEnumRows` unused (no enum sheets) | Keep for API |
+| 90_BOOTSTRAP_AUDIT.gs | `existingSheets` unused variable | Minor |
 
 ---
 
 ## Fixes applied
 
-1. `buildStructuredBootstrapReport` moved to `util.gs` (single source, shared by init_schema, install, audit_service).
+1. `buildStructuredBootstrapReport` in `00_CORE_UTILS.gs` (single source, shared by 90_BOOTSTRAP_INIT, 90_BOOTSTRAP_INSTALL, 90_BOOTSTRAP_AUDIT).
 2. `initAll` – removed unused `enumResult`, `configResult`.
-3. `audit_service.gs` – removed unused `existingSheets`.
+3. `90_BOOTSTRAP_AUDIT.gs` – removed unused `existingSheets`.
 4. Refactor: smallest modular structure without changing behavior.
 
 ---

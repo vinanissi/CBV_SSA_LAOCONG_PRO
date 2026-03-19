@@ -1,6 +1,6 @@
 # DEPLOY CHECKLIST - LAOCONG PRO
 
-See **CBV_LAOCONG_PRO_REFERENCE.md** for consolidated structure and run order.
+See **CBV_LAOCONG_PRO_REFERENCE.md** for consolidated structure and run order. See **RUNBOOK_LAOCONG_PRO.md** for troubleshooting.
 
 ## A. Chuẩn bị
 - [ ] Đã đọc toàn bộ `00_META`
@@ -17,7 +17,7 @@ See **CBV_LAOCONG_PRO_REFERENCE.md** for consolidated structure and run order.
 
 ## C. GAS
 - [ ] Đã copy đủ file từ `05_GAS_RUNTIME` (hoặc clasp push)
-- [ ] Đã sửa `config.gs` nếu cần
+- [ ] Đã sửa `00_CORE_CONFIG.gs` — thêm ADMIN_EMAILS nếu dùng admin panel
 - [ ] Đã chạy `initAll()` — tạo sheets, seed enum, fill display
 - [ ] Đã chạy `installTriggers()` nếu dùng
 - [ ] Đã kiểm tra menu hệ thống xuất hiện
@@ -28,7 +28,7 @@ See **CBV_LAOCONG_PRO_REFERENCE.md** for consolidated structure and run order.
 - [ ] Đã test tạo hồ sơ thử
 
 ## D. AppSheet
-- [ ] Đã add đủ table (bao gồm ENUM_DICTIONARY, MASTER_CODE)
+- [ ] Đã add đủ table (bao gồm ENUM_DICTIONARY, MASTER_CODE, ADMIN_AUDIT_LOG nếu dùng admin panel)
 - [ ] Key column đúng
 - [ ] Label column đúng
 - [ ] Enum columns bind theo 04_APPSHEET/APPSHEET_ENUM_BINDING.md
@@ -44,7 +44,12 @@ See **CBV_LAOCONG_PRO_REFERENCE.md** for consolidated structure and run order.
 - [ ] Enum không lệch
 - [ ] Workflow không có trạng thái tự do
 
-## F. Chốt vận hành
+## F. Admin Panel (nếu dùng)
+- [ ] ADMIN_EMAILS đã cấu hình
+- [ ] App Admin Panel tách riêng, share chỉ cho admin
+- [ ] Xem 04_APPSHEET/ADMIN_OPERATING_CHECKLIST.md
+
+## G. Chốt vận hành
 - [ ] Có người chịu trách nhiệm master data
 - [ ] Có người chịu trách nhiệm task
 - [ ] Có người chịu trách nhiệm finance

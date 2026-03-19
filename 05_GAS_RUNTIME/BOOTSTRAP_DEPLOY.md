@@ -33,29 +33,27 @@
 - `ensureHeadersMatchOrReport(sheet, headers)` - Compare headers, report only
 - `ensureEnumRows(sheet, keyColumn, rows)` - Add enum rows without duplicates
 - `ensureNoDuplicateTrigger(handler)` - Check trigger exists
-- `buildStructuredBootstrapReport()` - Empty result template (util.gs)
+- `buildStructuredBootstrapReport()` - Empty result template (00_CORE_UTILS.gs)
 
 ## File Tree (GAS)
 ```
 05_GAS_RUNTIME/
-  config.gs
-  enum.gs
-  util.gs
-  repository.gs
-  validation_service.gs
-  log_service.gs
-  schema_manifest.gs
-  init_schema.gs
-  bootstrap_menu.gs
-  install.gs
-  audit_service.gs
-  ho_so_service.gs
-  task_service.gs
-  finance_service.gs
-  triggers.gs
+  00_CORE_CONFIG.gs
+  00_CORE_CONSTANTS.gs
+  00_CORE_UTILS.gs
+  01_ENUM_*.gs
+  02_MASTER_CODE_SERVICE.gs
+  03_SHARED_*.gs
+  10_HOSO_SERVICE.gs
+  20_TASK_SERVICE.gs
+  30_FINANCE_SERVICE.gs
+  40_DISPLAY_MAPPING_SERVICE.gs
+  50_APPSHEET_VERIFY.gs
+  90_BOOTSTRAP_*.gs
+  99_DEBUG_*.gs
 ```
 
 ## Schema vs Docs
 - schema_manifest.json and _generated_schema/*.csv are aligned
 - No enum/config sheets in schema - initEnumData and initSystemConfig return skipped
-- log_service.logAction uses MODULE/ENTITY_TYPE/ENTITY_ID; FINANCE_LOG uses FIN_ID, TASK_UPDATE_LOG uses TASK_ID - task_service and finance_service use their own log functions (addTaskUpdate, logFinance)
+- 03_SHARED_LOGGER.logAction uses MODULE/ENTITY_TYPE/ENTITY_ID; FINANCE_LOG uses FIN_ID, TASK_UPDATE_LOG uses TASK_ID - 20_TASK_SERVICE and 30_FINANCE_SERVICE use their own log functions (addTaskUpdate, logFinance)

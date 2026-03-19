@@ -1,4 +1,16 @@
 {
+  "ADMIN_AUDIT_LOG": [
+    "ID",
+    "AUDIT_TYPE",
+    "ENTITY_TYPE",
+    "ENTITY_ID",
+    "ACTION",
+    "BEFORE_JSON",
+    "AFTER_JSON",
+    "NOTE",
+    "ACTOR_ID",
+    "CREATED_AT"
+  ],
   "MASTER_CODE": [
     "ID",
     "MASTER_GROUP",

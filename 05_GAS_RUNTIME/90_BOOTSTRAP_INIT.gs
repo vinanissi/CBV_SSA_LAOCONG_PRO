@@ -171,7 +171,7 @@ function initEnumData() {
 }
 
 /**
- * Ensures system config placeholders. Config is in config.gs - returns skipped.
+ * Ensures system config placeholders. Config is in 00_CORE_CONFIG.gs - returns skipped.
  * @returns {Object} Structured result
  */
 function initSystemConfig() {

@@ -13,7 +13,7 @@
 - getEnumValues(enumGroup) — returns active values
 - isValidEnumValue(enumGroup, value)
 - assertValidEnumValue(enumGroup, value, fieldName) — used by services
-- Fallback: CBV_ENUM (enum.gs) when sheet missing/empty
+- Fallback: CBV_ENUM (00_CORE_CONSTANTS.gs) when sheet missing/empty
 
 ## AppSheet Binding Method
 - Add ENUM_DICTIONARY table

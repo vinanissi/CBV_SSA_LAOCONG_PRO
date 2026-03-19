@@ -28,6 +28,7 @@
 
 | ENUM_GROUP | Used By | Repo Doc |
 |------------|---------|----------|
+| ROLE | AppSheet Account list, security filters | CBV_ENUM, 00_CORE_CONSTANTS |
 | HO_SO_TYPE | HO_SO_MASTER.HO_SO_TYPE | ENUM_DICTIONARY.md |
 | HO_SO_STATUS | HO_SO_MASTER.STATUS, HO_SO_FILE.STATUS, HO_SO_RELATION.STATUS | ENUM_DICTIONARY.md |
 | FILE_GROUP | HO_SO_FILE.FILE_GROUP | ENUM_DICTIONARY.md |
@@ -49,7 +50,7 @@
 - Do not remove existing rows; add new groups via seed spec and redeploy
 
 ## Fallback Policy
-- If ENUM_DICTIONARY sheet missing or empty: GAS uses CBV_ENUM (enum.gs) and logs warning
+- If ENUM_DICTIONARY sheet missing or empty: GAS uses CBV_ENUM (00_CORE_CONSTANTS.gs) and logs warning
 - Backend validation is always the real guard; AppSheet Valid_If is UI-only
 
 ## Audit Policy

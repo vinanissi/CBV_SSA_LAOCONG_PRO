@@ -1,7 +1,10 @@
 const CBV_CONFIG = {
   SPREADSHEET_ID: SpreadsheetApp.getActive().getId(),
   TIMEZONE: Session.getScriptTimeZone() || 'Asia/Ho_Chi_Minh',
+  /** Admin email whitelist. Required for admin panel. Add emails, e.g. ['admin@example.com']. */
+  ADMIN_EMAILS: [],  // Must be non-empty for adminCreateEnumRow, adminUpdateEnumRow, etc.
   SHEETS: {
+    ADMIN_AUDIT_LOG: 'ADMIN_AUDIT_LOG',
     ENUM_DICTIONARY: 'ENUM_DICTIONARY',
     MASTER_CODE: 'MASTER_CODE',
     HO_SO_MASTER: 'HO_SO_MASTER',

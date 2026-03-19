@@ -35,7 +35,7 @@ python 99_TOOLS/generate_cbv_ssa_laocong_pro.py "D:/Workspace/projects/CBV_SSA_L
 
 ### 2) Xuất schema CSV để import vào Google Sheets
 ```bash
-python 99_TOOLS/export_sheet_schema_csv.py "D:/Workspace/projects/CBV_SSA_LAOCONG_PRO/_generated_schema"
+python 99_TOOLS/export_sheet_schema_csv.py "D:/Workspace/projects/CBV_SSA_LAOCONG_PRO/06_DATABASE/_generated_schema"
 ```
 
 ### 3) Xuất sample data để thử AppSheet

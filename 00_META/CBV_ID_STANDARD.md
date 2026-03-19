@@ -4,6 +4,7 @@
 `<PREFIX>_<YYYYMMDD>_<6-8 ký tự>`
 
 ## Prefix chuẩn
+- AAL (ADMIN_AUDIT_LOG)
 - MC (MASTER_CODE)
 - HTX
 - XV

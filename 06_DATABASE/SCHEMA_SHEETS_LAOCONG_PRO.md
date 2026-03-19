@@ -4,6 +4,7 @@ Mỗi file CSV trong `_generated_schema` tương ứng 1 sheet header chuẩn.
 Import vào Google Sheets theo đúng tên file/sheet.
 
 ## Sheet bắt buộc
+- ADMIN_AUDIT_LOG
 - MASTER_CODE
 - HO_SO_MASTER
 - HO_SO_FILE

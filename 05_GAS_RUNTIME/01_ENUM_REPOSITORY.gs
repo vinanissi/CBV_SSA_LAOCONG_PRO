@@ -1,6 +1,6 @@
 /**
  * CBV Enum Repository - Reads ENUM_DICTIONARY sheet.
- * Fallback to CBV_ENUM (enum.gs) if sheet missing or not initialized.
+ * Fallback to CBV_ENUM (00_CORE_CONSTANTS.gs) if sheet missing or not initialized.
  */
 var _enumCache = null;
 var _enumFallbackUsed = false;
@@ -61,12 +61,13 @@ function buildEnumMap() {
 
 /**
  * Fallback when ENUM_DICTIONARY is empty or missing.
- * Uses CBV_ENUM from enum.gs. Maps group names to arrays.
+ * Uses CBV_ENUM from 00_CORE_CONSTANTS.gs. Maps group names to arrays.
  */
 function _getFallbackEnumMap() {
   var finType = CBV_ENUM.FINANCE_TYPE || CBV_ENUM.FIN_TRANS_TYPE || [];
   var finStatus = CBV_ENUM.FINANCE_STATUS || CBV_ENUM.FIN_STATUS || [];
   var fallback = {
+    ROLE: CBV_ENUM.ROLE || [],
     HO_SO_TYPE: CBV_ENUM.HO_SO_TYPE || [],
     HO_SO_STATUS: CBV_ENUM.HO_SO_STATUS || [],
     FILE_GROUP: CBV_ENUM.FILE_GROUP || [],
