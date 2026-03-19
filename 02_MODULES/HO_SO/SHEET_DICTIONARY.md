@@ -1,0 +1,12 @@
+# SHEET DICTIONARY - HO_SO
+
+## HO_SO_MASTER
+- HO_SO_TYPE: enum {HTX, XA_VIEN, XE, TAI_XE}
+- STATUS: enum {NEW, ACTIVE, INACTIVE, ARCHIVED}
+- HTX_ID: ref -> HO_SO_MASTER.ID where HO_SO_TYPE=HTX
+- OWNER_ID: user or staff id
+- ID_NO: CCCD / GPLX / biển số tùy loại
+
+## HO_SO_FILE
+- FILE_GROUP: enum {CCCD, GPLX, DANG_KY_XE, HOP_DONG, KHAC}
+- STATUS: enum {ACTIVE, ARCHIVED}

@@ -1,0 +1,188 @@
+# AppSheet Enum Binding — ENUM_DICTIONARY
+
+## Source
+- Table: ENUM_DICTIONARY (Google Sheets)
+- Filter: ENUM_GROUP = "[group]", IS_ACTIVE = TRUE
+
+## Binding Method
+Use Valid_If or List/Choice with SELECT from ENUM_DICTIONARY.
+
+## GAS Validation
+- `getEnumValues(enumGroup)` / `getActiveEnumValues(enumGroup)` — load from sheet
+- `assertValidEnumValue(enumGroup, value, fieldName)` — throw if invalid
+
+## Field Mappings
+
+### TASK_MAIN.STATUS
+- **Enum group:** TASK_STATUS
+- **Non-editable:** Yes (change via GAS action only)
+- **Valid_If (if editable):**
+```
+IN(
+  [STATUS],
+  SELECT(ENUM_DICTIONARY[ENUM_VALUE], AND(ENUM_DICTIONARY[ENUM_GROUP] = "TASK_STATUS", ENUM_DICTIONARY[IS_ACTIVE] = TRUE))
+)
+```
+
+### TASK_MAIN.PRIORITY
+- **Enum group:** TASK_PRIORITY
+- **Valid_If:**
+```
+IN(
+  [PRIORITY],
+  SELECT(ENUM_DICTIONARY[ENUM_VALUE], AND(ENUM_DICTIONARY[ENUM_GROUP] = "TASK_PRIORITY", ENUM_DICTIONARY[IS_ACTIVE] = TRUE))
+)
+```
+
+### TASK_MAIN.TASK_TYPE
+- **Enum group:** TASK_TYPE
+- **Valid_If:**
+```
+IN(
+  [TASK_TYPE],
+  SELECT(ENUM_DICTIONARY[ENUM_VALUE], AND(ENUM_DICTIONARY[ENUM_GROUP] = "TASK_TYPE", ENUM_DICTIONARY[IS_ACTIVE] = TRUE))
+)
+```
+
+### HO_SO_MASTER.HO_SO_TYPE
+- **Enum group:** HO_SO_TYPE
+- **Valid_If:**
+```
+IN(
+  [HO_SO_TYPE],
+  SELECT(ENUM_DICTIONARY[ENUM_VALUE], AND(ENUM_DICTIONARY[ENUM_GROUP] = "HO_SO_TYPE", ENUM_DICTIONARY[IS_ACTIVE] = TRUE))
+)
+```
+
+### HO_SO_MASTER.STATUS
+- **Enum group:** HO_SO_STATUS
+- **Non-editable:** Yes (change via GAS action only)
+- **Valid_If (if editable):**
+```
+IN(
+  [STATUS],
+  SELECT(ENUM_DICTIONARY[ENUM_VALUE], AND(ENUM_DICTIONARY[ENUM_GROUP] = "HO_SO_STATUS", ENUM_DICTIONARY[IS_ACTIVE] = TRUE))
+)
+```
+
+### FINANCE_TRANSACTION.TRANS_TYPE
+- **Enum group:** FINANCE_TYPE
+- **Non-editable when STATUS = CONFIRMED**
+- **Valid_If:**
+```
+IN(
+  [TRANS_TYPE],
+  SELECT(ENUM_DICTIONARY[ENUM_VALUE], AND(ENUM_DICTIONARY[ENUM_GROUP] = "FINANCE_TYPE", ENUM_DICTIONARY[IS_ACTIVE] = TRUE))
+)
+```
+
+### FINANCE_TRANSACTION.STATUS
+- **Enum group:** FINANCE_STATUS
+- **Non-editable:** Yes (change via GAS action only)
+- **Valid_If (if editable):**
+```
+IN(
+  [STATUS],
+  SELECT(ENUM_DICTIONARY[ENUM_VALUE], AND(ENUM_DICTIONARY[ENUM_GROUP] = "FINANCE_STATUS", ENUM_DICTIONARY[IS_ACTIVE] = TRUE))
+)
+```
+
+### FINANCE_TRANSACTION.CATEGORY
+- **Enum group:** FIN_CATEGORY
+- **Non-editable when STATUS = CONFIRMED**
+- **Valid_If:**
+```
+IN(
+  [CATEGORY],
+  SELECT(ENUM_DICTIONARY[ENUM_VALUE], AND(ENUM_DICTIONARY[ENUM_GROUP] = "FIN_CATEGORY", ENUM_DICTIONARY[IS_ACTIVE] = TRUE))
+)
+```
+
+### FINANCE_TRANSACTION.PAYMENT_METHOD
+- **Enum group:** PAYMENT_METHOD
+- **Valid_If:**
+```
+IN(
+  [PAYMENT_METHOD],
+  SELECT(ENUM_DICTIONARY[ENUM_VALUE], AND(ENUM_DICTIONARY[ENUM_GROUP] = "PAYMENT_METHOD", ENUM_DICTIONARY[IS_ACTIVE] = TRUE))
+)
+```
+
+### TASK_MAIN.RELATED_ENTITY_TYPE
+- **Enum group:** RELATED_ENTITY_TYPE
+- **Valid_If:**
+```
+IN(
+  [RELATED_ENTITY_TYPE],
+  SELECT(ENUM_DICTIONARY[ENUM_VALUE], AND(ENUM_DICTIONARY[ENUM_GROUP] = "RELATED_ENTITY_TYPE", ENUM_DICTIONARY[IS_ACTIVE] = TRUE))
+)
+```
+
+### FINANCE_TRANSACTION.RELATED_ENTITY_TYPE
+- **Enum group:** RELATED_ENTITY_TYPE
+- **Valid_If:**
+```
+IN(
+  [RELATED_ENTITY_TYPE],
+  SELECT(ENUM_DICTIONARY[ENUM_VALUE], AND(ENUM_DICTIONARY[ENUM_GROUP] = "RELATED_ENTITY_TYPE", ENUM_DICTIONARY[IS_ACTIVE] = TRUE))
+)
+```
+
+### HO_SO_FILE.FILE_GROUP
+- **Enum group:** FILE_GROUP
+- **Valid_If:**
+```
+IN(
+  [FILE_GROUP],
+  SELECT(ENUM_DICTIONARY[ENUM_VALUE], AND(ENUM_DICTIONARY[ENUM_GROUP] = "FILE_GROUP", ENUM_DICTIONARY[IS_ACTIVE] = TRUE))
+)
+```
+
+### TASK_ATTACHMENT.ATTACHMENT_TYPE
+- **Enum group:** ATTACHMENT_TYPE
+- **⚠️ FIELD NOT IN SCHEMA** — TASK_ATTACHMENT has no ATTACHMENT_TYPE column. Add when schema extended.
+- **Valid_If (when field exists):**
+```
+IN(
+  [ATTACHMENT_TYPE],
+  SELECT(ENUM_DICTIONARY[ENUM_VALUE], AND(ENUM_DICTIONARY[ENUM_GROUP] = "ATTACHMENT_TYPE", ENUM_DICTIONARY[IS_ACTIVE] = TRUE))
+)
+```
+
+### TASK_UPDATE_LOG.ACTION
+- **Enum group:** UPDATE_TYPE
+- **Column name:** ACTION (maps to enum group UPDATE_TYPE)
+- **Valid_If:**
+```
+IN(
+  [ACTION],
+  SELECT(ENUM_DICTIONARY[ENUM_VALUE], AND(ENUM_DICTIONARY[ENUM_GROUP] = "UPDATE_TYPE", ENUM_DICTIONARY[IS_ACTIVE] = TRUE))
+)
+```
+
+### MASTER_CODE.STATUS
+- **Enum group:** MASTER_CODE_STATUS
+- **Valid_If:**
+```
+IN(
+  [STATUS],
+  SELECT(ENUM_DICTIONARY[ENUM_VALUE], AND(ENUM_DICTIONARY[ENUM_GROUP] = "MASTER_CODE_STATUS", ENUM_DICTIONARY[IS_ACTIVE] = TRUE))
+)
+```
+
+## Display Mapping
+- **Store:** ENUM_VALUE
+- **Display:** DISPLAY_TEXT (if populated) else humanized ENUM_VALUE
+- See 04_APPSHEET/APPSHEET_DISPLAY_MAPPING.md
+
+## Choice/List Configuration
+For dropdowns, add ENUM_DICTIONARY as a table and use:
+- **List:** ENUM_DICTIONARY
+- **Filter:** `AND([ENUM_GROUP] = "TASK_STATUS", [IS_ACTIVE] = TRUE)`
+- **Display column:** ENUM_VALUE (or DISPLAY_TEXT if populated)
+- **Value column:** ENUM_VALUE
+
+## Rules
+- Do NOT enable "Allow other values"
+- Backend (GAS) validation is the real guard; AppSheet Valid_If is UI-only
+- STATUS fields: keep non-editable; use GAS actions

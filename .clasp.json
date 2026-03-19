@@ -1,0 +1,33 @@
+{
+  "scriptId": "1SPsNxiABAil6tqDyf2PezY4DCife3Z_NxXLv_mkvenXOe3hvFPU-APey",
+  "rootDir": "05_GAS_RUNTIME",
+  "filePushOrder": [
+    "config.gs",
+    "enum.gs",
+    "enum_repository.gs",
+    "enum_service.gs",
+    "enum_seed.gs",
+    "enum_audit.gs",
+    "util.gs",
+    "repository.gs",
+    "validation_service.gs",
+    "log_service.gs",
+    "schema_manifest.gs",
+    "init_schema.gs",
+    "master_code_service.gs",
+    "display_mapping_service.gs",
+    "ho_so_service.gs",
+    "task_service.gs",
+    "finance_service.gs",
+    "audit_service.gs",
+    "test_hoso.gs",
+    "test_task.gs",
+    "test_finance.gs",
+    "test_runner.gs",
+    "sample_data.gs",
+    "verify_appsheet.gs",
+    "bootstrap_menu.gs",
+    "triggers.gs",
+    "install.gs"
+  ]
+}

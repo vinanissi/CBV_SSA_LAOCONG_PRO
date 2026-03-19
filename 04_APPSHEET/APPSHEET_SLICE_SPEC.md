@@ -1,0 +1,21 @@
+# APPSHEET SLICE SPEC
+
+## HO_SO_ACTIVE
+Source: HO_SO_MASTER
+Condition: `[IS_DELETED] = FALSE`
+
+## TASK_OPEN
+Source: TASK_MAIN
+Condition: `IN([STATUS]; LIST("NEW"; "ASSIGNED"; "IN_PROGRESS"; "WAITING"))`
+
+## TASK_DONE
+Source: TASK_MAIN
+Condition: `[STATUS] = "DONE"`
+
+## FIN_DRAFT
+Source: FINANCE_TRANSACTION
+Condition: `[STATUS] = "NEW"`
+
+## FIN_CONFIRMED
+Source: FINANCE_TRANSACTION
+Condition: `[STATUS] = "CONFIRMED"`

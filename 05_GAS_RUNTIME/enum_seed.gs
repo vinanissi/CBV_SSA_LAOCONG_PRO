@@ -1,0 +1,133 @@
+/**
+ * CBV Enum Seed - Idempotent ENUM_DICTIONARY initialization.
+ * Creates sheet if missing, inserts missing rows only. Does not duplicate.
+ */
+var ENUM_DICTIONARY_HEADERS = ['ID', 'ENUM_GROUP', 'ENUM_VALUE', 'DISPLAY_TEXT', 'SORT_ORDER', 'IS_ACTIVE', 'NOTE', 'CREATED_AT', 'CREATED_BY', 'UPDATED_AT', 'UPDATED_BY'];
+
+var ENUM_SEED_SPEC = [
+  { ENUM_GROUP: 'HO_SO_TYPE', ENUM_VALUE: 'HTX', DISPLAY_TEXT: 'Hợp tác xã', SORT_ORDER: 1 },
+  { ENUM_GROUP: 'HO_SO_TYPE', ENUM_VALUE: 'XA_VIEN', DISPLAY_TEXT: 'Xã viên', SORT_ORDER: 2 },
+  { ENUM_GROUP: 'HO_SO_TYPE', ENUM_VALUE: 'XE', DISPLAY_TEXT: 'Xe', SORT_ORDER: 3 },
+  { ENUM_GROUP: 'HO_SO_TYPE', ENUM_VALUE: 'TAI_XE', DISPLAY_TEXT: 'Tài xế', SORT_ORDER: 4 },
+  { ENUM_GROUP: 'HO_SO_STATUS', ENUM_VALUE: 'NEW', SORT_ORDER: 1 },
+  { ENUM_GROUP: 'HO_SO_STATUS', ENUM_VALUE: 'ACTIVE', SORT_ORDER: 2 },
+  { ENUM_GROUP: 'HO_SO_STATUS', ENUM_VALUE: 'INACTIVE', SORT_ORDER: 3 },
+  { ENUM_GROUP: 'HO_SO_STATUS', ENUM_VALUE: 'ARCHIVED', SORT_ORDER: 4 },
+  { ENUM_GROUP: 'FILE_GROUP', ENUM_VALUE: 'CCCD', SORT_ORDER: 1 },
+  { ENUM_GROUP: 'FILE_GROUP', ENUM_VALUE: 'GPLX', SORT_ORDER: 2 },
+  { ENUM_GROUP: 'FILE_GROUP', ENUM_VALUE: 'DANG_KY_XE', SORT_ORDER: 3 },
+  { ENUM_GROUP: 'FILE_GROUP', ENUM_VALUE: 'HOP_DONG', SORT_ORDER: 4 },
+  { ENUM_GROUP: 'FILE_GROUP', ENUM_VALUE: 'KHAC', SORT_ORDER: 5 },
+  { ENUM_GROUP: 'TASK_TYPE', ENUM_VALUE: 'GENERAL', SORT_ORDER: 1 },
+  { ENUM_GROUP: 'TASK_TYPE', ENUM_VALUE: 'HO_SO', SORT_ORDER: 2 },
+  { ENUM_GROUP: 'TASK_TYPE', ENUM_VALUE: 'FINANCE', SORT_ORDER: 3 },
+  { ENUM_GROUP: 'TASK_TYPE', ENUM_VALUE: 'OPERATION', SORT_ORDER: 4 },
+  { ENUM_GROUP: 'TASK_STATUS', ENUM_VALUE: 'NEW', SORT_ORDER: 1 },
+  { ENUM_GROUP: 'TASK_STATUS', ENUM_VALUE: 'ASSIGNED', SORT_ORDER: 2 },
+  { ENUM_GROUP: 'TASK_STATUS', ENUM_VALUE: 'IN_PROGRESS', SORT_ORDER: 3 },
+  { ENUM_GROUP: 'TASK_STATUS', ENUM_VALUE: 'WAITING', SORT_ORDER: 4 },
+  { ENUM_GROUP: 'TASK_STATUS', ENUM_VALUE: 'DONE', SORT_ORDER: 5 },
+  { ENUM_GROUP: 'TASK_STATUS', ENUM_VALUE: 'CANCELLED', SORT_ORDER: 6 },
+  { ENUM_GROUP: 'TASK_STATUS', ENUM_VALUE: 'ARCHIVED', SORT_ORDER: 7 },
+  { ENUM_GROUP: 'TASK_PRIORITY', ENUM_VALUE: 'LOW', DISPLAY_TEXT: 'Thấp', SORT_ORDER: 1 },
+  { ENUM_GROUP: 'TASK_PRIORITY', ENUM_VALUE: 'MEDIUM', DISPLAY_TEXT: 'Trung bình', SORT_ORDER: 2 },
+  { ENUM_GROUP: 'TASK_PRIORITY', ENUM_VALUE: 'HIGH', DISPLAY_TEXT: 'Cao', SORT_ORDER: 3 },
+  { ENUM_GROUP: 'TASK_PRIORITY', ENUM_VALUE: 'URGENT', DISPLAY_TEXT: 'Khẩn cấp', SORT_ORDER: 4 },
+  { ENUM_GROUP: 'ATTACHMENT_TYPE', ENUM_VALUE: 'FILE', SORT_ORDER: 1 },
+  { ENUM_GROUP: 'ATTACHMENT_TYPE', ENUM_VALUE: 'IMAGE', SORT_ORDER: 2 },
+  { ENUM_GROUP: 'ATTACHMENT_TYPE', ENUM_VALUE: 'LINK', SORT_ORDER: 3 },
+  { ENUM_GROUP: 'UPDATE_TYPE', ENUM_VALUE: 'CREATED', SORT_ORDER: 1 },
+  { ENUM_GROUP: 'UPDATE_TYPE', ENUM_VALUE: 'STATUS_CHANGED', SORT_ORDER: 2 },
+  { ENUM_GROUP: 'UPDATE_TYPE', ENUM_VALUE: 'CHECKLIST_ADDED', SORT_ORDER: 3 },
+  { ENUM_GROUP: 'UPDATE_TYPE', ENUM_VALUE: 'CHECKLIST_DONE', SORT_ORDER: 4 },
+  { ENUM_GROUP: 'UPDATE_TYPE', ENUM_VALUE: 'COMMENT', SORT_ORDER: 5 },
+  { ENUM_GROUP: 'FINANCE_TYPE', ENUM_VALUE: 'INCOME', DISPLAY_TEXT: 'Thu', SORT_ORDER: 1 },
+  { ENUM_GROUP: 'FINANCE_TYPE', ENUM_VALUE: 'EXPENSE', DISPLAY_TEXT: 'Chi', SORT_ORDER: 2 },
+  { ENUM_GROUP: 'FINANCE_STATUS', ENUM_VALUE: 'NEW', SORT_ORDER: 1 },
+  { ENUM_GROUP: 'FINANCE_STATUS', ENUM_VALUE: 'CONFIRMED', SORT_ORDER: 2 },
+  { ENUM_GROUP: 'FINANCE_STATUS', ENUM_VALUE: 'CANCELLED', SORT_ORDER: 3 },
+  { ENUM_GROUP: 'FINANCE_STATUS', ENUM_VALUE: 'ARCHIVED', SORT_ORDER: 4 },
+  { ENUM_GROUP: 'FIN_CATEGORY', ENUM_VALUE: 'VAN_HANH', SORT_ORDER: 1 },
+  { ENUM_GROUP: 'FIN_CATEGORY', ENUM_VALUE: 'NHIEN_LIEU', SORT_ORDER: 2 },
+  { ENUM_GROUP: 'FIN_CATEGORY', ENUM_VALUE: 'SUA_CHUA', SORT_ORDER: 3 },
+  { ENUM_GROUP: 'FIN_CATEGORY', ENUM_VALUE: 'LUONG', SORT_ORDER: 4 },
+  { ENUM_GROUP: 'FIN_CATEGORY', ENUM_VALUE: 'THU_KHAC', SORT_ORDER: 5 },
+  { ENUM_GROUP: 'FIN_CATEGORY', ENUM_VALUE: 'CHI_KHAC', SORT_ORDER: 6 },
+  { ENUM_GROUP: 'PAYMENT_METHOD', ENUM_VALUE: 'CASH', DISPLAY_TEXT: 'Tiền mặt', SORT_ORDER: 1 },
+  { ENUM_GROUP: 'PAYMENT_METHOD', ENUM_VALUE: 'BANK', DISPLAY_TEXT: 'Chuyển khoản', SORT_ORDER: 2 },
+  { ENUM_GROUP: 'PAYMENT_METHOD', ENUM_VALUE: 'OTHER', DISPLAY_TEXT: 'Khác', SORT_ORDER: 3 },
+  { ENUM_GROUP: 'MASTER_CODE_STATUS', ENUM_VALUE: 'ACTIVE', SORT_ORDER: 1 },
+  { ENUM_GROUP: 'MASTER_CODE_STATUS', ENUM_VALUE: 'INACTIVE', SORT_ORDER: 2 },
+  { ENUM_GROUP: 'MASTER_CODE_STATUS', ENUM_VALUE: 'ARCHIVED', SORT_ORDER: 3 },
+  { ENUM_GROUP: 'RELATED_ENTITY_TYPE', ENUM_VALUE: 'NONE', SORT_ORDER: 1 },
+  { ENUM_GROUP: 'RELATED_ENTITY_TYPE', ENUM_VALUE: 'HO_SO', SORT_ORDER: 2 },
+  { ENUM_GROUP: 'RELATED_ENTITY_TYPE', ENUM_VALUE: 'FINANCE_TRANSACTION', SORT_ORDER: 3 },
+  { ENUM_GROUP: 'RELATED_ENTITY_TYPE', ENUM_VALUE: 'TASK', SORT_ORDER: 4 },
+  { ENUM_GROUP: 'RELATED_ENTITY_TYPE', ENUM_VALUE: 'UNIT', SORT_ORDER: 5 }
+];
+
+function seedEnumDictionary() {
+  var result = buildStructuredBootstrapReport();
+  result.code = 'ENUM_SEED';
+
+  var ss = SpreadsheetApp.getActive();
+  var sheet = ss.getSheetByName(CBV_CONFIG.SHEETS.ENUM_DICTIONARY);
+  var created = false;
+  if (!sheet) {
+    sheet = ss.insertSheet(CBV_CONFIG.SHEETS.ENUM_DICTIONARY);
+    created = true;
+    result.data.createdSheets = [CBV_CONFIG.SHEETS.ENUM_DICTIONARY];
+  }
+
+  var lastCol = sheet.getLastColumn();
+  var headers = lastCol > 0 ? sheet.getRange(1, 1, 1, lastCol).getValues()[0] : [];
+  if (headers.length === 0 || headers.indexOf('ENUM_GROUP') === -1) {
+    sheet.getRange(1, 1, 1, ENUM_DICTIONARY_HEADERS.length).setValues([ENUM_DICTIONARY_HEADERS]);
+    headers = ENUM_DICTIONARY_HEADERS;
+  }
+
+  var lastRow = sheet.getLastRow();
+  var existingKeys = [];
+  if (lastRow >= 2) {
+    var groupIdx = headers.indexOf('ENUM_GROUP');
+    var valueIdx = headers.indexOf('ENUM_VALUE');
+    if (groupIdx !== -1 && valueIdx !== -1) {
+      var data = sheet.getRange(2, 1, lastRow, headers.length).getValues();
+      existingKeys = data.map(function(r) { return String(r[groupIdx] || '') + '|' + String(r[valueIdx] || ''); });
+    }
+  }
+
+  var added = 0;
+  var now = cbvNow();
+  var user = cbvUser();
+  ENUM_SEED_SPEC.forEach(function(spec) {
+    var key = spec.ENUM_GROUP + '|' + spec.ENUM_VALUE;
+    if (existingKeys.indexOf(key) !== -1) return;
+    var record = {
+      ID: cbvMakeId('ENUM'),
+      ENUM_GROUP: spec.ENUM_GROUP,
+      ENUM_VALUE: spec.ENUM_VALUE,
+      DISPLAY_TEXT: spec.DISPLAY_TEXT || '',
+      SORT_ORDER: spec.SORT_ORDER != null ? spec.SORT_ORDER : '',
+      IS_ACTIVE: true,
+      NOTE: spec.NOTE || '',
+      CREATED_AT: now,
+      CREATED_BY: user,
+      UPDATED_AT: now,
+      UPDATED_BY: user
+    };
+    var out = headers.map(function(h) { return record[h] !== undefined ? record[h] : ''; });
+    sheet.appendRow(out);
+    existingKeys.push(key);
+    added++;
+  });
+
+  result.data.warnings = result.data.warnings || [];
+  if (added > 0) result.data.warnings.push('Added ' + added + ' enum rows');
+  clearEnumCache();
+
+  result.ok = true;
+  result.message = 'Enum dictionary seeded';
+  Logger.log('seedEnumDictionary: ' + JSON.stringify(result, null, 2));
+  return result;
+}

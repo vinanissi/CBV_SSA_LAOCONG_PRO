@@ -1,0 +1,28 @@
+/**
+ * CBV Schema Manifest - Source of truth for sheet headers.
+ * Aligned with 06_DATABASE/schema_manifest.json and _generated_schema/*.csv
+ */
+const CBV_SCHEMA_MANIFEST = {
+  MASTER_CODE: ['ID', 'MASTER_GROUP', 'CODE', 'NAME', 'DISPLAY_TEXT', 'SHORT_NAME', 'PARENT_CODE', 'STATUS', 'SORT_ORDER', 'IS_SYSTEM', 'ALLOW_EDIT', 'NOTE', 'CREATED_AT', 'CREATED_BY', 'UPDATED_AT', 'UPDATED_BY', 'IS_DELETED'],
+  HO_SO_MASTER: ['ID', 'HO_SO_TYPE', 'CODE', 'NAME', 'STATUS', 'HTX_ID', 'OWNER_ID', 'PHONE', 'EMAIL', 'ID_NO', 'ADDRESS', 'START_DATE', 'END_DATE', 'NOTE', 'TAGS', 'CREATED_AT', 'CREATED_BY', 'UPDATED_AT', 'UPDATED_BY', 'IS_DELETED'],
+  HO_SO_FILE: ['ID', 'HO_SO_ID', 'FILE_GROUP', 'FILE_NAME', 'FILE_URL', 'DRIVE_FILE_ID', 'STATUS', 'NOTE', 'CREATED_AT', 'CREATED_BY'],
+  HO_SO_RELATION: ['ID', 'FROM_HO_SO_ID', 'TO_HO_SO_ID', 'RELATION_TYPE', 'START_DATE', 'END_DATE', 'STATUS', 'NOTE', 'CREATED_AT', 'CREATED_BY'],
+  TASK_MAIN: ['ID', 'TASK_CODE', 'TITLE', 'DESCRIPTION', 'TASK_TYPE', 'STATUS', 'PRIORITY', 'OWNER_ID', 'REPORTER_ID', 'RELATED_ENTITY_TYPE', 'RELATED_ENTITY_ID', 'START_DATE', 'DUE_DATE', 'DONE_AT', 'RESULT_NOTE', 'CREATED_AT', 'CREATED_BY', 'UPDATED_AT', 'UPDATED_BY', 'IS_DELETED'],
+  TASK_CHECKLIST: ['ID', 'TASK_ID', 'ITEM_NO', 'TITLE', 'IS_REQUIRED', 'IS_DONE', 'DONE_AT', 'DONE_BY', 'NOTE', 'CREATED_AT', 'CREATED_BY'],
+  TASK_UPDATE_LOG: ['ID', 'TASK_ID', 'ACTION', 'OLD_STATUS', 'NEW_STATUS', 'NOTE', 'ACTOR_ID', 'CREATED_AT'],
+  TASK_ATTACHMENT: ['ID', 'TASK_ID', 'FILE_NAME', 'FILE_URL', 'DRIVE_FILE_ID', 'NOTE', 'CREATED_AT', 'CREATED_BY'],
+  FINANCE_TRANSACTION: ['ID', 'TRANS_CODE', 'TRANS_DATE', 'TRANS_TYPE', 'STATUS', 'CATEGORY', 'AMOUNT', 'UNIT_ID', 'COUNTERPARTY', 'PAYMENT_METHOD', 'REFERENCE_NO', 'RELATED_ENTITY_TYPE', 'RELATED_ENTITY_ID', 'DESCRIPTION', 'EVIDENCE_URL', 'CONFIRMED_AT', 'CONFIRMED_BY', 'CREATED_AT', 'CREATED_BY', 'UPDATED_AT', 'UPDATED_BY', 'IS_DELETED'],
+  FINANCE_LOG: ['ID', 'FIN_ID', 'ACTION', 'BEFORE_JSON', 'AFTER_JSON', 'NOTE', 'ACTOR_ID', 'CREATED_AT']
+};
+
+/** @returns {string[]} Required sheet names in canonical order */
+function getRequiredSheetNames() {
+  return Object.keys(CBV_SCHEMA_MANIFEST);
+}
+
+/** @returns {string[]} Headers for a sheet by name */
+function getSchemaHeaders(sheetName) {
+  const headers = CBV_SCHEMA_MANIFEST[sheetName];
+  if (!headers) throw new Error('Unknown sheet: ' + sheetName);
+  return headers;
+}
