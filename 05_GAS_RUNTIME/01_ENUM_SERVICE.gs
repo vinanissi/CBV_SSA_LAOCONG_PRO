@@ -1,14 +1,18 @@
 /**
  * CBV Enum Service - Validation and lookup.
- * Reads from ENUM_DICTIONARY via enum_repository. Fallback to CBV_ENUM.
+ * Prefers ENUM_DICTIONARY via enum sync engine. Fallback to enum_repository / CBV_ENUM.
  */
 
 /**
  * @param {string} enumGroup - e.g. HO_SO_TYPE, TASK_STATUS
+ * @param {Object} options - { activeOnly } (used when sync engine available)
  * @returns {string[]} Active enum values for group
  */
-function getEnumValues(enumGroup) {
-  var map = buildEnumMap();
+function getEnumValues(enumGroup, options) {
+  if (typeof getEnumValuesFromRegistry === 'function') {
+    return getEnumValuesFromRegistry(enumGroup, options || {});
+  }
+  var map = typeof buildEnumMap === 'function' ? buildEnumMap() : {};
   return map[enumGroup] || [];
 }
 

@@ -1,0 +1,12 @@
+UI_ACTION,GAS_FUNCTION,TARGET_STATUS,LOG_ACTION,OLD_STATUS,NEW_STATUS,NOTE_SOURCE
+TASK_ASSIGN,assignTask,NEW,ASSIGN,NEW,ASSIGNED,Assigned to {ownerId}
+TASK_START,setTaskStatus,ASSIGNED,START,ASSIGNED,IN_PROGRESS,Optional user note
+TASK_WAIT,setTaskStatus,IN_PROGRESS,WAIT,IN_PROGRESS,WAITING,Optional user note
+TASK_RESUME,setTaskStatus,WAITING,RESUME,WAITING,IN_PROGRESS,Optional user note
+TASK_DONE,completeTask,IN_PROGRESS,DONE,IN_PROGRESS,DONE,RESULT_NOTE (required)
+TASK_CANCEL,cancelTask,*,CANCEL,{current},CANCELLED,Optional user note
+createTask,createTask,NEW,CREATED,NEW,NEW,Task created
+addChecklistItem,addChecklistItem,,CHECKLIST_ADD,,,{item title}
+markChecklistDone,markChecklistDone,,CHECKLIST_DONE,,,{item title or note}
+createTaskAttachment,createTaskAttachment,,ATTACHMENT_ADD,,,Attachment added: {filename}
+addTaskLogEntry,addTaskLogEntry,,NOTE|QUESTION|ANSWER,,,User-provided note

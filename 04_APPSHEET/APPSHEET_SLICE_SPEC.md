@@ -1,21 +1,42 @@
 # APPSHEET SLICE SPEC
 
-## HO_SO_ACTIVE
+**Full map:** APPSHEET_SLICE_MAP.md
+
+## Required for Ref Columns
+
+### ACTIVE_USERS
+Source: USER_DIRECTORY
+Condition: `AND([STATUS] = "ACTIVE", [IS_DELETED] = FALSE)`
+Used by: OWNER_ID, REPORTER_ID, DONE_BY, CONFIRMED_BY
+
+### ACTIVE_HTX
+Source: HO_SO_MASTER
+Condition: `AND([HO_SO_TYPE] = "HTX", [IS_DELETED] = FALSE)`
+Used by: HO_SO_MASTER.HTX_ID, TASK_MAIN.HTX_ID
+
+### ACTIVE_MASTER_CODES
+Source: MASTER_CODE
+Condition: `AND([STATUS] = "ACTIVE", [IS_DELETED] = FALSE)`
+Used by: UNIT_ID, future MASTER_GROUP refs
+
+## Business Slices
+
+### HO_SO_ACTIVE
 Source: HO_SO_MASTER
 Condition: `[IS_DELETED] = FALSE`
 
-## TASK_OPEN
+### TASK_OPEN
 Source: TASK_MAIN
-Condition: `IN([STATUS]; LIST("NEW"; "ASSIGNED"; "IN_PROGRESS"; "WAITING"))`
+Condition: `IN([STATUS], LIST("NEW", "ASSIGNED", "IN_PROGRESS", "WAITING"))`
 
-## TASK_DONE
+### TASK_DONE
 Source: TASK_MAIN
 Condition: `[STATUS] = "DONE"`
 
-## FIN_DRAFT
+### FIN_DRAFT
 Source: FINANCE_TRANSACTION
 Condition: `[STATUS] = "NEW"`
 
-## FIN_CONFIRMED
+### FIN_CONFIRMED
 Source: FINANCE_TRANSACTION
 Condition: `[STATUS] = "CONFIRMED"`

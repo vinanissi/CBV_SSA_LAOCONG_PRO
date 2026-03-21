@@ -1,0 +1,93 @@
+# AppSheet Documentation — Operator Index
+
+**Entry point for builders and operators.** Use this to navigate the normalized doc pack.
+
+---
+
+## 1. Recommended Reading Order
+
+| Order | Doc | Purpose |
+|-------|-----|---------|
+| 1 | **APPSHEET_MASTER_REFERENCE** | Scope, architecture, deployment flow |
+| 2 | **APPSHEET_DEPLOY_CHECKLIST_MASTER** | Step-by-step config checklist |
+| 3 | **APPSHEET_TABLE_CONFIG_MASTER** | Key, label, refs, risks per table |
+| 4 | **APPSHEET_FIELD_POLICY_MASTER** | Hidden/readonly/editable rules |
+| 5 | **APPSHEET_ENUM_MASTER_CODE_BINDING** | Enum and MASTER_CODE binding |
+| 6 | **APPSHEET_VIEW_MASTER** | View design by module |
+| 7 | **APPSHEET_ACTION_MASTER** | Action catalog; GAS vs Update row |
+| 8 | **APPSHEET_SLICE_SECURITY_MASTER** | Slices, security filters |
+| 9 | **APPSHEET_EXPRESSION_MASTER** | Valid_If, Editable_If, filters |
+| 10 | **APPSHEET_ATTACHMENT_SYSTEM_MASTER** | Attachment tables, FILE_URL, inline UX |
+| 11 | **APPSHEET_ADMIN_PANEL_MASTER** | Admin tables, ops checklist |
+
+---
+
+## 2. Mandatory by Role
+
+| Doc | Builder | AppSheet Config Operator | Admin Operator |
+|-----|:-------:|:------------------------:|:--------------:|
+| APPSHEET_MASTER_REFERENCE | ✓ | ✓ | ✓ |
+| APPSHEET_DEPLOY_CHECKLIST_MASTER | ✓ | ✓ | — |
+| APPSHEET_TABLE_CONFIG_MASTER | ✓ | ✓ | — |
+| APPSHEET_FIELD_POLICY_MASTER | ✓ | ✓ | — |
+| APPSHEET_ENUM_MASTER_CODE_BINDING | ✓ | ✓ | — |
+| APPSHEET_VIEW_MASTER | ✓ | ✓ | — |
+| APPSHEET_ACTION_MASTER | ✓ | ✓ | — |
+| APPSHEET_SLICE_SECURITY_MASTER | ✓ | ✓ | — |
+| APPSHEET_EXPRESSION_MASTER | — | ✓ | — |
+| APPSHEET_ATTACHMENT_SYSTEM_MASTER | — | ✓ | — |
+| APPSHEET_ADMIN_PANEL_MASTER | — | — | ✓ |
+
+**Builder** = GAS + schema + deployment setup. **AppSheet Config Operator** = manual AppSheet Editor config. **Admin Operator** = Admin Panel deployment and daily ops.
+
+---
+
+## 3. Archive-Only (Legacy)
+
+These are superseded by the masters above. Use for historical reference only.
+
+| Legacy Doc | Superseded By |
+|------------|---------------|
+| APPSHEET_BUILD_SPEC_LAOCONG_PRO | APPSHEET_MASTER_REFERENCE |
+| APPSHEET_MANUAL_CONFIG_CHECKLIST | APPSHEET_DEPLOY_CHECKLIST_MASTER |
+| APPSHEET_FIELD_POLICY_MAP.md | APPSHEET_FIELD_POLICY_MASTER |
+| APPSHEET_TASK_POLICY | APPSHEET_FIELD_POLICY_MASTER |
+| TASK_MODULE_FIELD_POLICY | APPSHEET_FIELD_POLICY_MASTER |
+| APPSHEET_ENUM_BINDING | APPSHEET_ENUM_MASTER_CODE_BINDING |
+| APPSHEET_MASTER_CODE_BINDING | APPSHEET_ENUM_MASTER_CODE_BINDING |
+| APPSHEET_DISPLAY_MAPPING | APPSHEET_ENUM_MASTER_CODE_BINDING |
+| APPSHEET_EXPRESSION_PACK_LAOCONG_PRO | APPSHEET_EXPRESSION_MASTER |
+| APPSHEET_TABLE_READY_CHECKLIST | APPSHEET_TABLE_CONFIG_MASTER |
+| APPSHEET_DEPLOYMENT_NOTES | APPSHEET_DEPLOY_CHECKLIST_MASTER |
+| APPSHEET_PHASE1_CONFIG | APPSHEET_TABLE_CONFIG_MASTER, APPSHEET_VIEW_MASTER |
+| APPSHEET_REF_MAP | APPSHEET_TABLE_CONFIG_MASTER |
+| APPSHEET_KEY_LABEL_MAP | APPSHEET_TABLE_CONFIG_MASTER |
+| APPSHEET_VIEW_ARCHITECTURE | APPSHEET_VIEW_MASTER |
+| APPSHEET_VIEW_MAP_MASTER | APPSHEET_VIEW_MASTER |
+| APPSHEET_DETAIL_VIEWS | APPSHEET_VIEW_MASTER |
+| APPSHEET_FORM_VIEWS | APPSHEET_VIEW_MASTER |
+| APPSHEET_INLINE_VIEWS | APPSHEET_VIEW_MASTER |
+| APPSHEET_ACTION_MAP_MASTER | APPSHEET_ACTION_MASTER |
+| APPSHEET_SLICE_SPEC | APPSHEET_SLICE_SECURITY_MASTER |
+| APPSHEET_SECURITY_FILTERS | APPSHEET_SLICE_SECURITY_MASTER |
+| APPSHEET_ATTACHMENT_* (5 files) | APPSHEET_ATTACHMENT_SYSTEM_MASTER |
+| ATTACHMENT_SYSTEM_DELIVERABLES | APPSHEET_ATTACHMENT_SYSTEM_MASTER |
+| APPSHEET_ADMIN_* | APPSHEET_ADMIN_PANEL_MASTER |
+| ADMIN_* (3 files) | APPSHEET_ADMIN_PANEL_MASTER |
+| APPSHEET_UX_MASTER | APPSHEET_MASTER_REFERENCE |
+
+**Data files** (APPSHEET_FIELD_POLICY_MAP.csv, APPSHEET_VIEW_MAP.csv, etc.) — **kept**; not archive.
+
+---
+
+## 4. Quick Paths
+
+| Task | Go To |
+|------|-------|
+| First-time deploy | MASTER_REFERENCE → DEPLOY_CHECKLIST_MASTER |
+| Set up a table | TABLE_CONFIG_MASTER → FIELD_POLICY_MASTER |
+| Bind enum field | ENUM_MASTER_CODE_BINDING |
+| Create view | VIEW_MASTER |
+| Add action | ACTION_MASTER |
+| Configure Admin Panel | ADMIN_PANEL_MASTER |
+| Troubleshoot | DEPLOY_CHECKLIST_MASTER §Common Errors |

@@ -18,6 +18,10 @@ function seedGoldenDataset() {
   };
 
   try {
+    if (typeof seedUserDirectory === 'function') {
+      var udSeed = seedUserDirectory({ sampleMode: true });
+      result.data.userDirectory = { sampleCreated: udSeed.data ? udSeed.data.sampleCreated : 0 };
+    }
     _seedHoSo(result);
     _seedTasks(result);
     _seedFinance(result);
@@ -77,6 +81,9 @@ function _seedTasks(result) {
     { code: SAMPLE_PREFIX + 'TK002', title: 'Xác nhận giao dịch tháng', priority: 'MEDIUM' }
   ];
 
+  var activeUsers = typeof getActiveUsers === 'function' ? getActiveUsers() : [];
+  var ownerId = activeUsers.length > 0 ? activeUsers[0].id : cbvUser();
+
   specs.forEach(function(s) {
     if (exists(s.code)) {
       result.data.tasks.skipped++;
@@ -84,7 +91,7 @@ function _seedTasks(result) {
     }
     var res = createTask({
       TITLE: s.title,
-      OWNER_ID: cbvUser(),
+      OWNER_ID: ownerId,
       PRIORITY: s.priority,
       TASK_CODE: s.code
     });

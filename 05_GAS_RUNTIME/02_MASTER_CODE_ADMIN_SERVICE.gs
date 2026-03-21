@@ -5,7 +5,7 @@
  */
 
 /** Allowed columns for admin patch (when ALLOW_EDIT=TRUE, !IS_SYSTEM) */
-var ADMIN_MASTER_CODE_PATCH_COLUMNS = ['NAME', 'DISPLAY_TEXT', 'SHORT_NAME', 'NOTE', 'SORT_ORDER'];
+var ADMIN_MASTER_CODE_PATCH_COLUMNS = ['NAME', 'DISPLAY_TEXT', 'SHORT_NAME', 'PARENT_CODE', 'NOTE', 'SORT_ORDER'];
 
 /**
  * @param {string} id
@@ -58,6 +58,9 @@ function adminCreateMasterCodeRow(data) {
 
   var status = data.STATUS != null ? String(data.STATUS).trim() : 'ACTIVE';
   assertValidEnumValue('MASTER_CODE_STATUS', status, 'STATUS');
+  if (group === 'USER' && data.PARENT_CODE != null && String(data.PARENT_CODE).trim() !== '') {
+    assertValidEnumValue('ROLE', String(data.PARENT_CODE).trim(), 'PARENT_CODE (role)');
+  }
 
   var now = cbvNow();
   var user = cbvUser();
@@ -112,6 +115,9 @@ function adminUpdateMasterCodeRow(id, patch) {
   ADMIN_MASTER_CODE_PATCH_COLUMNS.forEach(function(col) {
     if (patch[col] !== undefined) allowed[col] = patch[col];
   });
+  if (allowed.PARENT_CODE != null && String(row.MASTER_GROUP || '').trim() === 'USER') {
+    assertValidEnumValue('ROLE', String(allowed.PARENT_CODE).trim(), 'PARENT_CODE (role)');
+  }
   if (Object.keys(allowed).length === 0) {
     return cbvResponse(true, 'MASTER_CODE_NO_CHANGE', 'No allowed columns to update', {});
   }

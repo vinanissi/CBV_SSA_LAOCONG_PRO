@@ -14,6 +14,13 @@ function ensurePositiveNumber(value, fieldName) {
   cbvAssert(Number(value) > 0, fieldName + ' must be > 0');
 }
 
+/** Max length for text fields. Prevents overflow and abuse. */
+function ensureMaxLength(value, maxLen, fieldName) {
+  if (value == null || value === '') return;
+  var s = String(value);
+  cbvAssert(s.length <= maxLen, fieldName + ' must be at most ' + maxLen + ' characters');
+}
+
 function ensureTaskCanComplete(taskId) {
   const items = _rows(_sheet(CBV_CONFIG.SHEETS.TASK_CHECKLIST))
     .filter(function(r) { return String(r.TASK_ID) === String(taskId); });

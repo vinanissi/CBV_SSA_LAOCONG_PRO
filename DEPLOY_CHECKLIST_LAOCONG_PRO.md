@@ -19,6 +19,7 @@ See **CBV_LAOCONG_PRO_REFERENCE.md** for consolidated structure and run order. S
 - [ ] Đã copy đủ file từ `05_GAS_RUNTIME` (hoặc clasp push)
 - [ ] Đã sửa `00_CORE_CONFIG.gs` — thêm ADMIN_EMAILS nếu dùng admin panel
 - [ ] Đã chạy `initAll()` — tạo sheets, seed enum, fill display
+- [ ] Đã chạy `protectSensitiveSheets()` — bảo vệ TASK_CHECKLIST, TASK_UPDATE_LOG, ENUM_DICTIONARY, MASTER_CODE
 - [ ] Đã chạy `installTriggers()` nếu dùng
 - [ ] Đã kiểm tra menu hệ thống xuất hiện
 - [ ] Đã chạy `auditEnumConsistency()`
@@ -36,6 +37,7 @@ See **CBV_LAOCONG_PRO_REFERENCE.md** for consolidated structure and run order. S
 - [ ] Slice đúng role
 - [ ] Actions không bypass service rule
 - [ ] Security filters đúng
+- [ ] **TASK workflow lock:** STATUS, PROGRESS_PERCENT, DONE_AT, IS_DONE, DONE_AT, DONE_BY, TASK_UPDATE_LOG = Editable OFF (xem 04_APPSHEET/APPSHEET_TASK_FIELD_POLICY.md, 02_MODULES/TASK_CENTER/TASK_SYSTEM_REFERENCE.md)
 
 ## E. Audit
 - [ ] Đã chạy `auditSystem()`

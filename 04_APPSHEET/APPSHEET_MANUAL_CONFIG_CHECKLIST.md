@@ -126,19 +126,34 @@ For each table, confirm in AppSheet: **Data → Tables**.
 
 - [ ] Table added (required for Valid_If)
 - [ ] Key: **ID**
-- [ ] Label: **ENUM_VALUE** or **ENUM_GROUP**
+- [ ] Label: **DISPLAY_TEXT** (primary; fallback ENUM_VALUE)
 
 ### 2.12 MASTER_CODE
 
-- [ ] Table added (if used)
+- [ ] Table added (required for user refs)
 - [ ] Key: **ID**
-- [ ] Label: **NAME** or **CODE**
+- [ ] Label: **DISPLAY_TEXT** (primary; run ensureDisplayTextForMasterCodeRows() if empty)
 
 ### 2.13 ADMIN_AUDIT_LOG
 
 - [ ] Table added (admin app only)
 - [ ] Key: **ID**
 - [ ] Label: **ACTION**
+
+---
+
+## PART 2.5 — SLICES (Data → Slices)
+
+Create slices before configuring Ref columns. See APPSHEET_SLICE_MAP.md.
+
+- [ ] **ACTIVE_USERS** — Source: MASTER_CODE; Filter: `AND([MASTER_GROUP] = "USER", [STATUS] = "ACTIVE", [IS_DELETED] = FALSE)`
+- [ ] **ACTIVE_MASTER_CODES** — Source: MASTER_CODE; Filter: `AND([STATUS] = "ACTIVE", [IS_DELETED] = FALSE)`
+- [ ] **ACTIVE_HTX** — Source: HO_SO_MASTER; Filter: `AND([HO_SO_TYPE] = "HTX", [IS_DELETED] = FALSE)`
+- [ ] **HO_SO_ACTIVE** — Source: HO_SO_MASTER; Filter: `[IS_DELETED] = FALSE`
+- [ ] **TASK_OPEN** — Source: TASK_MAIN; Filter: `IN([STATUS], LIST("NEW", "ASSIGNED", "IN_PROGRESS", "WAITING"))`
+- [ ] **TASK_DONE** — Source: TASK_MAIN; Filter: `[STATUS] = "DONE"`
+- [ ] **FIN_DRAFT** — Source: FINANCE_TRANSACTION; Filter: `[STATUS] = "NEW"`
+- [ ] **FIN_CONFIRMED** — Source: FINANCE_TRANSACTION; Filter: `[STATUS] = "CONFIRMED"`
 
 ---
 
@@ -156,8 +171,9 @@ For each table, go to **Data → Columns → [Table name]** and configure.
 - CODE → Text
 - NAME → Text
 - STATUS → Text (readonly)
-- HTX_ID → **Ref** → HO_SO_MASTER (Display: NAME; Filter: [HO_SO_TYPE] = "HTX")
-- OWNER_ID, PHONE, EMAIL, ID_NO, ADDRESS → Text
+- HTX_ID → **Ref** → ACTIVE_HTX slice (Display: NAME)
+- OWNER_ID → **Ref** → ACTIVE_USERS slice (Display: DISPLAY_TEXT); Allow other values: **No**
+- PHONE, EMAIL, ID_NO, ADDRESS → Text
 - START_DATE, END_DATE → Date
 - NOTE, TAGS → Text
 - CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY → leave default
@@ -220,16 +236,20 @@ For each table, go to **Data → Columns → [Table name]** and configure.
 - ID → Text (Key)
 - TASK_CODE, TITLE, DESCRIPTION, RESULT_NOTE → Text
 - TASK_TYPE, STATUS, PRIORITY, RELATED_ENTITY_TYPE → Text (enum; Valid_If later)
-- OWNER_ID, REPORTER_ID → Text
+- OWNER_ID → **Ref** → ACTIVE_USERS (Display: DISPLAY_TEXT); Allow other values: **No**
+- REPORTER_ID → **Ref** → ACTIVE_USERS (Display: DISPLAY_TEXT); Initial: `FIRST(SELECT(MASTER_CODE[ID], AND([MASTER_GROUP]="USER", [SHORT_NAME]=USEREMAIL())))`
 - RELATED_ENTITY_ID → Ref (polymorphic; or Text for Phase 1)
 - START_DATE, DUE_DATE → Date
 - DONE_AT → Date (readonly)
+- PROGRESS_PERCENT → Number (readonly; checklist-derived)
 - CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY → leave default
 - IS_DELETED → Yes/No
 
 **Step 3:** Hide: ID, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY, IS_DELETED
 
-**Step 4:** Editable? = FALSE: ID, STATUS, DONE_AT, CREATED_*, UPDATED_*
+**Step 4:** Editable? = FALSE: ID, STATUS, PROGRESS_PERCENT, DONE_AT, CREATED_*, UPDATED_*
+
+> **CRITICAL:** PROGRESS_PERCENT is controlled-readonly. Visible if needed; never manually editable. Source of truth: checklist-driven (syncTaskProgress). Editable_If = FALSE.
 
 ---
 
@@ -244,8 +264,8 @@ For each table, go to **Data → Columns → [Table name]** and configure.
 - SORT_ORDER → Number
 - TITLE, NOTE → Text
 - IS_REQUIRED, IS_DONE → Yes/No
-- DONE_AT → Date
-- DONE_BY → Text
+- DONE_AT → Date (readonly; GAS set)
+- DONE_BY → **Ref** → ACTIVE_USERS (Display: DISPLAY_TEXT); readonly; GAS set
 - CREATED_AT, CREATED_BY → leave default
 
 **Step 3:** Set TASK_ID → **IsPartOf** = **TRUE**
@@ -290,7 +310,7 @@ For each table, go to **Data → Columns → [Table name]** and configure.
 
 **Step 3:** Hide: ID, TASK_ID
 
-**Step 4:** Editable? = FALSE for ALL columns (read-only table)
+**Step 4:** Editable? = FALSE for ALL columns. Editable_If = FALSE. **Operationally read-only.** No add/edit/delete in AppSheet. Only GAS service writes.
 
 ---
 
@@ -307,8 +327,8 @@ For each table, go to **Data → Columns → [Table name]** and configure.
 - UNIT_ID → Text or Ref to MASTER_CODE
 - RELATED_ENTITY_ID → Text or Ref
 - EVIDENCE_URL → Text (legacy)
-- CONFIRMED_AT → Date
-- CONFIRMED_BY → Text
+- CONFIRMED_AT → Date (hidden; GAS set)
+- CONFIRMED_BY → **Ref** → ACTIVE_USERS (Display: DISPLAY_TEXT); hidden; GAS set
 - CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY → leave default
 - IS_DELETED → Yes/No
 

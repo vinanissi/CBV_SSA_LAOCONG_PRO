@@ -241,6 +241,66 @@ function ensureDisplayTextForMasterCodeRows() {
 }
 
 /**
+ * USER_DIRECTORY DISPLAY_NAME auto-generation (when empty):
+ * - FULL_NAME if present; else USER_CODE; else empty
+ */
+function _computeUserDirectoryDisplayName(fullName, userCode) {
+  var n = String(fullName || '').trim();
+  var c = String(userCode || '').trim();
+  return n || c || '';
+}
+
+/**
+ * Idempotent. Fills DISPLAY_NAME only when empty. Does not overwrite explicit values.
+ * @returns {Object} { ok, updated, skipped, errors }
+ */
+function ensureDisplayTextForUserDirectoryRows() {
+  var result = { ok: true, updated: 0, skipped: 0, errors: [] };
+  var sheet = SpreadsheetApp.getActive().getSheetByName(CBV_CONFIG.SHEETS.USER_DIRECTORY);
+  if (!sheet || sheet.getLastRow() < 2) return result;
+
+  var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  var nameIdx = headers.indexOf('FULL_NAME');
+  var codeIdx = headers.indexOf('USER_CODE');
+  var displayIdx = headers.indexOf('DISPLAY_NAME');
+  var updatedAtIdx = headers.indexOf('UPDATED_AT');
+  var updatedByIdx = headers.indexOf('UPDATED_BY');
+  if (nameIdx === -1 || codeIdx === -1 || displayIdx === -1) {
+    result.errors.push('USER_DIRECTORY missing required columns');
+    result.ok = false;
+    return result;
+  }
+
+  var now = typeof cbvNow === 'function' ? cbvNow() : new Date();
+  var user = typeof cbvUser === 'function' ? cbvUser() : 'system';
+  var lastRow = sheet.getLastRow();
+
+  for (var r = 2; r <= lastRow; r++) {
+    var row = sheet.getRange(r, 1, r, headers.length).getValues()[0];
+    var display = String(row[displayIdx] || '').trim();
+    if (display) {
+      result.skipped++;
+      continue;
+    }
+    var fullName = String(row[nameIdx] || '').trim();
+    var userCode = String(row[codeIdx] || '').trim();
+    var newDisplay = _computeUserDirectoryDisplayName(fullName, userCode);
+    if (!newDisplay) {
+      result.skipped++;
+      continue;
+    }
+    sheet.getRange(r, displayIdx + 1).setValue(newDisplay);
+    if (updatedAtIdx >= 0) sheet.getRange(r, updatedAtIdx + 1).setValue(now);
+    if (updatedByIdx >= 0) sheet.getRange(r, updatedByIdx + 1).setValue(user);
+    result.updated++;
+  }
+
+  if (result.updated > 0 && typeof clearUserCache === 'function') clearUserCache();
+  Logger.log('ensureDisplayTextForUserDirectoryRows: updated=' + result.updated + ', skipped=' + result.skipped);
+  return result;
+}
+
+/**
  * Clears display caches. Call after sheet edits.
  */
 function clearDisplayMappingCache() {

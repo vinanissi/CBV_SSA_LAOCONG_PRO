@@ -9,6 +9,8 @@ function createHoSo(data) {
   });
   cbvAssert(!existing, 'Duplicate CODE in HO_SO_TYPE');
 
+  if (data.OWNER_ID && typeof assertActiveUserId === 'function') assertActiveUserId(data.OWNER_ID, 'OWNER_ID');
+
   const record = {
     ID: cbvMakeId(data.HO_SO_TYPE === 'HTX' ? 'HTX' : data.HO_SO_TYPE === 'XA_VIEN' ? 'XV' : data.HO_SO_TYPE === 'XE' ? 'XE' : 'TX'),
     HO_SO_TYPE: data.HO_SO_TYPE,

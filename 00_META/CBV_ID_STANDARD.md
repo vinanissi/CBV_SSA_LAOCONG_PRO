@@ -5,6 +5,7 @@
 
 ## Prefix chuẩn
 - AAL (ADMIN_AUDIT_LOG)
+- UD (USER_DIRECTORY)
 - MC (MASTER_CODE)
 - HTX
 - XV

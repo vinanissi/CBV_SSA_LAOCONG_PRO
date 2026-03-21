@@ -1,0 +1,97 @@
+/**
+ * CBV Task Repository - Low-level sheet operations for TASK tables.
+ * No business logic. All mutations go through this layer or task_service.
+ * Dependencies: 00_CORE_CONFIG, 00_CORE_UTILS, 03_SHARED_REPOSITORY
+ */
+
+/**
+ * @param {string} taskId
+ * @returns {Object|null} Task row or null
+ */
+function taskFindById(taskId) {
+  return typeof _findById === 'function' ? _findById(CBV_CONFIG.SHEETS.TASK_MAIN, taskId) : null;
+}
+
+/**
+ * @param {string} taskId
+ * @returns {Object[]} Checklist items for task (non-deleted)
+ */
+function taskGetChecklistItems(taskId) {
+  var sheet = typeof _sheet === 'function' ? _sheet(CBV_CONFIG.SHEETS.TASK_CHECKLIST) : null;
+  if (!sheet) return [];
+  var rows = typeof _rows === 'function' ? _rows(sheet) : [];
+  return rows.filter(function(r) {
+    return String(r.TASK_ID) === String(taskId) && String(r.IS_DELETED) !== 'true' && r.IS_DELETED !== true;
+  });
+}
+
+/**
+ * @param {string} checklistId
+ * @returns {Object|null}
+ */
+function taskFindChecklistById(checklistId) {
+  var sheet = typeof _sheet === 'function' ? _sheet(CBV_CONFIG.SHEETS.TASK_CHECKLIST) : null;
+  if (!sheet) return null;
+  var rows = typeof _rows === 'function' ? _rows(sheet) : [];
+  return rows.find(function(r) { return String(r.ID) === String(checklistId); }) || null;
+}
+
+/**
+ * @param {string} htxId
+ * @returns {Object|null} HO_SO_MASTER row where HO_SO_TYPE=HTX
+ */
+function taskFindHtxById(htxId) {
+  var hoSo = typeof _findById === 'function' ? _findById(CBV_CONFIG.SHEETS.HO_SO_MASTER, htxId) : null;
+  if (!hoSo || String(hoSo.HO_SO_TYPE || '').trim() !== 'HTX') return null;
+  return hoSo;
+}
+
+/**
+ * Appends task record. Uses schema from 90_BOOTSTRAP_SCHEMA / schema_manifest.
+ * @param {Object} record
+ */
+function taskAppendMain(record) {
+  if (typeof _appendRecord === 'function') _appendRecord(CBV_CONFIG.SHEETS.TASK_MAIN, record);
+}
+
+/**
+ * Updates task row by row number.
+ * @param {number} rowNumber
+ * @param {Object} patch
+ */
+function taskUpdateMain(rowNumber, patch) {
+  if (typeof _updateRow === 'function') _updateRow(CBV_CONFIG.SHEETS.TASK_MAIN, rowNumber, patch);
+}
+
+/**
+ * Appends checklist record.
+ * @param {Object} record
+ */
+function taskAppendChecklist(record) {
+  if (typeof _appendRecord === 'function') _appendRecord(CBV_CONFIG.SHEETS.TASK_CHECKLIST, record);
+}
+
+/**
+ * Updates checklist row.
+ * @param {number} rowNumber
+ * @param {Object} patch
+ */
+function taskUpdateChecklist(rowNumber, patch) {
+  if (typeof _updateRow === 'function') _updateRow(CBV_CONFIG.SHEETS.TASK_CHECKLIST, rowNumber, patch);
+}
+
+/**
+ * Appends attachment record.
+ * @param {Object} record
+ */
+function taskAppendAttachment(record) {
+  if (typeof _appendRecord === 'function') _appendRecord(CBV_CONFIG.SHEETS.TASK_ATTACHMENT, record);
+}
+
+/**
+ * Appends update log record.
+ * @param {Object} record
+ */
+function taskAppendUpdateLog(record) {
+  if (typeof _appendRecord === 'function') _appendRecord(CBV_CONFIG.SHEETS.TASK_UPDATE_LOG, record);
+}

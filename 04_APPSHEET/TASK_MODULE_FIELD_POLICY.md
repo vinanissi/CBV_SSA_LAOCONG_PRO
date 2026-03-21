@@ -67,3 +67,18 @@
 | TASK_CHECKLIST | ID, TASK_ID, IS_DONE, DONE_AT, DONE_BY, CREATED_* = HIDDEN_READONLY or VISIBLE_READONLY |
 | TASK_ATTACHMENT | ID, CREATED_* = HIDDEN_READONLY; ATTACHMENT_TYPE required |
 | TASK_UPDATE_LOG | All columns VISIBLE_READONLY (GAS only) |
+
+---
+
+## 5. Bypass Risk — Fields That Must NOT Be Editable
+
+| Field | If Editable | Risk |
+|-------|-------------|------|
+| STATUS | User sets DONE without checklist | **CRITICAL** — workflow bypass |
+| PROGRESS_PERCENT | User overrides checklist-derived value | **CRITICAL** |
+| DONE_AT (TASK_MAIN) | Falsify completion time | **CRITICAL** |
+| IS_DONE (TASK_CHECKLIST) | Mark done without service | **CRITICAL** |
+| DONE_AT, DONE_BY (TASK_CHECKLIST) | Falsify actor/time | **CRITICAL** |
+| TASK_UPDATE_LOG (any) | Corrupt audit trail | **CRITICAL** |
+
+**See:** APPSHEET_TASK_POLICY.md for full checklist and deployment verification.

@@ -1,0 +1,7 @@
+ACTION_NAME,SHOW_IF,POSITION,COLOR,ICON,LABEL,GAS_FUNCTION,NOTES
+TASK_ASSIGN,[STATUS] = "NEW",1,Blue,👑,Giao task,assignTask(taskId ownerId),NEW→ASSIGNED; assign owner
+TASK_START,[STATUS] = "ASSIGNED",2,Green,▶️,Bắt đầu làm,setTaskStatus(taskId "IN_PROGRESS" ""),ASSIGNED→IN_PROGRESS
+TASK_WAIT,[STATUS] = "IN_PROGRESS",3,Orange,⏸️,Tạm chờ,setTaskStatus(taskId "WAITING" ""),IN_PROGRESS→WAITING
+TASK_RESUME,[STATUS] = "WAITING",4,Green,▶️,Tiếp tục,setTaskStatus(taskId "IN_PROGRESS" ""),WAITING→IN_PROGRESS
+TASK_DONE,"AND([STATUS] = ""IN_PROGRESS"", COUNT(SELECT(TASK_CHECKLIST[ID], AND([TASK_ID] = [_THISROW].[ID], [IS_REQUIRED] = TRUE, [IS_DONE] <> TRUE))) = 0)",5,Green,✅,Hoàn thành,completeTask(taskId note),IN_PROGRESS→DONE; checklist required done
+TASK_CANCEL,"IN([STATUS], LIST(""NEW"", ""ASSIGNED"", ""IN_PROGRESS"", ""WAITING""))",6,Red,❌,Hủy,setTaskStatus(taskId ""CANCELLED"" ""),No action on DONE/CANCELLED

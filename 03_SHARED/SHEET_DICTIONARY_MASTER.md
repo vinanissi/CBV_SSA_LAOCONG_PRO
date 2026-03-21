@@ -1,5 +1,25 @@
 # SHEET DICTIONARY MASTER
 
+## USER_DIRECTORY
+- ID: key (UD_YYYYMMDD_xxxxx)
+- USER_CODE: text unique
+- FULL_NAME: text canonical human name
+- DISPLAY_NAME: text optional UI override
+- EMAIL: text main login / identity reference
+- PHONE: text optional
+- ROLE: enum ADMIN | OPERATOR | VIEWER
+- POSITION: text optional job title
+- HTX_ID: ref HO_SO_MASTER (when user belongs to HTX)
+- STATUS: enum ACTIVE | INACTIVE | ARCHIVED
+- IS_SYSTEM: yes/no
+- ALLOW_LOGIN: yes/no
+- NOTE: long text
+- CREATED_AT: datetime
+- CREATED_BY: text
+- UPDATED_AT: datetime
+- UPDATED_BY: text
+- IS_DELETED: yes/no
+
 ## MASTER_CODE
 - ID: key
 - MASTER_GROUP: text (family: PROVINCE, DISTRICT, etc.)
@@ -26,7 +46,7 @@
 - NAME: text
 - STATUS: enum HO_SO_STATUS
 - HTX_ID: ref HO_SO_MASTER
-- OWNER_ID: text
+- OWNER_ID: ref USER_DIRECTORY
 - PHONE: phone text
 - EMAIL: email text
 - ID_NO: text
@@ -49,8 +69,8 @@
 - TASK_TYPE: enum TASK_TYPE
 - STATUS: enum TASK_STATUS
 - PRIORITY: enum PRIORITY
-- OWNER_ID: text
-- REPORTER_ID: text
+- OWNER_ID: ref USER_DIRECTORY
+- REPORTER_ID: ref USER_DIRECTORY
 - RELATED_ENTITY_TYPE: text
 - RELATED_ENTITY_ID: text
 - START_DATE: datetime
@@ -80,7 +100,7 @@
 - DESCRIPTION: long text
 - EVIDENCE_URL: url
 - CONFIRMED_AT: datetime
-- CONFIRMED_BY: text
+- CONFIRMED_BY: ref USER_DIRECTORY
 - CREATED_AT: datetime
 - CREATED_BY: text
 - UPDATED_AT: datetime

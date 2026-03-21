@@ -1,90 +1,57 @@
 /**
- * CBV AppSheet Readiness Verification - Tables, keys, enums, refs.
+ * CBV AppSheet Readiness Verification - Uses audit results.
+ * Evaluates: duplicate headers, blank headers, missing keys, duplicate keys,
+ * missing display columns, ref integrity, enum consistency, orphan rows.
  */
 function verifyAppSheetReadiness() {
+  var audit = selfAuditBootstrap({ writeHealthLog: false });
+  var auditReport = audit.auditReport || {};
+  var appsheetReady = auditReport.appsheetReady !== false;
+  var mustFixNow = auditReport.mustFixNow || [];
+  var warnings = auditReport.warnings || [];
+  var findings = auditReport.findings || [];
+
+  var blockers = findings.filter(function(f) {
+    return f && (f.severity === 'CRITICAL' || f.severity === 'HIGH') && (
+      (f.issue_code && f.issue_code.indexOf('SCHEMA_') === 0) ||
+      f.issue_code === 'SCHEMA_DUPLICATE_HEADER' ||
+      f.issue_code === 'SCHEMA_BLANK_HEADER' ||
+      f.issue_code === 'DATA_DUPLICATE_KEY' ||
+      f.issue_code === 'REF_ORPHAN' ||
+      f.issue_code === 'APPSHEET_NOT_READY' ||
+      f.issue_code === 'ENUM_DUPLICATE_VALUE' ||
+      f.issue_code === 'ENUM_MISSING_GROUP' ||
+      f.issue_code === 'ENUM_INVALID_USAGE'
+    );
+  }).map(function(f) { return (f.issue_code || '') + ': ' + (f.message || ''); });
+
+  var reasons = mustFixNow.concat(warnings);
+  var status = blockers.length > 0 ? 'FAIL' : (reasons.length > 0 ? 'WARN' : 'PASS');
+
   var result = {
-    ok: true,
-    code: 'APPSHEET_READY',
-    message: 'AppSheet readiness verified',
+    ok: appsheetReady,
+    code: appsheetReady ? 'APPSHEET_READY' : 'APPSHEET_NOT_READY',
+    message: appsheetReady ? 'AppSheet readiness verified' : 'AppSheet not ready: ' + (blockers[0] || 'review audit'),
     data: {
-      tablesExist: [],
-      tablesMissing: [],
-      keyChecks: [],
-      enumCoverage: [],
-      refCandidates: [],
-      warnings: []
+      tablesExist: getRequiredSheetNames().filter(function(n) {
+        return SpreadsheetApp.getActive().getSheetByName(n) !== null;
+      }),
+      tablesMissing: getRequiredSheetNames().filter(function(n) {
+        return SpreadsheetApp.getActive().getSheetByName(n) === null;
+      }),
+      appsheetReady: appsheetReady,
+      status: status,
+      blockers: blockers,
+      reasons: reasons,
+      auditReport: auditReport
     },
-    errors: []
+    errors: blockers,
+    appsheetReady: appsheetReady,
+    status: status,
+    blockers: blockers,
+    reasons: reasons
   };
 
-  var audit = selfAuditBootstrap();
-  if (!audit.ok) {
-    result.ok = false;
-    result.data.warnings.push('Bootstrap audit failed - run initAll() first');
-    result.errors = result.errors.concat(audit.errors || []);
-  }
-
-  var required = getRequiredSheetNames();
-  var ss = SpreadsheetApp.getActive();
-  var existing = ss.getSheets().map(function(s) { return s.getName(); });
-
-  required.forEach(function(name) {
-    if (existing.indexOf(name) !== -1) {
-      result.data.tablesExist.push(name);
-    } else {
-      result.data.tablesMissing.push(name);
-      result.ok = false;
-    }
-  });
-
-  var keyLabels = {
-    HO_SO_MASTER: { key: 'ID', label: 'NAME' },
-    HO_SO_FILE: { key: 'ID', label: 'FILE_NAME' },
-    HO_SO_RELATION: { key: 'ID', label: 'RELATION_TYPE' },
-    TASK_MAIN: { key: 'ID', label: 'TITLE' },
-    TASK_CHECKLIST: { key: 'ID', label: 'TITLE' },
-    TASK_UPDATE_LOG: { key: 'ID', label: 'ACTION' },
-    TASK_ATTACHMENT: { key: 'ID', label: 'TITLE' },
-    FINANCE_ATTACHMENT: { key: 'ID', label: 'TITLE' },
-    FINANCE_TRANSACTION: { key: 'ID', label: 'TRANS_CODE' },
-    FINANCE_LOG: { key: 'ID', label: 'ACTION' }
-  };
-
-  result.data.tablesExist.forEach(function(name) {
-    var sheet = ss.getSheetByName(name);
-    var headers = sheet.getLastColumn() > 0 ? sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0] : [];
-    var spec = keyLabels[name];
-    if (spec) {
-      var hasKey = headers.indexOf(spec.key) !== -1;
-      var hasLabel = headers.indexOf(spec.label) !== -1;
-      result.data.keyChecks.push({ table: name, key: spec.key, hasKey: hasKey, label: spec.label, hasLabel: hasLabel });
-      if (!hasKey || !hasLabel) result.ok = false;
-    }
-  });
-
-  var hoSoTypeVals = typeof getActiveEnumValues === 'function' ? getActiveEnumValues('HO_SO_TYPE') : [];
-  var taskStatusVals = typeof getActiveEnumValues === 'function' ? getActiveEnumValues('TASK_STATUS') : [];
-  var finStatusVals = typeof getActiveEnumValues === 'function' ? getActiveEnumValues('FINANCE_STATUS') : [];
-  result.data.enumCoverage = [
-    { field: 'HO_SO_TYPE', values: hoSoTypeVals ? hoSoTypeVals.length : 0 },
-    { field: 'TASK_STATUS', values: taskStatusVals ? taskStatusVals.length : 0 },
-    { field: 'FINANCE_STATUS', values: finStatusVals ? finStatusVals.length : 0 }
-  ];
-
-  result.data.refCandidates = [
-    { table: 'HO_SO_MASTER', ref: 'HTX_ID' },
-    { table: 'HO_SO_FILE', ref: 'HO_SO_ID' },
-    { table: 'TASK_CHECKLIST', ref: 'TASK_ID' },
-    { table: 'TASK_ATTACHMENT', ref: 'TASK_ID' },
-    { table: 'FINANCE_ATTACHMENT', ref: 'FINANCE_ID' },
-    { table: 'FINANCE_LOG', ref: 'FIN_ID' }
-  ];
-
-  if (result.data.tablesMissing.length > 0) {
-    result.code = 'APPSHEET_NOT_READY';
-    result.message = 'Missing tables: ' + result.data.tablesMissing.join(', ');
-  }
-
-  Logger.log('verifyAppSheetReadiness: ' + JSON.stringify(result, null, 2));
+  Logger.log('verifyAppSheetReadiness: status=' + status + ', appsheetReady=' + appsheetReady);
   return result;
 }

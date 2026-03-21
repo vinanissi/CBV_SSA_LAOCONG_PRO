@@ -63,6 +63,7 @@ function assertValidMasterCode(masterGroup, code, fieldName) {
  */
 function clearMasterCodeCache() {
   _masterCodeCache = null;
+  if (typeof clearUserCache === 'function') clearUserCache();
 }
 
 /**

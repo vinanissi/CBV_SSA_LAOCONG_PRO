@@ -2,6 +2,8 @@
 
 Complete view plan for Phase 1 manual AppSheet configuration. Aligned with CBV rules, field policy, and attachment architecture.
 
+**Enforcement:** Label=DISPLAY_TEXT for Ref; workflow fields readonly; log tables readonly; system fields hidden.
+
 ---
 
 ## PART 1 — TABLES DISCOVERED
@@ -113,7 +115,7 @@ Complete view plan for Phase 1 manual AppSheet configuration. Aligned with CBV r
 |------|------|---------|
 | HO_SO_DASHBOARD | Dashboard | Optional; link to HO_SO_LIST |
 | TASK_DASHBOARD | Dashboard | Optional; link to TASK_LIST, TASK_INBOX |
-| TASK_INBOX | Table | My open tasks (OWNER_ID = USEREMAIL) |
+| TASK_INBOX | Table | My open tasks; filter: [OWNER_ID] = FIRST(SELECT(USER_DIRECTORY[ID], AND([STATUS]="ACTIVE", LOWER([EMAIL])=LOWER(USEREMAIL())))) |
 | TASK_MY_OPEN | Table | Alias or variant of TASK_INBOX |
 | FIN_DASHBOARD | Dashboard | Optional; link to FINANCE_LIST |
 | FIN_CONFIRM_QUEUE | Table | Pending confirmation (STATUS = "NEW") |
@@ -188,6 +190,8 @@ See APPSHEET_DETAIL_VIEWS.md and APPSHEET_FORM_VIEWS.md for full specs.
 
 ID, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY, IS_DELETED, BEFORE_JSON, AFTER_JSON, CONFIRMED_AT, CONFIRMED_BY, DRIVE_FILE_ID
 
+**Ref display:** OWNER_ID, REPORTER_ID, DONE_BY, CONFIRMED_BY, HTX_ID → display DISPLAY_TEXT or NAME; never raw ID.
+
 ### Always Readonly
 
 - STATUS (all tables) — GAS action only
@@ -242,8 +246,25 @@ See PART 11 and APPSHEET_FIELD_POLICY_MAP.md.
 - HO_SO_RELATION dual ref; inline filter uses OR
 - RELATION_TYPE no enum; free text
 
-### 8. Final Statement
+### 8. TASK FORM / DETAIL / INLINE UX RULES
+
+**TASK_FORM visible fields:** TITLE, DESCRIPTION, TASK_TYPE, PRIORITY, OWNER_ID, REPORTER_ID, RELATED_ENTITY_TYPE, RELATED_ENTITY_ID, START_DATE, DUE_DATE, NOTE.
+
+**TASK_FORM hidden/readonly:** ID, TASK_CODE, STATUS, DONE_AT, PROGRESS_PERCENT, RESULT_NOTE, CREATED_*, UPDATED_*, IS_DELETED.
+
+**TASK_DETAIL inline sections:**
+- TASK_CHECKLIST_INLINE: editable add; IS_DONE via GAS action only
+- TASK_ATTACHMENT_INLINE: upload via child form; parent TASK_ID auto-linked
+- TASK_LOG_INLINE: **readonly**; no Add; GAS creates rows
+
+**FINANCE_DETAIL inline sections:**
+- FIN_ATTACHMENT_INLINE: editable add
+- FIN_LOG_INLINE: **readonly**; no Add; GAS creates rows
+
+**Log tables:** TASK_UPDATE_LOG, FINANCE_LOG, ADMIN_AUDIT_LOG — no Add/Edit/Delete in normal UX.
+
+### 9. Final Statement
 
 **VIEW ARCHITECTURE SAFE**
 
-Ready for manual AppSheet configuration. All tables identified. Parent-child confirmed. Detail, form, and inline views defined. Field policy aligned. No schema mismatches blocking configuration.
+Ready for manual AppSheet configuration. All tables identified. Parent-child confirmed. Detail, form, and inline views defined. Field policy aligned. Ref display = DISPLAY_TEXT. Log tables readonly.

@@ -26,6 +26,7 @@ Behavior, schema, GAS/AppSheet mapping, enum/master-code layers, and admin gover
 ├── 01_ENUM_SEED.gs           # seedEnumDictionary()
 ├── 01_ENUM_AUDIT.gs          # auditEnumConsistency()
 ├── 02_MASTER_CODE_SERVICE.gs # getMasterCodes, assertValidMasterCode
+├── 02_USER_SERVICE.gs        # getActiveUsers, getUserByEmail, getUserDisplay, assertValidUserId, mapCurrentUserEmailToInternalId
 ├── 03_SHARED_REPOSITORY.gs   # _sheet, _rows, _findById, _appendRecord, _updateRow
 ├── 03_SHARED_VALIDATION.gs   # ensureRequired, ensureEnum, ensureTransition
 ├── 03_SHARED_LOGGER.gs       # logAdminAudit, logAction
@@ -33,27 +34,41 @@ Behavior, schema, GAS/AppSheet mapping, enum/master-code layers, and admin gover
 ├── 02_MASTER_CODE_ADMIN_SERVICE.gs # adminCreateMasterCodeRow, adminUpdateMasterCodeRow, adminSetMasterCodeStatus
 ├── 03_ADMIN_AUDIT_SERVICE.gs # logAdminAction (alias)
 ├── 10_HOSO_SERVICE.gs
-├── 20_TASK_SERVICE.gs
+├── task_repository.gs      # TASK low-level
+├── task_validation.gs      # TASK guards
+├── task_service.gs         # TASK public API
+├── task_migration_helper.gs
+├── 20_TASK_SERVICE.gs      # Stub; impl in task_service.gs
 ├── 30_FINANCE_SERVICE.gs
 ├── 40_DISPLAY_MAPPING_SERVICE.gs # getEnumDisplay, getMasterCodeDisplay, ensureDisplayText*
 ├── 50_APPSHEET_VERIFY.gs
 ├── 90_BOOTSTRAP_SCHEMA.gs    # CBV_SCHEMA_MANIFEST, getRequiredSheetNames
 ├── 90_BOOTSTRAP_INIT.gs      # initAll(), initCoreSheets()
+├── task_bootstrap.gs         # taskBootstrapSheets()
 ├── 90_BOOTSTRAP_AUDIT.gs     # selfAuditBootstrap(), auditSystem()
 ├── 90_BOOTSTRAP_MENU.gs
 ├── 90_BOOTSTRAP_TRIGGER.gs
 ├── 90_BOOTSTRAP_INSTALL.gs
+├── task_test.gs              # runTaskTests()
 └── 99_DEBUG_*.gs             # test_hoso, test_task, test_finance, test_runner, sample_data
+
+02_MODULES/TASK_CENTER/
+├── TASK_SYSTEM_REFERENCE.md   # Single entry point; schema, GAS, AppSheet, deployment
+├── DATA_MODEL.md
+├── BUSINESS_SPEC.md
+└── ...
 
 03_SHARED/
 ├── ENUM_DICTIONARY_STANDARD.md
 ├── ENUM_DICTIONARY.md
 ├── MASTER_CODE_STANDARD.md
+├── USER_SYSTEM_ARCHITECTURE.md
 └── SHEET_DICTIONARY_MASTER.md
 
 04_APPSHEET/
 ├── APPSHEET_ENUM_BINDING.md
 ├── APPSHEET_MASTER_CODE_BINDING.md
+├── APPSHEET_USER_BINDING.md
 ├── APPSHEET_DISPLAY_MAPPING.md
 ├── ADMIN_PANEL_DATA_MODEL.md
 ├── APPSHEET_ADMIN_PANEL.md
@@ -69,6 +84,7 @@ Behavior, schema, GAS/AppSheet mapping, enum/master-code layers, and admin gover
 ├── ENUM_SYNC_AUDIT.md
 ├── MAPPING_AUDIT.md
 ├── DISPLAY_MAPPING_AUDIT.md
+├── USER_SYSTEM_AUDIT.md
 └── ADMIN_GOVERNANCE_AUDIT.md
 ```
 
@@ -112,6 +128,19 @@ Behavior, schema, GAS/AppSheet mapping, enum/master-code layers, and admin gover
 | assertValidMasterCode(masterGroup, code, fieldName) | Throw if invalid |
 | getMasterCodeDisplay(masterGroup, code) | Display string for UI |
 
+### User Layer (MASTER_GROUP=USER)
+| Function | Purpose |
+|----------|---------|
+| getActiveUsers() | Active USER rows from MASTER_CODE |
+| getUserByEmail(email) | Lookup by email (SHORT_NAME) |
+| getUserById(userId) | Lookup by ID, CODE, or email |
+| getUserDisplay(userId) | Display name |
+| getUserRole(userId) | Role (ADMIN\|OPERATOR\|VIEWER) |
+| assertValidUserId(userId, fieldName) | Throw if invalid user |
+| assertRoleAllowed(userId, requiredRoleOrList) | Throw if role not allowed |
+| mapCurrentUserEmailToInternalId() | Current user → MASTER_CODE.ID |
+| clearUserCache() | Clear user cache (called by clearMasterCodeCache) |
+
 ### Admin Panel (ADMIN only; requires ADMIN_EMAILS)
 | Function | Purpose |
 |----------|---------|
@@ -123,6 +152,21 @@ Behavior, schema, GAS/AppSheet mapping, enum/master-code layers, and admin gover
 | adminSetMasterCodeStatus(id, status) | Set STATUS; !IS_SYSTEM, ALLOW_EDIT |
 | logAdminAudit(...) | Append to ADMIN_AUDIT_LOG (internal) |
 | logAdminAction(...) | Alias for logAdminAudit |
+
+### Task Layer (see 02_MODULES/TASK_CENTER/TASK_SYSTEM_REFERENCE.md)
+| Function | Purpose |
+|----------|---------|
+| createTask(data) | Create task; HTX_ID, OWNER_ID, TITLE, PRIORITY required |
+| updateTask(id, patch) | Update; blocks STATUS, DONE_AT, PROGRESS_PERCENT |
+| assignTask(taskId, ownerId) | Assign owner; NEW→ASSIGNED |
+| setTaskStatus(taskId, newStatus, note) | Status transition |
+| completeTask(taskId, resultSummary) | IN_PROGRESS→DONE |
+| cancelTask(taskId, note) | →CANCELLED |
+| addChecklistItem(data) | Add checklist item |
+| markChecklistDone(checklistId, note) | Mark done; sync progress |
+| addTaskAttachment(data) | Add attachment |
+| addTaskUpdateLog(data) | Add log (NOTE, QUESTION, ANSWER) |
+| runTaskTests() | Validate task workflow |
 
 ### Audit
 | Function | Purpose |
@@ -163,11 +207,18 @@ Behavior, schema, GAS/AppSheet mapping, enum/master-code layers, and admin gover
 
 | Topic | File |
 |-------|------|
+| **Task system (consolidated)** | **02_MODULES/TASK_CENTER/TASK_SYSTEM_REFERENCE.md** |
+| Task schema | 06_DATABASE/TASK_SCHEMA.md |
+| Task field policy | 04_APPSHEET/APPSHEET_TASK_FIELD_POLICY.md |
+| Task action rules | 04_APPSHEET/APPSHEET_TASK_ACTION_RULES.md |
 | Enum standard | 03_SHARED/ENUM_DICTIONARY_STANDARD.md |
 | Master code standard | 03_SHARED/MASTER_CODE_STANDARD.md |
 | Enum binding (AppSheet) | 04_APPSHEET/APPSHEET_ENUM_BINDING.md |
 | Master code binding | 04_APPSHEET/APPSHEET_MASTER_CODE_BINDING.md |
+| User binding (AppSheet) | 04_APPSHEET/APPSHEET_USER_BINDING.md |
 | Display mapping | 04_APPSHEET/APPSHEET_DISPLAY_MAPPING.md |
+| User system architecture | 03_SHARED/USER_SYSTEM_ARCHITECTURE.md |
+| User/role/permission spec | 05_GAS_RUNTIME/USER_ROLE_PERMISSION_SPEC.md |
 | GAS bootstrap | 05_GAS_RUNTIME/GAS_BOOTSTRAP_SPEC_LAOCONG_PRO.md |
 | Clasp push order | 05_GAS_RUNTIME/CLASP_PUSH_ORDER.md |
 | Admin governance | 00_META/CBV_ADMIN_GOVERNANCE_STANDARD.md |

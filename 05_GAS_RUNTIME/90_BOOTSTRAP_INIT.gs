@@ -2,6 +2,8 @@
  * CBV Bootstrap - Idempotent schema initialization.
  * Uses 06_DATABASE/schema_manifest as source of truth.
  * Never clears business data. Never overwrites existing valid rows.
+ *
+ * initAll(options) - Full bootstrap with audit-first, optional safe append.
  */
 
 /**
@@ -20,9 +22,6 @@ function ensureSheetExists(name) {
 /**
  * Compares current headers to expected. Reports match, mismatch, or safe-to-extend.
  * Does NOT modify headers. Only reports.
- * @param {GoogleAppsScript.Spreadsheet.Sheet} sheet
- * @param {string[]} expectedHeaders
- * @returns {{ match: boolean, currentHeaders: string[], expectedHeaders: string[], mismatchReason?: string, canExtend?: boolean }}
  */
 function ensureHeadersMatchOrReport(sheet, expectedHeaders) {
   const lastCol = sheet.getLastColumn();
@@ -79,20 +78,17 @@ function ensureHeadersMatchOrReport(sheet, expectedHeaders) {
 
 /**
  * Writes headers to row 1. Only used when sheet is empty or safe to extend.
- * @param {GoogleAppsScript.Spreadsheet.Sheet} sheet
- * @param {string[]} headers
  */
 function _writeHeaders(sheet, headers) {
   sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
 }
 
 /**
- * Initializes all core business sheets with correct headers.
- * Idempotent: creates missing sheets, sets headers only when empty or safely extendable.
- * Reports mismatches without destructive fix.
- * @returns {Object} Structured bootstrap result
+ * Ensures core business sheets exist with correct headers.
+ * Idempotent: creates missing sheets, sets headers when empty or safely extendable.
+ * @returns {Object} Structured result
  */
-function initCoreSheets() {
+function ensureCoreSheetsExist() {
   const result = buildStructuredBootstrapReport();
   const sheetNames = getRequiredSheetNames();
 
@@ -124,21 +120,17 @@ function initCoreSheets() {
 
   result.ok = result.data.mismatchedSheets.length === 0;
   result.code = result.ok ? 'INIT_OK' : 'INIT_MISMATCH';
-  result.message = result.ok
-    ? 'Core sheets initialized'
-    : 'Initialized with header mismatches - review required';
-
-  Logger.log(JSON.stringify(result, null, 2));
+  result.message = result.ok ? 'Core sheets initialized' : 'Initialized with header mismatches - review required';
   return result;
+}
+
+/** @deprecated Use ensureCoreSheetsExist */
+function initCoreSheets() {
+  return ensureCoreSheetsExist();
 }
 
 /**
  * Ensures enum reference rows exist in an enum sheet. No duplicates.
- * No enum sheets in schema - initEnumData returns skipped.
- * @param {GoogleAppsScript.Spreadsheet.Sheet} sheet
- * @param {string} keyColumn - Column name for dedup (e.g. VALUE)
- * @param {Array<Object>} rows - Rows to ensure exist
- * @returns {{ added: number, skipped: number }}
  */
 function ensureEnumRows(sheet, keyColumn, rows) {
   const lastCol = sheet.getLastColumn();
@@ -163,60 +155,134 @@ function ensureEnumRows(sheet, keyColumn, rows) {
 }
 
 /**
- * Ensures enum reference rows exist. No enum sheets in schema - returns skipped.
- * @returns {Object} Structured result
+ * Ensures enum data. Seeds ENUM_DICTIONARY, fills DISPLAY_TEXT.
+ * Runs enum health check and includes summary in result.
  */
+function ensureEnums() {
+  initEnumData();
+  var enumSeedResult = typeof seedEnumDictionary === 'function' ? seedEnumDictionary() : null;
+  if (enumSeedResult && enumSeedResult.data && enumSeedResult.data.warnings) {
+    return { warnings: enumSeedResult.data.warnings };
+  }
+  if (typeof ensureDisplayTextForEnumRows === 'function') {
+    var r = ensureDisplayTextForEnumRows();
+    if (r && r.updated > 0) return { warnings: ['Filled ' + r.updated + ' empty DISPLAY_TEXT in ENUM_DICTIONARY'] };
+  }
+  var enumHealth = typeof enumHealthCheck === 'function' ? enumHealthCheck({}) : null;
+  if (enumHealth && !enumHealth.ok) {
+    return {
+      warnings: ['Enum health: ' + (enumHealth.status || 'WARN')],
+      enumHealth: { status: enumHealth.status, enumRegistryValid: enumHealth.enumRegistryValid, enumUsageValid: enumHealth.enumUsageValid }
+    };
+  }
+  return enumHealth ? { enumHealth: { status: enumHealth.status } } : {};
+}
+
 function initEnumData() {
   return cbvResponse(true, 'INIT_SKIPPED', 'No enum sheets defined in schema', { skipped: true }, []);
 }
 
 /**
- * Ensures system config placeholders. Config is in 00_CORE_CONFIG.gs - returns skipped.
- * @returns {Object} Structured result
+ * Ensures master code display text. No structural changes.
  */
+function ensureMasterCode() {
+  if (typeof ensureDisplayTextForMasterCodeRows === 'function') {
+    var r = ensureDisplayTextForMasterCodeRows();
+    if (r && r.updated > 0) return { warnings: ['Filled ' + r.updated + ' empty DISPLAY_TEXT in MASTER_CODE'] };
+  }
+  return {};
+}
+
 function initSystemConfig() {
   return cbvResponse(true, 'INIT_SKIPPED', 'Config in code - no config sheet', { skipped: true }, []);
 }
 
 /**
- * Full bootstrap: sheets, headers, menus (via onOpen), audit helpers.
- * Does NOT install triggers - use installTriggers() separately.
- * @returns {Object} Structured bootstrap result
+ * Full bootstrap: sheets, schema, enums, audit, verify.
+ * @param {Object} options - { appendMissingColumns, writeHealthLog, failOnCritical, verbose }
+ * @returns {Object} Structured result
  */
-function initAll() {
-  const report = buildStructuredBootstrapReport();
-  const sheetResult = initCoreSheets();
+function initAll(options) {
+  var opts = mergeBootstrapOptions(options);
+  var enumWarnings = [];
+  var schemaResult = { schemaUpdated: false, appendedColumns: [], findings: [] };
 
-  report.data.createdSheets = sheetResult.data.createdSheets || [];
-  report.data.existingSheets = sheetResult.data.existingSheets || [];
-  report.data.updatedSheets = sheetResult.data.updatedSheets || [];
-  report.data.mismatchedSheets = sheetResult.data.mismatchedSheets || [];
-  report.data.warnings = (report.data.warnings || []).concat(sheetResult.data.warnings || []);
-  report.errors = (report.errors || []).concat(sheetResult.errors || []);
+  if (opts.verbose) Logger.log('initAll: starting with options ' + JSON.stringify(opts));
 
-  initEnumData();
-  var enumSeedResult = typeof seedEnumDictionary === 'function' ? seedEnumDictionary() : null;
-  if (enumSeedResult && enumSeedResult.data && enumSeedResult.data.warnings) {
-    report.data.warnings = (report.data.warnings || []).concat(enumSeedResult.data.warnings);
+  var coreResult = ensureCoreSheetsExist();
+  if (!coreResult.ok) {
+    var errResult = buildBootstrapSummary({
+      auditReport: { bootstrapSafe: false, appsheetReady: false, systemHealth: 'FAIL', totals: {}, mustFixNow: coreResult.errors, warnings: [] },
+      schemaResult: schemaResult,
+      verifyResult: { status: 'FAIL', blockers: coreResult.errors, reasons: [] }
+    });
+    errResult.ok = false;
+    errResult.message = 'Core sheets failed: ' + (coreResult.errors || []).join('; ');
+    if (opts.verbose) Logger.log('initAll: ' + JSON.stringify(errResult, null, 2));
+    return errResult;
   }
-  if (typeof ensureDisplayTextForEnumRows === 'function') {
-    var enumDisplayResult = ensureDisplayTextForEnumRows();
-    if (enumDisplayResult && enumDisplayResult.updated > 0) {
-      report.data.warnings = (report.data.warnings || []).concat(['Filled ' + enumDisplayResult.updated + ' empty DISPLAY_TEXT in ENUM_DICTIONARY']);
-    }
+
+  schemaResult = ensureSchema({ appendMissingColumns: opts.appendMissingColumns });
+  if (schemaResult.findings && schemaResult.findings.length > 0 && opts.verbose) {
+    Logger.log('ensureSchema findings: ' + schemaResult.findings.join('; '));
   }
-  if (typeof ensureDisplayTextForMasterCodeRows === 'function') {
-    var mcDisplayResult = ensureDisplayTextForMasterCodeRows();
-    if (mcDisplayResult && mcDisplayResult.updated > 0) {
-      report.data.warnings = (report.data.warnings || []).concat(['Filled ' + mcDisplayResult.updated + ' empty DISPLAY_TEXT in MASTER_CODE']);
-    }
+
+  var enumResult = ensureEnums();
+  if (enumResult.warnings) enumWarnings = Array.isArray(enumResult.warnings) ? enumResult.warnings : [enumResult.warnings];
+
+  var mcResult = ensureMasterCode();
+  if (mcResult.warnings) enumWarnings = enumWarnings.concat(Array.isArray(mcResult.warnings) ? mcResult.warnings : [mcResult.warnings]);
+
+  if (typeof ensureDisplayTextForUserDirectoryRows === 'function') {
+    var udResult = ensureDisplayTextForUserDirectoryRows();
+    if (udResult && udResult.updated > 0) enumWarnings.push('Filled ' + udResult.updated + ' empty DISPLAY_NAME in USER_DIRECTORY');
   }
+
   initSystemConfig();
 
-  report.ok = sheetResult.ok;
-  report.code = sheetResult.code;
-  report.message = sheetResult.ok ? 'Bootstrap completed' : 'Bootstrap completed with errors - review mismatched sheets';
+  var auditOpts = {
+    autoFix: false,
+    appendMissingColumns: false,
+    writeHealthLog: opts.writeHealthLog,
+    schemaResult: schemaResult
+  };
+  var audit = selfAuditBootstrap(auditOpts);
+  var auditReport = audit.auditReport || {};
 
-  Logger.log('initAll: ' + JSON.stringify(report, null, 2));
-  return report;
+  var abort = maybeAbortOnCritical(auditReport);
+  if (opts.failOnCritical && abort.shouldAbort) {
+    var abortResult = buildBootstrapSummary({
+      auditReport: auditReport,
+      schemaResult: schemaResult,
+      verifyResult: { status: 'FAIL', blockers: [abort.reason], reasons: auditReport.mustFixNow || [] }
+    });
+    abortResult.ok = false;
+    abortResult.message = 'Bootstrap aborted: ' + abort.reason;
+    if (opts.verbose) Logger.log('initAll: ' + JSON.stringify(abortResult, null, 2));
+    return abortResult;
+  }
+
+  var verify = verifyAppSheetReadiness();
+  var verifyResult = {
+    status: verify.data && verify.data.appsheetReady ? 'PASS' : (verify.ok ? 'WARN' : 'FAIL'),
+    blockers: verify.errors || [],
+    reasons: (verify.data && verify.data.auditReport && verify.data.auditReport.mustFixNow) || []
+  };
+
+  var summary = buildBootstrapSummary({
+    auditReport: auditReport,
+    schemaResult: schemaResult,
+    verifyResult: verifyResult
+  });
+
+  summary.data = summary.data || {};
+  summary.data.createdSheets = coreResult.data.createdSheets || [];
+  summary.data.existingSheets = coreResult.data.existingSheets || [];
+  summary.data.updatedSheets = coreResult.data.updatedSheets || [];
+  summary.data.warnings = (coreResult.data.warnings || []).concat(enumWarnings);
+  summary.code = summary.ok ? 'INIT_OK' : 'INIT_WARN';
+  summary.message = summary.ok ? 'Bootstrap completed' : 'Bootstrap completed with warnings - review nextSteps';
+
+  if (opts.verbose) Logger.log('initAll: ' + JSON.stringify(summary, null, 2));
+  return summary;
 }

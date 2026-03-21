@@ -1,0 +1,42 @@
+COLUMN_NAME,ICON,MEANING
+TITLE,📝,Tiêu đề / nội dung
+DESCRIPTION,📄,Mô tả
+TASK_TYPE,🧩,Loại công việc
+PRIORITY,⚡,Mức độ ưu tiên
+STATUS,🔄,Trạng thái
+OWNER_ID,👑,Chủ task / Người phụ trách
+REPORTER_ID,🧑‍💼,Người tạo
+DONE_BY,✅,Người hoàn thành
+CONFIRMED_BY,✔️,Người duyệt
+ACTOR_ID,👤,Người thực hiện
+START_DATE,📅,Ngày bắt đầu
+DUE_DATE,⏰,Hạn hoàn thành
+DONE_AT,✅,Thời điểm hoàn thành
+CREATED_AT,🕐,Thời điểm tạo
+UPDATED_AT,🕑,Thời điểm cập nhật
+FILE_URL,📎,Tệp đính kèm
+FILE_NAME,📄,Tên file
+ATTACHMENT_TYPE,📎,Loại đính kèm
+PROGRESS_PERCENT,📊,Tiến độ
+RESULT_NOTE,📋,Kết quả
+AMOUNT,💰,Số tiền
+CATEGORY,🧾,Loại thu/chi
+TRANS_TYPE,🧾,Loại giao dịch
+PAYMENT_METHOD,💳,Phương thức thanh toán
+ACTION,📜,Hành động / log
+NAME,📌,Tên
+CODE,🔢,Mã
+NOTE,💬,Ghi chú
+HO_SO_TYPE,📁,Loại hồ sơ
+HTX_ID,🏢,Hợp tác xã
+PHONE,📞,Số điện thoại
+EMAIL,📧,Email
+ADDRESS,📍,Địa chỉ
+RELATED_ENTITY_TYPE,🔗,Loại liên quan
+RELATED_ENTITY_ID,🔗,Đối tượng liên quan
+IS_REQUIRED,⚠️,Bắt buộc
+IS_DONE,☑️,Đã hoàn thành
+COUNTERPARTY,🤝,Đối tác
+TRANS_DATE,📅,Ngày giao dịch
+REFERENCE_NO,🔖,Số chứng từ
+EVIDENCE_URL,🔗,Link chứng từ

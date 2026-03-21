@@ -218,6 +218,7 @@ Complete field policy classification for Phase 1 deployment. Use for Show?, Edit
 | START_DATE | BUSINESS_INPUT | VISIBLE_EDITABLE | ON | ON | — | TRUE | BUSINESS | | |
 | DUE_DATE | BUSINESS_INPUT | VISIBLE_EDITABLE | ON | ON | — | TRUE | BUSINESS | | |
 | DONE_AT | BUSINESS_OUTPUT | VISIBLE_READONLY | ON | OFF | — | FALSE | BUSINESS | Set by GAS | |
+| PROGRESS_PERCENT | BUSINESS_OUTPUT | VISIBLE_READONLY | ON | OFF | — | FALSE | BUSINESS | Checklist-derived; syncTaskProgress | |
 | RESULT_NOTE | BUSINESS_INPUT | VISIBLE_EDITABLE | ON | ON | — | TRUE | BUSINESS | | |
 | CREATED_AT | AUDIT_FIELD | HIDDEN_READONLY | OFF | OFF | — | FALSE | AUDIT | | |
 | CREATED_BY | AUDIT_FIELD | HIDDEN_READONLY | OFF | OFF | — | FALSE | AUDIT | | |
@@ -482,3 +483,12 @@ ID, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY, IS_DELETED, BEFORE_JSON, AFT
 - MASTER_CODE (entire table)
 - ADMIN_AUDIT_LOG (entire table)
 - Separate AppSheet app; share only with ADMIN_EMAILS
+
+### TASK Bypass Risk (CRITICAL)
+
+If any of these are editable in form, workflow and audit are bypassed:
+- TASK_MAIN: STATUS, PROGRESS_PERCENT, DONE_AT
+- TASK_CHECKLIST: IS_DONE, DONE_AT, DONE_BY
+- TASK_UPDATE_LOG: all columns
+
+**See:** 04_APPSHEET/APPSHEET_TASK_POLICY.md for checklist and verification.

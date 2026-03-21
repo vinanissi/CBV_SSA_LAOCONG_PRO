@@ -43,6 +43,7 @@ function createTransaction(data) {
 }
 
 function logFinance(finId, action, beforeObj, afterObj, note) {
+  var actorId = (typeof mapCurrentUserEmailToInternalId === 'function' ? mapCurrentUserEmailToInternalId() : null) || cbvUser();
   const record = {
     ID: cbvMakeId('FLOG'),
     FIN_ID: finId,
@@ -50,7 +51,7 @@ function logFinance(finId, action, beforeObj, afterObj, note) {
     BEFORE_JSON: JSON.stringify(beforeObj || {}),
     AFTER_JSON: JSON.stringify(afterObj || {}),
     NOTE: note || '',
-    ACTOR_ID: cbvUser(),
+    ACTOR_ID: actorId,
     CREATED_AT: cbvNow()
   };
   _appendRecord(CBV_CONFIG.SHEETS.FINANCE_LOG, record);
@@ -108,7 +109,7 @@ function setFinanceStatus(id, newStatus, note) {
   current.STATUS = newStatus;
   if (newStatus === 'CONFIRMED') {
     current.CONFIRMED_AT = cbvNow();
-    current.CONFIRMED_BY = cbvUser();
+    current.CONFIRMED_BY = (typeof mapCurrentUserEmailToInternalId === 'function' ? mapCurrentUserEmailToInternalId() : null) || '';
   }
   current.UPDATED_AT = cbvNow();
   current.UPDATED_BY = cbvUser();

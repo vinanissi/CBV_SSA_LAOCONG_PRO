@@ -24,7 +24,7 @@
 | updateTaskStatus | ensureTaskEditable; validateTaskTransition; if DONE → ensureTaskCanComplete |
 | completeTask | (via updateTaskStatus) ensureTaskCanComplete |
 | cancelTask | (via updateTaskStatus) validateTaskTransition |
-| addChecklistItem | ensureRequired(TASK_ID, TITLE); ensureTaskEditable |
+| addChecklistItem | ensureRequired(TASK_ID, TITLE); ensureMaxLength(TITLE,500); task not ARCHIVED, not DONE |
 | markChecklistDone | ensureTaskEditable |
 | createTaskAttachment | ensureRequired(TASK_ID, FILE_URL, ATTACHMENT_TYPE); ensureTaskEditable; assertValidEnumValue(ATTACHMENT_TYPE) |
 | addTaskLogEntry | ensureRequired(note); action in NOTE\|QUESTION\|ANSWER; ensureTaskEditable |

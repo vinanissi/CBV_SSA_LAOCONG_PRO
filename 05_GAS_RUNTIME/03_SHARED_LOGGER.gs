@@ -9,6 +9,7 @@
  * @param {string} [note] - Optional note
  */
 function logAdminAudit(auditType, entityType, entityId, action, beforeObj, afterObj, note) {
+  var actorId = (typeof mapCurrentUserEmailToInternalId === 'function' ? mapCurrentUserEmailToInternalId() : null) || cbvUser();
   var record = {
     ID: cbvMakeId('AAL'),
     AUDIT_TYPE: auditType || '',
@@ -18,13 +19,14 @@ function logAdminAudit(auditType, entityType, entityId, action, beforeObj, after
     BEFORE_JSON: JSON.stringify(beforeObj || {}),
     AFTER_JSON: JSON.stringify(afterObj || {}),
     NOTE: note || '',
-    ACTOR_ID: cbvUser(),
+    ACTOR_ID: actorId,
     CREATED_AT: cbvNow()
   };
   _appendRecord(CBV_CONFIG.SHEETS.ADMIN_AUDIT_LOG, record);
 }
 
 function logAction(module, entityType, entityId, action, beforeObj, afterObj, note) {
+  var actorId = (typeof mapCurrentUserEmailToInternalId === 'function' ? mapCurrentUserEmailToInternalId() : null) || cbvUser();
   const sheetName = module === 'FINANCE' ? CBV_CONFIG.SHEETS.FINANCE_LOG : CBV_CONFIG.SHEETS.TASK_UPDATE_LOG;
   const idPrefix = module === 'FINANCE' ? 'FLOG' : 'TLOG';
   const record = {
@@ -36,7 +38,7 @@ function logAction(module, entityType, entityId, action, beforeObj, afterObj, no
     BEFORE_JSON: JSON.stringify(beforeObj || {}),
     AFTER_JSON: JSON.stringify(afterObj || {}),
     NOTE: note || '',
-    ACTOR_ID: cbvUser(),
+    ACTOR_ID: actorId,
     CREATED_AT: cbvNow()
   };
 

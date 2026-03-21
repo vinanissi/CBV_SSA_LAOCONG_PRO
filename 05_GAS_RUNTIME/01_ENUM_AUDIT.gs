@@ -92,7 +92,7 @@ function auditEnumConsistency() {
     }
   });
 
-  var requiredGroups = ['HO_SO_TYPE', 'HO_SO_STATUS', 'FILE_GROUP', 'TASK_TYPE', 'TASK_STATUS', 'TASK_PRIORITY', 'TASK_ATTACHMENT_TYPE', 'ATTACHMENT_TYPE', 'UPDATE_TYPE', 'FINANCE_TYPE', 'FINANCE_STATUS', 'FIN_CATEGORY', 'PAYMENT_METHOD', 'MASTER_CODE_STATUS', 'RELATED_ENTITY_TYPE'];
+  var requiredGroups = ['HO_SO_TYPE', 'HO_SO_STATUS', 'FILE_GROUP', 'TASK_TYPE', 'TASK_STATUS', 'TASK_PRIORITY', 'TASK_ATTACHMENT_TYPE', 'ATTACHMENT_TYPE', 'UPDATE_TYPE', 'FINANCE_TYPE', 'FINANCE_STATUS', 'FIN_CATEGORY', 'PAYMENT_METHOD', 'MASTER_CODE_STATUS', 'USER_DIRECTORY_STATUS', 'RELATED_ENTITY_TYPE'];
   requiredGroups.forEach(function(g) {
     if (!sheetMap[g] || sheetMap[g].length === 0) {
       result.data.missingGroups.push(g);
