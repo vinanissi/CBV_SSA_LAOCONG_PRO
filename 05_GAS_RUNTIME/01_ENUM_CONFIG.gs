@@ -11,7 +11,8 @@ var ENUM_CONFIG = {
   ROLE: [
     { value: 'ADMIN', displayText: 'Quản trị', sortOrder: 1, isActive: true },
     { value: 'OPERATOR', displayText: 'Vận hành', sortOrder: 2, isActive: true },
-    { value: 'VIEWER', displayText: 'Xem chỉ', sortOrder: 3, isActive: true }
+    { value: 'ACCOUNTANT', displayText: 'Kế toán', sortOrder: 3, isActive: true },
+    { value: 'VIEWER', displayText: 'Xem chỉ', sortOrder: 4, isActive: true }
   ],
   HO_SO_TYPE: [
     { value: 'HTX', displayText: 'Hợp tác xã', sortOrder: 1, isActive: true },

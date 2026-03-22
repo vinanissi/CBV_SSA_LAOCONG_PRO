@@ -34,22 +34,21 @@ Behavior, schema, GAS/AppSheet mapping, enum/master-code layers, and admin gover
 ├── 02_MASTER_CODE_ADMIN_SERVICE.gs # adminCreateMasterCodeRow, adminUpdateMasterCodeRow, adminSetMasterCodeStatus
 ├── 03_ADMIN_AUDIT_SERVICE.gs # logAdminAction (alias)
 ├── 10_HOSO_SERVICE.gs
-├── task_repository.gs      # TASK low-level
-├── task_validation.gs      # TASK guards
-├── task_service.gs         # TASK public API
-├── task_migration_helper.gs
-├── 20_TASK_SERVICE.gs      # Stub; impl in task_service.gs
+├── 20_TASK_REPOSITORY.gs   # TASK low-level
+├── 20_TASK_VALIDATION.gs   # TASK guards
+├── 20_TASK_SERVICE.gs      # TASK public API
+├── 20_TASK_MIGRATION_HELPER.gs
 ├── 30_FINANCE_SERVICE.gs
 ├── 40_DISPLAY_MAPPING_SERVICE.gs # getEnumDisplay, getMasterCodeDisplay, ensureDisplayText*
 ├── 50_APPSHEET_VERIFY.gs
 ├── 90_BOOTSTRAP_SCHEMA.gs    # CBV_SCHEMA_MANIFEST, getRequiredSheetNames
 ├── 90_BOOTSTRAP_INIT.gs      # initAll(), initCoreSheets()
-├── task_bootstrap.gs         # taskBootstrapSheets()
+├── 90_BOOTSTRAP_TASK.gs     # taskBootstrapSheets()
 ├── 90_BOOTSTRAP_AUDIT.gs     # selfAuditBootstrap(), auditSystem()
 ├── 90_BOOTSTRAP_MENU.gs
 ├── 90_BOOTSTRAP_TRIGGER.gs
 ├── 90_BOOTSTRAP_INSTALL.gs
-├── task_test.gs              # runTaskTests()
+├── 99_DEBUG_TASK_TEST.gs     # runTaskTests()
 └── 99_DEBUG_*.gs             # test_hoso, test_task, test_finance, test_runner, sample_data
 
 02_MODULES/TASK_CENTER/

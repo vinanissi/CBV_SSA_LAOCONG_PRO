@@ -1,7 +1,7 @@
 # Task Field Policy and Workflow Enforcement Audit
 
 **Date:** 2025-03-21  
-**Scope:** APPSHEET_TASK_FIELD_POLICY.md, APPSHEET_TASK_ACTION_RULES.md, task_service.gs, task_validation.gs
+**Scope:** APPSHEET_TASK_FIELD_POLICY.md, APPSHEET_TASK_ACTION_RULES.md, 20_TASK_SERVICE.gs, 20_TASK_VALIDATION.gs
 
 ---
 
@@ -42,9 +42,9 @@
 |-------|----------|
 | Policy: STATUS Editable=OFF | APPSHEET_TASK_FIELD_POLICY §1 |
 | No direct STATUS edit in AppSheet | APPSHEET_TASK_ACTION_RULES §6 |
-| GAS: updateTask blocks STATUS | task_service.gs:123-126 `blocked = ['STATUS', 'DONE_AT', 'PROGRESS_PERCENT']` |
-| Only paths: setTaskStatus, assignTask, completeTask, cancelTask | task_service.gs |
-| validateTaskTransition blocks invalid transitions | task_validation.gs |
+| GAS: updateTask blocks STATUS | 20_TASK_SERVICE.gs:123-126 `blocked = ['STATUS', 'DONE_AT', 'PROGRESS_PERCENT']` |
+| Only paths: setTaskStatus, assignTask, completeTask, cancelTask | 20_TASK_SERVICE.gs |
+| validateTaskTransition blocks invalid transitions | 20_TASK_VALIDATION.gs |
 | NEW→DONE blocked | TASK_VALID_TRANSITIONS: NEW→['ASSIGNED','CANCELLED'] |
 
 **PASS.** STATUS fully guarded; no free editing.
@@ -57,8 +57,8 @@
 |-------|----------|
 | TASK_MAIN.DONE_AT Editable=OFF | APPSHEET_TASK_FIELD_POLICY §1 |
 | TASK_CHECKLIST.DONE_AT Editable=OFF | APPSHEET_TASK_FIELD_POLICY §2 |
-| GAS: updateTask strips DONE_AT | task_service.gs:123-126 |
-| Only setter: completeTask | task_service.gs:201-202 `patch.DONE_AT = cbvNow()` |
+| GAS: updateTask strips DONE_AT | 20_TASK_SERVICE.gs:123-126 |
+| Only setter: completeTask | 20_TASK_SERVICE.gs:201-202 `patch.DONE_AT = cbvNow()` |
 | Bypass risks documented | APPSHEET_TASK_FIELD_POLICY §5 |
 
 **PASS.** DONE_AT cannot be manually set; only completion flow writes it.

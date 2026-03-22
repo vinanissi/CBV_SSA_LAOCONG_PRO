@@ -107,7 +107,7 @@ var CBV_AUDIT_SCHEMA = {
   },
   TASK_UPDATE_LOG: {
     requiredColumns: ['ID', 'TASK_ID', 'UPDATE_TYPE', 'ACTOR_ID', 'CREATED_AT'],
-    optionalColumns: ['CONTENT', 'CREATED_BY', 'UPDATED_AT', 'UPDATED_BY', 'IS_DELETED'],
+    optionalColumns: ['CONTENT', 'CREATED_BY', 'UPDATED_AT', 'UPDATED_BY', 'IS_DELETED', 'ACTION', 'OLD_STATUS', 'NEW_STATUS', 'NOTE', 'RESULT_NOTE', 'FILE_NAME'],
     key: 'ID',
     auditColumns: ['CREATED_AT', 'CREATED_BY', 'UPDATED_AT', 'UPDATED_BY'],
     refColumns: { TASK_ID: 'TASK_MAIN', ACTOR_ID: 'USER_DIRECTORY' },

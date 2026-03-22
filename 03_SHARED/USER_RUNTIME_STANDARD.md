@@ -8,7 +8,7 @@
 
 | Function | File | Purpose |
 |----------|------|---------|
-| seedUserDirectory(options) | 02_USER_SEED.gs | Idempotent seed; sampleMode=true for demo users |
+| seedUserDirectory(options) | 90_BOOTSTRAP_USER_SEED.gs | Idempotent seed; sampleMode=true for demo users |
 | getUsers() | 02_USER_SERVICE.gs | All non-deleted users |
 | getActiveUsers() | 02_USER_SERVICE.gs | STATUS=ACTIVE only |
 | getUserById(id) | 02_USER_SERVICE.gs | Lookup by ID, USER_CODE, or email |
@@ -66,4 +66,4 @@
 
 - 02_USER_SERVICE: 00_CORE_CONFIG, 00_CORE_UTILS
 - 02_USER_VALIDATION: 02_USER_SERVICE, 01_ENUM_SERVICE, 03_SHARED_VALIDATION, 03_SHARED_REPOSITORY
-- 02_USER_SEED: 00_CORE_CONFIG, 00_CORE_UTILS, 90_BOOTSTRAP_SCHEMA
+- 90_BOOTSTRAP_USER_SEED: 00_CORE_CONFIG, 03_SHARED_REPOSITORY, 90_BOOTSTRAP_SCHEMA

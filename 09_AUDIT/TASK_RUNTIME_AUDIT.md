@@ -1,13 +1,13 @@
 # TASK Runtime Audit
 
 **Audit date:** 2025-03-21  
-**Scope:** GAS task runtime layer — task_service, task_validation, task_repository, task_bootstrap, task_test
+**Scope:** GAS task runtime layer — 20_TASK_SERVICE, 20_TASK_VALIDATION, 20_TASK_REPOSITORY, 90_BOOTSTRAP_TASK, 99_DEBUG_TASK_TEST
 
 ## Load Order (.clasp.json filePushOrder)
 
-task_repository.gs → task_validation.gs → task_service.gs → 20_TASK_SERVICE.gs (stub)  
-task_bootstrap.gs (after 90_BOOTSTRAP_INIT)  
-task_test.gs (before 99_DEBUG_TEST_TASK)
+20_TASK_REPOSITORY.gs → 20_TASK_VALIDATION.gs → 20_TASK_SERVICE.gs → 20_TASK_MIGRATION_HELPER.gs
+90_BOOTSTRAP_TASK.gs (after 90_BOOTSTRAP_INIT)
+99_DEBUG_TASK_TEST.gs (before 99_DEBUG_TEST_TASK)
 
 ---
 
@@ -15,19 +15,19 @@ task_test.gs (before 99_DEBUG_TEST_TASK)
 
 | File | Action |
 |------|--------|
-| task_repository.gs | Created |
-| task_validation.gs | Created |
-| task_service.gs | Created |
-| task_bootstrap.gs | Created |
-| task_test.gs | Created |
+| 20_TASK_REPOSITORY.gs | Created |
+| 20_TASK_VALIDATION.gs | Created |
+| 20_TASK_SERVICE.gs | Created |
+| 90_BOOTSTRAP_TASK.gs | Created |
+| 99_DEBUG_TASK_TEST.gs | Created |
 | 20_TASK_SERVICE.gs | Replaced with stub; implementation in task_*.gs |
-| 99_DEBUG_TEST_TASK.gs | Replaced with stub; runTaskTests in task_test.gs |
+| 99_DEBUG_TEST_TASK.gs | Replaced with stub; runTaskTests in 99_DEBUG_TASK_TEST.gs |
 
 ---
 
 ## 2. Functions Added
 
-### task_repository.gs
+### 20_TASK_REPOSITORY.gs
 | Function | Purpose |
 |----------|---------|
 | taskFindById(taskId) | Find task by ID |
@@ -41,7 +41,7 @@ task_test.gs (before 99_DEBUG_TEST_TASK)
 | taskAppendAttachment(record) | Append TASK_ATTACHMENT row |
 | taskAppendUpdateLog(record) | Append TASK_UPDATE_LOG row |
 
-### task_validation.gs
+### 20_TASK_VALIDATION.gs
 | Function | Purpose |
 |----------|---------|
 | assertActiveHtxId(htxId, fieldName) | HTX_ID → active HTX |
@@ -50,7 +50,7 @@ task_test.gs (before 99_DEBUG_TEST_TASK)
 | ensureTaskCanComplete(taskId) | Block DONE if required checklist incomplete |
 | assertValidUpdateType(updateType) | UPDATE_TYPE enum |
 
-### task_service.gs (Public API)
+### 20_TASK_SERVICE.gs (Public API)
 | Function | Purpose |
 |----------|---------|
 | createTask(data) | Create task; HTX_ID, OWNER_ID required |
@@ -67,12 +67,12 @@ task_test.gs (before 99_DEBUG_TEST_TASK)
 | addTaskLogEntry(taskId, action, note) | Legacy alias |
 | createTaskAttachment(data) | Legacy alias |
 
-### task_bootstrap.gs
+### 90_BOOTSTRAP_TASK.gs
 | Function | Purpose |
 |----------|---------|
 | taskBootstrapSheets() | Ensure TASK sheets exist with headers |
 
-### task_test.gs
+### 99_DEBUG_TASK_TEST.gs
 | Function | Purpose |
 |----------|---------|
 | runTaskTests() | Full test suite |
@@ -132,7 +132,7 @@ task_test.gs (before 99_DEBUG_TEST_TASK)
 
 | Rule | Status |
 |------|--------|
-| No uncontrolled direct sheet mutation | ✓ All via task_repository |
+| No uncontrolled direct sheet mutation | ✓ All via 20_TASK_REPOSITORY |
 | No business logic in AppSheet | ✓ GAS-only workflow |
 | No fake completion bypass | ✓ ensureTaskCanComplete |
 | No HO_SO_MASTER as user source | ✓ USER_DIRECTORY only |

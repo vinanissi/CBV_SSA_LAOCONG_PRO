@@ -17,19 +17,27 @@ function _auditGetHeaders(sheet) {
   return sheet.getRange(1, 1, 1, lastCol).getValues()[0];
 }
 
-/** Get all data rows (row 2 to lastRow). Does not use lastRow-1. */
+/** Get data rows (row 2 to lastRow), excluding fully blank rows. Uses shared readNormalizedRows when available. */
 function _auditGetRows(sheet) {
   if (!sheet) return [];
+  if (typeof readNormalizedRows === 'function') {
+    return readNormalizedRows(sheet, sheet.getName());
+  }
   var lastRow = sheet.getLastRow();
   var lastCol = sheet.getLastColumn();
   if (lastRow < 2 || lastCol === 0) return [];
   var headers = _auditGetHeaders(sheet);
   var rows = sheet.getRange(2, 1, lastRow, lastCol).getValues();
-  return rows.map(function(row, idx) {
+  var rowObjs = rows.map(function(row, idx) {
     var o = { _rowNumber: idx + 2 };
     headers.forEach(function(h, i) { o[h] = row[i]; });
     return o;
   });
+  if (typeof getMeaningfulFieldsForTable === 'function' && typeof filterRealDataRows === 'function') {
+    var meaningful = getMeaningfulFieldsForTable(sheet.getName(), headers);
+    return filterRealDataRows(rowObjs, meaningful);
+  }
+  return rowObjs;
 }
 
 function _auditAddFinding(findings, finding) {
@@ -202,8 +210,8 @@ function auditUserDirectory() {
   var roleIdx = headers.indexOf('ROLE');
   var statusIdx = headers.indexOf('STATUS');
   var htxIdx = headers.indexOf('HTX_ID');
-  var validRoles = ['ADMIN', 'OPERATOR', 'VIEWER'];
-  var validStatuses = ['ACTIVE', 'INACTIVE', 'ARCHIVED'];
+  var validRoles = (typeof getEnumValues === 'function' ? getEnumValues('ROLE') : null) || (typeof CBV_ENUM !== 'undefined' && CBV_ENUM.ROLE) || ['ADMIN', 'OPERATOR', 'ACCOUNTANT', 'VIEWER'];
+  var validStatuses = (typeof getEnumValues === 'function' ? getEnumValues('USER_DIRECTORY_STATUS') : null) || (typeof CBV_ENUM !== 'undefined' && CBV_ENUM.USER_DIRECTORY_STATUS) || ['ACTIVE', 'INACTIVE', 'ARCHIVED'];
 
   var idCount = {};
   var codeCount = {};
@@ -244,10 +252,14 @@ function auditUserDirectory() {
     var role = roleIdx >= 0 ? String(r.ROLE || '').trim() : '';
     var status = statusIdx >= 0 ? String(r.STATUS || '').trim() : '';
     var htxId = htxIdx >= 0 ? String(r.HTX_ID || '').trim() : '';
-    if (role && validRoles.indexOf(role) === -1) {
+    if (!role) {
+      findings.push({ severity: 'HIGH', table: 'USER_DIRECTORY', column: 'ROLE', issue: 'UD_BLANK_ROLE', message: 'Row ' + (i + 2) + ': blank ROLE' });
+    } else if (validRoles.indexOf(role) === -1) {
       findings.push({ severity: 'HIGH', table: 'USER_DIRECTORY', column: 'ROLE', issue: 'UD_INVALID_ROLE', message: 'Row ' + (i + 2) + ': invalid ROLE ' + role });
     }
-    if (status && validStatuses.indexOf(status) === -1) {
+    if (!status) {
+      findings.push({ severity: 'HIGH', table: 'USER_DIRECTORY', column: 'STATUS', issue: 'UD_BLANK_STATUS', message: 'Row ' + (i + 2) + ': blank STATUS' });
+    } else if (validStatuses.indexOf(status) === -1) {
       findings.push({ severity: 'HIGH', table: 'USER_DIRECTORY', column: 'STATUS', issue: 'UD_INVALID_STATUS', message: 'Row ' + (i + 2) + ': invalid STATUS ' + status });
     }
     if (htxId && !hoSoIds[htxId]) {
@@ -490,7 +502,7 @@ function writeAuditLog(summary, findings) {
       ID: typeof cbvMakeId === 'function' ? cbvMakeId('AAL') : 'AAL_' + new Date().getTime(),
       AUDIT_TYPE: 'BOOTSTRAP_AUDIT',
       ENTITY_TYPE: 'SYSTEM',
-      ENTITY_ID: '',
+      ENTITY_ID: 'SYSTEM',
       ACTION: 'selfAuditBootstrap',
       BEFORE_JSON: '',
       AFTER_JSON: JSON.stringify({ systemHealth: summary.systemHealth, bootstrapSafe: summary.bootstrapSafe, appsheetReady: summary.appsheetReady, critical: summary.totals.critical, high: summary.totals.high }),

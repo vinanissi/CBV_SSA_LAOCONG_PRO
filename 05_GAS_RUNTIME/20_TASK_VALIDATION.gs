@@ -1,7 +1,7 @@
 /**
  * CBV Task Validation - Enforces task model rules.
  * HTX_ID → active HTX; OWNER_ID/REPORTER_ID → active users; STATUS transitions; checklist completion.
- * Dependencies: 02_USER_SERVICE, 01_ENUM_SERVICE, 03_SHARED_VALIDATION, task_repository
+ * Dependencies: 02_USER_SERVICE, 01_ENUM_SERVICE, 03_SHARED_VALIDATION, 20_TASK_REPOSITORY
  */
 
 /** Valid STATUS transitions. NEW→DONE blocked. */

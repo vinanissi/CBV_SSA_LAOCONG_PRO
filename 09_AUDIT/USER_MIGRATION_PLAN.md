@@ -2,7 +2,7 @@
 
 **Purpose:** Safe migration from mixed people-selection sources to USER_DIRECTORY as canonical operational user source.
 
-**Related:** 03_SHARED/USER_TASK_FINANCE_MAPPING.md, 04_APPSHEET/APPSHEET_USER_LAYER.md, 05_GAS_RUNTIME/user_migration_helper.gs
+**Related:** 03_SHARED/USER_TASK_FINANCE_MAPPING.md, 04_APPSHEET/APPSHEET_USER_LAYER.md, 05_GAS_RUNTIME/03_USER_MIGRATION_HELPER.gs
 
 ---
 
@@ -106,7 +106,7 @@
 | Step | Action | Output |
 |------|--------|--------|
 | 0.1 | Ensure USER_DIRECTORY is populated with all operational users | USER_DIRECTORY has rows |
-| 0.2 | Run `analyzeUserRefValues()` from user_migration_helper.gs | Report of current value distribution |
+| 0.2 | Run `analyzeUserRefValues()` from 03_USER_MIGRATION_HELPER.gs | Report of current value distribution |
 | 0.3 | Run `buildMigrationReport({ dryRun: true })` | Migration report with resolved/flagged counts |
 | 0.4 | Review report; fix USER_DIRECTORY duplicates (email), add missing users | Ready for migration |
 | 0.5 | Create backup of affected sheets or columns | Backup available |
@@ -156,7 +156,7 @@
 
 ## 8. Dependencies
 
-- 05_GAS_RUNTIME/user_migration_helper.gs
+- 05_GAS_RUNTIME/03_USER_MIGRATION_HELPER.gs
 - 02_USER_SERVICE.gs (getUserByEmail, getUserById)
 - CBV_CONFIG.SHEETS.*
 - Spreadsheet access to USER_DIRECTORY, MASTER_CODE, TASK_MAIN, TASK_CHECKLIST, HO_SO_MASTER, FINANCE_TRANSACTION, TASK_UPDATE_LOG, FINANCE_LOG, ADMIN_AUDIT_LOG

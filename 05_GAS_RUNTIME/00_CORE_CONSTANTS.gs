@@ -1,6 +1,6 @@
 /** Fallback only when ENUM_DICTIONARY sheet is missing or empty. Prefer getEnumValues() / assertValidEnumValue(). */
 const CBV_ENUM = {
-  ROLE: ['ADMIN', 'OPERATOR', 'VIEWER'],
+  ROLE: ['ADMIN', 'OPERATOR', 'ACCOUNTANT', 'VIEWER'],
   HO_SO_TYPE: ['HTX', 'XA_VIEN', 'XE', 'TAI_XE'],
   HO_SO_STATUS: ['NEW', 'ACTIVE', 'INACTIVE', 'ARCHIVED'],
   FILE_GROUP: ['CCCD', 'GPLX', 'DANG_KY_XE', 'HOP_DONG', 'KHAC'],

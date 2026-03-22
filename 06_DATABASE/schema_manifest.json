@@ -141,6 +141,7 @@
     "ID",
     "TASK_ID",
     "UPDATE_TYPE",
+    "ACTION",
     "CONTENT",
     "ACTOR_ID",
     "CREATED_AT",

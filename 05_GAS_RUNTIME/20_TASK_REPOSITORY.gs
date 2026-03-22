@@ -1,6 +1,6 @@
 /**
  * CBV Task Repository - Low-level sheet operations for TASK tables.
- * No business logic. All mutations go through this layer or task_service.
+ * No business logic. All mutations go through this layer or 20_TASK_SERVICE.
  * Dependencies: 00_CORE_CONFIG, 00_CORE_UTILS, 03_SHARED_REPOSITORY
  */
 

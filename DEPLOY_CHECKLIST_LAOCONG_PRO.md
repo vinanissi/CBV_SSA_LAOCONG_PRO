@@ -6,7 +6,7 @@ See **CBV_LAOCONG_PRO_REFERENCE.md** for consolidated structure and run order. S
 - [ ] Đã đọc toàn bộ `00_META`
 - [ ] Đã chọn 1 Google Sheets file làm DB chính
 - [ ] Đã tạo Apps Script bound với DB
-- [ ] Đã quyết định vai trò người dùng: ADMIN / OPERATOR / VIEWER
+- [ ] Đã quyết định vai trò người dùng: ADMIN / OPERATOR / ACCOUNTANT / VIEWER
 
 ## B. Database
 - [ ] Đã import đầy đủ CSV từ `06_DATABASE/_generated_schema`
@@ -19,6 +19,7 @@ See **CBV_LAOCONG_PRO_REFERENCE.md** for consolidated structure and run order. S
 - [ ] Đã copy đủ file từ `05_GAS_RUNTIME` (hoặc clasp push)
 - [ ] Đã sửa `00_CORE_CONFIG.gs` — thêm ADMIN_EMAILS nếu dùng admin panel
 - [ ] Đã chạy `initAll()` — tạo sheets, seed enum, fill display
+- [ ] Nếu selfAuditBootstrap báo thiếu cột (HTX_ID, UPDATE_TYPE) hoặc blank enum: chạy `repairSchemaAndData()` (menu: Run Schema & Data Repair)
 - [ ] Đã chạy `protectSensitiveSheets()` — bảo vệ TASK_CHECKLIST, TASK_UPDATE_LOG, ENUM_DICTIONARY, MASTER_CODE
 - [ ] Đã chạy `installTriggers()` nếu dùng
 - [ ] Đã kiểm tra menu hệ thống xuất hiện

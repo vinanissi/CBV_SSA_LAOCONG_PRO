@@ -6,7 +6,7 @@
 
 var _userCache = null;
 
-var CBV_USER_ROLES = ['ADMIN', 'OPERATOR', 'VIEWER'];
+var CBV_USER_ROLES = ['ADMIN', 'OPERATOR', 'ACCOUNTANT', 'VIEWER'];
 
 /**
  * Loads user rows from USER_DIRECTORY. Excludes deleted unless includeDeleted=true.

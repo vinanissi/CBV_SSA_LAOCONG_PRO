@@ -10,16 +10,26 @@ function _headers(sheet) {
   return sheet.getRange(1, 1, 1, lastCol).getValues()[0];
 }
 
+/** Uses readNormalizedRows when 03_SHARED_ROW_READER is loaded; otherwise raw read with blank-filter fallback. */
 function _rows(sheet) {
-  const lastRow = sheet.getLastRow();
-  const lastCol = sheet.getLastColumn();
+  if (typeof readNormalizedRows === 'function') {
+    return readNormalizedRows(sheet, sheet ? sheet.getName() : '');
+  }
+  var lastRow = sheet.getLastRow();
+  var lastCol = sheet.getLastColumn();
   if (lastRow < 2 || lastCol === 0) return [];
-  const headers = _headers(sheet);
-  return sheet.getRange(2, 1, lastRow - 1, lastCol).getValues().map(function(row, idx) {
-    const o = {_rowNumber: idx + 2};
+  var headers = _headers(sheet);
+  var raw = sheet.getRange(2, 1, lastRow, lastCol).getValues();
+  var rowObjs = raw.map(function(row, idx) {
+    var o = { _rowNumber: idx + 2 };
     headers.forEach(function(h, i) { o[h] = row[i]; });
     return o;
   });
+  if (typeof getMeaningfulFieldsForTable === 'function' && typeof filterRealDataRows === 'function') {
+    var meaningful = getMeaningfulFieldsForTable(sheet.getName(), headers);
+    return filterRealDataRows(rowObjs, meaningful);
+  }
+  return rowObjs;
 }
 
 function _findById(sheetName, id) {

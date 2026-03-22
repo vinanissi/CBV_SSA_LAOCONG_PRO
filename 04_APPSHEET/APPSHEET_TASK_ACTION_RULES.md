@@ -6,7 +6,7 @@
 
 ---
 
-## 1. Valid Status Transitions (GAS: task_validation.gs)
+## 1. Valid Status Transitions (GAS: 20_TASK_VALIDATION.gs)
 
 | From | To | GAS Function |
 |------|-----|--------------|

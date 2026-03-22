@@ -13,6 +13,28 @@ function runEnumHealthCheck() {
 }
 
 /**
+ * Menu handler: run schema and data repair (must-fix pass).
+ */
+function runSchemaAndDataRepair() {
+  var r = typeof repairSchemaAndData === 'function' ? repairSchemaAndData({}) : null;
+  if (!r) {
+    SpreadsheetApp.getUi().alert('repairSchemaAndData not available');
+    return;
+  }
+  var msg = 'Schema: ' + (r.schemaRepairs && r.schemaRepairs.length ? r.schemaRepairs.join('; ') : 'none') +
+    '\nUser: ' + (r.userRepaired || 0) +
+    '\nHO_SO: ' + (r.hoSoRepaired || 0) +
+    '\nHO_SO_FILE: ' + (r.hoSoFileRepaired || 0) +
+    '\nFinance: ' + (r.financeStatusFilled || 0) + ' STATUS, ' + (r.financeTransTypeFilled || 0) + ' TRANS_TYPE' +
+    '\nTASK_UPDATE_LOG: ' + (r.taskLogUpdateTypeFilled || 0) + ' UPDATE_TYPE, ' + (r.taskLogActionFilled || 0) + ' ACTION' +
+    '\nTASK_MAIN HTX_ID: ' + (r.taskMainHtxFilled || 0);
+  if ((r.manualReviewTotal || 0) > 0) {
+    msg += '\n\nManual review: ' + r.manualReviewTotal + ' rows (see 09_AUDIT/DATA_QUALITY_REPAIR_REPORT.md)';
+  }
+  SpreadsheetApp.getUi().alert('Schema & Data Repair', msg, SpreadsheetApp.getUi().ButtonSet.OK);
+}
+
+/**
  * Menu handler: run safe repair in dry-run mode.
  */
 function runSafeRepairDryRun() {
@@ -38,6 +60,7 @@ function onOpen() {
     .addItem('Init All', 'initAll')
     .addItem('Protect Sensitive Sheets', 'protectSensitiveSheets')
     .addItem('Self Audit', 'selfAuditBootstrap')
+    .addItem('Run Schema & Data Repair', 'runSchemaAndDataRepair')
     .addItem('Install Triggers', 'installTriggers')
     .addSeparator()
     .addItem('Run All Tests', 'runAllModuleTests')

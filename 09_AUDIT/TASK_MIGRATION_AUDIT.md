@@ -1,7 +1,7 @@
 # Task Migration Plan Audit
 
 **Date:** 2025-03-21  
-**Scope:** 09_AUDIT/TASK_MIGRATION_PLAN.md, 05_GAS_RUNTIME/task_migration_helper.gs
+**Scope:** 09_AUDIT/TASK_MIGRATION_PLAN.md, 05_GAS_RUNTIME/20_TASK_MIGRATION_HELPER.gs
 
 ---
 
@@ -98,8 +98,8 @@
 
 | # | Issue | Severity | Location |
 |---|-------|----------|----------|
-| 1 | `ownerVal` used before assignment — `!ownerVal` check on line 265 runs before `ownerVal = _getCell(...)` on 266. Causes wrong unresolvedUserRefs count. | **CRITICAL** | task_migration_helper.gs:264-266 |
-| 2 | RESULT column: when value contains embedded URL in text (e.g. "Done. See https://..."), no attachment created. DRAFT/SOP/REFERENCE use `_extractUrls`; RESULT only uses `_isUrl` for whole string. | Minor | task_migration_helper.gs:315 |
+| 1 | `ownerVal` used before assignment — `!ownerVal` check on line 265 runs before `ownerVal = _getCell(...)` on 266. Causes wrong unresolvedUserRefs count. | **CRITICAL** | 20_TASK_MIGRATION_HELPER.gs:264-266 |
+| 2 | RESULT column: when value contains embedded URL in text (e.g. "Done. See https://..."), no attachment created. DRAFT/SOP/REFERENCE use `_extractUrls`; RESULT only uses `_isUrl` for whole string. | Minor | 20_TASK_MIGRATION_HELPER.gs:315 |
 | 3 | Plan doc: `report.rows.filter(r => r.flagged)` — rows have `action`, not `flagged`. Should be `r.action === 'FLAG'`. | Minor | TASK_MIGRATION_PLAN.md:125 |
 | 4 | Dry-run example missing `defaultHtxId` — report will show missingHtx for all rows if not provided. | Minor | TASK_MIGRATION_PLAN.md:110-115 |
 

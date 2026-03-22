@@ -1,6 +1,6 @@
 /**
  * Task Migration Helper - Safe migration from BangCongViec-style single sheet to normalized model.
- * Dependencies: 00_CORE_CONFIG, 00_CORE_UTILS, 03_SHARED_REPOSITORY, task_repository, user_migration_helper
+ * Dependencies: 00_CORE_CONFIG, 00_CORE_UTILS, 03_SHARED_REPOSITORY, 20_TASK_REPOSITORY, 03_USER_MIGRATION_HELPER
  *
  * STRICT:
  * - Does NOT modify or delete old sheet.

@@ -1,7 +1,7 @@
 # TASK GAS Runtime Audit
 
 **Audit date:** 2025-03-21  
-**Scope:** task_service.gs, task_validation.gs, task_repository.gs
+**Scope:** 20_TASK_SERVICE.gs, 20_TASK_VALIDATION.gs, 20_TASK_REPOSITORY.gs
 
 ---
 
@@ -17,7 +17,7 @@
 
 **PASS.**
 
-**Note:** Defensive `if (typeof assertActiveHtxId === 'function')` allows silent bypass if task_validation loads after task_service; load order in .clasp.json prevents this.
+**Note:** Defensive `if (typeof assertActiveHtxId === 'function')` allows silent bypass if 20_TASK_VALIDATION loads after 20_TASK_SERVICE; load order in .clasp.json prevents this.
 
 ---
 
@@ -38,8 +38,8 @@
 
 | Check | Result | Evidence |
 |-------|--------|----------|
-| TASK_VALID_TRANSITIONS defined | ✓ | task_validation.gs lines 8–15 |
-| setTaskStatus calls validateTaskTransition | ✓ | task_service.gs line 192 |
+| TASK_VALID_TRANSITIONS defined | ✓ | 20_TASK_VALIDATION.gs lines 8–15 |
+| setTaskStatus calls validateTaskTransition | ✓ | 20_TASK_SERVICE.gs line 192 |
 | Invalid transition throws | ✓ | cbvAssert(validateTaskTransition(...)) |
 | ARCHIVED blocks edits | ✓ | ensureTaskEditable; cbvAssert(STATUS !== 'ARCHIVED') |
 | NEW→DONE blocked | ✓ | NEW allows only ASSIGNED, CANCELLED |
@@ -55,7 +55,7 @@
 | ensureTaskCanComplete before DONE | ✓ | setTaskStatus line 191: if (newStatus === 'DONE') ensureTaskCanComplete(taskId) |
 | Required items filter | ✓ | IS_REQUIRED=true and !IS_DONE |
 | Throws on pending required | ✓ | cbvAssert(pendingRequired.length === 0, 'Required checklist...') |
-| taskGetChecklistItems excludes deleted | ✓ | IS_DELETED filter in task_repository |
+| taskGetChecklistItems excludes deleted | ✓ | IS_DELETED filter in 20_TASK_REPOSITORY |
 
 **PASS.**
 
@@ -93,7 +93,7 @@
 
 | Check | Result | Evidence |
 |-------|--------|----------|
-| task_*.gs in filePushOrder | ✓ | task_repository, task_validation, task_service, task_bootstrap, task_test |
+| 20_TASK_*.gs in filePushOrder | ✓ | 20_TASK_REPOSITORY, 20_TASK_VALIDATION, 20_TASK_SERVICE, 90_BOOTSTRAP_TASK, 99_DEBUG_TASK_TEST |
 | Correct load order | ✓ | repository → validation → service → 20_TASK_SERVICE |
 | rootDir | ✓ | 05_GAS_RUNTIME |
 | Dependencies before task_* | ✓ | 02_USER_SERVICE, 03_SHARED_*, 01_ENUM_SERVICE load first |

@@ -30,13 +30,12 @@
 
 | File | Role |
 |------|------|
-| task_repository.gs | Low-level: taskFindById, taskAppendMain, taskUpdateMain, taskAppendChecklist, taskAppendAttachment, taskAppendUpdateLog |
-| task_validation.gs | Guards: assertActiveHtxId, validateTaskTransition, ensureTaskEditable, ensureTaskCanComplete |
-| task_service.gs | Public API: createTask, updateTask, assignTask, setTaskStatus, completeTask, cancelTask, addChecklistItem, markChecklistDone, addTaskAttachment, addTaskUpdateLog |
-| task_migration_helper.gs | Migration: analyzeTaskMigrationSource, buildTaskMigrationReport, runTaskMigration |
-| task_bootstrap.gs | taskBootstrapSheets() — ensures TASK sheets exist |
-| task_test.gs | runTaskTests() |
-| 20_TASK_SERVICE.gs | Stub; implementation in task_service.gs |
+| 20_TASK_REPOSITORY.gs | Low-level: taskFindById, taskAppendMain, taskUpdateMain, taskAppendChecklist, taskAppendAttachment, taskAppendUpdateLog |
+| 20_TASK_VALIDATION.gs | Guards: assertActiveHtxId, validateTaskTransition, ensureTaskEditable, ensureTaskCanComplete |
+| 20_TASK_SERVICE.gs | Public API: createTask, updateTask, assignTask, setTaskStatus, completeTask, cancelTask, addChecklistItem, markChecklistDone, addTaskAttachment, addTaskUpdateLog |
+| 20_TASK_MIGRATION_HELPER.gs | Migration: analyzeTaskMigrationSource, buildTaskMigrationReport, runTaskMigration |
+| 90_BOOTSTRAP_TASK.gs | taskBootstrapSheets() — ensures TASK sheets exist |
+| 99_DEBUG_TASK_TEST.gs | runTaskTests() |
 
 **Dependencies:** 00_CORE_CONFIG, 00_CORE_UTILS, 03_SHARED_REPOSITORY, 03_SHARED_VALIDATION, 02_USER_SERVICE, 01_ENUM_SERVICE
 
@@ -96,7 +95,7 @@
 See **05_GAS_RUNTIME/CLASP_PUSH_ORDER.md** and `.clasp.json`. Task files load after shared, before 20_TASK_SERVICE:
 
 ```
-… 03_SHARED_* → task_repository → task_validation → task_service → task_migration_helper → 20_TASK_SERVICE → …
+… 03_SHARED_* → 20_TASK_REPOSITORY → 20_TASK_VALIDATION → 20_TASK_SERVICE → 20_TASK_MIGRATION_HELPER → …
 ```
 
 ---
@@ -106,11 +105,11 @@ See **05_GAS_RUNTIME/CLASP_PUSH_ORDER.md** and `.clasp.json`. Task files load af
 ### GAS filePushOrder (from .clasp.json)
 
 ```
-00_CORE_* → 01_ENUM_* → 02_MASTER_CODE → 02_USER_* → 03_SHARED_* → user_migration_helper
+00_CORE_* → 01_ENUM_* → 02_MASTER_CODE → 02_USER_* → 03_SHARED_* → 03_USER_MIGRATION_HELPER
 → 90_BOOTSTRAP_SCHEMA → 90_BOOTSTRAP_AUDIT_SCHEMA → 90_BOOTSTRAP_LIFECYCLE
-→ 10_HOSO_SERVICE → task_repository → task_validation → task_service → task_migration_helper
-→ 20_TASK_SERVICE → 30_FINANCE_SERVICE → 40_DISPLAY_* → 90_BOOTSTRAP_INIT → task_bootstrap
-→ 90_BOOTSTRAP_AUDIT → 50_APPSHEET_VERIFY → 99_DEBUG_* → task_test → 90_BOOTSTRAP_MENU → …
+→ 10_HOSO_SERVICE → 20_TASK_REPOSITORY → 20_TASK_VALIDATION → 20_TASK_SERVICE → 20_TASK_MIGRATION_HELPER
+→ 30_FINANCE_SERVICE → 40_DISPLAY_* → 90_BOOTSTRAP_INIT → 90_BOOTSTRAP_TASK
+→ 90_BOOTSTRAP_AUDIT → 50_APPSHEET_VERIFY → 99_DEBUG_* → 99_DEBUG_TASK_TEST → 90_BOOTSTRAP_MENU → …
 ```
 
 ### Exact Functions to Run (in order)
