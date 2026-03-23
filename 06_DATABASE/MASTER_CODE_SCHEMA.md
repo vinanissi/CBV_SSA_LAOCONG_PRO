@@ -1,5 +1,7 @@
 # MASTER_CODE Schema
 
+**Canonical:** See 01_SCHEMA/MASTER_CODE_SCHEMA.md for final spec. MASTER_CODE does NOT store DON_VI or USER.
+
 ## Sheet
 MASTER_CODE
 

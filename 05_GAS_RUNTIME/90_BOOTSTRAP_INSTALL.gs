@@ -36,7 +36,7 @@ function _removeTriggersFor(handlerFunction) {
  * Installs time-based triggers. Avoids duplicates.
  * @returns {Object} Structured result with createdTriggers, skippedTriggers
  */
-function installTriggers() {
+function installTriggersImpl() {
   const result = buildStructuredBootstrapReport();
 
   CBV_BOOTSTRAP_TRIGGERS.forEach(function (handler) {
@@ -58,6 +58,18 @@ function installTriggers() {
 
   Logger.log('installTriggers: ' + JSON.stringify(result, null, 2));
   return result;
+}
+
+/**
+ * Removes all CBV-managed triggers. Safe to call; no-op if none exist.
+ * @returns {number} Count of removed triggers
+ */
+function removeCbvTriggersImpl() {
+  var removed = 0;
+  CBV_BOOTSTRAP_TRIGGERS.forEach(function(handler) {
+    removed += _removeTriggersFor(handler);
+  });
+  return removed;
 }
 
 /**

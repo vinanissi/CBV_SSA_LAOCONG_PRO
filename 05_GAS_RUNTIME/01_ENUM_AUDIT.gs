@@ -38,15 +38,24 @@ function auditEnumConsistency() {
   var sheet = SpreadsheetApp.getActive().getSheetByName(CBV_CONFIG.SHEETS.ENUM_DICTIONARY);
   result.data.sheetExists = !!sheet;
 
-  if (!sheet || sheet.getLastRow() < 2) {
+  if (!sheet) {
     result.data.fallbackUsed = true;
     result.data.warnings = result.data.warnings || [];
-    result.data.warnings.push('ENUM_DICTIONARY sheet missing or empty - GAS uses fallback');
+    result.data.warnings.push('ENUM_DICTIONARY sheet missing - GAS uses fallback');
     Logger.log('auditEnumConsistency: ' + JSON.stringify(result, null, 2));
     return result;
   }
 
-  var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  var loaded = typeof loadSheetDataSafe === 'function' ? loadSheetDataSafe(sheet, CBV_CONFIG.SHEETS.ENUM_DICTIONARY) : null;
+  if (!loaded || loaded.rowCount === 0) {
+    result.data.fallbackUsed = true;
+    result.data.warnings = result.data.warnings || [];
+    result.data.warnings.push('ENUM_DICTIONARY sheet empty - GAS uses fallback');
+    Logger.log('auditEnumConsistency: ' + JSON.stringify(result, null, 2));
+    return result;
+  }
+
+  var headers = loaded.headers;
   var groupIdx = headers.indexOf('ENUM_GROUP');
   var valueIdx = headers.indexOf('ENUM_VALUE');
   if (groupIdx === -1 || valueIdx === -1) {
@@ -55,17 +64,17 @@ function auditEnumConsistency() {
     return result;
   }
 
-  var rows = sheet.getRange(2, 1, sheet.getLastRow(), headers.length).getValues();
+  var rows = loaded.rows;
   var seen = {};
   var sheetMap = {};
 
-  rows.forEach(function(row, i) {
-    var group = String(row[groupIdx] || '').trim();
-    var value = String(row[valueIdx] || '').trim();
+  rows.forEach(function(row) {
+    var group = String(row.ENUM_GROUP || row[groupIdx] || '').trim();
+    var value = String(row.ENUM_VALUE || row[valueIdx] || '').trim();
     if (!group || !value) return;
     var key = group + '|' + value;
     if (seen[key]) {
-      result.data.duplicates.push({ group: group, value: value, row: i + 2 });
+      result.data.duplicates.push({ group: group, value: value, row: row._rowNumber || 0 });
     }
     seen[key] = true;
     if (!sheetMap[group]) sheetMap[group] = [];

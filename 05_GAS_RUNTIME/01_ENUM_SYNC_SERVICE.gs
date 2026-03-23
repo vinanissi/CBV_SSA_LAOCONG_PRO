@@ -21,16 +21,24 @@ function _enumGetHeaders(sheet) {
 
 function _enumGetRows(sheet) {
   if (!sheet) return [];
+  var tableName = (sheet.getName && sheet.getName() === 'ENUM_DICTIONARY') ? 'ENUM_DICTIONARY' : (sheet.getName ? sheet.getName() : '');
+  var loaded = typeof loadSheetDataSafe === 'function' ? loadSheetDataSafe(sheet, tableName) : null;
+  if (loaded) return loaded.rows;
   var lastRow = sheet.getLastRow();
   var lastCol = sheet.getLastColumn();
   if (lastRow < 2 || lastCol === 0) return [];
   var headers = _enumGetHeaders(sheet);
-  var rows = sheet.getRange(2, 1, lastRow, lastCol).getValues();
-  return rows.map(function(row, idx) {
+  var raw = sheet.getRange(2, 1, lastRow, lastCol).getValues();
+  var rowObjs = raw.map(function(row, idx) {
     var o = { _rowNumber: idx + 2 };
     headers.forEach(function(h, i) { o[h] = row[i]; });
     return o;
   });
+  if (typeof filterRealDataRows === 'function' && typeof getMeaningfulFieldsForTable === 'function') {
+    var meaningful = getMeaningfulFieldsForTable(tableName || 'ENUM_DICTIONARY', headers);
+    return filterRealDataRows(rowObjs, meaningful);
+  }
+  return rowObjs;
 }
 
 function _mergeEnumOptions(opts) {
@@ -186,7 +194,7 @@ function auditEnumUsageInBusinessTables(options) {
   var usageConfig = typeof ENUM_USAGE_CONFIG !== 'undefined' ? ENUM_USAGE_CONFIG : [];
   usageConfig.forEach(function(uc) {
     var sheet = SpreadsheetApp.getActive().getSheetByName(uc.table);
-    if (!sheet || sheet.getLastRow() < 2) return;
+    if (!sheet) return;
     var headers = _enumGetHeaders(sheet);
     var colIdx = headers.indexOf(uc.column);
     if (colIdx === -1) return;
@@ -195,11 +203,11 @@ function auditEnumUsageInBusinessTables(options) {
     var rows = _enumGetRows(sheet);
     var valueCounts = {};
     var invalidSamples = [];
-    rows.forEach(function(r, i) {
+    rows.forEach(function(r) {
       var val = String(r[uc.column] || '').trim();
       if (!val) {
         if (uc.required) {
-          findings.push({ category: 'BLANK_REQUIRED', severity: 'HIGH', table: uc.table, column: uc.column, enumGroup: uc.enumGroup, invalidValue: '(blank)', rowCount: 1, sampleRowNumbers: [i + 2], suggestedFix: 'Fill required enum value' });
+          findings.push({ category: 'BLANK_REQUIRED', severity: 'HIGH', table: uc.table, column: uc.column, enumGroup: uc.enumGroup, invalidValue: '(blank)', rowCount: 1, sampleRowNumbers: [r._rowNumber || 0], suggestedFix: 'Fill required enum value' });
         }
         return;
       }
@@ -207,7 +215,7 @@ function auditEnumUsageInBusinessTables(options) {
       var inRegistry = validValues.indexOf(val) !== -1;
       var isActive = activeValues.indexOf(val) !== -1;
       if (!inRegistry && invalidSamples.length < 5) {
-        invalidSamples.push({ value: val, row: i + 2 });
+        invalidSamples.push({ value: val, row: r._rowNumber || 0 });
       }
     });
     Object.keys(valueCounts).forEach(function(val) {
@@ -215,8 +223,8 @@ function auditEnumUsageInBusinessTables(options) {
       var isActive = activeValues.indexOf(val) !== -1;
       if (!inRegistry) {
         var samples = [];
-        rows.forEach(function(r, i) {
-          if (String(r[uc.column] || '').trim() === val && samples.length < 5) samples.push(i + 2);
+        rows.forEach(function(r) {
+          if (String(r[uc.column] || '').trim() === val && samples.length < 5) samples.push(r._rowNumber || 0);
         });
         findings.push({
           category: 'VALUE_NOT_IN_REGISTRY',

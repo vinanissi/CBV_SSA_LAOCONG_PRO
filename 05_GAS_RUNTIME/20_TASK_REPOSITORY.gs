@@ -37,6 +37,15 @@ function taskFindChecklistById(checklistId) {
 }
 
 /**
+ * @param {string} donViId
+ * @returns {Object|null} DON_VI row
+ */
+function donViFindById(donViId) {
+  var sheetName = (typeof CBV_CONFIG !== 'undefined' && CBV_CONFIG.SHEETS && CBV_CONFIG.SHEETS.DON_VI) ? CBV_CONFIG.SHEETS.DON_VI : 'DON_VI';
+  return typeof _findById === 'function' ? _findById(sheetName, donViId) : null;
+}
+
+/**
  * @param {string} htxId
  * @returns {Object|null} HO_SO_MASTER row where HO_SO_TYPE=HTX
  */

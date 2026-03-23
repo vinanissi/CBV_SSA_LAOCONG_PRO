@@ -246,7 +246,7 @@ function initAll(options) {
     writeHealthLog: opts.writeHealthLog,
     schemaResult: schemaResult
   };
-  var audit = selfAuditBootstrap(auditOpts);
+  var audit = selfAuditBootstrapImpl(auditOpts);
   var auditReport = audit.auditReport || {};
 
   var abort = maybeAbortOnCritical(auditReport);
@@ -262,7 +262,7 @@ function initAll(options) {
     return abortResult;
   }
 
-  var verify = verifyAppSheetReadiness();
+  var verify = verifyAppSheetReadinessImpl();
   var verifyResult = {
     status: verify.data && verify.data.appsheetReady ? 'PASS' : (verify.ok ? 'WARN' : 'FAIL'),
     blockers: verify.errors || [],

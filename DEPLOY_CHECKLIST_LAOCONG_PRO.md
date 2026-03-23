@@ -19,7 +19,7 @@ See **CBV_LAOCONG_PRO_REFERENCE.md** for consolidated structure and run order. S
 - [ ] Đã copy đủ file từ `05_GAS_RUNTIME` (hoặc clasp push)
 - [ ] Đã sửa `00_CORE_CONFIG.gs` — thêm ADMIN_EMAILS nếu dùng admin panel
 - [ ] Đã chạy `initAll()` — tạo sheets, seed enum, fill display
-- [ ] Nếu selfAuditBootstrap báo thiếu cột (HTX_ID, UPDATE_TYPE) hoặc blank enum: chạy `repairSchemaAndData()` (menu: Run Schema & Data Repair)
+- [ ] Nếu selfAuditBootstrap báo thiếu cột hoặc blank enum: chạy `repairSchemaAndData()` (menu: Run Schema & Data Repair)
 - [ ] Đã chạy `protectSensitiveSheets()` — bảo vệ TASK_CHECKLIST, TASK_UPDATE_LOG, ENUM_DICTIONARY, MASTER_CODE
 - [ ] Đã chạy `installTriggers()` nếu dùng
 - [ ] Đã kiểm tra menu hệ thống xuất hiện

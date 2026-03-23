@@ -1,5 +1,7 @@
 # USER_DIRECTORY Schema
 
+**Canonical:** See 01_SCHEMA/USER_DIRECTORY_SCHEMA.md for final spec.
+
 ## Sheet
 USER_DIRECTORY
 
@@ -9,32 +11,51 @@ USER_DIRECTORY
 - 00_META/CBV_ID_STANDARD.md
 
 ## Purpose
-Dedicated layer for operational users. Manages system identity separately from business records (HO_SO_MASTER). Used for task owner/assignee, reporter, finance confirmation, checklist done-by.
+Operational user registry for the system. **Independent from DON_VI/HTX** — users are system-wide, not tied to organizational units. Used for task owner/assignee, reporter, finance confirmation, checklist done-by.
 
 ---
 
-## Columns (Canonical Order)
+## Minimum Required Fields
 
-| # | Column | Type | Required | Notes |
-|---|--------|------|----------|-------|
-| 1 | ID | Text | Yes | Unique key, UD_YYYYMMDD_<6-8 chars> |
-| 2 | USER_CODE | Text | Yes | Machine-safe; USER_001, USER_002 |
-| 3 | FULL_NAME | Text | Yes | Canonical human name |
-| 4 | DISPLAY_NAME | Text | No | UI override; empty = use FULL_NAME |
-| 5 | EMAIL | Text | No | Main login / identity reference |
-| 6 | PHONE | Text | No | Contact phone |
-| 7 | ROLE | Text | Yes | Enum: ADMIN \| OPERATOR \| VIEWER |
-| 8 | POSITION | Text | No | Job title; not enum |
-| 9 | HTX_ID | Text | No | Ref HO_SO_MASTER (HO_SO_TYPE=HTX) |
-| 10 | STATUS | Text | Yes | ACTIVE \| INACTIVE \| ARCHIVED |
-| 11 | IS_SYSTEM | Yes/No | Yes | System-seeded, not admin-editable |
-| 12 | ALLOW_LOGIN | Yes/No | Yes | Can sign in to AppSheet |
-| 13 | NOTE | Text | No | Admin note |
-| 14 | CREATED_AT | Datetime | No | |
-| 15 | CREATED_BY | Text | No | |
-| 16 | UPDATED_AT | Datetime | No | |
-| 17 | UPDATED_BY | Text | No | |
-| 18 | IS_DELETED | Yes/No | Yes | Soft delete |
+| Column | Type | Required | Notes |
+|--------|------|----------|-------|
+| ID | Text | Yes | Unique key, UD_YYYYMMDD_<6-8 chars> |
+| EMAIL | Text | Yes | Main login / identity reference |
+| DISPLAY_NAME | Text | Yes | User-facing name (UI) |
+| ROLE | Text | Yes | ADMIN \| OPERATOR \| VIEWER |
+| STATUS | Text | Yes | ACTIVE \| INACTIVE \| ARCHIVED |
+| IS_DELETED | Yes/No | Yes | Soft delete |
+
+---
+
+## Extended Columns (Optional)
+
+| Column | Type | Required | Notes |
+|--------|------|----------|-------|
+| USER_CODE | Text | No | Machine-safe; USER_001, USER_002 |
+| FULL_NAME | Text | No | Canonical human name |
+| PHONE | Text | No | Contact phone |
+| POSITION | Text | No | Job title; not enum |
+| IS_SYSTEM | Yes/No | No | System-seeded, not admin-editable |
+| ALLOW_LOGIN | Yes/No | No | Can sign in to AppSheet |
+| NOTE | Text | No | Admin note |
+| CREATED_AT | Datetime | No | |
+| CREATED_BY | Text | No | |
+| UPDATED_AT | Datetime | No | |
+| UPDATED_BY | Text | No | |
+
+---
+
+## ACTIVE_USERS View
+
+**Filter:** `STATUS = "ACTIVE" AND IS_DELETED = FALSE`
+
+Used for:
+- TASK_MAIN.OWNER_ID Valid_If
+- TASK_MAIN.REPORTER_ID Valid_If
+- HO_SO_MASTER.OWNER_ID Valid_If
+- TASK_CHECKLIST.DONE_BY Valid_If
+- FINANCE_TRANSACTION.CONFIRMED_BY Valid_If
 
 ---
 
@@ -44,7 +65,7 @@ Dedicated layer for operational users. Manages system identity separately from b
 - INACTIVE
 - ARCHIVED
 
-(Use ENUM_GROUP=USER_DIRECTORY_STATUS or MASTER_CODE_STATUS pattern; values align with MASTER_CODE_STATUS.)
+(Use ENUM_GROUP=USER_DIRECTORY_STATUS or MASTER_CODE_STATUS pattern.)
 
 ---
 
@@ -58,16 +79,24 @@ Dedicated layer for operational users. Manages system identity separately from b
 
 ---
 
+## Independence Policy
+
+- USER_DIRECTORY has **no** DON_VI_ID or HTX_ID.
+- Users are system-wide; organizational assignment (if needed) is via TASK_MAIN.DON_VI_ID, HO_SO_MASTER, or other business tables.
+- Do not link USER_DIRECTORY to DON_VI or HO_SO_MASTER for user-to-unit mapping at schema level.
+
+---
+
 ## Relationship to Other Sheets
 
 | Ref Field | Target | Notes |
 |-----------|--------|-------|
-| USER_DIRECTORY.HTX_ID | HO_SO_MASTER | When user belongs to specific HTX |
 | TASK_MAIN.OWNER_ID | USER_DIRECTORY | Task assignee |
 | TASK_MAIN.REPORTER_ID | USER_DIRECTORY | Task reporter |
-| HO_SO_MASTER.OWNER_ID | USER_DIRECTORY | File owner (operational user) |
+| HO_SO_MASTER.OWNER_ID | USER_DIRECTORY | File owner |
 | TASK_CHECKLIST.DONE_BY | USER_DIRECTORY | Who marked done |
 | FINANCE_TRANSACTION.CONFIRMED_BY | USER_DIRECTORY | Who confirmed |
+| DON_VI.MANAGER_USER_ID | USER_DIRECTORY | Unit manager |
 
 ---
 
@@ -80,8 +109,7 @@ Dedicated layer for operational users. Manages system identity separately from b
 ## Validation Rules
 
 1. ID is system key and must be stable.
-2. USER_CODE is unique per sheet.
+2. EMAIL recommended for USEREMAIL() mapping; uniqueness enforced by app logic.
 3. ROLE must be from ENUM_DICTIONARY ROLE group.
 4. STATUS must be ACTIVE, INACTIVE, or ARCHIVED.
-5. HTX_ID when provided must reference valid HO_SO_MASTER row (HO_SO_TYPE=HTX).
-6. EMAIL recommended for USEREMAIL() mapping; not enforced unique at schema level.
+5. DISPLAY_NAME used when FULL_NAME empty; at least one required.

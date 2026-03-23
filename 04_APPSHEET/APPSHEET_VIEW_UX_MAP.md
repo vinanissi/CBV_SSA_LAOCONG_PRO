@@ -4,40 +4,48 @@
 
 ---
 
-## 1. TASK MODULE
+## 1. TASK MODULE (PRO)
 
-### 1.1 TASK_FORM — Cấu trúc Form
+**Spec:** [TASK_MAIN_PRO_SPEC.md](TASK_MAIN_PRO_SPEC.md) — visible/hidden fields, refs, actions BẮT ĐẦU/HOÀN THÀNH/HỦY, validation.
+
+### 1.1 TASK_FORM — Cấu trúc Form (PRO)
 
 | Group | Section Title | Fields | Order |
 |-------|---------------|--------|-------|
-| 1 | Thông tin chính | TITLE, DESCRIPTION | 1-2 |
-| 2 | Phân loại | TASK_TYPE, PRIORITY | 3-4 |
-| 3 | Người phụ trách | OWNER_ID, REPORTER_ID (readonly/default) | 5-6 |
-| 4 | Liên quan | RELATED_ENTITY_TYPE, RELATED_ENTITY_ID | 7-8 |
-| 5 | Thời gian | START_DATE, DUE_DATE | 9-10 |
+| 1 | Đơn vị & Phân loại | DON_VI_ID, TASK_TYPE_ID | 1-2 |
+| 2 | Thông tin chính | TITLE, DESCRIPTION | 3-4 |
+| 3 | Ưu tiên | PRIORITY | 5 |
+| 4 | Thời gian | START_DATE, DUE_DATE | 6-7 |
+| 5 | Người phụ trách | OWNER_ID | 8 |
+| 6 | Liên quan | RELATED_ENTITY_TYPE, RELATED_ENTITY_ID | 9-10 |
 
-**Ẩn:** ID, TASK_CODE, STATUS, DONE_AT, PROGRESS_PERCENT, RESULT_NOTE, CREATED_*, UPDATED_*, IS_DELETED
+**Field order target:** DON_VI_ID, TASK_TYPE_ID, TITLE, DESCRIPTION, PRIORITY, START_DATE, DUE_DATE, OWNER_ID
 
-**Auto:** STATUS=NEW; REPORTER_ID=USEREMAIL() mapping (readonly)
+**Ẩn:** ID, TASK_CODE, STATUS, DONE_AT, PROGRESS_PERCENT, RESULT_SUMMARY, REPORTER_ID, CREATED_*, UPDATED_*, IS_DELETED.
 
-**Lưu ý:** Không có ASSIGNEE_ID — OWNER_ID = Chủ task = Người thực hiện
+**Auto:** STATUS=NEW; REPORTER_ID=USEREMAIL()→USER_DIRECTORY mapping (readonly)
+
+**Lưu ý:** OWNER_ID = Chủ task. REF từ ACTIVE_USERS. Users are global; no HTX filter.
 
 ---
 
-### 1.2 TASK_DETAIL — Cấu trúc Detail
+### 1.2 TASK_DETAIL — Cấu trúc Detail (PRO)
 
-| Section | Title | Fields | Style |
-|---------|-------|--------|-------|
-| 1 | Tóm tắt | TITLE, STATUS (badge), PRIORITY | Header |
+| Section | Title | Content | Style |
+|---------|-------|---------|-------|
+| 0 | Actions | BẮT ĐẦU, HOÀN THÀNH, HỦY, MỞ LẠI | Top action buttons |
+| 1 | Tóm tắt | TITLE, STATUS (badge), PRIORITY, DON_VI_ID, TASK_TYPE_ID | Header |
 | 2 | Người | OWNER_ID, REPORTER_ID | Card |
 | 3 | Thời gian | START_DATE, DUE_DATE, DONE_AT | Timeline |
 | 4 | Tiến độ | PROGRESS_PERCENT, checklist summary | Progress bar |
-| 5 | Kết quả | RESULT_NOTE | Show when DONE |
+| 5 | Kết quả | RESULT_SUMMARY | Show when DONE |
 | 6 | Mô tả | DESCRIPTION | Collapsible |
 | 7 | Liên quan | RELATED_ENTITY_TYPE, RELATED_ENTITY_ID | Optional |
 | 8 | Checklist | TASK_CHECKLIST inline | Inline |
 | 9 | Đính kèm | TASK_ATTACHMENT inline | Inline |
 | 10 | Lịch sử | TASK_UPDATE_LOG inline | Readonly |
+
+**Workflow actions:** GAS: taskStartAction, taskCompleteAction, taskCancelAction, taskReopenAction. STATUS not editable in form.
 
 ---
 
@@ -109,7 +117,7 @@
 | 1 | Phân loại | TRANS_TYPE, CATEGORY | 1-2 |
 | 2 | Số tiền | AMOUNT | 3 |
 | 3 | Thời gian | TRANS_DATE | 4 |
-| 4 | Đối tác | COUNTERPARTY, UNIT_ID | 5-6 |
+| 4 | Đối tác | COUNTERPARTY, DON_VI_ID | 5-6 |
 | 5 | Thanh toán | PAYMENT_METHOD, REFERENCE_NO | 7-8 |
 | 6 | Liên quan | RELATED_ENTITY_TYPE, RELATED_ENTITY_ID | 9-10 |
 | 7 | Mô tả | DESCRIPTION, EVIDENCE_URL | 11-12 |
@@ -160,7 +168,7 @@
 
 | Field | Show_If |
 |-------|---------|
-| RESULT_NOTE | [STATUS] = "DONE" |
+| RESULT_SUMMARY | [STATUS] = "DONE" |
 | DONE_AT | [STATUS] = "DONE" |
 | PROGRESS_PERCENT | Always (readonly) |
 | CONFIRMED_AT, CONFIRMED_BY | [STATUS] = "CONFIRMED" |
@@ -170,7 +178,7 @@
 
 ## 6. USER FLOW
 
-**Tạo task:** TITLE → TASK_TYPE → PRIORITY → OWNER_ID → START_DATE → DUE_DATE (6 fields chính)
+**Tạo task:** TITLE → TASK_TYPE_ID → PRIORITY → OWNER_ID → START_DATE → DUE_DATE (6 fields chính)
 
 **Xem task:** Summary → People → Timeline → Progress → Checklist → Attachments → Log
 

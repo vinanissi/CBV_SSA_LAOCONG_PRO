@@ -141,8 +141,13 @@ function auditBlankHeaders(sheetName, sheet, findings) {
 
 function auditEnumIntegrity(ss, findings) {
   var sheet = _auditGetSheet(CBV_CONFIG.SHEETS.ENUM_DICTIONARY);
-  if (!sheet || sheet.getLastRow() < 2) {
-    _auditAddFinding(findings, _auditCreateFinding('ENUM', 'ENUM_SHEET', AUDIT_SEVERITY.MEDIUM, 'WARN', 'ENUM_DICTIONARY', '', 'ENUM_MISSING_OR_EMPTY', 'ENUM_DICTIONARY missing or empty - GAS uses fallback', 'Run seedEnumDictionary()'));
+  if (!sheet) {
+    _auditAddFinding(findings, _auditCreateFinding('ENUM', 'ENUM_SHEET', AUDIT_SEVERITY.MEDIUM, 'WARN', 'ENUM_DICTIONARY', '', 'ENUM_MISSING_OR_EMPTY', 'ENUM_DICTIONARY missing - GAS uses fallback', 'Run seedEnumDictionary()'));
+    return AUDIT_SECTION_RESULT.WARN;
+  }
+  var rows = _auditGetRows(sheet);
+  if (rows.length === 0) {
+    _auditAddFinding(findings, _auditCreateFinding('ENUM', 'ENUM_SHEET', AUDIT_SEVERITY.MEDIUM, 'WARN', 'ENUM_DICTIONARY', '', 'ENUM_MISSING_OR_EMPTY', 'ENUM_DICTIONARY empty - GAS uses fallback', 'Run seedEnumDictionary()'));
     return AUDIT_SECTION_RESULT.WARN;
   }
   var headers = _auditGetHeaders(sheet);
@@ -154,15 +159,14 @@ function auditEnumIntegrity(ss, findings) {
     _auditAddFinding(findings, _auditCreateFinding('ENUM', 'ENUM_COLUMNS', AUDIT_SEVERITY.CRITICAL, 'FAIL', 'ENUM_DICTIONARY', '', 'ENUM_MISSING_COLUMNS', 'ENUM_DICTIONARY missing ENUM_GROUP or ENUM_VALUE', 'Fix schema'));
     return AUDIT_SECTION_RESULT.FAIL;
   }
-  var rows = _auditGetRows(sheet);
   var seen = {};
   var dupes = [];
-  rows.forEach(function(row, i) {
+  rows.forEach(function(row) {
     var g = String(row.ENUM_GROUP || row[groupIdx] || '').trim();
     var v = String(row.ENUM_VALUE || row[valueIdx] || '').trim();
     if (!g || !v) return;
     var key = g + '|' + v;
-    if (seen[key]) dupes.push({ group: g, value: v, row: i + 2 });
+    if (seen[key]) dupes.push({ group: g, value: v, row: row._rowNumber || 0 });
     seen[key] = true;
   });
   dupes.forEach(function(d) {
@@ -173,11 +177,12 @@ function auditEnumIntegrity(ss, findings) {
 
 function auditMasterCodeIntegrity(ss, findings) {
   var sheet = _auditGetSheet(CBV_CONFIG.SHEETS.MASTER_CODE);
-  if (!sheet || sheet.getLastRow() < 2) {
+  if (!sheet) return AUDIT_SECTION_RESULT.PASS;
+  var rows = _auditGetRows(sheet);
+  if (rows.length === 0) {
     _auditAddFinding(findings, _auditCreateFinding('MASTER_CODE', 'MC_EXISTS', AUDIT_SEVERITY.INFO, 'PASS', 'MASTER_CODE', '', 'MC_EMPTY', 'MASTER_CODE empty (OK for new system)', ''));
     return AUDIT_SECTION_RESULT.PASS;
   }
-  var rows = _auditGetRows(sheet);
   var idCount = {};
   rows.forEach(function(r) {
     var id = String(r.ID || '').trim();
@@ -192,24 +197,22 @@ function auditMasterCodeIntegrity(ss, findings) {
 }
 
 /**
- * Audits USER_DIRECTORY: duplicate ID, duplicate USER_CODE, duplicate EMAIL, invalid ROLE, invalid STATUS, orphan HTX_ID.
+ * Audits USER_DIRECTORY: duplicate ID, duplicate USER_CODE, duplicate EMAIL, invalid ROLE, invalid STATUS.
  * @returns {Object} auditUserDirectory result for standalone use
  */
 function auditUserDirectory() {
   var findings = [];
   var ss = SpreadsheetApp.getActive();
   var sheet = _auditGetSheet(CBV_CONFIG.SHEETS.USER_DIRECTORY);
-  if (!sheet || sheet.getLastRow() < 2) {
-    return { ok: true, code: 'USER_AUDIT_OK', message: 'USER_DIRECTORY empty (OK)', data: { findings: [] } };
-  }
-  var headers = _auditGetHeaders(sheet);
+  if (!sheet) return { ok: true, code: 'USER_AUDIT_OK', message: 'USER_DIRECTORY sheet missing', data: { findings: [] } };
   var rows = _auditGetRows(sheet);
+  if (rows.length === 0) return { ok: true, code: 'USER_AUDIT_OK', message: 'USER_DIRECTORY empty (OK)', data: { findings: [] } };
+  var headers = _auditGetHeaders(sheet);
   var idIdx = headers.indexOf('ID');
   var codeIdx = headers.indexOf('USER_CODE');
   var emailIdx = headers.indexOf('EMAIL');
   var roleIdx = headers.indexOf('ROLE');
   var statusIdx = headers.indexOf('STATUS');
-  var htxIdx = headers.indexOf('HTX_ID');
   var validRoles = (typeof getEnumValues === 'function' ? getEnumValues('ROLE') : null) || (typeof CBV_ENUM !== 'undefined' && CBV_ENUM.ROLE) || ['ADMIN', 'OPERATOR', 'ACCOUNTANT', 'VIEWER'];
   var validStatuses = (typeof getEnumValues === 'function' ? getEnumValues('USER_DIRECTORY_STATUS') : null) || (typeof CBV_ENUM !== 'undefined' && CBV_ENUM.USER_DIRECTORY_STATUS) || ['ACTIVE', 'INACTIVE', 'ARCHIVED'];
 
@@ -240,30 +243,19 @@ function auditUserDirectory() {
     }
   });
 
-  var hoSoIds = {};
-  var hoSoSheet = _auditGetSheet(CBV_CONFIG.SHEETS.HO_SO_MASTER);
-  if (hoSoSheet && hoSoSheet.getLastRow() >= 2) {
-    _auditGetRows(hoSoSheet).forEach(function(r) {
-      if (String(r.HO_SO_TYPE || '').trim() === 'HTX') hoSoIds[String(r.ID || '').trim()] = true;
-    });
-  }
-
-  rows.forEach(function(r, i) {
+  rows.forEach(function(r) {
+    var rn = r._rowNumber || 0;
     var role = roleIdx >= 0 ? String(r.ROLE || '').trim() : '';
     var status = statusIdx >= 0 ? String(r.STATUS || '').trim() : '';
-    var htxId = htxIdx >= 0 ? String(r.HTX_ID || '').trim() : '';
     if (!role) {
-      findings.push({ severity: 'HIGH', table: 'USER_DIRECTORY', column: 'ROLE', issue: 'UD_BLANK_ROLE', message: 'Row ' + (i + 2) + ': blank ROLE' });
+      findings.push({ severity: 'HIGH', table: 'USER_DIRECTORY', column: 'ROLE', issue: 'UD_BLANK_ROLE', message: 'Row ' + rn + ': blank ROLE' });
     } else if (validRoles.indexOf(role) === -1) {
-      findings.push({ severity: 'HIGH', table: 'USER_DIRECTORY', column: 'ROLE', issue: 'UD_INVALID_ROLE', message: 'Row ' + (i + 2) + ': invalid ROLE ' + role });
+      findings.push({ severity: 'HIGH', table: 'USER_DIRECTORY', column: 'ROLE', issue: 'UD_INVALID_ROLE', message: 'Row ' + rn + ': invalid ROLE ' + role });
     }
     if (!status) {
-      findings.push({ severity: 'HIGH', table: 'USER_DIRECTORY', column: 'STATUS', issue: 'UD_BLANK_STATUS', message: 'Row ' + (i + 2) + ': blank STATUS' });
+      findings.push({ severity: 'HIGH', table: 'USER_DIRECTORY', column: 'STATUS', issue: 'UD_BLANK_STATUS', message: 'Row ' + rn + ': blank STATUS' });
     } else if (validStatuses.indexOf(status) === -1) {
-      findings.push({ severity: 'HIGH', table: 'USER_DIRECTORY', column: 'STATUS', issue: 'UD_INVALID_STATUS', message: 'Row ' + (i + 2) + ': invalid STATUS ' + status });
-    }
-    if (htxId && !hoSoIds[htxId]) {
-      findings.push({ severity: 'MEDIUM', table: 'USER_DIRECTORY', column: 'HTX_ID', issue: 'UD_ORPHAN_HTX', message: 'Row ' + (i + 2) + ': HTX_ID ' + htxId + ' not found or not HTX' });
+      findings.push({ severity: 'HIGH', table: 'USER_DIRECTORY', column: 'STATUS', issue: 'UD_INVALID_STATUS', message: 'Row ' + rn + ': invalid STATUS ' + status });
     }
   });
 
@@ -280,18 +272,20 @@ function auditRefIntegrity(refSpecs, ss, findings) {
   var hasFail = false;
   refSpecs.forEach(function(ref) {
     var childSheet = _auditGetSheet(ref.child);
-    if (!childSheet || childSheet.getLastRow() < 2) return;
+    if (!childSheet) return;
+    var childLoaded = typeof loadSheetDataSafe === 'function' ? loadSheetDataSafe(childSheet, ref.child) : null;
+    var childRows = childLoaded && childLoaded.rowCount > 0 ? childLoaded.rows : _auditGetRows(childSheet);
+    if (childRows.length === 0) return;
     var parentSheet = _auditGetSheet(ref.parent);
     if (!parentSheet) return;
-    var childRows = _auditGetRows(childSheet);
     var parentIds = {};
     _auditGetRows(parentSheet).forEach(function(r) {
       parentIds[String(r[ref.parentKey] || r.ID || '')] = true;
     });
     var orphans = [];
-    childRows.forEach(function(r, i) {
+    childRows.forEach(function(r) {
       var val = String(r[ref.childCol] || '').trim();
-      if (val && !parentIds[val]) orphans.push({ row: i + 2, value: val });
+      if (val && !parentIds[val]) orphans.push({ row: r._rowNumber || 0, value: val });
     });
     if (orphans.length > 0) {
       var sample = orphans.slice(0, 5).map(function(o) { return o.value; }).join(', ');
@@ -309,31 +303,35 @@ function auditOrphanRows(refSpecs, ss, findings) {
 function auditWorkflowFieldIntegrity(ss, findings) {
   var hasFail = false;
   var taskSheet = _auditGetSheet(CBV_CONFIG.SHEETS.TASK_MAIN);
-  if (taskSheet && taskSheet.getLastRow() >= 2) {
-    var rows = _auditGetRows(taskSheet);
-    rows.forEach(function(r, i) {
+  if (taskSheet) {
+    var taskLoaded = typeof loadSheetDataSafe === 'function' ? loadSheetDataSafe(taskSheet, CBV_CONFIG.SHEETS.TASK_MAIN) : null;
+    var rows = taskLoaded && taskLoaded.rowCount > 0 ? taskLoaded.rows : _auditGetRows(taskSheet);
+    rows.forEach(function(r) {
+      var rn = r._rowNumber || 0;
       var status = String(r.STATUS || '').trim();
       var doneAt = String(r.DONE_AT || '').trim();
       var progress = Number(r.PROGRESS_PERCENT);
       if (status === 'DONE' && !doneAt) {
-        _auditAddFinding(findings, _auditCreateFinding('WORKFLOW', 'DONE_NO_DONE_AT', AUDIT_SEVERITY.HIGH, 'FAIL', 'TASK_MAIN', 'DONE_AT', 'WORKFLOW_DONE_NO_DONE_AT', 'Row ' + (i + 2) + ': STATUS=DONE but DONE_AT blank', 'GAS should set DONE_AT on complete'));
+        _auditAddFinding(findings, _auditCreateFinding('WORKFLOW', 'DONE_NO_DONE_AT', AUDIT_SEVERITY.HIGH, 'FAIL', 'TASK_MAIN', 'DONE_AT', 'WORKFLOW_DONE_NO_DONE_AT', 'Row ' + rn + ': STATUS=DONE but DONE_AT blank', 'GAS should set DONE_AT on complete'));
         hasFail = true;
       }
       if (status === 'NEW' && progress === 100) {
-        _auditAddFinding(findings, _auditCreateFinding('WORKFLOW', 'NEW_FULL_PROGRESS', AUDIT_SEVERITY.MEDIUM, 'WARN', 'TASK_MAIN', 'PROGRESS_PERCENT', 'WORKFLOW_INCONSISTENT', 'Row ' + (i + 2) + ': STATUS=NEW but PROGRESS_PERCENT=100', 'Review workflow'));
+        _auditAddFinding(findings, _auditCreateFinding('WORKFLOW', 'NEW_FULL_PROGRESS', AUDIT_SEVERITY.MEDIUM, 'WARN', 'TASK_MAIN', 'PROGRESS_PERCENT', 'WORKFLOW_INCONSISTENT', 'Row ' + rn + ': STATUS=NEW but PROGRESS_PERCENT=100', 'Review workflow'));
       }
       if (progress < 0 || progress > 100) {
-        _auditAddFinding(findings, _auditCreateFinding('WORKFLOW', 'PROGRESS_RANGE', AUDIT_SEVERITY.HIGH, 'FAIL', 'TASK_MAIN', 'PROGRESS_PERCENT', 'WORKFLOW_PROGRESS_RANGE', 'Row ' + (i + 2) + ': PROGRESS_PERCENT=' + progress + ' out of 0-100', 'Fix or sync from checklist'));
+        _auditAddFinding(findings, _auditCreateFinding('WORKFLOW', 'PROGRESS_RANGE', AUDIT_SEVERITY.HIGH, 'FAIL', 'TASK_MAIN', 'PROGRESS_PERCENT', 'WORKFLOW_PROGRESS_RANGE', 'Row ' + rn + ': PROGRESS_PERCENT=' + progress + ' out of 0-100', 'Fix or sync from checklist'));
         hasFail = true;
       }
     });
   }
   var clSheet = _auditGetSheet(CBV_CONFIG.SHEETS.TASK_CHECKLIST);
-  if (clSheet && clSheet.getLastRow() >= 2) {
+  if (clSheet) {
+    var clLoaded = typeof loadSheetDataSafe === 'function' ? loadSheetDataSafe(clSheet, CBV_CONFIG.SHEETS.TASK_CHECKLIST) : null;
+    var clRows = clLoaded && clLoaded.rowCount > 0 ? clLoaded.rows : _auditGetRows(clSheet);
+    if (clRows.length > 0) {
     var taskRows = taskSheet ? _auditGetRows(taskSheet) : [];
     var taskIds = {};
     taskRows.forEach(function(r) { taskIds[String(r.ID || '')] = r; });
-    var clRows = _auditGetRows(clSheet);
     var doneByTask = {};
     clRows.forEach(function(r) {
       var tid = String(r.TASK_ID || '');
@@ -348,6 +346,7 @@ function auditWorkflowFieldIntegrity(ss, findings) {
         hasFail = true;
       }
     });
+    }
   }
   return hasFail ? AUDIT_SECTION_RESULT.FAIL : AUDIT_SECTION_RESULT.PASS;
 }
@@ -356,18 +355,19 @@ function auditRequiredFieldCompleteness(requiredSheets, ss, specMap, findings) {
   var hasFail = false;
   requiredSheets.forEach(function(name) {
     var sheet = _auditGetSheet(name);
-    if (!sheet || sheet.getLastRow() < 2) return;
+    if (!sheet) return;
+    var rows = _auditGetRows(sheet);
+    if (rows.length === 0) return;
     var spec = specMap[name];
     if (!spec || !spec.requiredColumns) return;
-    var rows = _auditGetRows(sheet);
     spec.requiredColumns.forEach(function(col) {
       var blankCount = 0;
       var samples = [];
-      rows.forEach(function(r, i) {
+      rows.forEach(function(r) {
         var v = r[col];
         if (v === undefined || v === null || String(v).trim() === '') {
           blankCount++;
-          if (samples.length < 3) samples.push(i + 2);
+          if (samples.length < 3) samples.push(r._rowNumber || 0);
         }
       });
       if (blankCount > 0) {
@@ -383,10 +383,11 @@ function auditDuplicateKeys(requiredSheets, ss, specMap, findings) {
   var hasFail = false;
   requiredSheets.forEach(function(name) {
     var sheet = _auditGetSheet(name);
-    if (!sheet || sheet.getLastRow() < 2) return;
+    if (!sheet) return;
+    var rows = _auditGetRows(sheet);
+    if (rows.length === 0) return;
     var spec = specMap[name];
     var keyCol = (spec && spec.key) ? spec.key : 'ID';
-    var rows = _auditGetRows(sheet);
     var count = {};
     rows.forEach(function(r) {
       var k = String(r[keyCol] || '').trim();
@@ -406,16 +407,17 @@ function auditSoftDeleteConsistency(softDeleteTables, ss, findings) {
   var hasFail = false;
   softDeleteTables.forEach(function(name) {
     var sheet = _auditGetSheet(name);
-    if (!sheet || sheet.getLastRow() < 2) return;
+    if (!sheet) return;
+    var rows = _auditGetRows(sheet);
+    if (rows.length === 0) return;
     var headers = _auditGetHeaders(sheet);
     if (headers.indexOf('IS_DELETED') === -1 || headers.indexOf('STATUS') === -1) return;
-    var rows = _auditGetRows(sheet);
-    rows.forEach(function(r, i) {
+    rows.forEach(function(r) {
       var del = r.IS_DELETED;
       var isDel = del === true || String(del).toLowerCase() === 'true';
       var status = String(r.STATUS || '').trim();
       if (isDel && status === 'ACTIVE') {
-        _auditAddFinding(findings, _auditCreateFinding('SOFT_DELETE', 'DELETED_ACTIVE', AUDIT_SEVERITY.MEDIUM, 'WARN', name, '', 'SOFT_DELETE_INCONSISTENT', 'Row ' + (i + 2) + ': IS_DELETED=TRUE but STATUS=ACTIVE', 'Align STATUS with IS_DELETED'));
+        _auditAddFinding(findings, _auditCreateFinding('SOFT_DELETE', 'DELETED_ACTIVE', AUDIT_SEVERITY.MEDIUM, 'WARN', name, '', 'SOFT_DELETE_INCONSISTENT', 'Row ' + (r._rowNumber || 0) + ': IS_DELETED=TRUE but STATUS=ACTIVE', 'Align STATUS with IS_DELETED'));
         hasFail = true;
       }
     });
@@ -427,15 +429,17 @@ function auditLogRowIntegrity(ss, findings) {
   var hasFail = false;
   [CBV_CONFIG.SHEETS.TASK_UPDATE_LOG, CBV_CONFIG.SHEETS.FINANCE_LOG, CBV_CONFIG.SHEETS.ADMIN_AUDIT_LOG].forEach(function(sheetName) {
     var sheet = _auditGetSheet(sheetName);
-    if (!sheet || sheet.getLastRow() < 2) return;
+    if (!sheet) return;
     var rows = _auditGetRows(sheet);
-    rows.forEach(function(r, i) {
+    if (rows.length === 0) return;
+    rows.forEach(function(r) {
+      var rn = r._rowNumber || 0;
       if (!r.ACTION || String(r.ACTION).trim() === '') {
-        _auditAddFinding(findings, _auditCreateFinding('LOG', 'LOG_MISSING_ACTION', AUDIT_SEVERITY.HIGH, 'FAIL', sheetName, 'ACTION', 'LOG_MISSING_ACTION', 'Row ' + (i + 2) + ': ACTION blank', 'Log rows must have ACTION'));
+        _auditAddFinding(findings, _auditCreateFinding('LOG', 'LOG_MISSING_ACTION', AUDIT_SEVERITY.HIGH, 'FAIL', sheetName, 'ACTION', 'LOG_MISSING_ACTION', 'Row ' + rn + ': ACTION blank', 'Log rows must have ACTION'));
         hasFail = true;
       }
       if (!r.CREATED_AT || String(r.CREATED_AT).trim() === '') {
-        _auditAddFinding(findings, _auditCreateFinding('LOG', 'LOG_MISSING_CREATED_AT', AUDIT_SEVERITY.MEDIUM, 'WARN', sheetName, 'CREATED_AT', 'LOG_MISSING_CREATED_AT', 'Row ' + (i + 2) + ': CREATED_AT blank', ''));
+        _auditAddFinding(findings, _auditCreateFinding('LOG', 'LOG_MISSING_CREATED_AT', AUDIT_SEVERITY.MEDIUM, 'WARN', sheetName, 'CREATED_AT', 'LOG_MISSING_CREATED_AT', 'Row ' + rn + ': CREATED_AT blank', ''));
       }
     });
   });
@@ -524,7 +528,7 @@ function writeAuditLog(summary, findings) {
  * @param {Object} opts - { autoFix: false, appendMissingColumns: false }
  * @returns {Object} Structured report
  */
-function selfAuditBootstrap(opts) {
+function selfAuditBootstrapImpl(opts) {
   opts = opts || {};
   var autoFix = opts.autoFix === true;
   var appendMissingColumns = opts.appendMissingColumns === true;
@@ -629,7 +633,7 @@ function selfAuditBootstrap(opts) {
  * Basic audit: required sheets exist. Backward compatible.
  */
 function auditSystem() {
-  var result = selfAuditBootstrap();
+  var result = selfAuditBootstrapImpl();
   return {
     ok: result.ok,
     code: result.code,

@@ -14,17 +14,16 @@ Canonical action catalog. Actions must call GAS webhook — NOT "Update row" for
 
 ---
 
-## TASK Actions
+## TASK Actions (PRO)
 
-| Action | Target | Purpose |
-|--------|--------|---------|
-| ACT_TASK_ASSIGN | TASK_MAIN | Assign owner |
-| ACT_TASK_START | TASK_MAIN | STATUS → IN_PROGRESS |
-| ACT_TASK_WAITING | TASK_MAIN | STATUS → WAITING |
-| ACT_TASK_RESUME | TASK_MAIN | STATUS → IN_PROGRESS |
-| ACT_TASK_COMPLETE | TASK_MAIN | STATUS → DONE (GAS enforces checklist) |
-| ACT_TASK_CANCEL | TASK_MAIN | STATUS → CANCELLED |
-| ACT_TASK_ARCHIVE | TASK_MAIN | STATUS → ARCHIVED |
+| Action | Label | GAS Function | When | Effect |
+|--------|-------|--------------|------|--------|
+| BẮT ĐẦU | Start | `taskStartAction([ID])` | NEW, ASSIGNED | STATUS → IN_PROGRESS; START_DATE if blank |
+| HOÀN THÀNH | Complete | `taskCompleteAction([ID], resultSummary)` | IN_PROGRESS, WAITING | STATUS → DONE, DONE_AT |
+| HỦY | Cancel | `taskCancelAction([ID], note)` | NEW, ASSIGNED, IN_PROGRESS, WAITING | STATUS → CANCELLED |
+| MỞ LẠI | Reopen | `taskReopenAction([ID])` | DONE, CANCELLED | STATUS → IN_PROGRESS |
+
+**Legacy aliases:** ACT_TASK_START → taskStartAction, ACT_TASK_COMPLETE → taskCompleteAction, ACT_TASK_CANCEL → taskCancelAction
 
 ---
 

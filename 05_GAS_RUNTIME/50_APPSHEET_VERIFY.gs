@@ -3,8 +3,8 @@
  * Evaluates: duplicate headers, blank headers, missing keys, duplicate keys,
  * missing display columns, ref integrity, enum consistency, orphan rows.
  */
-function verifyAppSheetReadiness() {
-  var audit = selfAuditBootstrap({ writeHealthLog: false });
+function verifyAppSheetReadinessImpl() {
+  var audit = selfAuditBootstrapImpl({ writeHealthLog: false });
   var auditReport = audit.auditReport || {};
   var appsheetReady = auditReport.appsheetReady !== false;
   var mustFixNow = auditReport.mustFixNow || [];

@@ -1,0 +1,70 @@
+# Architecture Changelog
+
+**Purpose:** Document the cleanup from hybrid/legacy design to final non-hybrid architecture.
+
+---
+
+## Final Architecture Enforced
+
+| Area | Final Design |
+|------|--------------|
+| **USER_DIRECTORY** | Separate canonical user table. Users are global. No HTX dependency. |
+| **DON_VI** | Separate organization table. Covers CONG_TY, HTX, DOI_KINH_DOANH, BO_PHAN, NHOM. No separate HTX table. NOT in MASTER_CODE. |
+| **MASTER_CODE** | Static/semi-static business master data only. Does NOT store DON_VI or USER. |
+| **ENUM_DICTIONARY** | Enum dictionary only. |
+| **TASK_MAIN** | Uses TASK_TYPE_ID (REF to MASTER_CODE), DON_VI_ID (REF to DON_VI). No TASK_TYPE, no HTX_ID. |
+| **FINANCE_TRANSACTION** | Uses DON_VI_ID. No UNIT_ID. |
+
+---
+
+## Old Assumptions Removed
+
+1. **DON_VI in MASTER_CODE** — Removed. DON_VI is a separate table.
+2. **HTX as separate core table** — Removed. HTX is a DON_VI_TYPE in DON_VI.
+3. **USER_DIRECTORY depends on HTX** — Removed. Users are global.
+4. **Hybrid schema acceptable** — Removed. Non-hybrid only.
+5. **TASK_MAIN uses both TASK_TYPE and TASK_TYPE_ID** — Removed. TASK_TYPE_ID only.
+6. **TASK_MAIN uses HTX_ID** — Removed. DON_VI_ID only.
+7. **MASTER_CODE stores USER** — Removed. USER_DIRECTORY only.
+8. **MASTER_CODE stores DON_VI** — Removed. DON_VI table only.
+9. **UNIT_ID in FINANCE_TRANSACTION** — Removed. DON_VI_ID only.
+10. **Legacy/hybrid as current architecture** — Removed. Final only.
+
+---
+
+## Fields Removed from Design
+
+| Table | Field | Replacement |
+|-------|-------|-------------|
+| TASK_MAIN | TASK_TYPE | TASK_TYPE_ID |
+| TASK_MAIN | HTX_ID | DON_VI_ID |
+| TASK_MAIN | RESULT_NOTE | RESULT_SUMMARY |
+| TASK_CHECKLIST | DESCRIPTION | — |
+| TASK_UPDATE_LOG | CONTENT | ACTION, OLD_STATUS, NEW_STATUS, NOTE |
+| FINANCE_TRANSACTION | UNIT_ID | DON_VI_ID |
+
+---
+
+## Official Final Fields
+
+| Table | Key Final Fields |
+|-------|------------------|
+| USER_DIRECTORY | ID, USER_CODE, FULL_NAME, DISPLAY_NAME, EMAIL, PHONE, ROLE, POSITION, STATUS, IS_SYSTEM, ALLOW_LOGIN, NOTE, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY, IS_DELETED |
+| DON_VI | ID, DON_VI_TYPE, CODE, NAME, DISPLAY_TEXT, SHORT_NAME, PARENT_ID, STATUS, SORT_ORDER, MANAGER_USER_ID, EMAIL, PHONE, ADDRESS, NOTE, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY, IS_DELETED |
+| MASTER_CODE | ID, MASTER_GROUP, CODE, NAME, DISPLAY_TEXT, STATUS, SORT_ORDER, IS_SYSTEM, ALLOW_EDIT, NOTE, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY, IS_DELETED |
+| TASK_MAIN | ID, TASK_CODE, TITLE, DESCRIPTION, TASK_TYPE_ID, STATUS, PRIORITY, OWNER_ID, REPORTER_ID, DON_VI_ID, RELATED_ENTITY_TYPE, RELATED_ENTITY_ID, START_DATE, DUE_DATE, DONE_AT, RESULT_SUMMARY, PROGRESS_PERCENT, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY, IS_DELETED |
+| TASK_CHECKLIST | ID, TASK_ID, ITEM_NO, TITLE, IS_REQUIRED, IS_DONE, DONE_AT, DONE_BY, NOTE, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY, IS_DELETED |
+| TASK_UPDATE_LOG | ID, TASK_ID, UPDATE_TYPE, ACTION, OLD_STATUS, NEW_STATUS, NOTE, ACTOR_ID, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY, IS_DELETED |
+| TASK_ATTACHMENT | ID, TASK_ID, FILE_NAME, FILE_URL, DRIVE_FILE_ID, ATTACHMENT_TYPE, TITLE, NOTE, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY, IS_DELETED |
+| FINANCE_TRANSACTION | ID, TRANS_CODE, TRANS_DATE, TRANS_TYPE, STATUS, CATEGORY, AMOUNT, DON_VI_ID, COUNTERPARTY, PAYMENT_METHOD, REFERENCE_NO, RELATED_ENTITY_TYPE, RELATED_ENTITY_ID, DESCRIPTION, EVIDENCE_URL, CONFIRMED_AT, CONFIRMED_BY, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY, IS_DELETED |
+
+---
+
+## Documentation Updated
+
+- 00_OVERVIEW/CBV_FINAL_ARCHITECTURE.md (created)
+- 01_SCHEMA/*.md (10 schema docs created)
+- 04_APPSHEET/APPSHEET_REF_MAP.md (updated)
+- 04_APPSHEET/APPSHEET_FIELD_POLICY_MAP.md (updated)
+- 04_APPSHEET/APPSHEET_VIEW_UX_MAP.md (updated)
+- 09_AUDIT/DEPRECATED_OLD_DESIGN_ITEMS.md (created)

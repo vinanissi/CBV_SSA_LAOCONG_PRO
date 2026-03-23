@@ -1,17 +1,17 @@
 /**
  * CBV Task Validation - Enforces task model rules.
- * HTX_ID → active HTX; OWNER_ID/REPORTER_ID → active users; STATUS transitions; checklist completion.
+ * DON_VI_ID → active DON_VI; OWNER_ID/REPORTER_ID → active users; STATUS transitions; checklist completion.
  * Dependencies: 02_USER_SERVICE, 01_ENUM_SERVICE, 03_SHARED_VALIDATION, 20_TASK_REPOSITORY
  */
 
-/** Valid STATUS transitions. NEW→DONE blocked. */
+/** Valid STATUS transitions. PRO flow: NEW→IN_PROGRESS→DONE/CANCELLED. Legacy: ASSIGNED, WAITING, ARCHIVED. */
 var TASK_VALID_TRANSITIONS = {
-  NEW: ['ASSIGNED', 'CANCELLED'],
+  NEW: ['ASSIGNED', 'IN_PROGRESS', 'CANCELLED'],
   ASSIGNED: ['IN_PROGRESS', 'CANCELLED'],
   IN_PROGRESS: ['WAITING', 'DONE', 'CANCELLED'],
   WAITING: ['IN_PROGRESS', 'CANCELLED'],
-  DONE: ['ARCHIVED'],
-  CANCELLED: ['ARCHIVED'],
+  DONE: ['IN_PROGRESS', 'ARCHIVED'],
+  CANCELLED: ['IN_PROGRESS', 'ARCHIVED'],
   ARCHIVED: []
 };
 
@@ -19,16 +19,31 @@ var TASK_VALID_TRANSITIONS = {
 var TASK_UPDATE_TYPES = ['NOTE', 'QUESTION', 'ANSWER', 'STATUS_CHANGE'];
 
 /**
- * Asserts HTX_ID points to an active HTX (HO_SO_MASTER, HO_SO_TYPE=HTX, IS_DELETED=false).
- * @param {string} htxId
+ * Asserts TASK_TYPE_ID points to an active TASK_TYPE row in MASTER_CODE.
+ * @param {string} taskTypeId
  * @param {string} fieldName
  */
-function assertActiveHtxId(htxId, fieldName) {
-  ensureRequired(htxId, fieldName || 'HTX_ID');
-  var htx = typeof taskFindHtxById === 'function' ? taskFindHtxById(htxId) : null;
-  if (!htx) throw new Error('Invalid ' + (fieldName || 'HTX_ID') + ': must reference an active HTX');
-  if (String(htx.IS_DELETED) === 'true' || htx.IS_DELETED === true) {
-    throw new Error('HTX is deleted: ' + htxId);
+function assertActiveTaskTypeId(taskTypeId, fieldName) {
+  if (!taskTypeId || String(taskTypeId).trim() === '') return;
+  var row = typeof _findById === 'function' ? _findById(CBV_CONFIG.SHEETS.MASTER_CODE, String(taskTypeId).trim()) : null;
+  if (!row) throw new Error('Invalid ' + (fieldName || 'TASK_TYPE_ID') + ': not found in MASTER_CODE');
+  if (String(row.MASTER_GROUP || '').trim() !== 'TASK_TYPE') throw new Error('TASK_TYPE_ID must reference MASTER_GROUP=TASK_TYPE');
+  if (String(row.STATUS || '').trim() !== 'ACTIVE') throw new Error('TASK_TYPE is not ACTIVE: ' + taskTypeId);
+  if (String(row.IS_DELETED) === 'true' || row.IS_DELETED === true) throw new Error('TASK_TYPE is deleted: ' + taskTypeId);
+}
+
+/**
+ * Asserts DON_VI_ID points to an active DON_VI row.
+ * @param {string} donViId
+ * @param {string} fieldName
+ */
+function assertActiveDonViId(donViId, fieldName) {
+  ensureRequired(donViId, fieldName || 'DON_VI_ID');
+  var donVi = typeof donViFindById === 'function' ? donViFindById(donViId) : null;
+  if (!donVi) throw new Error('Invalid ' + (fieldName || 'DON_VI_ID') + ': must reference an active DON_VI');
+  if (String(donVi.STATUS) !== 'ACTIVE') throw new Error('DON_VI is not ACTIVE: ' + donViId);
+  if (String(donVi.IS_DELETED) === 'true' || donVi.IS_DELETED === true) {
+    throw new Error('DON_VI is deleted: ' + donViId);
   }
 }
 
@@ -74,4 +89,66 @@ function ensureTaskCanComplete(taskId) {
  */
 function assertValidUpdateType(updateType) {
   cbvAssert(TASK_UPDATE_TYPES.indexOf(updateType) !== -1, 'Invalid UPDATE_TYPE: ' + updateType);
+}
+
+/**
+ * Validates task create/update payload for PRO architecture.
+ * @param {Object} data - Create/update payload
+ * @param {boolean} isCreate - true for create
+ * @returns {{ valid: boolean, errors: string[] }}
+ */
+function validateTaskPayload(data, isCreate) {
+  var errors = [];
+  if (!data || typeof data !== 'object') {
+    return { valid: false, errors: ['Payload required'] };
+  }
+  if (isCreate) {
+    if (!String(data.TITLE || '').trim()) errors.push('TITLE required');
+    if (!String(data.OWNER_ID || '').trim()) errors.push('OWNER_ID required');
+    if (!String(data.DON_VI_ID || '').trim()) errors.push('DON_VI_ID required');
+    if (!String(data.PRIORITY || '').trim()) errors.push('PRIORITY required');
+  }
+  if (data.DON_VI_ID != null && String(data.DON_VI_ID).trim()) {
+    var dv = typeof donViFindById === 'function' ? donViFindById(String(data.DON_VI_ID).trim()) : null;
+    if (!dv) errors.push('DON_VI_ID does not reference active DON_VI');
+    else if (String(dv.STATUS) !== 'ACTIVE' || dv.IS_DELETED === true) errors.push('DON_VI is not active');
+  }
+  if (data.TASK_TYPE_ID != null && String(data.TASK_TYPE_ID).trim()) {
+    try {
+      if (typeof assertActiveTaskTypeId === 'function') assertActiveTaskTypeId(data.TASK_TYPE_ID, 'TASK_TYPE_ID');
+    } catch (e) { errors.push('TASK_TYPE_ID: ' + (e.message || e)); }
+  }
+  if (data.OWNER_ID != null && String(data.OWNER_ID).trim()) {
+    try {
+      if (typeof assertActiveUserId === 'function') assertActiveUserId(data.OWNER_ID, 'OWNER_ID');
+    } catch (e) { errors.push('OWNER_ID: ' + (e.message || e)); }
+  }
+  if (data.PRIORITY != null && String(data.PRIORITY).trim()) {
+    var prio = String(data.PRIORITY).trim();
+    if (['CAO', 'TRUNG_BINH', 'THAP'].indexOf(prio) === -1) {
+      if (typeof assertValidEnumValue === 'function') {
+        try { assertValidEnumValue('TASK_PRIORITY', prio, 'PRIORITY'); } catch (e) { errors.push('PRIORITY: ' + e.message); }
+      } else errors.push('PRIORITY must be CAO, TRUNG_BINH, or THAP');
+    }
+  }
+  if (data.TITLE != null && String(data.TITLE).length > 500) errors.push('TITLE max 500 chars');
+  return { valid: errors.length === 0, errors: errors };
+}
+
+/**
+ * Pre-validate create payload. Call before createTask for early failure.
+ * @param {Object} data
+ * @returns {{ valid: boolean, errors: string[] }}
+ */
+function validateTaskForCreate(data) {
+  return validateTaskPayload(data, true);
+}
+
+/**
+ * Pre-validate update patch. Call before updateTask for early failure.
+ * @param {Object} patch
+ * @returns {{ valid: boolean, errors: string[] }}
+ */
+function validateTaskForUpdate(patch) {
+  return validateTaskPayload(patch || {}, false);
 }

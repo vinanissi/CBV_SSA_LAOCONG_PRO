@@ -155,7 +155,7 @@ Behavior, schema, GAS/AppSheet mapping, enum/master-code layers, and admin gover
 ### Task Layer (see 02_MODULES/TASK_CENTER/TASK_SYSTEM_REFERENCE.md)
 | Function | Purpose |
 |----------|---------|
-| createTask(data) | Create task; HTX_ID, OWNER_ID, TITLE, PRIORITY required |
+| createTask(data) | Create task; OWNER_ID, TITLE, PRIORITY required; DON_VI_ID optional |
 | updateTask(id, patch) | Update; blocks STATUS, DONE_AT, PROGRESS_PERCENT |
 | assignTask(taskId, ownerId) | Assign owner; NEW→ASSIGNED |
 | setTaskStatus(taskId, newStatus, note) | Status transition |

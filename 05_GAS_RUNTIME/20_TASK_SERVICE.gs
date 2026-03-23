@@ -34,20 +34,20 @@ function syncTaskProgress(taskId) {
 }
 
 /**
- * Internal: append log row. Uses UPDATE_TYPE, CONTENT.
+ * Internal: append log row. Uses UPDATE_TYPE, ACTION.
  */
 function _addTaskUpdateLog(taskId, updateType, content, oldStatus, newStatus) {
   assertValidUpdateType(updateType);
   var actorId = (typeof mapCurrentUserEmailToInternalId === 'function' ? mapCurrentUserEmailToInternalId() : null) || cbvUser();
-  var c = content || '';
+  var action = content || '';
   if (updateType === 'STATUS_CHANGE' && (oldStatus || newStatus)) {
-    c = (oldStatus ? oldStatus + ' → ' : '') + (newStatus || '') + (c ? ' | ' + c : '');
+    action = (oldStatus ? oldStatus + ' → ' : '') + (newStatus || '') + (action ? ' | ' + action : '');
   }
   var record = {
     ID: cbvMakeId('TLOG'),
     TASK_ID: taskId,
     UPDATE_TYPE: updateType,
-    CONTENT: c,
+    ACTION: action,
     ACTOR_ID: actorId,
     CREATED_AT: cbvNow(),
     CREATED_BY: cbvUser(),
@@ -60,7 +60,7 @@ function _addTaskUpdateLog(taskId, updateType, content, oldStatus, newStatus) {
 }
 
 /**
- * Create task. HTX_ID, OWNER_ID, TITLE, PRIORITY required.
+ * Create task. DON_VI_ID, OWNER_ID, TITLE, PRIORITY required.
  * @param {Object} data
  * @returns {Object} cbvResponse
  */
@@ -68,24 +68,25 @@ function createTask(data) {
   ensureRequired(data.TITLE, 'TITLE');
   ensureMaxLength(data.TITLE, 500, 'TITLE');
   ensureRequired(data.OWNER_ID, 'OWNER_ID');
-  ensureRequired(data.HTX_ID, 'HTX_ID');
+  ensureRequired(data.DON_VI_ID, 'DON_VI_ID');
   ensureRequired(data.PRIORITY, 'PRIORITY');
   if (typeof assertActiveUserId === 'function') assertActiveUserId(data.OWNER_ID, 'OWNER_ID');
-  if (typeof assertActiveHtxId === 'function') assertActiveHtxId(data.HTX_ID, 'HTX_ID');
+  if (typeof assertActiveDonViId === 'function') assertActiveDonViId(data.DON_VI_ID, 'DON_VI_ID');
   if (data.REPORTER_ID && typeof assertActiveUserId === 'function') assertActiveUserId(data.REPORTER_ID, 'REPORTER_ID');
   assertValidEnumValue('TASK_PRIORITY', data.PRIORITY, 'PRIORITY');
-  assertValidEnumValue('TASK_TYPE', data.TASK_TYPE || 'GENERAL', 'TASK_TYPE');
   if (data.RELATED_ENTITY_TYPE != null) assertValidEnumValue('RELATED_ENTITY_TYPE', data.RELATED_ENTITY_TYPE, 'RELATED_ENTITY_TYPE');
+  var taskTypeId = (data.TASK_TYPE_ID && String(data.TASK_TYPE_ID).trim()) ? data.TASK_TYPE_ID : '';
+  if (taskTypeId && typeof assertActiveTaskTypeId === 'function') assertActiveTaskTypeId(taskTypeId, 'TASK_TYPE_ID');
 
   var record = {
     ID: cbvMakeId('TASK'),
     TASK_CODE: data.TASK_CODE || cbvMakeId('TK'),
     TITLE: data.TITLE,
     DESCRIPTION: data.DESCRIPTION || '',
-    TASK_TYPE: data.TASK_TYPE || 'GENERAL',
+    TASK_TYPE_ID: taskTypeId,
     STATUS: 'NEW',
     PRIORITY: data.PRIORITY,
-    HTX_ID: data.HTX_ID,
+    DON_VI_ID: data.DON_VI_ID || '',
     OWNER_ID: data.OWNER_ID,
     REPORTER_ID: data.REPORTER_ID || (typeof mapCurrentUserEmailToInternalId === 'function' ? mapCurrentUserEmailToInternalId() : null) || '',
     START_DATE: data.START_DATE || '',
@@ -126,10 +127,10 @@ function updateTask(id, patch) {
   });
   if (Object.keys(patch).length === 0) return cbvResponse(true, 'TASK_NO_CHANGE', 'No editable fields', task, []);
 
-  if (patch.HTX_ID != null) assertActiveHtxId(patch.HTX_ID, 'HTX_ID');
+  if (patch.DON_VI_ID != null && String(patch.DON_VI_ID).trim() && typeof assertActiveDonViId === 'function') assertActiveDonViId(patch.DON_VI_ID, 'DON_VI_ID');
+  if (patch.TASK_TYPE_ID != null && String(patch.TASK_TYPE_ID).trim() && typeof assertActiveTaskTypeId === 'function') assertActiveTaskTypeId(patch.TASK_TYPE_ID, 'TASK_TYPE_ID');
   if (patch.OWNER_ID != null && typeof assertActiveUserId === 'function') assertActiveUserId(patch.OWNER_ID, 'OWNER_ID');
   if (patch.REPORTER_ID != null && patch.REPORTER_ID !== '' && typeof assertActiveUserId === 'function') assertActiveUserId(patch.REPORTER_ID, 'REPORTER_ID');
-  if (patch.TASK_TYPE != null) assertValidEnumValue('TASK_TYPE', patch.TASK_TYPE, 'TASK_TYPE');
   if (patch.PRIORITY != null) assertValidEnumValue('TASK_PRIORITY', patch.PRIORITY, 'PRIORITY');
   if (patch.RELATED_ENTITY_TYPE != null) assertValidEnumValue('RELATED_ENTITY_TYPE', patch.RELATED_ENTITY_TYPE, 'RELATED_ENTITY_TYPE');
 
@@ -226,6 +227,61 @@ function completeTask(taskId, resultSummary) {
  */
 function cancelTask(taskId, note) {
   return setTaskStatus(taskId, 'CANCELLED', note || '');
+}
+
+/**
+ * BẮT ĐẦU - Start task. NEW/ASSIGNED → IN_PROGRESS. Sets START_DATE if blank.
+ * @param {string} taskId
+ * @returns {Object} cbvResponse
+ */
+function taskStartAction(taskId) {
+  var task = taskFindById(taskId);
+  cbvAssert(task, 'Task not found');
+  cbvAssert(['NEW', 'ASSIGNED'].indexOf(String(task.STATUS)) !== -1, 'Can only start NEW or ASSIGNED task');
+  var patch = { STATUS: 'IN_PROGRESS', UPDATED_AT: cbvNow(), UPDATED_BY: cbvUser() };
+  if (!task.START_DATE || String(task.START_DATE).trim() === '') {
+    patch.START_DATE = cbvNow();
+  }
+  taskUpdateMain(task._rowNumber, patch);
+  _addTaskUpdateLog(taskId, 'STATUS_CHANGE', 'Bắt đầu', String(task.STATUS), 'IN_PROGRESS');
+  return cbvResponse(true, 'TASK_STARTED', 'Đã bắt đầu', Object.assign({}, task, patch), []);
+}
+
+/**
+ * HOÀN THÀNH - Complete task. Alias for completeTask.
+ * @param {string} taskId
+ * @param {string} resultSummary
+ * @returns {Object} cbvResponse
+ */
+function taskCompleteAction(taskId, resultSummary) {
+  return completeTask(taskId, resultSummary);
+}
+
+/**
+ * HỦY - Cancel task. Alias for cancelTask.
+ * @param {string} taskId
+ * @param {string} note
+ * @returns {Object} cbvResponse
+ */
+function taskCancelAction(taskId, note) {
+  return cancelTask(taskId, note);
+}
+
+/**
+ * MỞ LẠI - Reopen task. DONE/CANCELLED → IN_PROGRESS.
+ * @param {string} taskId
+ * @returns {Object} cbvResponse
+ */
+function taskReopenAction(taskId) {
+  var task = taskFindById(taskId);
+  cbvAssert(task, 'Task not found');
+  var s = String(task.STATUS);
+  cbvAssert(['DONE', 'CANCELLED'].indexOf(s) !== -1, 'Can only reopen DONE or CANCELLED task');
+  var patch = { STATUS: 'IN_PROGRESS', UPDATED_AT: cbvNow(), UPDATED_BY: cbvUser() };
+  if (s === 'DONE') patch.DONE_AT = '';
+  taskUpdateMain(task._rowNumber, patch);
+  _addTaskUpdateLog(taskId, 'STATUS_CHANGE', 'Mở lại', s, 'IN_PROGRESS');
+  return cbvResponse(true, 'TASK_REOPENED', 'Đã mở lại', Object.assign({}, task, patch), []);
 }
 
 /** Alias for setTaskStatus. */

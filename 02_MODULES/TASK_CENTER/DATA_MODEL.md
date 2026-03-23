@@ -13,10 +13,10 @@
 | 2 | TASK_CODE | Text | | Business code; GAS may generate |
 | 3 | TITLE | Text | | Required |
 | 4 | DESCRIPTION | Text | | |
-| 5 | TASK_TYPE | Enum | | TASK_TYPE |
+| 5 | TASK_TYPE_ID | Text | Ref MASTER_CODE | MASTER_GROUP=TASK_TYPE |
 | 6 | STATUS | Enum | | TASK_STATUS; GAS action only |
 | 7 | PRIORITY | Enum | | TASK_PRIORITY |
-| 8 | HTX_ID | Text | → ACTIVE_HTX | Task belongs to HTX |
+| 8 | DON_VI_ID | Text | → ACTIVE_DON_VI | Task organizational unit |
 | 9 | OWNER_ID | Text | → ACTIVE_USERS | Assignee |
 | 10 | REPORTER_ID | Text | → ACTIVE_USERS | Creator |
 | 11 | START_DATE | Date | | |
@@ -96,7 +96,7 @@
 
 | From | Column | To |
 |------|--------|-----|
-| TASK_MAIN | HTX_ID | HO_SO_MASTER (ACTIVE_HTX) |
+| TASK_MAIN | DON_VI_ID | DON_VI (ACTIVE_DON_VI) |
 | TASK_MAIN | OWNER_ID | USER_DIRECTORY (ACTIVE_USERS) |
 | TASK_MAIN | REPORTER_ID | USER_DIRECTORY (ACTIVE_USERS) |
 | TASK_CHECKLIST | TASK_ID | TASK_MAIN |

@@ -8,6 +8,7 @@ Per-table canonical config: key, label, refs, enum fields, risks.
 
 | Table | Key | Label |
 |-------|-----|-------|
+| DON_VI | ID | DISPLAY_TEXT |
 | HO_SO_MASTER | ID | NAME |
 | HO_SO_FILE | ID | FILE_NAME |
 | HO_SO_RELATION | ID | RELATION_TYPE |
@@ -28,6 +29,8 @@ Per-table canonical config: key, label, refs, enum fields, risks.
 
 | Table | Column | Ref Table | Filter/Notes |
 |-------|--------|-----------|--------------|
+| DON_VI | PARENT_ID | DON_VI | Self-ref; hierarchy |
+| DON_VI | MANAGER_USER_ID | USER_DIRECTORY | ACTIVE_USERS slice |
 | HO_SO_MASTER | HTX_ID | HO_SO_MASTER | HO_SO_TYPE = "HTX" |
 | HO_SO_FILE | HO_SO_ID | HO_SO_MASTER | |
 | HO_SO_RELATION | FROM_HO_SO_ID, TO_HO_SO_ID | HO_SO_MASTER | |
@@ -47,6 +50,7 @@ OWNER_ID, REPORTER_ID, CREATED_BY, CONFIRMED_BY: User (email), not table ref.
 
 | Table | Field | ENUM_GROUP |
 |-------|-------|------------|
+| DON_VI | DON_VI_TYPE, STATUS | DON_VI_TYPE, DON_VI_STATUS |
 | HO_SO_MASTER | HO_SO_TYPE, STATUS | HO_SO_TYPE, HO_SO_STATUS |
 | HO_SO_FILE | FILE_GROUP, STATUS | FILE_GROUP, HO_SO_STATUS |
 | HO_SO_RELATION | STATUS | HO_SO_STATUS |

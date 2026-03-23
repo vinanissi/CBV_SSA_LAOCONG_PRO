@@ -4,8 +4,28 @@
  * Dependencies: 90_BOOTSTRAP_SCHEMA, 90_BOOTSTRAP_AUDIT helpers, 03_SHARED_REPOSITORY
  *
  * Run repairSchemaAndData() to fix schema columns and data blanks.
- * Transition-safe: keeps legacy columns ACTION, OLD_STATUS, NEW_STATUS, NOTE, RESULT_NOTE, FILE_NAME.
+ * PRO schema: DON_VI_ID, TASK_TYPE_ID. No legacy columns.
  */
+
+function _repairGetFirstDonViId(ss) {
+  var sheet = ss.getSheetByName(CBV_CONFIG.SHEETS.DON_VI || 'DON_VI');
+  if (!sheet) return null;
+  var loaded = typeof loadSheetDataSafe === 'function' ? loadSheetDataSafe(sheet, 'DON_VI') : null;
+  if (!loaded || loaded.rowCount === 0) return null;
+  var h = loaded.headers;
+  var idIdx = h.indexOf('ID');
+  var stIdx = h.indexOf('STATUS');
+  if (idIdx < 0) return null;
+  for (var i = 0; i < loaded.rows.length; i++) {
+    var r = loaded.rows[i];
+    if (stIdx < 0 || String(r.STATUS || r[stIdx] || '').trim() === 'ACTIVE') {
+      var id = String(r.ID || r[idIdx] || '').trim();
+      if (id) return id;
+    }
+  }
+  var first = loaded.rows[0];
+  return first ? (String(first.ID || first[idIdx] || '').trim() || null) : null;
+}
 
 /** ACTION -> UPDATE_TYPE mapping for TASK_UPDATE_LOG backfill */
 var ACTION_TO_UPDATE_TYPE = {
@@ -45,8 +65,7 @@ function _repairInsertColumn(sheet, colPosition, headerName) {
 }
 
 /**
- * Repairs schema: adds HTX_ID to TASK_MAIN and UPDATE_TYPE to TASK_UPDATE_LOG if missing.
- * Non-destructive. Keeps legacy columns.
+ * Repairs schema: adds DON_VI_ID, TASK_TYPE_ID to TASK_MAIN and UPDATE_TYPE, ACTION to TASK_UPDATE_LOG if missing.
  * @returns {Object} { ok, schemaRepairs: string[] }
  */
 function repairSchemaColumns() {
@@ -56,13 +75,15 @@ function repairSchemaColumns() {
   var taskMain = ss.getSheetByName(CBV_CONFIG.SHEETS.TASK_MAIN);
   if (taskMain) {
     var headers = taskMain.getRange(1, 1, 1, taskMain.getLastColumn() || 1).getValues()[0];
-    if (headers.indexOf('HTX_ID') === -1) {
-      var expectedHeaders = getSchemaHeaders(CBV_CONFIG.SHEETS.TASK_MAIN);
-      var htxPos = expectedHeaders.indexOf('HTX_ID') + 1;
-      if (htxPos > 0 && _repairInsertColumn(taskMain, htxPos, 'HTX_ID')) {
-        result.schemaRepairs.push('TASK_MAIN: added HTX_ID at col ' + htxPos);
+    var expected = getSchemaHeaders(CBV_CONFIG.SHEETS.TASK_MAIN);
+    ['DON_VI_ID', 'TASK_TYPE_ID'].forEach(function(col) {
+      if (headers.indexOf(col) === -1) {
+        var pos = expected.indexOf(col) + 1;
+        if (pos > 0 && _repairInsertColumn(taskMain, pos, col)) {
+          result.schemaRepairs.push('TASK_MAIN: added ' + col + ' at col ' + pos);
+        }
       }
-    }
+    });
   }
 
   var taskLog = ss.getSheetByName(CBV_CONFIG.SHEETS.TASK_UPDATE_LOG);
@@ -94,42 +115,45 @@ function repairSchemaColumns() {
 function repairUserDirectoryBlanks() {
   var result = { ok: true, repaired: 0, rowsFixed: [], manualReview: [] };
   var sheet = SpreadsheetApp.getActive().getSheetByName(CBV_CONFIG.SHEETS.USER_DIRECTORY);
-  if (!sheet || sheet.getLastRow() < 2) return result;
+  if (!sheet) return result;
+  var loaded = typeof loadSheetDataSafe === 'function' ? loadSheetDataSafe(sheet, CBV_CONFIG.SHEETS.USER_DIRECTORY) : null;
+  if (!loaded || loaded.rowCount === 0) return result;
 
-  var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  var headers = loaded.headers;
   var roleIdx = headers.indexOf('ROLE');
   var statusIdx = headers.indexOf('STATUS');
   if (roleIdx === -1 || statusIdx === -1) return result;
 
-  var validRoles = (typeof getEnumValues === 'function' ? getEnumValues('ROLE') : null) || CBV_ENUM.ROLE || ['ADMIN', 'OPERATOR', 'ACCOUNTANT', 'VIEWER'];
-  var validStatuses = (typeof getEnumValues === 'function' ? getEnumValues('USER_DIRECTORY_STATUS') : null) || CBV_ENUM.USER_DIRECTORY_STATUS || ['ACTIVE', 'INACTIVE', 'ARCHIVED'];
+  var validRoles = (typeof getEnumValues === 'function' ? getEnumValues('ROLE') : null) || (typeof CBV_ENUM !== 'undefined' && CBV_ENUM.ROLE) || ['ADMIN', 'OPERATOR', 'ACCOUNTANT', 'VIEWER'];
+  var validStatuses = (typeof getEnumValues === 'function' ? getEnumValues('USER_DIRECTORY_STATUS') : null) || (typeof CBV_ENUM !== 'undefined' && CBV_ENUM.USER_DIRECTORY_STATUS) || ['ACTIVE', 'INACTIVE', 'ARCHIVED'];
 
-  for (var r = 2; r <= sheet.getLastRow(); r++) {
-    var roleVal = String(sheet.getRange(r, roleIdx + 1).getValue() || '').trim();
-    var statusVal = String(sheet.getRange(r, statusIdx + 1).getValue() || '').trim();
+  loaded.rows.forEach(function(r) {
+    var rowNum = r._rowNumber || 0;
+    var roleVal = String(r.ROLE || r[roleIdx] || '').trim();
+    var statusVal = String(r.STATUS || r[statusIdx] || '').trim();
 
     if (!roleVal) {
       if (validRoles.indexOf('OPERATOR') !== -1) {
-        sheet.getRange(r, roleIdx + 1).setValue('OPERATOR');
+        sheet.getRange(rowNum, roleIdx + 1).setValue('OPERATOR');
         result.repaired++;
-        result.rowsFixed.push({ sheet: 'USER_DIRECTORY', row: r, col: 'ROLE', from: '(blank)', to: 'OPERATOR', decision: 'Safe default for non-admin' });
+        result.rowsFixed.push({ sheet: 'USER_DIRECTORY', row: rowNum, col: 'ROLE', from: '(blank)', to: 'OPERATOR', decision: 'Safe default for non-admin' });
       } else {
-        result.manualReview.push({ row: r, col: 'ROLE', sheet: 'USER_DIRECTORY' });
+        result.manualReview.push({ row: rowNum, col: 'ROLE', sheet: 'USER_DIRECTORY' });
       }
     } else if (validRoles.indexOf(roleVal) === -1 && roleVal.toUpperCase() === 'ACCOUNTANT') {
       if (validRoles.indexOf('ACCOUNTANT') !== -1) {
-        sheet.getRange(r, roleIdx + 1).setValue('ACCOUNTANT');
+        sheet.getRange(rowNum, roleIdx + 1).setValue('ACCOUNTANT');
         result.repaired++;
-        result.rowsFixed.push({ sheet: 'USER_DIRECTORY', row: r, col: 'ROLE', from: roleVal, to: 'ACCOUNTANT', decision: 'Normalized to canonical enum value' });
+        result.rowsFixed.push({ sheet: 'USER_DIRECTORY', row: rowNum, col: 'ROLE', from: roleVal, to: 'ACCOUNTANT', decision: 'Normalized to canonical enum value' });
       }
     }
 
     if (!statusVal) {
-      sheet.getRange(r, statusIdx + 1).setValue('ACTIVE');
+      sheet.getRange(rowNum, statusIdx + 1).setValue('ACTIVE');
       result.repaired++;
-      result.rowsFixed.push({ sheet: 'USER_DIRECTORY', row: r, col: 'STATUS', from: '(blank)', to: 'ACTIVE', decision: 'Safe default' });
+      result.rowsFixed.push({ sheet: 'USER_DIRECTORY', row: rowNum, col: 'STATUS', from: '(blank)', to: 'ACTIVE', decision: 'Safe default' });
     }
-  }
+  });
 
   return result;
 }
@@ -144,9 +168,11 @@ function repairHoSoMasterBlanks() {
   var result = { ok: true, repaired: 0, rowsFixed: [], manualReview: [] };
   var ss = SpreadsheetApp.getActive();
   var sheet = ss.getSheetByName(CBV_CONFIG.SHEETS.HO_SO_MASTER);
-  if (!sheet || sheet.getLastRow() < 2) return result;
+  if (!sheet) return result;
+  var loaded = typeof loadSheetDataSafe === 'function' ? loadSheetDataSafe(sheet, CBV_CONFIG.SHEETS.HO_SO_MASTER) : null;
+  if (!loaded || loaded.rowCount === 0) return result;
 
-  var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  var headers = loaded.headers;
   var idIdx = headers.indexOf('ID');
   var typeIdx = headers.indexOf('HO_SO_TYPE');
   var statusIdx = headers.indexOf('STATUS');
@@ -154,24 +180,24 @@ function repairHoSoMasterBlanks() {
 
   var hoSoIdsWithFiles = {};
   var fileSheet = ss.getSheetByName(CBV_CONFIG.SHEETS.HO_SO_FILE);
-  if (fileSheet && fileSheet.getLastRow() >= 2) {
-    var fHeaders = fileSheet.getRange(1, 1, 1, fileSheet.getLastColumn()).getValues()[0];
-    var fHoSoIdx = fHeaders.indexOf('HO_SO_ID');
+  var fileLoaded = fileSheet && typeof loadSheetDataSafe === 'function' ? loadSheetDataSafe(fileSheet, CBV_CONFIG.SHEETS.HO_SO_FILE) : null;
+  if (fileLoaded && fileLoaded.rowCount > 0) {
+    var fHoSoIdx = fileLoaded.headers.indexOf('HO_SO_ID');
     if (fHoSoIdx >= 0) {
-      var fRows = fileSheet.getRange(2, 1, fileSheet.getLastRow(), fileSheet.getLastColumn()).getValues();
-      for (var i = 0; i < fRows.length; i++) {
-        var hsId = String(fRows[i][fHoSoIdx] || '').trim();
+      fileLoaded.rows.forEach(function(r) {
+        var hsId = String(r.HO_SO_ID || r[fHoSoIdx] || '').trim();
         if (hsId) hoSoIdsWithFiles[hsId] = true;
-      }
+      });
     }
   }
 
   var typeFromId = { 'HTX_': 'HTX', 'XV_': 'XA_VIEN', 'XE_': 'XE', 'TX_': 'TAI_XE' };
 
-  for (var r = 2; r <= sheet.getLastRow(); r++) {
-    var idVal = String(sheet.getRange(r, idIdx + 1).getValue() || '').trim();
-    var typeVal = String(sheet.getRange(r, typeIdx + 1).getValue() || '').trim();
-    var statusVal = String(sheet.getRange(r, statusIdx + 1).getValue() || '').trim();
+  loaded.rows.forEach(function(r) {
+    var rowNum = r._rowNumber || 0;
+    var idVal = String(r.ID || r[idIdx] || '').trim();
+    var typeVal = String(r.HO_SO_TYPE || r[typeIdx] || '').trim();
+    var statusVal = String(r.STATUS || r[statusIdx] || '').trim();
 
     if (!typeVal) {
       var inferred = null;
@@ -179,21 +205,21 @@ function repairHoSoMasterBlanks() {
         if (idVal.indexOf(prefix) === 0) { inferred = typeFromId[prefix]; break; }
       }
       if (inferred) {
-        sheet.getRange(r, typeIdx + 1).setValue(inferred);
+        sheet.getRange(rowNum, typeIdx + 1).setValue(inferred);
         result.repaired++;
-        result.rowsFixed.push({ sheet: 'HO_SO_MASTER', row: r, col: 'HO_SO_TYPE', from: '(blank)', to: inferred, decision: 'Inferred from ID prefix ' + (idVal.substring(0, 4) || '') });
+        result.rowsFixed.push({ sheet: 'HO_SO_MASTER', row: rowNum, col: 'HO_SO_TYPE', from: '(blank)', to: inferred, decision: 'Inferred from ID prefix ' + (idVal.substring(0, 4) || '') });
       } else {
-        result.manualReview.push({ row: r, col: 'HO_SO_TYPE', id: idVal, sheet: 'HO_SO_MASTER' });
+        result.manualReview.push({ row: rowNum, col: 'HO_SO_TYPE', id: idVal, sheet: 'HO_SO_MASTER' });
       }
     }
 
     if (!statusVal) {
       var defaultStatus = hoSoIdsWithFiles[idVal] ? 'ACTIVE' : 'NEW';
-      sheet.getRange(r, statusIdx + 1).setValue(defaultStatus);
+      sheet.getRange(rowNum, statusIdx + 1).setValue(defaultStatus);
       result.repaired++;
-      result.rowsFixed.push({ sheet: 'HO_SO_MASTER', row: r, col: 'STATUS', from: '(blank)', to: defaultStatus, decision: (defaultStatus === 'ACTIVE' ? 'Has HO_SO_FILE rows (in use)' : 'No files; default NEW') });
+      result.rowsFixed.push({ sheet: 'HO_SO_MASTER', row: rowNum, col: 'STATUS', from: '(blank)', to: defaultStatus, decision: (defaultStatus === 'ACTIVE' ? 'Has HO_SO_FILE rows (in use)' : 'No files; default NEW') });
     }
-  }
+  });
 
   return result;
 }
@@ -205,22 +231,25 @@ function repairHoSoMasterBlanks() {
 function repairHoSoFileBlanks() {
   var result = { ok: true, repaired: 0, rowsFixed: [] };
   var sheet = SpreadsheetApp.getActive().getSheetByName(CBV_CONFIG.SHEETS.HO_SO_FILE);
-  if (!sheet || sheet.getLastRow() < 2) return result;
+  if (!sheet) return result;
+  var loaded = typeof loadSheetDataSafe === 'function' ? loadSheetDataSafe(sheet, CBV_CONFIG.SHEETS.HO_SO_FILE) : null;
+  if (!loaded || loaded.rowCount === 0) return result;
 
-  var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  var headers = loaded.headers;
   var fgIdx = headers.indexOf('FILE_GROUP');
   var idIdx = headers.indexOf('ID');
   if (fgIdx === -1) return result;
 
-  for (var r = 2; r <= sheet.getLastRow(); r++) {
-    var fgVal = String(sheet.getRange(r, fgIdx + 1).getValue() || '').trim();
+  loaded.rows.forEach(function(r) {
+    var rowNum = r._rowNumber || 0;
+    var fgVal = String(r.FILE_GROUP || r[fgIdx] || '').trim();
     if (!fgVal) {
-      sheet.getRange(r, fgIdx + 1).setValue('KHAC');
+      sheet.getRange(rowNum, fgIdx + 1).setValue('KHAC');
       result.repaired++;
-      var rowId = idIdx >= 0 ? String(sheet.getRange(r, idIdx + 1).getValue() || '').trim() : '';
-      result.rowsFixed.push({ sheet: 'HO_SO_FILE', row: r, col: 'FILE_GROUP', from: '(blank)', to: 'KHAC', decision: 'Unknown file group; KHAC = other' });
+      var rowId = idIdx >= 0 ? String(r.ID || r[idIdx] || '').trim() : '';
+      result.rowsFixed.push({ sheet: 'HO_SO_FILE', row: rowNum, col: 'FILE_GROUP', from: '(blank)', to: 'KHAC', decision: 'Unknown file group; KHAC = other' });
     }
-  }
+  });
 
   return result;
 }
@@ -232,9 +261,11 @@ function repairHoSoFileBlanks() {
 function repairFinanceTransactionBlanks() {
   var result = { ok: true, statusFilled: 0, transTypeFilled: 0, rowsFixed: [], manualReview: [] };
   var sheet = SpreadsheetApp.getActive().getSheetByName(CBV_CONFIG.SHEETS.FINANCE_TRANSACTION);
-  if (!sheet || sheet.getLastRow() < 2) return result;
+  if (!sheet) return result;
+  var loaded = typeof loadSheetDataSafe === 'function' ? loadSheetDataSafe(sheet, CBV_CONFIG.SHEETS.FINANCE_TRANSACTION) : null;
+  if (!loaded || loaded.rowCount === 0) return result;
 
-  var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  var headers = loaded.headers;
   var statusIdx = headers.indexOf('STATUS');
   var transTypeIdx = headers.indexOf('TRANS_TYPE');
   var categoryIdx = headers.indexOf('CATEGORY');
@@ -242,29 +273,30 @@ function repairFinanceTransactionBlanks() {
 
   var categoryToType = { 'THU_KHAC': 'INCOME', 'VAN_HANH': 'EXPENSE', 'NHIEN_LIEU': 'EXPENSE', 'SUA_CHUA': 'EXPENSE', 'LUONG': 'EXPENSE', 'CHI_KHAC': 'EXPENSE' };
 
-  for (var r = 2; r <= sheet.getLastRow(); r++) {
-    var statusVal = String(sheet.getRange(r, statusIdx + 1).getValue() || '').trim();
-    var transTypeVal = String(sheet.getRange(r, transTypeIdx + 1).getValue() || '').trim();
-    var categoryVal = categoryIdx >= 0 ? String(sheet.getRange(r, categoryIdx + 1).getValue() || '').trim() : '';
-    var rowId = idIdx >= 0 ? String(sheet.getRange(r, idIdx + 1).getValue() || '').trim() : '';
+  loaded.rows.forEach(function(r) {
+    var rowNum = r._rowNumber || 0;
+    var statusVal = String(r.STATUS || r[statusIdx] || '').trim();
+    var transTypeVal = String(r.TRANS_TYPE || r[transTypeIdx] || '').trim();
+    var categoryVal = categoryIdx >= 0 ? String(r.CATEGORY || r[categoryIdx] || '').trim() : '';
+    var rowId = idIdx >= 0 ? String(r.ID || r[idIdx] || '').trim() : '';
 
     if (!statusVal) {
-      sheet.getRange(r, statusIdx + 1).setValue('NEW');
+      sheet.getRange(rowNum, statusIdx + 1).setValue('NEW');
       result.statusFilled++;
-      result.rowsFixed.push({ sheet: 'FINANCE_TRANSACTION', row: r, col: 'STATUS', from: '(blank)', to: 'NEW', id: rowId, decision: 'Safe default' });
+      result.rowsFixed.push({ sheet: 'FINANCE_TRANSACTION', row: rowNum, col: 'STATUS', from: '(blank)', to: 'NEW', id: rowId, decision: 'Safe default' });
     }
 
     if (!transTypeVal) {
       var inferred = categoryVal ? (categoryToType[categoryVal] || null) : null;
       if (inferred) {
-        sheet.getRange(r, transTypeIdx + 1).setValue(inferred);
+        sheet.getRange(rowNum, transTypeIdx + 1).setValue(inferred);
         result.transTypeFilled++;
-        result.rowsFixed.push({ sheet: 'FINANCE_TRANSACTION', row: r, col: 'TRANS_TYPE', from: '(blank)', to: inferred, id: rowId, decision: 'Inferred from CATEGORY ' + categoryVal });
+        result.rowsFixed.push({ sheet: 'FINANCE_TRANSACTION', row: rowNum, col: 'TRANS_TYPE', from: '(blank)', to: inferred, id: rowId, decision: 'Inferred from CATEGORY ' + categoryVal });
       } else {
-        result.manualReview.push({ sheet: 'FINANCE_TRANSACTION', row: r, col: 'TRANS_TYPE', id: rowId });
+        result.manualReview.push({ sheet: 'FINANCE_TRANSACTION', row: rowNum, col: 'TRANS_TYPE', id: rowId });
       }
     }
-  }
+  });
 
   return result;
 }
@@ -276,88 +308,79 @@ function repairFinanceTransactionBlanks() {
 function repairTaskUpdateLogBlanks() {
   var result = { ok: true, updateTypeFilled: 0, actionFilled: 0, rowsFixed: [] };
   var sheet = SpreadsheetApp.getActive().getSheetByName(CBV_CONFIG.SHEETS.TASK_UPDATE_LOG);
-  if (!sheet || sheet.getLastRow() < 2) return result;
+  if (!sheet) return result;
+  var loaded = typeof loadSheetDataSafe === 'function' ? loadSheetDataSafe(sheet, CBV_CONFIG.SHEETS.TASK_UPDATE_LOG) : null;
+  if (!loaded || loaded.rowCount === 0) return result;
 
-  var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  var headers = loaded.headers;
   var updateTypeIdx = headers.indexOf('UPDATE_TYPE');
   var actionIdx = headers.indexOf('ACTION');
 
   if (updateTypeIdx === -1) return result;
 
-  for (var r = 2; r <= sheet.getLastRow(); r++) {
-    var updateTypeVal = String(sheet.getRange(r, updateTypeIdx + 1).getValue() || '').trim();
-    var actionVal = actionIdx >= 0 ? String(sheet.getRange(r, actionIdx + 1).getValue() || '').trim() : '';
+  loaded.rows.forEach(function(r) {
+    var rowNum = r._rowNumber || 0;
+    var updateTypeVal = String(r.UPDATE_TYPE || r[updateTypeIdx] || '').trim();
+    var actionVal = actionIdx >= 0 ? String(r.ACTION || r[actionIdx] || '').trim() : '';
 
     if (!updateTypeVal && actionVal) {
       var mapped = ACTION_TO_UPDATE_TYPE[actionVal] || 'NOTE';
-      sheet.getRange(r, updateTypeIdx + 1).setValue(mapped);
+      sheet.getRange(rowNum, updateTypeIdx + 1).setValue(mapped);
       result.updateTypeFilled++;
-      result.rowsFixed.push({ sheet: 'TASK_UPDATE_LOG', row: r, col: 'UPDATE_TYPE', from: '(blank)', to: mapped, decision: 'Mapped from ACTION' });
+      result.rowsFixed.push({ sheet: 'TASK_UPDATE_LOG', row: rowNum, col: 'UPDATE_TYPE', from: '(blank)', to: mapped, decision: 'Mapped from ACTION' });
     } else if (!updateTypeVal) {
-      sheet.getRange(r, updateTypeIdx + 1).setValue('NOTE');
+      sheet.getRange(rowNum, updateTypeIdx + 1).setValue('NOTE');
       result.updateTypeFilled++;
-      result.rowsFixed.push({ sheet: 'TASK_UPDATE_LOG', row: r, col: 'UPDATE_TYPE', from: '(blank)', to: 'NOTE', decision: 'Default' });
+      result.rowsFixed.push({ sheet: 'TASK_UPDATE_LOG', row: rowNum, col: 'UPDATE_TYPE', from: '(blank)', to: 'NOTE', decision: 'Default' });
     }
 
     if (actionIdx >= 0 && !actionVal) {
-      sheet.getRange(r, actionIdx + 1).setValue('NOTE');
+      sheet.getRange(rowNum, actionIdx + 1).setValue('NOTE');
       result.actionFilled++;
-      result.rowsFixed.push({ sheet: 'TASK_UPDATE_LOG', row: r, col: 'ACTION', from: '(blank)', to: 'NOTE', decision: 'Compatibility with legacy readers' });
+      result.rowsFixed.push({ sheet: 'TASK_UPDATE_LOG', row: rowNum, col: 'ACTION', from: '(blank)', to: 'NOTE', decision: 'Compatibility with legacy readers' });
     }
-  }
+  });
 
   return result;
 }
 
 /**
- * Backfills TASK_MAIN.HTX_ID where blank but inferable from OWNER_ID's HTX or first HTX in HO_SO_MASTER.
+ * Backfills TASK_MAIN.DON_VI_ID where blank with first active DON_VI.
  * @returns {Object} { ok, filled: number, manualReview: { row: number, id: string }[] }
  */
-function repairTaskMainHtxIdBlanks() {
+function repairTaskMainDonViIdBlanks() {
   var result = { ok: true, filled: 0, manualReview: [] };
   var ss = SpreadsheetApp.getActive();
   var taskSheet = ss.getSheetByName(CBV_CONFIG.SHEETS.TASK_MAIN);
-  if (!taskSheet || taskSheet.getLastRow() < 2) return result;
+  if (!taskSheet) return result;
+  var taskLoaded = typeof loadSheetDataSafe === 'function' ? loadSheetDataSafe(taskSheet, CBV_CONFIG.SHEETS.TASK_MAIN) : null;
+  if (!taskLoaded || taskLoaded.rowCount === 0) return result;
 
-  var headers = taskSheet.getRange(1, 1, 1, taskSheet.getLastColumn()).getValues()[0];
-  var htxIdx = headers.indexOf('HTX_ID');
+  var headers = taskLoaded.headers;
+  var dvIdx = headers.indexOf('DON_VI_ID');
   var idIdx = headers.indexOf('ID');
-  if (htxIdx === -1) return result;
+  if (dvIdx === -1) return result;
 
-  var hoSoSheet = ss.getSheetByName(CBV_CONFIG.SHEETS.HO_SO_MASTER);
-  var firstHtxId = null;
-  if (hoSoSheet && hoSoSheet.getLastRow() >= 2) {
-    var hsHeaders = hoSoSheet.getRange(1, 1, 1, hoSoSheet.getLastColumn()).getValues()[0];
-    var hsTypeIdx = hsHeaders.indexOf('HO_SO_TYPE');
-    var hsIdIdx = hsHeaders.indexOf('ID');
-    if (hsTypeIdx >= 0 && hsIdIdx >= 0) {
-      var hsRows = hoSoSheet.getRange(2, 1, hoSoSheet.getLastRow(), hoSoSheet.getLastColumn()).getValues();
-      for (var i = 0; i < hsRows.length; i++) {
-        if (String(hsRows[i][hsTypeIdx] || '').trim() === 'HTX') {
-          firstHtxId = String(hsRows[i][hsIdIdx] || '').trim();
-          break;
-        }
-      }
-    }
-  }
+  var firstDonViId = typeof _repairGetFirstDonViId === 'function' ? _repairGetFirstDonViId(ss) : null;
 
-  for (var r = 2; r <= taskSheet.getLastRow(); r++) {
-    var htxVal = String(taskSheet.getRange(r, htxIdx + 1).getValue() || '').trim();
-    var taskId = String(taskSheet.getRange(r, idIdx + 1).getValue() || '').trim();
-    if (!htxVal && firstHtxId) {
-      taskSheet.getRange(r, htxIdx + 1).setValue(firstHtxId);
+  taskLoaded.rows.forEach(function(r) {
+    var rowNum = r._rowNumber || 0;
+    var dvVal = String(r.DON_VI_ID || r[dvIdx] || '').trim();
+    var taskId = String(r.ID || r[idIdx] || '').trim();
+    if (!dvVal && firstDonViId) {
+      taskSheet.getRange(rowNum, dvIdx + 1).setValue(firstDonViId);
       result.filled++;
-    } else if (!htxVal) {
-      result.manualReview.push({ row: r, id: taskId, sheet: 'TASK_MAIN' });
+    } else if (!dvVal) {
+      result.manualReview.push({ row: rowNum, id: taskId, sheet: 'TASK_MAIN' });
     }
-  }
+  });
 
   return result;
 }
 
 /**
  * Full schema and data repair pass. Run after selfAuditBootstrap identifies blockers.
- * @param {Object} options { skipSchema, skipUser, skipHoSo, skipHoSoFile, skipFinance, skipTaskLog, skipTaskMainHtx }
+ * @param {Object} options { skipSchema, skipUser, skipHoSo, skipHoSoFile, skipFinance, skipTaskLog, skipTaskMainDonVi }
  * @returns {Object} Combined result with rowsFixed, manualReview, exact rerun order
  */
 function repairSchemaAndData(options) {
@@ -375,7 +398,7 @@ function repairSchemaAndData(options) {
     financeManualReview: [],
     taskLogUpdateTypeFilled: 0,
     taskLogActionFilled: 0,
-    taskMainHtxFilled: 0,
+    taskMainDonViFilled: 0,
     taskMainManualReview: [],
     rowsFixed: [],
     manualReview: [],
@@ -415,17 +438,17 @@ function repairSchemaAndData(options) {
     if (ft.rowsFixed) combined.rowsFixed = combined.rowsFixed.concat(ft.rowsFixed);
   }
 
+  if (opts.skipTaskMainDonVi !== true) {
+    var tmdv = repairTaskMainDonViIdBlanks();
+    combined.taskMainDonViFilled = tmdv.filled || 0;
+    combined.taskMainManualReview = tmdv.manualReview || [];
+  }
+
   if (opts.skipTaskLog !== true) {
     var tul = repairTaskUpdateLogBlanks();
     combined.taskLogUpdateTypeFilled = tul.updateTypeFilled || 0;
     combined.taskLogActionFilled = tul.actionFilled || 0;
     if (tul.rowsFixed) combined.rowsFixed = combined.rowsFixed.concat(tul.rowsFixed);
-  }
-
-  if (opts.skipTaskMainHtx !== true) {
-    var tmh = repairTaskMainHtxIdBlanks();
-    combined.taskMainHtxFilled = tmh.filled || 0;
-    combined.taskMainManualReview = tmh.manualReview || [];
   }
 
   combined.manualReview = (combined.userManualReview || []).concat(combined.hoSoManualReview || []).concat(combined.financeManualReview || []).concat(combined.taskMainManualReview || []);
@@ -442,7 +465,7 @@ function repairSchemaAndData(options) {
 
 /** Tables and columns that cause audit blockers when blank. Keyed by sheet name. */
 var RESIDUAL_BLOCKER_COLUMNS = {
-  TASK_MAIN: ['STATUS', 'PRIORITY', 'TASK_TYPE'],
+  TASK_MAIN: ['STATUS', 'PRIORITY', 'DON_VI_ID'],
   USER_DIRECTORY: ['ROLE', 'STATUS'],
   HO_SO_MASTER: ['HO_SO_TYPE', 'STATUS'],
   FINANCE_TRANSACTION: ['STATUS', 'TRANS_TYPE', 'CATEGORY'],
@@ -471,8 +494,10 @@ function inspectResidualInvalidRecords() {
     var cols = RESIDUAL_BLOCKER_COLUMNS[table];
     if (!cols || cols.length === 0) return;
     var sheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
-    if (!sheet || sheet.getLastRow() < 2) return;
-    var rows = typeof _auditGetRows === 'function' ? _auditGetRows(sheet) : (typeof readNormalizedRows === 'function' ? readNormalizedRows(sheet, table) : []);
+    if (!sheet) return;
+    var loaded = typeof loadSheetDataSafe === 'function' ? loadSheetDataSafe(sheet, table) : null;
+    var rows = loaded ? loaded.rows : (typeof _auditGetRows === 'function' ? _auditGetRows(sheet) : (typeof readNormalizedRows === 'function' ? readNormalizedRows(sheet, table) : []));
+    if (!rows || rows.length === 0) return;
     rows.forEach(function(r) {
       var id = String(r.ID || '').trim();
       if (!id) return;
@@ -500,7 +525,7 @@ function inspectResidualInvalidRecords() {
 
 /** Safe defaults for residual repair */
 var RESIDUAL_SAFE_DEFAULTS = {
-  TASK_MAIN: { STATUS: 'NEW', PRIORITY: 'MEDIUM', TASK_TYPE: 'GENERAL' },
+  TASK_MAIN: { STATUS: 'NEW', PRIORITY: 'MEDIUM' },
   USER_DIRECTORY: { ROLE: 'OPERATOR', STATUS: 'ACTIVE' },
   HO_SO_MASTER_STATUS_NEW: 'NEW',
   HO_SO_MASTER_STATUS_ACTIVE: 'ACTIVE',
@@ -528,8 +553,9 @@ function repairResidualInvalidRecords() {
 
   var hoSoIdsWithFiles = {};
   var fileSheet = ss.getSheetByName(CBV_CONFIG.SHEETS.HO_SO_FILE);
-  if (fileSheet && fileSheet.getLastRow() >= 2) {
-    var fRows = typeof _auditGetRows === 'function' ? _auditGetRows(fileSheet) : [];
+  var fileLoaded = fileSheet && typeof loadSheetDataSafe === 'function' ? loadSheetDataSafe(fileSheet, CBV_CONFIG.SHEETS.HO_SO_FILE) : null;
+  var fRows = fileLoaded && fileLoaded.rowCount > 0 ? fileLoaded.rows : (fileSheet && typeof _auditGetRows === 'function' ? _auditGetRows(fileSheet) : []);
+  if (fRows && fRows.length > 0) {
     fRows.forEach(function(r) {
       var hsId = String(r.HO_SO_ID || '').trim();
       if (hsId) hoSoIdsWithFiles[hsId] = true;
@@ -543,8 +569,10 @@ function repairResidualInvalidRecords() {
     var sheetName = CBV_CONFIG.SHEETS[table] || table;
 
     if (table === 'TASK_MAIN') {
+      var firstDonViId = _repairGetFirstDonViId(ss);
       rec.missingFields.forEach(function(col) {
         var def = RESIDUAL_SAFE_DEFAULTS.TASK_MAIN[col];
+        if (col === 'DON_VI_ID' && firstDonViId) def = firstDonViId;
         if (def) { patch[col] = def; repairsApplied.push({ table: table, id: id, column: col, from: rec.currentValues[col], to: def }); }
       });
     } else if (table === 'USER_DIRECTORY') {

@@ -1,5 +1,7 @@
 # TASK Architecture Audit
 
+**⚠️ SUPERSEDED.** This audit recommended HTX_ID. Final architecture uses DON_VI_ID (REF DON_VI). See 00_OVERVIEW/CBV_FINAL_ARCHITECTURE.md and 09_AUDIT/DEPRECATED_OLD_DESIGN_ITEMS.md.
+
 **Date:** 2025-03-21  
 **Scope:** Canonical task architecture vs implementation.
 

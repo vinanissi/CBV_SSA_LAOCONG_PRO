@@ -234,10 +234,10 @@ var GOLDEN_TASK_DEFAULT_STATUS = 'NEW';
 /** Default PRIORITY for seeded tasks. */
 var GOLDEN_TASK_DEFAULT_PRIORITY = 'MEDIUM';
 
-/** Default TASK_TYPE for seeded tasks. */
+/** Default TASK_TYPE_ID for seeded tasks (MASTER_CODE ID). */
 var GOLDEN_TASK_DEFAULT_TYPE = 'GENERAL';
 
-/** Fallback HTX_ID when spec lacks it (must exist in seed). */
+/** Fallback DON_VI_ID when spec lacks it (must exist in DON_VI seed). */
 var GOLDEN_TASK_DEFAULT_HTX = 'HTX_001';
 
 /** Fallback OWNER_ID when spec lacks it (must exist in seed). */
@@ -253,14 +253,14 @@ function _goldenHTXSpecs() {
 
 function _goldenTaskSpecs() {
   return [
-    { ID: 'TASK_001', HTX_ID: 'HTX_001', OWNER_ID: 'USR_002', REPORTER_ID: 'USR_001', TITLE: 'Kiểm tra hồ sơ ban đầu', STATUS: 'NEW', PRIORITY: 'HIGH', TASK_TYPE: 'GENERAL' },
-    { ID: 'TASK_002', HTX_ID: 'HTX_001', OWNER_ID: 'USR_002', REPORTER_ID: 'USR_001', TITLE: 'Xác nhận giao dịch tháng', STATUS: 'IN_PROGRESS', PRIORITY: 'MEDIUM', TASK_TYPE: 'FINANCE' },
-    { ID: 'TASK_003', HTX_ID: 'HTX_001', OWNER_ID: 'USR_003', REPORTER_ID: 'USR_002', TITLE: 'Cập nhật danh sách xe', STATUS: 'DONE', PRIORITY: 'LOW', TASK_TYPE: 'HO_SO' },
-    { ID: 'TASK_004', HTX_ID: 'HTX_002', OWNER_ID: 'USR_004', REPORTER_ID: 'USR_001', TITLE: 'Đối chiếu thu chi quý', STATUS: 'NEW', PRIORITY: 'HIGH', TASK_TYPE: 'FINANCE' },
-    { ID: 'TASK_005', HTX_ID: 'HTX_002', OWNER_ID: 'USR_002', REPORTER_ID: 'USR_005', TITLE: 'Lập báo cáo vận hành', STATUS: 'IN_PROGRESS', PRIORITY: 'MEDIUM', TASK_TYPE: 'OPERATION' },
-    { ID: 'TASK_006', HTX_ID: 'HTX_001', OWNER_ID: 'USR_003', REPORTER_ID: 'USR_002', TITLE: 'Rà soát hợp đồng xã viên', STATUS: 'DONE', PRIORITY: 'LOW', TASK_TYPE: 'HO_SO' },
-    { ID: 'TASK_007', HTX_ID: 'HTX_003', OWNER_ID: 'USR_004', REPORTER_ID: 'USR_001', TITLE: 'Chuẩn bị hồ sơ kiểm toán', STATUS: 'NEW', PRIORITY: 'HIGH', TASK_TYPE: 'GENERAL' },
-    { ID: 'TASK_008', HTX_ID: 'HTX_003', OWNER_ID: 'USR_002', REPORTER_ID: 'USR_005', TITLE: 'Theo dõi thanh toán nhà cung cấp', STATUS: 'IN_PROGRESS', PRIORITY: 'MEDIUM', TASK_TYPE: 'FINANCE' }
+    { ID: 'TASK_001', DON_VI_ID: 'DV_20250322_ABC001', OWNER_ID: 'USR_002', REPORTER_ID: 'USR_001', TITLE: 'Kiểm tra hồ sơ ban đầu', STATUS: 'NEW', PRIORITY: 'HIGH', TASK_TYPE_ID: 'MC_TASK_GENERAL' },
+    { ID: 'TASK_002', DON_VI_ID: 'DV_20250322_ABC001', OWNER_ID: 'USR_002', REPORTER_ID: 'USR_001', TITLE: 'Xác nhận giao dịch tháng', STATUS: 'IN_PROGRESS', PRIORITY: 'MEDIUM', TASK_TYPE_ID: 'MC_TASK_FINANCE' },
+    { ID: 'TASK_003', DON_VI_ID: 'DV_20250322_ABC001', OWNER_ID: 'USR_003', REPORTER_ID: 'USR_002', TITLE: 'Cập nhật danh sách xe', STATUS: 'DONE', PRIORITY: 'LOW', TASK_TYPE_ID: 'MC_TASK_HO_SO' },
+    { ID: 'TASK_004', DON_VI_ID: 'DV_20250322_HTX01', OWNER_ID: 'USR_004', REPORTER_ID: 'USR_001', TITLE: 'Đối chiếu thu chi quý', STATUS: 'NEW', PRIORITY: 'HIGH', TASK_TYPE_ID: 'MC_TASK_FINANCE' },
+    { ID: 'TASK_005', DON_VI_ID: 'DV_20250322_HTX01', OWNER_ID: 'USR_002', REPORTER_ID: 'USR_005', TITLE: 'Lập báo cáo vận hành', STATUS: 'IN_PROGRESS', PRIORITY: 'MEDIUM', TASK_TYPE_ID: 'MC_TASK_OPERATION' },
+    { ID: 'TASK_006', DON_VI_ID: 'DV_20250322_ABC001', OWNER_ID: 'USR_003', REPORTER_ID: 'USR_002', TITLE: 'Rà soát hợp đồng xã viên', STATUS: 'DONE', PRIORITY: 'LOW', TASK_TYPE_ID: 'MC_TASK_HO_SO' },
+    { ID: 'TASK_007', DON_VI_ID: 'DV_20250322_HTX02', OWNER_ID: 'USR_004', REPORTER_ID: 'USR_001', TITLE: 'Chuẩn bị hồ sơ kiểm toán', STATUS: 'NEW', PRIORITY: 'HIGH', TASK_TYPE_ID: 'MC_TASK_GENERAL' },
+    { ID: 'TASK_008', DON_VI_ID: 'DV_20250322_HTX02', OWNER_ID: 'USR_002', REPORTER_ID: 'USR_005', TITLE: 'Theo dõi thanh toán nhà cung cấp', STATUS: 'IN_PROGRESS', PRIORITY: 'MEDIUM', TASK_TYPE_ID: 'MC_TASK_FINANCE' }
   ];
 }
 
@@ -270,7 +270,7 @@ function _goldenSeedUsers(now, user, summary) {
   var sheetName = CBV_CONFIG.SHEETS.USER_DIRECTORY;
   var headers = typeof getSchemaHeaders === 'function'
     ? getSchemaHeaders(sheetName)
-    : ['ID', 'USER_CODE', 'FULL_NAME', 'DISPLAY_NAME', 'EMAIL', 'PHONE', 'ROLE', 'POSITION', 'HTX_ID', 'STATUS', 'IS_SYSTEM', 'ALLOW_LOGIN', 'NOTE', 'CREATED_AT', 'CREATED_BY', 'UPDATED_AT', 'UPDATED_BY', 'IS_DELETED'];
+    : ['ID', 'USER_CODE', 'FULL_NAME', 'DISPLAY_NAME', 'EMAIL', 'PHONE', 'ROLE', 'POSITION', 'STATUS', 'IS_SYSTEM', 'ALLOW_LOGIN', 'NOTE', 'CREATED_AT', 'CREATED_BY', 'UPDATED_AT', 'UPDATED_BY', 'IS_DELETED'];
 
   _goldenUserSpecs().forEach(function(spec) {
     if (_goldenExists(sheetName, spec.ID)) {
@@ -290,7 +290,6 @@ function _goldenSeedUsers(now, user, summary) {
       PHONE: spec.PHONE != null ? String(spec.PHONE) : '',
       ROLE: role,
       POSITION: spec.POSITION != null ? String(spec.POSITION) : '',
-      HTX_ID: '',
       STATUS: status,
       IS_SYSTEM: false,
       ALLOW_LOGIN: false,
@@ -374,10 +373,10 @@ function _goldenSeedTasks(now, user, summary) {
       return;
     }
 
-    var taskType = (spec.TASK_TYPE && String(spec.TASK_TYPE).trim()) ? String(spec.TASK_TYPE).trim() : (typeof GOLDEN_TASK_DEFAULT_TYPE !== 'undefined' ? GOLDEN_TASK_DEFAULT_TYPE : 'GENERAL');
+    var taskTypeId = (spec.TASK_TYPE_ID && String(spec.TASK_TYPE_ID).trim()) ? String(spec.TASK_TYPE_ID).trim() : (typeof GOLDEN_TASK_DEFAULT_TASK_TYPE_ID !== 'undefined' ? GOLDEN_TASK_DEFAULT_TASK_TYPE_ID : 'MC_TASK_GENERAL');
     var status = (spec.STATUS && String(spec.STATUS).trim()) ? String(spec.STATUS).trim() : (typeof GOLDEN_TASK_DEFAULT_STATUS !== 'undefined' ? GOLDEN_TASK_DEFAULT_STATUS : 'NEW');
     var priority = (spec.PRIORITY && String(spec.PRIORITY).trim()) ? String(spec.PRIORITY).trim() : (typeof GOLDEN_TASK_DEFAULT_PRIORITY !== 'undefined' ? GOLDEN_TASK_DEFAULT_PRIORITY : 'MEDIUM');
-    var htxId = (spec.HTX_ID && String(spec.HTX_ID).trim()) ? String(spec.HTX_ID).trim() : (typeof GOLDEN_TASK_DEFAULT_HTX !== 'undefined' ? GOLDEN_TASK_DEFAULT_HTX : 'HTX_001');
+    var donViId = (spec.DON_VI_ID && String(spec.DON_VI_ID).trim()) ? String(spec.DON_VI_ID).trim() : (typeof GOLDEN_TASK_DEFAULT_DON_VI !== 'undefined' ? GOLDEN_TASK_DEFAULT_DON_VI : 'DV_20250322_ABC001');
     var ownerId = (spec.OWNER_ID && String(spec.OWNER_ID).trim()) ? String(spec.OWNER_ID).trim() : (typeof GOLDEN_TASK_DEFAULT_OWNER !== 'undefined' ? GOLDEN_TASK_DEFAULT_OWNER : 'USR_002');
     var reporterId = (spec.REPORTER_ID != null && String(spec.REPORTER_ID).trim()) ? String(spec.REPORTER_ID).trim() : '';
 
@@ -386,10 +385,10 @@ function _goldenSeedTasks(now, user, summary) {
       TASK_CODE: (spec.TASK_CODE && String(spec.TASK_CODE).trim()) ? String(spec.TASK_CODE).trim() : ('TK_' + spec.ID),
       TITLE: (spec.TITLE && String(spec.TITLE).trim()) ? String(spec.TITLE).trim() : spec.ID,
       DESCRIPTION: '',
-      TASK_TYPE: taskType,
+      TASK_TYPE_ID: taskTypeId,
       STATUS: status,
       PRIORITY: priority,
-      HTX_ID: htxId,
+      DON_VI_ID: donViId,
       OWNER_ID: ownerId,
       REPORTER_ID: reporterId,
       START_DATE: '',
@@ -427,7 +426,6 @@ function _goldenSeedTasks(now, user, summary) {
         TASK_ID: taskId,
         ITEM_NO: tclNo,
         TITLE: item.title,
-        DESCRIPTION: '',
         IS_REQUIRED: true,
         IS_DONE: item.isDone,
         DONE_AT: item.isDone ? now : '',
@@ -496,8 +494,7 @@ function _goldenSeedTasks(now, user, summary) {
         ID: logId,
         TASK_ID: taskId,
         UPDATE_TYPE: updateType,
-        ACTION: updateType,
-        CONTENT: content,
+        ACTION: content,
         ACTOR_ID: ownerId,
         CREATED_AT: now,
         CREATED_BY: user,

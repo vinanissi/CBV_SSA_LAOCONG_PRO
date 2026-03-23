@@ -21,7 +21,7 @@ function createTransaction(data) {
     STATUS: 'NEW',
     CATEGORY: data.CATEGORY,
     AMOUNT: Number(data.AMOUNT),
-    UNIT_ID: data.UNIT_ID || '',
+    DON_VI_ID: data.DON_VI_ID || '',
     COUNTERPARTY: data.COUNTERPARTY || '',
     PAYMENT_METHOD: data.PAYMENT_METHOD || 'OTHER',
     REFERENCE_NO: data.REFERENCE_NO || '',

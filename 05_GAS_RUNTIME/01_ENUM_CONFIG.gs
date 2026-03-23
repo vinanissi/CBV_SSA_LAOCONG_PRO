@@ -126,9 +126,7 @@ var ENUM_CONFIG = {
 var ENUM_USAGE_CONFIG = [
   { table: 'TASK_MAIN', column: 'STATUS', enumGroup: 'TASK_STATUS', required: true },
   { table: 'TASK_MAIN', column: 'PRIORITY', enumGroup: 'TASK_PRIORITY', required: true },
-  { table: 'TASK_MAIN', column: 'TASK_TYPE', enumGroup: 'TASK_TYPE', required: true },
   { table: 'TASK_MAIN', column: 'RELATED_ENTITY_TYPE', enumGroup: 'RELATED_ENTITY_TYPE', required: false },
-  { table: 'MASTER_CODE', column: 'PARENT_CODE', enumGroup: 'ROLE', required: false },
   { table: 'MASTER_CODE', column: 'STATUS', enumGroup: 'MASTER_CODE_STATUS', required: true },
   { table: 'USER_DIRECTORY', column: 'ROLE', enumGroup: 'ROLE', required: true },
   { table: 'USER_DIRECTORY', column: 'STATUS', enumGroup: 'USER_DIRECTORY_STATUS', required: true },

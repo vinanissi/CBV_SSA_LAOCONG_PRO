@@ -15,19 +15,20 @@ var CBV_AUDIT_ONLY_COLUMNS = ['CREATED_AT', 'UPDATED_AT', 'CREATED_BY', 'UPDATED
  * Excludes audit-only columns. Partial rows (any meaningful field filled) still count as real.
  */
 var CBV_MEANINGFUL_FIELDS = {
-  USER_DIRECTORY: ['ID', 'USER_CODE', 'FULL_NAME', 'DISPLAY_NAME', 'EMAIL', 'PHONE', 'ROLE', 'POSITION', 'HTX_ID', 'STATUS', 'IS_SYSTEM', 'ALLOW_LOGIN', 'NOTE'],
+  USER_DIRECTORY: ['ID', 'USER_CODE', 'FULL_NAME', 'DISPLAY_NAME', 'EMAIL', 'PHONE', 'ROLE', 'POSITION', 'STATUS', 'IS_SYSTEM', 'ALLOW_LOGIN', 'NOTE'],
   ADMIN_AUDIT_LOG: ['ID', 'AUDIT_TYPE', 'ENTITY_TYPE', 'ENTITY_ID', 'ACTION', 'BEFORE_JSON', 'AFTER_JSON', 'NOTE', 'ACTOR_ID'],
   ENUM_DICTIONARY: ['ID', 'ENUM_GROUP', 'ENUM_VALUE', 'DISPLAY_TEXT', 'SORT_ORDER', 'IS_ACTIVE', 'NOTE'],
-  MASTER_CODE: ['ID', 'MASTER_GROUP', 'CODE', 'NAME', 'DISPLAY_TEXT', 'SHORT_NAME', 'PARENT_CODE', 'STATUS', 'SORT_ORDER', 'IS_SYSTEM', 'ALLOW_EDIT', 'NOTE'],
+  MASTER_CODE: ['ID', 'MASTER_GROUP', 'CODE', 'NAME', 'DISPLAY_TEXT', 'STATUS', 'SORT_ORDER', 'IS_SYSTEM', 'ALLOW_EDIT', 'NOTE'],
+  DON_VI: ['ID', 'DON_VI_TYPE', 'CODE', 'NAME', 'PARENT_ID', 'STATUS', 'MANAGER_USER_ID', 'IS_DELETED'],
   HO_SO_MASTER: ['ID', 'HO_SO_TYPE', 'CODE', 'NAME', 'STATUS', 'HTX_ID', 'OWNER_ID', 'PHONE', 'EMAIL', 'ID_NO', 'ADDRESS', 'START_DATE', 'END_DATE', 'NOTE', 'TAGS'],
   HO_SO_FILE: ['ID', 'HO_SO_ID', 'FILE_GROUP', 'FILE_NAME', 'FILE_URL', 'DRIVE_FILE_ID', 'STATUS', 'NOTE'],
   HO_SO_RELATION: ['ID', 'FROM_HO_SO_ID', 'TO_HO_SO_ID', 'RELATION_TYPE', 'START_DATE', 'END_DATE', 'STATUS', 'NOTE'],
-  TASK_MAIN: ['ID', 'TASK_CODE', 'TITLE', 'DESCRIPTION', 'TASK_TYPE', 'STATUS', 'PRIORITY', 'HTX_ID', 'OWNER_ID', 'REPORTER_ID', 'START_DATE', 'DUE_DATE', 'DONE_AT', 'PROGRESS_PERCENT', 'RESULT_SUMMARY', 'RELATED_ENTITY_TYPE', 'RELATED_ENTITY_ID'],
-  TASK_CHECKLIST: ['ID', 'TASK_ID', 'ITEM_NO', 'TITLE', 'DESCRIPTION', 'IS_REQUIRED', 'IS_DONE', 'DONE_AT', 'DONE_BY', 'NOTE'],
-  TASK_UPDATE_LOG: ['ID', 'TASK_ID', 'UPDATE_TYPE', 'ACTION', 'CONTENT', 'ACTOR_ID'],
+  TASK_MAIN: ['ID', 'TASK_CODE', 'TITLE', 'DESCRIPTION', 'TASK_TYPE_ID', 'STATUS', 'PRIORITY', 'DON_VI_ID', 'OWNER_ID', 'REPORTER_ID', 'START_DATE', 'DUE_DATE', 'DONE_AT', 'PROGRESS_PERCENT', 'RESULT_SUMMARY', 'RELATED_ENTITY_TYPE', 'RELATED_ENTITY_ID'],
+  TASK_CHECKLIST: ['ID', 'TASK_ID', 'ITEM_NO', 'TITLE', 'IS_REQUIRED', 'IS_DONE', 'DONE_AT', 'DONE_BY', 'NOTE'],
+  TASK_UPDATE_LOG: ['ID', 'TASK_ID', 'UPDATE_TYPE', 'ACTION', 'ACTOR_ID'],
   TASK_ATTACHMENT: ['ID', 'TASK_ID', 'ATTACHMENT_TYPE', 'TITLE', 'FILE_URL', 'DRIVE_FILE_ID', 'NOTE'],
   FINANCE_ATTACHMENT: ['ID', 'FINANCE_ID', 'ATTACHMENT_TYPE', 'TITLE', 'FILE_NAME', 'FILE_URL', 'DRIVE_FILE_ID', 'NOTE'],
-  FINANCE_TRANSACTION: ['ID', 'TRANS_CODE', 'TRANS_DATE', 'TRANS_TYPE', 'STATUS', 'CATEGORY', 'AMOUNT', 'UNIT_ID', 'COUNTERPARTY', 'PAYMENT_METHOD', 'REFERENCE_NO', 'RELATED_ENTITY_TYPE', 'RELATED_ENTITY_ID', 'DESCRIPTION', 'EVIDENCE_URL', 'CONFIRMED_AT', 'CONFIRMED_BY'],
+  FINANCE_TRANSACTION: ['ID', 'TRANS_CODE', 'TRANS_DATE', 'TRANS_TYPE', 'STATUS', 'CATEGORY', 'AMOUNT', 'DON_VI_ID', 'COUNTERPARTY', 'PAYMENT_METHOD', 'REFERENCE_NO', 'RELATED_ENTITY_TYPE', 'RELATED_ENTITY_ID', 'DESCRIPTION', 'EVIDENCE_URL', 'CONFIRMED_AT', 'CONFIRMED_BY'],
   FINANCE_LOG: ['ID', 'FIN_ID', 'ACTION', 'BEFORE_JSON', 'AFTER_JSON', 'NOTE', 'ACTOR_ID']
 };
 
@@ -107,14 +108,31 @@ function filterRealDataRows(rowObjs, meaningfulFields, options) {
  * @returns {Object[]} Rows as { headerKey: value, _rowNumber }
  */
 function readNormalizedRows(sheet, tableName) {
-  if (!sheet) return [];
-  var lastRow = sheet.getLastRow();
+  var loaded = loadSheetDataSafe(sheet, tableName);
+  return loaded.rows;
+}
+
+/**
+ * Safe data loader for audit, validation, and repair.
+ * - Row 1 = header (never validated as data)
+ * - Data rows = row 2+, filtered to exclude fully blank trailing/intermediate rows
+ * - Each row has _rowNumber = actual sheet row for logging
+ * - Do NOT use getLastRow() for validation accuracy; use rows.length or rowCount
+ * @param {GoogleAppsScript.Spreadsheet.Sheet} sheet
+ * @param {string} [tableName] - Defaults to sheet.getName()
+ * @returns {{ headers: string[], rows: Object[], rowCount: number }}
+ */
+function loadSheetDataSafe(sheet, tableName) {
+  var empty = { headers: [], rows: [], rowCount: 0 };
+  if (!sheet) return empty;
   var lastCol = sheet.getLastColumn();
-  if (lastRow < 2 || lastCol === 0) return [];
+  if (lastCol === 0) return empty;
+
+  var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) return { headers: headers, rows: [], rowCount: 0 };
+
   var name = String(tableName || sheet.getName() || '').trim() || 'UNKNOWN';
-  var headers = (typeof _headers === 'function' ? _headers(sheet) : null) ||
-    (typeof _auditGetHeaders === 'function' ? _auditGetHeaders(sheet) : null) ||
-    sheet.getRange(1, 1, 1, lastCol).getValues()[0];
   var raw = sheet.getRange(2, 1, lastRow, lastCol).getValues();
   var rowObjs = raw.map(function(row, idx) {
     var o = { _rowNumber: idx + 2 };
@@ -122,5 +140,6 @@ function readNormalizedRows(sheet, tableName) {
     return o;
   });
   var meaningful = getMeaningfulFieldsForTable(name, headers);
-  return filterRealDataRows(rowObjs, meaningful);
+  var rows = filterRealDataRows(rowObjs, meaningful);
+  return { headers: headers, rows: rows, rowCount: rows.length };
 }
