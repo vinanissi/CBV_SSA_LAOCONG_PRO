@@ -1,0 +1,47 @@
+{
+  "version": "3.23",
+  "projectName": "CBV_SSA_LAOCONG_PRO",
+  "isMultiEnv": true,
+  "currentEnvironment": "DEV",
+  "environments": {
+    "PROD": {
+      "scriptId": "1SPsNxiABAil6tqDyf2PezY4DCife3Z_NxXLv_mkvenXOe3hvFPU-APey",
+      "oauthEnv": "PROD_OAuth",
+      "saEnv": "PROD_SA",
+      "branch": "main",
+      "githubRepo": "CBV_SSA_LAOCONG_PRO",
+      "createdAt": "2026-03-25T09:32:28.567Z",
+      "lastDeployed": null,
+      "databaseId": null,
+      "apiKeys": {},
+      "webhookUrl": null,
+      "customConfig": {}
+    },
+    "STAGING": {
+      "scriptId": "1SPsNxiABAil6tqDyf2PezY4DCife3Z_NxXLv_mkvenXOe3hvFPU-APey",
+      "oauthEnv": "DEV_GM",
+      "saEnv": "DEV_SA",
+      "branch": "staging",
+      "githubRepo": "CBV_SSA_LAOCONG_PRO",
+      "createdAt": "2026-03-25T09:32:28.581Z",
+      "lastDeployed": "2026-03-25T09:32:53.809Z",
+      "databaseId": null,
+      "apiKeys": {},
+      "webhookUrl": null,
+      "customConfig": {}
+    },
+    "DEV": {
+      "scriptId": "1Q1p1StpjqIjImG8Qg7cf6pAZLfwFSplGGMobF1SJaz6C6MLcOy3co30w",
+      "oauthEnv": "DEV_GM",
+      "saEnv": "DEV_SA",
+      "branch": "dev",
+      "githubRepo": "CBV_SSA_LAOCONG_PRO",
+      "createdAt": "2026-03-25T09:32:28.581Z",
+      "lastDeployed": null,
+      "databaseId": null,
+      "apiKeys": {},
+      "webhookUrl": null,
+      "customConfig": {}
+    }
+  }
+}

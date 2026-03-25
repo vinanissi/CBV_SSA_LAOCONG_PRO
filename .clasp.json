@@ -1,6 +1,6 @@
 {
-  "scriptId": "1SPsNxiABAil6tqDyf2PezY4DCife3Z_NxXLv_mkvenXOe3hvFPU-APey",
-  "rootDir": "05_GAS_RUNTIME",
+  "scriptId": "1Q1p1StpjqIjImG8Qg7cf6pAZLfwFSplGGMobF1SJaz6C6MLcOy3co30w",
+  "rootDir": ".",
   "filePushOrder": [
     "00_CORE_CONFIG.gs",
     "00_CORE_CONSTANTS.gs",

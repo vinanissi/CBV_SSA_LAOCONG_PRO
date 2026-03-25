@@ -1,34 +1,40 @@
-name: Deploy to Google Apps Script (WIF Flow)
+name: Deploy to Google Apps Script (Multi-Env)
 
 on:
   push:
-    branches:
-      - main
-  pull_request:
-    types: [closed]
-    branches:
-      - main
+    branches: [main, staging, dev]
 
 jobs:
   deploy:
-    if: (github.event_name == 'push') || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      id-token: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
       
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v1
-        with:
-          workload_identity_provider: projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/${{ secrets.WIP_POOL_ID }}/providers/${{ secrets.WIP_PROVIDER_ID }}
-          service_account: ${{ secrets.GCP_SA_EMAIL }}
-
-      - name: Setup Cloud SDK
-        uses: google-github-actions/setup-gcloud@v1
-
+      - name: Detect Environment
+        id: detect-env
+        run: |
+          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            echo "env=PROD" >> $GITHUB_OUTPUT
+            echo "branch=main" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref }}" == "refs/heads/staging" ]; then
+            echo "env=STAGING" >> $GITHUB_OUTPUT
+            echo "branch=staging" >> $GITHUB_OUTPUT
+          else
+            echo "env=DEV" >> $GITHUB_OUTPUT
+            echo "branch=dev" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Load Environment Config
+        id: load-config
+        run: |
+          ENV="${{ steps.detect-env.outputs.env }}"
+          SCRIPT_ID=$(jq -r ".environments.$ENV.scriptId" .idp-environments.json)
+          SA_ENV=$(jq -r ".environments.$ENV.saEnv" .idp-environments.json)
+          echo "script_id=$SCRIPT_ID" >> $GITHUB_OUTPUT
+          echo "sa_env=$SA_ENV" >> $GITHUB_OUTPUT
+          echo "✓ Environment: $ENV, Script ID: $SCRIPT_ID"
+      
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
@@ -39,20 +45,43 @@ jobs:
       
       - name: Install jq
         run: sudo apt-get install -y jq
-
+      
+      - name: Create .clasp.json
+        run: |
+          echo '{
+            "scriptId": "${{ steps.load-config.outputs.script_id }}",
+            "rootDir": "."
+          }' > .clasp.json
+      
+      - name: Create Service Account Key File
+        env:
+          SA_KEY: ${{ secrets.SERVICE_ACCOUNT_KEY_${{ steps.detect-env.outputs.env }} }}
+        run: |
+          echo "$SA_KEY" > ./sa-key-raw.json
+          if jq . ./sa-key-raw.json > ./sa-key.json 2>/dev/null; then
+            echo "✓ Valid JSON"
+            rm ./sa-key-raw.json
+          else
+            tr -d '\n' < ./sa-key-raw.json | sed 's/  */ /g' > ./sa-key-oneline.json
+            if jq . ./sa-key-oneline.json > ./sa-key.json 2>/dev/null; then
+              echo "✓ Fixed JSON"
+              rm ./sa-key-raw.json ./sa-key-oneline.json
+            else
+              echo "ERROR: Invalid JSON"
+              exit 1
+            fi
+          fi
+      
+      - name: Install Google Cloud SDK
+        run: |
+          echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+          curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
+          apt-get update && apt-get install -y google-cloud-sdk
+      
       - name: Authenticate and Create .clasprc.json
         run: |
-          # Lấy access token từ gcloud (đã authenticated qua WIF)
+          gcloud auth activate-service-account --key-file=./sa-key.json --quiet
           ACCESS_TOKEN=$(gcloud auth print-access-token)
-          
-          # Đọc scriptId từ .clasp.json
-          SCRIPT_ID=$(jq -r .scriptId .clasp.json)
-          if [ -z "$SCRIPT_ID" ] || [ "$SCRIPT_ID" = "null" ]; then
-            echo "ERROR: Khong tim thay scriptId trong .clasp.json"
-            exit 1
-          fi
-          
-          # Tạo .clasprc.json với access token
           jq -n \
             --arg token "$ACCESS_TOKEN" \
             '{
@@ -70,8 +99,6 @@ jobs:
               },
               "isLocalCreds": true
             }' > .clasprc.json
-          
-          echo "✓ Đã tạo .clasprc.json từ WIF authentication"
-
-      - name: Deploy to Apps Script
+      
+      - name: Deploy to Apps Script (${{ steps.detect-env.outputs.env }})
         run: clasp push -f
