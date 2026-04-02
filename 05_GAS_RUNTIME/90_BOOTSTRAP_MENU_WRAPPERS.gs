@@ -685,3 +685,52 @@ function menuRunTaskSystemTests() {
   SpreadsheetApp.getUi().alert('Task Tests', msg, SpreadsheetApp.getUi().ButtonSet.OK);
 }
 
+function menuCheckHoSoCompleteness() {
+  var ui = SpreadsheetApp.getUi();
+  var id = ui.prompt('Kiểm tra hồ sơ', 'Nhập ID hồ sơ (HO_SO_MASTER.ID):', ui.ButtonSet.OK_CANCEL);
+  if (id.getSelectedButton() !== ui.Button.OK) return;
+  var hoSoId = id.getResponseText().trim();
+  if (!hoSoId) return;
+  var result = callIfExists_('checkHoSoCompleteness', hoSoId);
+  if (!result) { ui.alert('checkHoSoCompleteness chưa được tải'); return; }
+  if (result.ok) {
+    ui.alert('✅ Hồ sơ đầy đủ thành phần bắt buộc.\nCó: ' + result.data.have + '/' + result.data.total + ' loại giấy tờ.');
+  } else {
+    var missing = result.data.missing.map(function(m) { return '• ' + m.DOC_TYPE; }).join('\n');
+    ui.alert('⚠️ Thiếu ' + result.data.missing.length + ' thành phần:\n' + missing);
+  }
+}
+
+function menuGetExpiringDocs() {
+  var result = callIfExists_('getExpiringDocs', 60);
+  if (!result) { SpreadsheetApp.getUi().alert('getExpiringDocs chưa được tải'); return; }
+  var ui = SpreadsheetApp.getUi();
+  if (result.data.count === 0) {
+    ui.alert('✅ Không có giấy tờ nào hết hạn trong 60 ngày tới.');
+  } else {
+    var list = result.data.rows.slice(0, 10).map(function(f) {
+      return '• ' + f.DOC_TYPE + ' | ' + f.HO_SO_ID + ' | Hết hạn: ' + f.EXPIRY_DATE;
+    }).join('\n');
+    ui.alert('⚠️ ' + result.data.count + ' giấy tờ sắp hết hạn:\n' + list + (result.data.count > 10 ? '\n...(và ' + (result.data.count - 10) + ' giấy tờ khác)' : ''));
+  }
+}
+
+function menuGenerateHoSoReport() {
+  var ui = SpreadsheetApp.getUi();
+  var id = ui.prompt('Xuất báo cáo', 'Nhập ID hồ sơ:', ui.ButtonSet.OK_CANCEL);
+  if (id.getSelectedButton() !== ui.Button.OK) return;
+  var hoSoId = id.getResponseText().trim();
+  if (!hoSoId) return;
+  var result = callIfExists_('generateHoSoReport', hoSoId);
+  if (!result) { ui.alert('generateHoSoReport chưa được tải'); return; }
+  var d = result.data;
+  var summary = [
+    'Hồ sơ: ' + d.hoSo.NAME + ' (' + d.hoSo.HO_SO_TYPE + ')',
+    'Trạng thái: ' + d.hoSo.STATUS,
+    'Giấy tờ có: ' + d.completeness.have + '/' + d.completeness.total,
+    'Thiếu bắt buộc: ' + d.completeness.missing_count,
+    'Sắp hết hạn: ' + d.expiring.length,
+  ].join('\n');
+  ui.alert('📋 Báo cáo hồ sơ\n\n' + summary + '\n\nXem chi tiết trong AppSheet → HS_PRINT_VIEW');
+}
+

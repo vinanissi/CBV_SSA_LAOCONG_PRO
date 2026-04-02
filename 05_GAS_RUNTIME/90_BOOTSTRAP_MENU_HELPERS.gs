@@ -108,7 +108,8 @@ function showMissingFunctionReport() {
     'runSafeRepair', 'seedEnumDictionary', 'ensureSeedDonVi', 'ensureSeedTaskType',
     'selfAuditTaskSystem', 'selfAuditTaskSystemFull', 'seedGoldenDataset',
     'repairSchemaColumns', 'repairSchemaAndData', 'runHoSoTests', 'runFinanceTests',
-    'getRequiredSheetNames', 'testSchemaIntegrity', 'testFieldPolicyReadiness'
+    'getRequiredSheetNames', 'testSchemaIntegrity', 'testFieldPolicyReadiness',
+    'checkHoSoCompleteness', 'getExpiringDocs', 'generateHoSoReport'
   ];
   var missing = requiredImpl.filter(function(name) { return !_menuFnExists_(name); });
   var msg = missing.length === 0

@@ -18,7 +18,7 @@
       "customConfig": {}
     },
     "STAGING": {
-      "scriptId": "1SPsNxiABAil6tqDyf2PezY4DCife3Z_NxXLv_mkvenXOe3hvFPU-APey",
+      "scriptId": "1Q1p1StpjqIjImG8Qg7cf6pAZLfwFSplGGMobF1SJaz6C6MLcOy3co30w",
       "oauthEnv": "DEV_GM",
       "saEnv": "DEV_SA",
       "branch": "staging",
@@ -31,7 +31,7 @@
       "customConfig": {}
     },
     "DEV": {
-      "scriptId": "1Q1p1StpjqIjImG8Qg7cf6pAZLfwFSplGGMobF1SJaz6C6MLcOy3co30w",
+      "scriptId": "1M7SgVOxQmLiswqvq-ROpVRpvemzPr-_LfN1qDRJJbL9v2tuEwyGsP_UL",
       "oauthEnv": "DEV_GM",
       "saEnv": "DEV_SA",
       "branch": "dev",

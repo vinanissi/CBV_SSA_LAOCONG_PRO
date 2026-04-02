@@ -93,6 +93,9 @@ function buildCbvProMenu_() {
       .addItem('🔎 Audit Hồ sơ', 'menuAuditHoSo')
       .addItem('🌱 Gieo Hồ sơ Demo', 'menuSeedHoSoDemo')
       .addItem('🧪 Test Quan hệ Hồ sơ', 'menuTestHoSoRelations')
+      .addItem('🔍 Kiểm tra hồ sơ đầy đủ', 'menuCheckHoSoCompleteness')
+      .addItem('⏰ Giấy tờ sắp hết hạn (60 ngày)', 'menuGetExpiringDocs')
+      .addItem('📋 Xuất báo cáo hồ sơ', 'menuGenerateHoSoReport')
   );
 
   // 7. Tài chính Module
