@@ -73,28 +73,36 @@ var CBV_AUDIT_SCHEMA = {
     enumColumns: {}
   },
   HO_SO_MASTER: {
-    requiredColumns: ['ID', 'HO_SO_TYPE', 'NAME', 'STATUS'],
-    optionalColumns: ['CODE', 'HTX_ID', 'OWNER_ID', 'PHONE', 'EMAIL', 'ID_NO', 'ADDRESS', 'START_DATE', 'END_DATE', 'NOTE', 'TAGS', 'CREATED_AT', 'CREATED_BY', 'UPDATED_AT', 'UPDATED_BY', 'IS_DELETED'],
+    requiredColumns: ['ID', 'HO_SO_CODE', 'HO_SO_TYPE_ID', 'STATUS'],
+    optionalColumns: ['TITLE', 'DISPLAY_NAME', 'DON_VI_ID', 'OWNER_ID', 'MANAGER_USER_ID', 'RELATED_ENTITY_TYPE', 'RELATED_ENTITY_ID', 'FULL_NAME', 'PHONE', 'EMAIL', 'ID_TYPE', 'ID_NO', 'DOB', 'ADDRESS', 'START_DATE', 'END_DATE', 'PRIORITY', 'SOURCE_CHANNEL', 'SUMMARY', 'NOTE', 'TAGS_TEXT', 'CREATED_AT', 'CREATED_BY', 'UPDATED_AT', 'UPDATED_BY', 'IS_DELETED'],
     key: 'ID',
     auditColumns: ['CREATED_AT', 'CREATED_BY', 'UPDATED_AT', 'UPDATED_BY'],
-    refColumns: { HTX_ID: 'HO_SO_MASTER', OWNER_ID: 'USER_DIRECTORY' },
-    enumColumns: { HO_SO_TYPE: 'HO_SO_TYPE', STATUS: 'HO_SO_STATUS' }
+    refColumns: { HO_SO_TYPE_ID: 'MASTER_CODE', DON_VI_ID: 'DON_VI', OWNER_ID: 'USER_DIRECTORY', MANAGER_USER_ID: 'USER_DIRECTORY' },
+    enumColumns: { STATUS: 'HO_SO_STATUS', PRIORITY: 'PRIORITY', RELATED_ENTITY_TYPE: 'RELATED_ENTITY_TYPE', ID_TYPE: 'ID_TYPE', SOURCE_CHANNEL: 'SOURCE_CHANNEL' }
   },
   HO_SO_FILE: {
-    requiredColumns: ['ID', 'HO_SO_ID', 'FILE_GROUP'],
-    optionalColumns: ['FILE_NAME', 'FILE_URL', 'DRIVE_FILE_ID', 'STATUS', 'NOTE', 'CREATED_AT', 'CREATED_BY'],
+    requiredColumns: ['ID', 'HO_SO_ID', 'FILE_TYPE'],
+    optionalColumns: ['TITLE', 'FILE_NAME', 'FILE_URL', 'DRIVE_FILE_ID', 'MIME_TYPE', 'FILE_SIZE', 'VERSION_NO', 'ISSUED_DATE', 'EXPIRED_DATE', 'NOTE', 'CREATED_AT', 'CREATED_BY', 'UPDATED_AT', 'UPDATED_BY', 'IS_DELETED'],
     key: 'ID',
-    auditColumns: ['CREATED_AT', 'CREATED_BY'],
+    auditColumns: ['CREATED_AT', 'CREATED_BY', 'UPDATED_AT', 'UPDATED_BY'],
     refColumns: { HO_SO_ID: 'HO_SO_MASTER' },
-    enumColumns: { FILE_GROUP: 'FILE_GROUP' }
+    enumColumns: { FILE_TYPE: 'FILE_TYPE' }
   },
   HO_SO_RELATION: {
-    requiredColumns: ['ID', 'FROM_HO_SO_ID', 'TO_HO_SO_ID', 'RELATION_TYPE', 'STATUS'],
-    optionalColumns: ['START_DATE', 'END_DATE', 'NOTE', 'CREATED_AT', 'CREATED_BY'],
+    requiredColumns: ['ID', 'HO_SO_ID', 'RELATED_TABLE', 'RELATED_RECORD_ID', 'RELATION_TYPE'],
+    optionalColumns: ['NOTE', 'CREATED_AT', 'CREATED_BY', 'UPDATED_AT', 'UPDATED_BY', 'IS_DELETED'],
     key: 'ID',
-    auditColumns: ['CREATED_AT', 'CREATED_BY'],
-    refColumns: { FROM_HO_SO_ID: 'HO_SO_MASTER', TO_HO_SO_ID: 'HO_SO_MASTER' },
+    auditColumns: ['CREATED_AT', 'CREATED_BY', 'UPDATED_AT', 'UPDATED_BY'],
+    refColumns: { HO_SO_ID: 'HO_SO_MASTER' },
     enumColumns: {}
+  },
+  HO_SO_UPDATE_LOG: {
+    requiredColumns: ['ID', 'HO_SO_ID', 'ACTION_TYPE', 'CREATED_AT'],
+    optionalColumns: ['OLD_STATUS', 'NEW_STATUS', 'FIELD_CHANGED', 'OLD_VALUE', 'NEW_VALUE', 'NOTE', 'ACTOR_ID', 'CREATED_BY', 'UPDATED_AT', 'UPDATED_BY', 'IS_DELETED'],
+    key: 'ID',
+    auditColumns: ['CREATED_AT', 'CREATED_BY', 'UPDATED_AT', 'UPDATED_BY'],
+    refColumns: { HO_SO_ID: 'HO_SO_MASTER', ACTOR_ID: 'USER_DIRECTORY' },
+    enumColumns: { ACTION_TYPE: 'HO_SO_ACTION_TYPE' }
   },
   TASK_MAIN: {
     requiredColumns: ['ID', 'TITLE', 'STATUS', 'PRIORITY', 'DON_VI_ID', 'OWNER_ID'],
@@ -159,16 +167,21 @@ var CBV_AUDIT_SCHEMA = {
 
 /** Ref relationships: child table -> [{ childCol, parentTable }] */
 var CBV_AUDIT_REFS = [
+  { child: 'HO_SO_MASTER', childCol: 'HO_SO_TYPE_ID', parent: 'MASTER_CODE', parentKey: 'ID' },
+  { child: 'HO_SO_MASTER', childCol: 'DON_VI_ID', parent: 'DON_VI', parentKey: 'ID' },
+  { child: 'HO_SO_MASTER', childCol: 'OWNER_ID', parent: 'USER_DIRECTORY', parentKey: 'ID' },
+  { child: 'HO_SO_MASTER', childCol: 'MANAGER_USER_ID', parent: 'USER_DIRECTORY', parentKey: 'ID' },
   { child: 'TASK_MAIN', childCol: 'DON_VI_ID', parent: 'DON_VI', parentKey: 'ID' },
   { child: 'TASK_CHECKLIST', childCol: 'TASK_ID', parent: 'TASK_MAIN', parentKey: 'ID' },
   { child: 'TASK_ATTACHMENT', childCol: 'TASK_ID', parent: 'TASK_MAIN', parentKey: 'ID' },
   { child: 'TASK_UPDATE_LOG', childCol: 'TASK_ID', parent: 'TASK_MAIN', parentKey: 'ID' },
   { child: 'HO_SO_FILE', childCol: 'HO_SO_ID', parent: 'HO_SO_MASTER', parentKey: 'ID' },
-  { child: 'HO_SO_RELATION', childCol: 'FROM_HO_SO_ID', parent: 'HO_SO_MASTER', parentKey: 'ID' },
-  { child: 'HO_SO_RELATION', childCol: 'TO_HO_SO_ID', parent: 'HO_SO_MASTER', parentKey: 'ID' },
+  { child: 'HO_SO_RELATION', childCol: 'HO_SO_ID', parent: 'HO_SO_MASTER', parentKey: 'ID' },
+  { child: 'HO_SO_UPDATE_LOG', childCol: 'HO_SO_ID', parent: 'HO_SO_MASTER', parentKey: 'ID' },
+  { child: 'HO_SO_UPDATE_LOG', childCol: 'ACTOR_ID', parent: 'USER_DIRECTORY', parentKey: 'ID' },
   { child: 'FINANCE_ATTACHMENT', childCol: 'FINANCE_ID', parent: 'FINANCE_TRANSACTION', parentKey: 'ID' },
   { child: 'FINANCE_LOG', childCol: 'FIN_ID', parent: 'FINANCE_TRANSACTION', parentKey: 'ID' }
 ];
 
 /** Tables that use IS_DELETED soft delete */
-var CBV_SOFT_DELETE_TABLES = ['USER_DIRECTORY', 'DON_VI', 'MASTER_CODE', 'HO_SO_MASTER', 'TASK_MAIN', 'TASK_CHECKLIST', 'TASK_ATTACHMENT', 'TASK_UPDATE_LOG', 'FINANCE_TRANSACTION'];
+var CBV_SOFT_DELETE_TABLES = ['USER_DIRECTORY', 'DON_VI', 'MASTER_CODE', 'HO_SO_MASTER', 'HO_SO_FILE', 'HO_SO_RELATION', 'HO_SO_UPDATE_LOG', 'TASK_MAIN', 'TASK_CHECKLIST', 'TASK_ATTACHMENT', 'TASK_UPDATE_LOG', 'FINANCE_TRANSACTION'];

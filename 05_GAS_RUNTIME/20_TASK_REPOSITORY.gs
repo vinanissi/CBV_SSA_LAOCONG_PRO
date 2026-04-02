@@ -46,13 +46,11 @@ function donViFindById(donViId) {
 }
 
 /**
- * @param {string} htxId
- * @returns {Object|null} HO_SO_MASTER row where HO_SO_TYPE=HTX
+ * @param {string} donViOrLegacyId
+ * @returns {Object|null} DON_VI row (PRO: organizational unit; legacy name kept for callers)
  */
-function taskFindHtxById(htxId) {
-  var hoSo = typeof _findById === 'function' ? _findById(CBV_CONFIG.SHEETS.HO_SO_MASTER, htxId) : null;
-  if (!hoSo || String(hoSo.HO_SO_TYPE || '').trim() !== 'HTX') return null;
-  return hoSo;
+function taskFindHtxById(donViOrLegacyId) {
+  return typeof donViFindById === 'function' ? donViFindById(donViOrLegacyId) : null;
 }
 
 /**

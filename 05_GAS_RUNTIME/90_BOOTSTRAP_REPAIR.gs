@@ -159,9 +159,7 @@ function repairUserDirectoryBlanks() {
 }
 
 /**
- * Repairs HO_SO_MASTER: fills blank HO_SO_TYPE and STATUS.
- * HO_SO_TYPE: infers from ID prefix (HTX_, XV_, XE_, TX_); else flags for manual review.
- * STATUS: ACTIVE if record has HO_SO_FILE rows (in use), else NEW.
+ * Repairs HO_SO_MASTER (PRO): blank STATUS -> NEW (or ACTIVE if files exist); blank HO_SO_TYPE_ID -> MASTER_CODE KHAC or first HO_SO_TYPE.
  * @returns {Object} { ok, repaired: number, rowsFixed: [], manualReview: [] }
  */
 function repairHoSoMasterBlanks() {
@@ -174,9 +172,23 @@ function repairHoSoMasterBlanks() {
 
   var headers = loaded.headers;
   var idIdx = headers.indexOf('ID');
-  var typeIdx = headers.indexOf('HO_SO_TYPE');
+  var typeIdIdx = headers.indexOf('HO_SO_TYPE_ID');
+  var codeIdx = headers.indexOf('HO_SO_CODE');
   var statusIdx = headers.indexOf('STATUS');
-  if (idIdx === -1 || typeIdx === -1 || statusIdx === -1) return result;
+  if (idIdx === -1 || statusIdx === -1) return result;
+
+  var defaultTypeId = '';
+  if (typeIdIdx >= 0 && typeof hosoRepoRows === 'function') {
+    var mcRows = hosoRepoRows(CBV_CONFIG.SHEETS.MASTER_CODE);
+    var khac = mcRows.find(function(m) {
+      return String(m.MASTER_GROUP || '') === 'HO_SO_TYPE' && String(m.CODE || '') === 'KHAC' && String(m.STATUS || '') === 'ACTIVE';
+    });
+    if (khac) defaultTypeId = String(khac.ID);
+    else {
+      var any = mcRows.find(function(m) { return String(m.MASTER_GROUP || '') === 'HO_SO_TYPE' && String(m.STATUS || '') === 'ACTIVE'; });
+      if (any) defaultTypeId = String(any.ID);
+    }
+  }
 
   var hoSoIdsWithFiles = {};
   var fileSheet = ss.getSheetByName(CBV_CONFIG.SHEETS.HO_SO_FILE);
@@ -191,33 +203,36 @@ function repairHoSoMasterBlanks() {
     }
   }
 
-  var typeFromId = { 'HTX_': 'HTX', 'XV_': 'XA_VIEN', 'XE_': 'XE', 'TX_': 'TAI_XE' };
-
   loaded.rows.forEach(function(r) {
     var rowNum = r._rowNumber || 0;
     var idVal = String(r.ID || r[idIdx] || '').trim();
-    var typeVal = String(r.HO_SO_TYPE || r[typeIdx] || '').trim();
     var statusVal = String(r.STATUS || r[statusIdx] || '').trim();
+    var typeIdVal = typeIdIdx >= 0 ? String(r.HO_SO_TYPE_ID || r[typeIdIdx] || '').trim() : '';
+    var codeVal = codeIdx >= 0 ? String(r.HO_SO_CODE || r[codeIdx] || '').trim() : '';
 
-    if (!typeVal) {
-      var inferred = null;
-      for (var prefix in typeFromId) {
-        if (idVal.indexOf(prefix) === 0) { inferred = typeFromId[prefix]; break; }
-      }
-      if (inferred) {
-        sheet.getRange(rowNum, typeIdx + 1).setValue(inferred);
+    if (typeIdIdx >= 0 && !typeIdVal) {
+      if (defaultTypeId) {
+        sheet.getRange(rowNum, typeIdIdx + 1).setValue(defaultTypeId);
         result.repaired++;
-        result.rowsFixed.push({ sheet: 'HO_SO_MASTER', row: rowNum, col: 'HO_SO_TYPE', from: '(blank)', to: inferred, decision: 'Inferred from ID prefix ' + (idVal.substring(0, 4) || '') });
+        result.rowsFixed.push({ sheet: 'HO_SO_MASTER', row: rowNum, col: 'HO_SO_TYPE_ID', from: '(blank)', to: defaultTypeId, decision: 'Default MASTER HO_SO_TYPE' });
+        typeIdVal = defaultTypeId;
       } else {
-        result.manualReview.push({ row: rowNum, col: 'HO_SO_TYPE', id: idVal, sheet: 'HO_SO_MASTER' });
+        result.manualReview.push({ row: rowNum, col: 'HO_SO_TYPE_ID', id: idVal, sheet: 'HO_SO_MASTER' });
       }
+    }
+
+    if (codeIdx >= 0 && !codeVal && typeIdVal && typeof hosoGenerateHoSoCode === 'function') {
+      var newCode = hosoGenerateHoSoCode(typeIdVal);
+      sheet.getRange(rowNum, codeIdx + 1).setValue(newCode);
+      result.repaired++;
+      result.rowsFixed.push({ sheet: 'HO_SO_MASTER', row: rowNum, col: 'HO_SO_CODE', from: '(blank)', to: newCode, decision: 'Generated HS code' });
     }
 
     if (!statusVal) {
       var defaultStatus = hoSoIdsWithFiles[idVal] ? 'ACTIVE' : 'NEW';
       sheet.getRange(rowNum, statusIdx + 1).setValue(defaultStatus);
       result.repaired++;
-      result.rowsFixed.push({ sheet: 'HO_SO_MASTER', row: rowNum, col: 'STATUS', from: '(blank)', to: defaultStatus, decision: (defaultStatus === 'ACTIVE' ? 'Has HO_SO_FILE rows (in use)' : 'No files; default NEW') });
+      result.rowsFixed.push({ sheet: 'HO_SO_MASTER', row: rowNum, col: 'STATUS', from: '(blank)', to: defaultStatus, decision: (defaultStatus === 'ACTIVE' ? 'Has HO_SO_FILE rows' : 'Default NEW') });
     }
   });
 
@@ -225,7 +240,7 @@ function repairHoSoMasterBlanks() {
 }
 
 /**
- * Repairs HO_SO_FILE: fills blank FILE_GROUP with KHAC (other/unknown).
+ * Repairs HO_SO_FILE (PRO): fills blank FILE_TYPE with OTHER.
  * @returns {Object} { ok, repaired: number, rowsFixed: [] }
  */
 function repairHoSoFileBlanks() {
@@ -236,18 +251,20 @@ function repairHoSoFileBlanks() {
   if (!loaded || loaded.rowCount === 0) return result;
 
   var headers = loaded.headers;
-  var fgIdx = headers.indexOf('FILE_GROUP');
-  var idIdx = headers.indexOf('ID');
-  if (fgIdx === -1) return result;
+  var ftIdx = headers.indexOf('FILE_TYPE');
+  var legacyIdx = headers.indexOf('FILE_GROUP');
+  var colIdx = ftIdx >= 0 ? ftIdx : legacyIdx;
+  if (colIdx === -1) return result;
+  var colName = ftIdx >= 0 ? 'FILE_TYPE' : 'FILE_GROUP';
+  var fallback = ftIdx >= 0 ? 'OTHER' : 'KHAC';
 
   loaded.rows.forEach(function(r) {
     var rowNum = r._rowNumber || 0;
-    var fgVal = String(r.FILE_GROUP || r[fgIdx] || '').trim();
-    if (!fgVal) {
-      sheet.getRange(rowNum, fgIdx + 1).setValue('KHAC');
+    var val = String(ftIdx >= 0 ? (r.FILE_TYPE || r[ftIdx]) : (r.FILE_GROUP || r[legacyIdx]) || '').trim();
+    if (!val) {
+      sheet.getRange(rowNum, colIdx + 1).setValue(fallback);
       result.repaired++;
-      var rowId = idIdx >= 0 ? String(r.ID || r[idIdx] || '').trim() : '';
-      result.rowsFixed.push({ sheet: 'HO_SO_FILE', row: rowNum, col: 'FILE_GROUP', from: '(blank)', to: 'KHAC', decision: 'Unknown file group; KHAC = other' });
+      result.rowsFixed.push({ sheet: 'HO_SO_FILE', row: rowNum, col: colName, from: '(blank)', to: fallback, decision: 'Default type' });
     }
   });
 
@@ -467,7 +484,7 @@ function repairSchemaAndData(options) {
 var RESIDUAL_BLOCKER_COLUMNS = {
   TASK_MAIN: ['STATUS', 'PRIORITY', 'DON_VI_ID'],
   USER_DIRECTORY: ['ROLE', 'STATUS'],
-  HO_SO_MASTER: ['HO_SO_TYPE', 'STATUS'],
+  HO_SO_MASTER: ['HO_SO_TYPE_ID', 'HO_SO_CODE', 'STATUS'],
   FINANCE_TRANSACTION: ['STATUS', 'TRANS_TYPE', 'CATEGORY'],
   ADMIN_AUDIT_LOG: ['ENTITY_ID']
 };
@@ -581,22 +598,34 @@ function repairResidualInvalidRecords() {
         if (def) { patch[col] = def; repairsApplied.push({ table: table, id: id, column: col, from: rec.currentValues[col], to: def }); }
       });
     } else if (table === 'HO_SO_MASTER') {
+      var defaultHosoTypeId = '';
+      if (typeof hosoRepoRows === 'function') {
+        var mcRows = hosoRepoRows(CBV_CONFIG.SHEETS.MASTER_CODE);
+        var k = mcRows.find(function(m) {
+          return String(m.MASTER_GROUP || '') === 'HO_SO_TYPE' && String(m.CODE || '') === 'KHAC' && String(m.STATUS || '') === 'ACTIVE';
+        });
+        if (k) defaultHosoTypeId = String(k.ID);
+        else {
+          var a = mcRows.find(function(m) { return String(m.MASTER_GROUP || '') === 'HO_SO_TYPE' && String(m.STATUS || '') === 'ACTIVE'; });
+          if (a) defaultHosoTypeId = String(a.ID);
+        }
+      }
       rec.missingFields.forEach(function(col) {
         if (col === 'STATUS') {
           var def = hoSoIdsWithFiles[id] ? RESIDUAL_SAFE_DEFAULTS.HO_SO_MASTER_STATUS_ACTIVE : RESIDUAL_SAFE_DEFAULTS.HO_SO_MASTER_STATUS_NEW;
           patch[col] = def;
           repairsApplied.push({ table: table, id: id, column: col, from: rec.currentValues[col], to: def });
-        } else if (col === 'HO_SO_TYPE') {
-          var inferred = null;
-          for (var p in HO_SO_TYPE_FROM_ID_PREFIX) {
-            if (id.indexOf(p) === 0) { inferred = HO_SO_TYPE_FROM_ID_PREFIX[p]; break; }
-          }
-          if (inferred) {
-            patch[col] = inferred;
-            repairsApplied.push({ table: table, id: id, column: col, from: rec.currentValues[col], to: inferred });
+        } else if (col === 'HO_SO_TYPE_ID') {
+          if (defaultHosoTypeId) {
+            patch[col] = defaultHosoTypeId;
+            repairsApplied.push({ table: table, id: id, column: col, from: rec.currentValues[col], to: defaultHosoTypeId });
           } else {
-            manualReview.push({ table: table, id: id, column: col, reason: 'HO_SO_TYPE not inferable from ID prefix' });
+            manualReview.push({ table: table, id: id, column: col, reason: 'No HO_SO_TYPE master row to default' });
           }
+        } else if (col === 'HO_SO_CODE' && defaultHosoTypeId && typeof hosoGenerateHoSoCode === 'function') {
+          var nc = hosoGenerateHoSoCode(patch.HO_SO_TYPE_ID || defaultHosoTypeId);
+          patch[col] = nc;
+          repairsApplied.push({ table: table, id: id, column: col, from: rec.currentValues[col], to: nc });
         }
       });
     } else if (table === 'FINANCE_TRANSACTION') {

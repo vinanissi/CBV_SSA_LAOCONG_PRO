@@ -219,28 +219,6 @@ function testTaskWorkflowRules() { return (callIfExists_('runTaskSystemTests') |
 function testFieldPolicyReadiness() { return callIfExists_('testFieldPolicyReadiness') || callIfExists_('runTaskSystemTests') || null; }
 function createSampleTaskRows() { return seedTaskDemo(); }
 
-function auditHoSoModule() {
-  var r = callIfExists_('runHoSoTests');
-  if (r == null) {
-    SpreadsheetApp.getUi().alert('Chưa tải', 'runHoSoTests chưa được tải.', SpreadsheetApp.getUi().ButtonSet.OK);
-    return null;
-  }
-  SpreadsheetApp.getUi().alert('Audit Hồ sơ', r.ok !== false ? 'OK' : 'Có vấn đề', SpreadsheetApp.getUi().ButtonSet.OK);
-  return r;
-}
-
-function seedHoSoDemo() {
-  var r = callIfExists_('seedGoldenDataset', {});
-  if (r == null) {
-    SpreadsheetApp.getUi().alert('Chưa tải', 'seedGoldenDataset chưa được tải.', SpreadsheetApp.getUi().ButtonSet.OK);
-    return null;
-  }
-  SpreadsheetApp.getUi().alert('Gieo Hồ sơ Demo', r.message || 'Xong', SpreadsheetApp.getUi().ButtonSet.OK);
-  return r;
-}
-
-function testHoSoRelations() { return auditHoSoModule(); }
-
 function auditFinanceModule() {
   var r = callIfExists_('runFinanceTests');
   if (r == null) {
@@ -539,28 +517,7 @@ function menuCreateSampleTaskRows() {
 }
 
 // ==================== HỒ SƠ MODULE ====================
-
-function menuAuditHoSo() {
-  var r = callIfExists_('runHoSoTests');
-  if (r == null) {
-    SpreadsheetApp.getUi().alert('Chưa tải', 'runHoSoTests chưa được tải.', SpreadsheetApp.getUi().ButtonSet.OK);
-    return;
-  }
-  SpreadsheetApp.getUi().alert('Audit Hồ sơ', r.ok !== false ? 'OK' : 'Có vấn đề', SpreadsheetApp.getUi().ButtonSet.OK);
-}
-
-function menuSeedHoSoDemo() {
-  var r = callIfExists_('seedGoldenDataset', {});
-  if (r == null) {
-    SpreadsheetApp.getUi().alert('Chưa tải', 'seedGoldenDataset chưa được tải.', SpreadsheetApp.getUi().ButtonSet.OK);
-    return;
-  }
-  SpreadsheetApp.getUi().alert('Gieo Hồ sơ Demo', r.message || 'Xong', SpreadsheetApp.getUi().ButtonSet.OK);
-}
-
-function menuTestHoSoRelations() {
-  menuAuditHoSo();
-}
+// menuAuditHoSo, menuSeedHoSoDemo, menuTestHoSoRelations, menuHosoFullDeploy → 10_HOSO_MENU.gs
 
 // ==================== TÀI CHÍNH MODULE ====================
 

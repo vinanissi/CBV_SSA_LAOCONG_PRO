@@ -89,6 +89,7 @@ function buildCbvProMenu_() {
   // 6. Hồ sơ Module
   menu.addSubMenu(
     ui.createMenu('📁 Hồ sơ Module')
+      .addItem('▶ Triển khai HO_SO (bootstrap+seed+audit+smoke)', 'menuHosoFullDeploy')
       .addItem('🔎 Audit Hồ sơ', 'menuAuditHoSo')
       .addItem('🌱 Gieo Hồ sơ Demo', 'menuSeedHoSoDemo')
       .addItem('🧪 Test Quan hệ Hồ sơ', 'menuTestHoSoRelations')

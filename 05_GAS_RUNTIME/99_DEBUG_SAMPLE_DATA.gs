@@ -308,36 +308,72 @@ function _goldenSeedUsers(now, user, summary) {
   return { created: created, skipped: skipped };
 }
 
+/**
+ * Maps legacy golden token (e.g. HTX) → MASTER_CODE.CODE in group HO_SO_TYPE.
+ */
+function _goldenResolveHoSoTypeIdForSeed(legacyToken) {
+  var raw = String(legacyToken || '').trim();
+  var map = { HTX: 'KHAC', XA_VIEN: 'HO_SO_XA_VIEN', XE: 'HO_SO_PHUONG_TIEN', TAI_XE: 'HO_SO_TAI_XE' };
+  var mcCode = map[raw] || raw || 'KHAC';
+  if (typeof hosoRepoRows !== 'function') return '';
+  var rows = hosoRepoRows(CBV_CONFIG.SHEETS.MASTER_CODE);
+  var m = rows.find(function(x) {
+    return String(x.MASTER_GROUP || '') === HOSO_MASTER_GROUP_TYPE && String(x.CODE || '') === mcCode && String(x.STATUS || '').toUpperCase() === 'ACTIVE';
+  });
+  if (m) return String(m.ID || '').trim();
+  var fb = rows.find(function(x) {
+    return String(x.MASTER_GROUP || '') === HOSO_MASTER_GROUP_TYPE && String(x.CODE || '') === 'KHAC';
+  });
+  return fb ? String(fb.ID || '').trim() : '';
+}
+
+/** Golden HO_SO_MASTER rows — PRO schema only (no HO_SO_TYPE / HTX_ID text columns). */
 function _goldenSeedHTX(now, user, summary) {
   var created = 0;
   var skipped = 0;
   var sheetName = CBV_CONFIG.SHEETS.HO_SO_MASTER;
+  if (typeof seedHosoMasterData_ === 'function') seedHosoMasterData_();
 
   _goldenHTXSpecs().forEach(function(spec) {
     if (_goldenExists(sheetName, spec.ID)) {
       skipped++;
       return;
     }
-    var hoSoType = (spec.HO_SO_TYPE && String(spec.HO_SO_TYPE).trim()) ? String(spec.HO_SO_TYPE).trim() : (typeof GOLDEN_HTX_DEFAULT_TYPE !== 'undefined' ? GOLDEN_HTX_DEFAULT_TYPE : 'HTX');
+    var legacyType = (spec.HO_SO_TYPE && String(spec.HO_SO_TYPE).trim()) ? String(spec.HO_SO_TYPE).trim() : (typeof GOLDEN_HTX_DEFAULT_TYPE !== 'undefined' ? GOLDEN_HTX_DEFAULT_TYPE : 'HTX');
+    var typeId = _goldenResolveHoSoTypeIdForSeed(legacyType);
+    if (!typeId) {
+      Logger.log('[seedGoldenDataset] Skip HO_SO golden row: no HO_SO_TYPE master for ' + legacyType);
+      return;
+    }
     var status = (spec.STATUS && String(spec.STATUS).trim()) ? String(spec.STATUS).trim() : (typeof GOLDEN_HTX_DEFAULT_STATUS !== 'undefined' ? GOLDEN_HTX_DEFAULT_STATUS : 'ACTIVE');
-    var code = (spec.CODE && String(spec.CODE).trim()) ? String(spec.CODE).trim() : spec.ID;
-    var name = (spec.NAME && String(spec.NAME).trim()) ? String(spec.NAME).trim() : (code || spec.ID);
+    var name = (spec.NAME && String(spec.NAME).trim()) ? String(spec.NAME).trim() : spec.ID;
+    var hoSoCode = 'HS-GOLD-' + String(spec.ID).replace(/[^A-Z0-9]/gi, '');
     var record = {
       ID: spec.ID,
-      HO_SO_TYPE: hoSoType,
-      CODE: code,
-      NAME: name,
+      HO_SO_CODE: hoSoCode,
+      TITLE: name,
+      DISPLAY_NAME: name,
+      HO_SO_TYPE_ID: typeId,
       STATUS: status,
-      HTX_ID: '',
+      DON_VI_ID: '',
       OWNER_ID: '',
+      MANAGER_USER_ID: '',
+      RELATED_ENTITY_TYPE: 'NONE',
+      RELATED_ENTITY_ID: '',
+      FULL_NAME: '',
       PHONE: '',
       EMAIL: '',
+      ID_TYPE: '',
       ID_NO: '',
+      DOB: '',
       ADDRESS: '',
       START_DATE: '',
       END_DATE: '',
-      NOTE: '[GOLDEN] Demo HTX - safe to delete',
-      TAGS: '',
+      PRIORITY: 'MEDIUM',
+      SOURCE_CHANNEL: 'DIRECT',
+      SUMMARY: '',
+      NOTE: '[GOLDEN] Demo hồ sơ (slot legacy HTX) — PRO schema, safe to delete',
+      TAGS_TEXT: '',
       CREATED_AT: now,
       CREATED_BY: user,
       UPDATED_AT: now,

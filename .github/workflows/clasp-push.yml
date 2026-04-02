@@ -48,10 +48,8 @@ jobs:
       
       - name: Create .clasp.json
         run: |
-          echo '{
-            "scriptId": "${{ steps.load-config.outputs.script_id }}",
-            "rootDir": "."
-          }' > .clasp.json
+          jq --arg sid "${{ steps.load-config.outputs.script_id }}" \
+            '.scriptId = $sid | .rootDir = "05_GAS_RUNTIME"' .clasp.json > .clasp.tmp && mv .clasp.tmp .clasp.json
       
       - name: Create Service Account Key File
         env:
