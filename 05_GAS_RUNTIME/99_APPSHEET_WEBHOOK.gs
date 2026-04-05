@@ -41,6 +41,26 @@ function doGet(e) {
 }
 
 /**
+ * Xóa PENDING_ACTION về "" sau khi xử lý xong.
+ * Tránh Bot AppSheet fire lại.
+ * @param {string} taskId
+ */
+function _clearPendingAction(taskId) {
+  try {
+    var task = taskFindById(taskId);
+    if (task && task._rowNumber) {
+      taskUpdateMain(task._rowNumber, {
+        PENDING_ACTION: '',
+        UPDATED_AT: cbvNow(),
+        UPDATED_BY: cbvUser()
+      });
+    }
+  } catch (e) {
+    // Non-blocking — không throw nếu clear thất bại
+  }
+}
+
+/**
  * Router theo body.action → 20_TASK_SERVICE.
  * @param {Object} body
  * @returns {Object} cbvResponse
@@ -51,29 +71,44 @@ function _routeWebhookAction(body) {
   var note = String(body.note || '');
   var checklistId = String(body.checklistId || '');
   var resultSummary = String(body.resultSummary || '');
+  var result;
 
   switch (action) {
     case 'taskStart':
       _webhookRequireParam(taskId, 'taskId');
-      return taskStartAction(taskId);
+      result = taskStartAction(taskId);
+      if (result && result.ok) _clearPendingAction(taskId);
+      return result;
     case 'taskWait':
       _webhookRequireParam(taskId, 'taskId');
-      return setTaskStatus(taskId, 'WAITING', note);
+      result = setTaskStatus(taskId, 'WAITING', note);
+      if (result && result.ok) _clearPendingAction(taskId);
+      return result;
     case 'taskResume':
       _webhookRequireParam(taskId, 'taskId');
-      return setTaskStatus(taskId, 'IN_PROGRESS', note);
+      result = setTaskStatus(taskId, 'IN_PROGRESS', note);
+      if (result && result.ok) _clearPendingAction(taskId);
+      return result;
     case 'taskComplete':
       _webhookRequireParam(taskId, 'taskId');
-      return completeTask(taskId, resultSummary);
+      result = completeTask(taskId, resultSummary);
+      if (result && result.ok) _clearPendingAction(taskId);
+      return result;
     case 'taskCancel':
       _webhookRequireParam(taskId, 'taskId');
-      return cancelTask(taskId, note);
+      result = cancelTask(taskId, note);
+      if (result && result.ok) _clearPendingAction(taskId);
+      return result;
     case 'taskReopen':
       _webhookRequireParam(taskId, 'taskId');
-      return taskReopenAction(taskId);
+      result = taskReopenAction(taskId);
+      if (result && result.ok) _clearPendingAction(taskId);
+      return result;
     case 'taskArchive':
       _webhookRequireParam(taskId, 'taskId');
-      return setTaskStatus(taskId, 'ARCHIVED', note);
+      result = setTaskStatus(taskId, 'ARCHIVED', note);
+      if (result && result.ok) _clearPendingAction(taskId);
+      return result;
     case 'checklistDone':
       _webhookRequireParam(checklistId, 'checklistId');
       return markChecklistDone(checklistId, note);
@@ -81,7 +116,9 @@ function _routeWebhookAction(body) {
       _webhookRequireParam(taskId, 'taskId');
       var updateType = String(body.updateType || 'NOTE');
       var content = String(body.content || '');
-      return addTaskLogEntry(taskId, updateType, content);
+      result = addTaskLogEntry(taskId, updateType, content);
+      if (result && result.ok) _clearPendingAction(taskId);
+      return result;
     default:
       return cbvResponse(false, 'UNKNOWN_ACTION', 'Action không hợp lệ: ' + action, null, []);
   }

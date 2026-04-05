@@ -50,6 +50,8 @@ function buildCbvProMenu_() {
       .addItem('🔒 Bảo vệ sheet nhạy cảm', 'menuProtectSensitiveSheets')
       .addItem('⏰ Cài đặt Triggers', 'menuInstallTriggers')
       .addItem('⏹ Gỡ Triggers', 'menuRemoveTriggers')
+      .addItem('📌 Cài onEdit (Task)', 'menuInstallOnEditTrigger')
+      .addItem('📌 Gỡ onEdit (Task)', 'menuUninstallOnEditTrigger')
   );
 
   // 3. Audit & Health

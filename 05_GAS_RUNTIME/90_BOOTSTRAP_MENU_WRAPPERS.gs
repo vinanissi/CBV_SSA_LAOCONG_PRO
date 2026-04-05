@@ -63,6 +63,34 @@ function removeCbvTriggers() {
   return n;
 }
 
+function menuInstallOnEditTrigger() {
+  if (!_menuFnExists_('installOnEditTrigger')) {
+    SpreadsheetApp.getUi().alert('Chưa tải', 'installOnEditTrigger chưa được tải.', SpreadsheetApp.getUi().ButtonSet.OK);
+    return;
+  }
+  try {
+    installOnEditTrigger();
+  } catch (err) {
+    SpreadsheetApp.getUi().alert('Lỗi', String(err.message || err), SpreadsheetApp.getUi().ButtonSet.OK);
+    return;
+  }
+  SpreadsheetApp.getUi().alert('onEdit', 'Đã cài onEditTaskHandler.', SpreadsheetApp.getUi().ButtonSet.OK);
+}
+
+function menuUninstallOnEditTrigger() {
+  if (!_menuFnExists_('uninstallOnEditTrigger')) {
+    SpreadsheetApp.getUi().alert('Chưa tải', 'uninstallOnEditTrigger chưa được tải.', SpreadsheetApp.getUi().ButtonSet.OK);
+    return;
+  }
+  try {
+    uninstallOnEditTrigger();
+  } catch (err) {
+    SpreadsheetApp.getUi().alert('Lỗi', String(err.message || err), SpreadsheetApp.getUi().ButtonSet.OK);
+    return;
+  }
+  SpreadsheetApp.getUi().alert('onEdit', 'Đã gỡ trigger onEditTaskHandler.', SpreadsheetApp.getUi().ButtonSet.OK);
+}
+
 function selfAuditBootstrap(opts) {
   var o = opts || {};
   var r = callIfExists_('selfAuditBootstrapImpl', o);
