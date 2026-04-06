@@ -17,20 +17,21 @@ Form view specifications. Field order, visibility, hidden/readonly. Aligned with
 
 | Order | Field | Visible | Editable | Notes |
 |-------|-------|---------|----------|-------|
-| 1 | HO_SO_TYPE | Yes | Yes | Enum; Valid_If ENUM_DICTIONARY |
-| 2 | CODE | Yes | Yes | GAS validates duplicate |
-| 3 | NAME | Yes | Yes | |
-| 4 | HTX_ID | Yes | Yes | Ref HO_SO_MASTER (HO_SO_TYPE=HTX) |
-| 5 | OWNER_ID | Yes | Yes | |
-| 6 | PHONE | Yes | Yes | |
-| 7 | EMAIL | Yes | Yes | |
-| 8 | ID_NO | Yes | Yes | |
-| 9 | ADDRESS | Yes | Yes | |
-| 10 | START_DATE | Yes | Yes | |
-| 11 | END_DATE | Yes | Yes | |
-| 12 | NOTE | Yes | Yes | |
-| 13 | TAGS | Yes | Yes | |
-| 14 | STATUS | Yes | No | GAS action only |
+| 1 | HO_SO_TYPE_ID | Yes | Yes | Ref MASTER_CODE (group HO_SO_TYPE); dropdown slice ACTIVE_HO_SO_TYPE |
+| 2 | HO_SO_TYPE | Yes | Yes | Enum legacy; auto-sync từ HO_SO_TYPE_ID khi có |
+| 3 | CODE | Yes | Yes | GAS validates duplicate |
+| 4 | NAME | Yes | Yes | |
+| 5 | HTX_ID | Yes | Yes | Ref HO_SO_MASTER (HO_SO_TYPE=HTX) |
+| 6 | OWNER_ID | Yes | Yes | |
+| 7 | PHONE | Yes | Yes | |
+| 8 | EMAIL | Yes | Yes | |
+| 9 | ID_NO | Yes | Yes | |
+| 10 | ADDRESS | Yes | Yes | |
+| 11 | START_DATE | Yes | Yes | |
+| 12 | END_DATE | Yes | Yes | |
+| 13 | NOTE | Yes | Yes | |
+| 14 | TAGS_TEXT | Yes | Yes | Tags tìm kiếm, phân cách dấu phẩy |
+| 15 | STATUS | Yes | No | GAS action only |
 
 ### Hidden Fields
 

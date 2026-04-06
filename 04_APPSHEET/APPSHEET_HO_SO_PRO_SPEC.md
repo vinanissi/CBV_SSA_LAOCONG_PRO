@@ -13,7 +13,7 @@
 
 | Column | Ref to | Suggested slice for dropdown |
 |--------|--------|------------------------------|
-| HO_SO_TYPE_ID | MASTER_CODE | `MASTER_CODE` where `MASTER_GROUP = HO_SO_TYPE`, `IS_DELETED = FALSE` |
+| HO_SO_TYPE_ID | MASTER_CODE | `MASTER_CODE` where `MASTER_GROUP = HO_SO_TYPE`, `STATUS = ACTIVE` |
 | DON_VI_ID | DON_VI | Active DON_VI |
 | OWNER_ID, MANAGER_USER_ID | USER_DIRECTORY | Active users |
 | HO_SO_ID (child) | HO_SO_MASTER | Parent row / `_RowNumber` |

@@ -28,7 +28,7 @@ const CBV_SCHEMA_MANIFEST = {
     'START_DATE',   // col 12
     'END_DATE',     // col 13
     'NOTE',         // col 14
-    'TAGS',         // col 15
+    'TAGS_TEXT',    // col 15
     'CREATED_AT',   // col 16
     'CREATED_BY',   // col 17
     'UPDATED_AT',   // col 18
@@ -43,11 +43,12 @@ const CBV_SCHEMA_MANIFEST = {
     'RELATED_ENTITY_TYPE',  // col 26
     'RELATED_ENTITY_ID',    // col 27
     'FULL_NAME',            // col 28
-    'ID_TYPE',              // col 39
+    'ID_TYPE',              // col 29
     'DOB',                  // col 30
     'PRIORITY',             // col 31
     'SOURCE_CHANNEL',       // col 32
     'SUMMARY',              // col 33
+    'HO_SO_TYPE_ID',        // col 34
   ],
  
   HO_SO_FILE: [

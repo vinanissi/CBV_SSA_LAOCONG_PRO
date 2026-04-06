@@ -32,7 +32,20 @@ Reusable slices for Ref targets, filters, and UI consistency. Prefer slice reuse
 
 ---
 
-### C. ACTIVE_HTX
+### C. ACTIVE_HO_SO_TYPE
+
+| Property | Value |
+|----------|-------|
+| Slice name | ACTIVE_HO_SO_TYPE |
+| Source table | MASTER_CODE |
+| Row filter | `AND([MASTER_GROUP] = "HO_SO_TYPE", [STATUS] = "ACTIVE", [IS_DELETED] = FALSE)` |
+| Purpose | Dropdown cho HO_SO_TYPE_ID trong HO_SO form |
+| Columns used | ID, CODE, DISPLAY_TEXT, NAME, MASTER_GROUP |
+| Referenced by | HO_SO_MASTER.HO_SO_TYPE_ID |
+
+---
+
+### D. ACTIVE_HTX
 
 | Property | Value |
 |----------|-------|
@@ -45,7 +58,7 @@ Reusable slices for Ref targets, filters, and UI consistency. Prefer slice reuse
 
 ---
 
-### D. HO_SO_ACTIVE
+### E. HO_SO_ACTIVE
 
 | Property | Value |
 |----------|-------|
@@ -58,7 +71,7 @@ Reusable slices for Ref targets, filters, and UI consistency. Prefer slice reuse
 
 ---
 
-### E. TASK_OPEN
+### F. TASK_OPEN
 
 | Property | Value |
 |----------|-------|
@@ -71,7 +84,7 @@ Reusable slices for Ref targets, filters, and UI consistency. Prefer slice reuse
 
 ---
 
-### F. TASK_DONE
+### G. TASK_DONE
 
 | Property | Value |
 |----------|-------|
@@ -84,7 +97,7 @@ Reusable slices for Ref targets, filters, and UI consistency. Prefer slice reuse
 
 ---
 
-### G. TASK_MY_OPEN (Security/Filter)
+### H. TASK_MY_OPEN (Security/Filter)
 
 | Property | Value |
 |----------|-------|
@@ -99,7 +112,7 @@ Reusable slices for Ref targets, filters, and UI consistency. Prefer slice reuse
 
 ---
 
-### H. FIN_DRAFT
+### I. FIN_DRAFT
 
 | Property | Value |
 |----------|-------|
@@ -112,7 +125,7 @@ Reusable slices for Ref targets, filters, and UI consistency. Prefer slice reuse
 
 ---
 
-### I. FIN_CONFIRMED
+### J. FIN_CONFIRMED
 
 | Property | Value |
 |----------|-------|
@@ -127,12 +140,13 @@ Reusable slices for Ref targets, filters, and UI consistency. Prefer slice reuse
 
 ## SLICE CREATION ORDER
 
-1. ACTIVE_USERS (MASTER_CODE)
+1. ACTIVE_USERS (USER_DIRECTORY)
 2. ACTIVE_MASTER_CODES (MASTER_CODE)
-3. ACTIVE_HTX (HO_SO_MASTER)
-4. HO_SO_ACTIVE (HO_SO_MASTER)
-5. TASK_OPEN, TASK_DONE, TASK_MY_OPEN (TASK_MAIN)
-6. FIN_DRAFT, FIN_CONFIRMED (FINANCE_TRANSACTION)
+3. ACTIVE_HO_SO_TYPE (MASTER_CODE)
+4. ACTIVE_HTX (HO_SO_MASTER)
+5. HO_SO_ACTIVE (HO_SO_MASTER)
+6. TASK_OPEN, TASK_DONE, TASK_MY_OPEN (TASK_MAIN)
+7. FIN_DRAFT, FIN_CONFIRMED (FINANCE_TRANSACTION)
 
 ---
 

@@ -4,6 +4,8 @@ Canonical tables per **CBV final architecture**. Legacy columns (`HO_SO_TYPE`, `
 
 ## HO_SO_MASTER
 
+**Thứ tự cột trên sheet (34 cột):** cột 15 = `TAGS_TEXT` (đổi tên từ `TAGS`); cột 34 = `HO_SO_TYPE_ID` (cuối sheet).
+
 | Column | Type | Notes |
 |--------|------|--------|
 | ID | PK | |
@@ -13,7 +15,7 @@ Canonical tables per **CBV final architecture**. Legacy columns (`HO_SO_TYPE`, `
 | HO_SO_CODE | string | Unique; generated `HS-…` |
 | TITLE | string | |
 | DISPLAY_NAME | string | |
-| HO_SO_TYPE_ID | ref | → `MASTER_CODE.ID`, `MASTER_GROUP=HO_SO_TYPE` |
+| HO_SO_TYPE_ID | ref | → `MASTER_CODE.ID`, `MASTER_GROUP=HO_SO_TYPE` · required |
 | STATUS | enum | `HO_SO_STATUS` |
 | DON_VI_ID | ref | → `DON_VI.ID`, optional |
 | OWNER_ID | ref | → `USER_DIRECTORY.ID` |

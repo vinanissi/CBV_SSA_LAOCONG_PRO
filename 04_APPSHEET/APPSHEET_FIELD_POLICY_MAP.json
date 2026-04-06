@@ -56,6 +56,14 @@
       "label_column": "NAME",
       "key_column": "ID",
       "ref_columns": {
+        "HO_SO_TYPE_ID": {
+          "type": "Ref",
+          "target": "MASTER_CODE",
+          "filter": "MASTER_GROUP = \"HO_SO_TYPE\" AND STATUS = \"ACTIVE\"",
+          "show": true,
+          "editable": true,
+          "required": true
+        },
         "HTX_ID": {"target": "ACTIVE_HTX", "label_source": "NAME"},
         "OWNER_ID": {"target": "ACTIVE_USERS", "label_source": "FULL_NAME"}
       },
@@ -88,6 +96,7 @@
   "slices": {
     "ACTIVE_USERS": {"source": "USER_DIRECTORY", "filter": "AND([STATUS]=\"ACTIVE\", [IS_DELETED]=FALSE)"},
     "ACTIVE_MASTER_CODES": {"source": "MASTER_CODE", "filter": "AND([STATUS]=\"ACTIVE\", [IS_DELETED]=FALSE)"},
+    "ACTIVE_HO_SO_TYPE": {"source": "MASTER_CODE", "filter": "AND([MASTER_GROUP]=\"HO_SO_TYPE\", [STATUS]=\"ACTIVE\", [IS_DELETED]=FALSE)"},
     "ACTIVE_HTX": {"source": "HO_SO_MASTER", "filter": "AND([HO_SO_TYPE]=\"HTX\", [IS_DELETED]=FALSE)"},
     "HO_SO_ACTIVE": {"source": "HO_SO_MASTER", "filter": "[IS_DELETED]=FALSE"},
     "TASK_OPEN": {"source": "TASK_MAIN", "filter": "IN([STATUS], LIST(\"NEW\", \"ASSIGNED\", \"IN_PROGRESS\", \"WAITING\"))"},

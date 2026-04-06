@@ -68,6 +68,17 @@
 
 ---
 
+## PART 3B — REF COLUMNS (HO_SO_MASTER)
+
+| Column | Ref to | Slice / notes |
+|--------|--------|----------------|
+| HO_SO_TYPE_ID | MASTER_CODE | **ACTIVE_HO_SO_TYPE** — `MASTER_GROUP=HO_SO_TYPE`, `STATUS=ACTIVE`; required PRO |
+| HTX_ID | HO_SO_MASTER | ACTIVE_HTX (HO_SO_TYPE=HTX) |
+| OWNER_ID | USER_DIRECTORY | ACTIVE_USERS |
+| TAGS_TEXT | — | Text (không phải TAGS); tags tìm kiếm, phân cách dấu phẩy |
+
+---
+
 ## PART 4 — SLICE DESIGN (MINIMAL)
 
 ### HO_SO
@@ -75,6 +86,7 @@
 |-------|-----------|---------|
 | HO_SO_ACTIVE | STATUS = "ACTIVE" | Active records only |
 | HO_SO_ALL | IS_DELETED = FALSE | All non-deleted |
+| ACTIVE_HO_SO_TYPE | MASTER_CODE: `MASTER_GROUP=HO_SO_TYPE`, `STATUS=ACTIVE`, `IS_DELETED=FALSE` | Dropdown cho `HO_SO_TYPE_ID` |
 
 ### TASK
 | Slice | Condition | Purpose |

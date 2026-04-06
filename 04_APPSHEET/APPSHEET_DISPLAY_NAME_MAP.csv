@@ -64,7 +64,7 @@ HO_SO_MASTER,ADDRESS,Địa chỉ,
 HO_SO_MASTER,START_DATE,Ngày bắt đầu,
 HO_SO_MASTER,END_DATE,Ngày kết thúc,
 HO_SO_MASTER,NOTE,Ghi chú,
-HO_SO_MASTER,TAGS,Nhãn,
+HO_SO_MASTER,TAGS_TEXT,Nhãn,
 HO_SO_MASTER,CREATED_AT,Thời điểm tạo,Hidden
 HO_SO_MASTER,CREATED_BY,Người tạo,Hidden
 HO_SO_MASTER,UPDATED_AT,Thời điểm cập nhật,Hidden

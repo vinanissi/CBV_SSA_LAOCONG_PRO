@@ -79,7 +79,7 @@
 | 4 | Liên hệ | PHONE, EMAIL | 7-8 |
 | 5 | Định danh | ID_NO, ADDRESS | 9-10 |
 | 6 | Thời gian | START_DATE, END_DATE | 11-12 |
-| 7 | Ghi chú | NOTE, TAGS | 13-14 |
+| 7 | Ghi chú | NOTE, TAGS_TEXT | 13-14 |
 
 **Ẩn:** ID, CREATED_*, UPDATED_*, IS_DELETED
 
@@ -93,7 +93,7 @@
 | 2 | Người phụ trách | OWNER_ID |
 | 3 | Liên hệ | PHONE, EMAIL, ADDRESS |
 | 4 | Thời gian | START_DATE, END_DATE |
-| 5 | Ghi chú | NOTE, TAGS |
+| 5 | Ghi chú | NOTE, TAGS_TEXT |
 | 6 | File | HO_SO_FILE inline |
 | 7 | Quan hệ | HO_SO_RELATION inline |
 

@@ -14,7 +14,7 @@
 | 4 | Liên quan / Đối tác | Ref, liên kết | RELATED_ENTITY_*, COUNTERPARTY |
 | 5 | Thời gian | Ngày, hạn | START_DATE, DUE_DATE, DONE_AT |
 | 6 | Kết quả | Kết quả, tiến độ | RESULT_NOTE, PROGRESS_PERCENT |
-| 7 | Ghi chú | Ghi chú, mô tả phụ | NOTE, TAGS |
+| 7 | Ghi chú | Ghi chú, mô tả phụ | NOTE, TAGS_TEXT |
 | 8 | Hệ thống | Ẩn | ID, CREATED_*, UPDATED_* |
 
 ---
@@ -42,7 +42,7 @@
 [4] Liên hệ: PHONE, EMAIL
 [5] Định danh: ID_NO, ADDRESS
 [6] Thời gian: START_DATE, END_DATE
-[7] Ghi chú: NOTE, TAGS
+[7] Ghi chú: NOTE, TAGS_TEXT
 [8] Hệ thống: (hidden)
 ```
 

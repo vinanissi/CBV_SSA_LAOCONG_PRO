@@ -67,6 +67,9 @@ For each table, confirm in AppSheet: **Data → Tables**.
 - [ ] Key column: **ID**
 - [ ] Label column: **NAME**
 - [ ] Add table if missing: Data → Add new table → Select HO_SO_MASTER sheet
+- [ ] Column **HO_SO_TYPE_ID**: Type = Ref → MASTER_CODE, Slice = **ACTIVE_HO_SO_TYPE**
+- [ ] Column **TAGS_TEXT**: Type = Text (không phải TAGS nữa — xác nhận tên cột đúng trong sheet)
+- [ ] Column **HO_SO_TYPE**: Type = Enum, Valid_If = HO_SO_TYPE group (legacy, giữ readonly nếu auto-sync)
 
 ### 2.2 HO_SO_FILE
 
@@ -148,6 +151,7 @@ Create slices before configuring Ref columns. See APPSHEET_SLICE_MAP.md.
 
 - [ ] **ACTIVE_USERS** — Source: MASTER_CODE; Filter: `AND([MASTER_GROUP] = "USER", [STATUS] = "ACTIVE", [IS_DELETED] = FALSE)`
 - [ ] **ACTIVE_MASTER_CODES** — Source: MASTER_CODE; Filter: `AND([STATUS] = "ACTIVE", [IS_DELETED] = FALSE)`
+- [ ] **ACTIVE_HO_SO_TYPE** — Source: MASTER_CODE; Filter: `AND([MASTER_GROUP] = "HO_SO_TYPE", [STATUS] = "ACTIVE", [IS_DELETED] = FALSE)`
 - [ ] **ACTIVE_HTX** — Source: HO_SO_MASTER; Filter: `AND([HO_SO_TYPE] = "HTX", [IS_DELETED] = FALSE)`
 - [ ] **HO_SO_ACTIVE** — Source: HO_SO_MASTER; Filter: `[IS_DELETED] = FALSE`
 - [ ] **TASK_OPEN** — Source: TASK_MAIN; Filter: `IN([STATUS], LIST("NEW", "ASSIGNED", "IN_PROGRESS", "WAITING"))`
@@ -175,7 +179,7 @@ For each table, go to **Data → Columns → [Table name]** and configure.
 - OWNER_ID → **Ref** → ACTIVE_USERS slice (Display: DISPLAY_TEXT); Allow other values: **No**
 - PHONE, EMAIL, ID_NO, ADDRESS → Text
 - START_DATE, END_DATE → Date
-- NOTE, TAGS → Text
+- NOTE, TAGS_TEXT → Text
 - CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY → leave default
 - IS_DELETED → Yes/No
 
@@ -560,7 +564,7 @@ For each form view, set column order and visibility.
 ### 7.1 HO_SO_FORM
 
 - [ ] Open UX → HO_SO_FORM → Form columns
-- [ ] Order: HO_SO_TYPE, CODE, NAME, HTX_ID, OWNER_ID, PHONE, EMAIL, ID_NO, ADDRESS, START_DATE, END_DATE, NOTE, TAGS, STATUS
+- [ ] Order: HO_SO_TYPE_ID, HO_SO_TYPE, CODE, NAME, HTX_ID, OWNER_ID, PHONE, EMAIL, ID_NO, ADDRESS, START_DATE, END_DATE, NOTE, TAGS_TEXT, STATUS
 - [ ] Hide: ID, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY, IS_DELETED
 - [ ] STATUS: Editable? = FALSE
 

@@ -31,7 +31,7 @@ Detail view specifications. Field order, visibility, inline children. Aligned wi
 | 11 | START_DATE | Yes | No | |
 | 12 | END_DATE | Yes | No | |
 | 13 | NOTE | Yes | No | |
-| 14 | TAGS | Yes | No | |
+| 14 | TAGS_TEXT | Yes | No | |
 
 ### Hidden Fields
 
