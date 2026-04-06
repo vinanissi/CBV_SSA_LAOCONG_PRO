@@ -157,6 +157,10 @@ function _routeWebhookAction(body) {
       result = addTaskLogEntry(taskId, updateType, content);
       _clearPendingAfterOk(result, taskId);
       return result;
+    case 'deleteAttachment':
+      var attachmentId = String(body.attachmentId || '');
+      _webhookRequireParam(attachmentId, 'attachmentId');
+      return deleteTaskAttachment(attachmentId, note);
     default:
       return cbvResponse(false, 'UNKNOWN_ACTION', 'Action không hợp lệ: ' + action, null, []);
   }

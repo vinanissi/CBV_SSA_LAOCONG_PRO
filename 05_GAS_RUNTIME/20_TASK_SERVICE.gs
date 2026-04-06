@@ -419,3 +419,63 @@ function addTaskLogEntry(taskId, action, note) {
 function createTaskAttachment(data) {
   return addTaskAttachment(data);
 }
+
+/**
+ * Soft delete TASK_ATTACHMENT — đánh IS_DELETED = true, ghi log.
+ *
+ * Rules:
+ *  - Không xóa dòng khỏi sheet (soft delete).
+ *  - Idempotent: đã IS_DELETED=true → trả success ngay, không write.
+ *  - Block nếu task cha ARCHIVED (ensureTaskEditable).
+ *  - Ghi 1 dòng vào TASK_UPDATE_LOG sau khi xóa.
+ *
+ * @param {string} attachmentId  ID của TASK_ATTACHMENT cần xóa mềm
+ * @param {string} [note]        Lý do xóa (tuỳ chọn)
+ * @returns {Object} cbvResponse
+ */
+function deleteTaskAttachment(attachmentId, note) {
+  // 1. Validate đầu vào
+  ensureRequired(attachmentId, 'attachmentId');
+
+  // 2. Tìm attachment — throw nếu không tồn tại
+  var attachment = taskFindAttachmentById(attachmentId);
+  cbvAssert(attachment, 'Không tìm thấy attachment: ' + attachmentId);
+
+  // 3. Idempotent check
+  var alreadyDeleted = attachment.IS_DELETED === true
+    || String(attachment.IS_DELETED).toLowerCase() === 'true';
+  if (alreadyDeleted) {
+    return cbvResponse(
+      true,
+      'TASK_ATTACHMENT_ALREADY_DELETED',
+      'Attachment đã được xóa trước đó',
+      attachment,
+      []
+    );
+  }
+
+  // 4. Block nếu task cha ARCHIVED
+  ensureTaskEditable(attachment.TASK_ID);
+
+  // 5. Ghi soft delete
+  var patch = {
+    IS_DELETED: true,
+    UPDATED_AT: cbvNow(),
+    UPDATED_BY: cbvUser()
+  };
+  taskUpdateAttachment(attachment._rowNumber, patch);
+
+  // 6. Ghi log
+  var logNote = 'Attachment deleted: '
+    + (attachment.TITLE || attachment.FILE_URL || attachmentId)
+    + (note ? ' | ' + note : '');
+  _addTaskUpdateLog(attachment.TASK_ID, 'NOTE', logNote, '', '');
+
+  return cbvResponse(
+    true,
+    'TASK_ATTACHMENT_DELETED',
+    'Đã xóa file đính kèm',
+    Object.assign({}, attachment, patch),
+    []
+  );
+}

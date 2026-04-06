@@ -96,6 +96,29 @@ function taskAppendAttachment(record) {
 }
 
 /**
+ * Tìm attachment theo ID trong sheet TASK_ATTACHMENT.
+ * Trả về object row (có _rowNumber) hoặc null nếu không tìm thấy.
+ * @param {string} attachmentId
+ * @returns {Object|null}
+ */
+function taskFindAttachmentById(attachmentId) {
+  return typeof _findById === 'function'
+    ? _findById(CBV_CONFIG.SHEETS.TASK_ATTACHMENT, attachmentId)
+    : null;
+}
+
+/**
+ * Cập nhật attachment row theo rowNumber.
+ * @param {number} rowNumber  - _rowNumber lấy từ taskFindAttachmentById
+ * @param {Object} patch      - các field cần ghi đè
+ */
+function taskUpdateAttachment(rowNumber, patch) {
+  if (typeof _updateRow === 'function') {
+    _updateRow(CBV_CONFIG.SHEETS.TASK_ATTACHMENT, rowNumber, patch);
+  }
+}
+
+/**
  * Appends update log record.
  * @param {Object} record
  */
