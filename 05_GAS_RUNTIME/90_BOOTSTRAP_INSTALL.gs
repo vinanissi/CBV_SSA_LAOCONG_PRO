@@ -5,6 +5,17 @@
 /** Trigger handler names that this bootstrap manages */
 const CBV_BOOTSTRAP_TRIGGERS = ['dailyHealthCheck'];
 
+/** Warm-up handler — 5 min interval (see installTriggersImpl) */
+var CBV_WARM_HANDLER = 'keepWebhookWarm';
+
+/**
+ * Warm-up function — time-based trigger mỗi 5 phút.
+ * Giữ GAS instance không idle lâu để giảm cold start Web App.
+ */
+function keepWebhookWarm() {
+  Logger.log('[CBV_WARM] ' + new Date().toISOString());
+}
+
 /**
  * Checks if a trigger for the given handler already exists.
  * @param {string} handlerFunction
@@ -52,6 +63,17 @@ function installTriggersImpl() {
     }
   });
 
+  if (ensureNoDuplicateTrigger(CBV_WARM_HANDLER)) {
+    result.data.skippedTriggers.push(CBV_WARM_HANDLER);
+  } else {
+    ScriptApp.newTrigger(CBV_WARM_HANDLER)
+      .timeBased()
+      .everyMinutes(5)
+      .create();
+    result.data.createdTriggers.push(CBV_WARM_HANDLER);
+    Logger.log('[CBV] Đã cài keepWebhookWarm trigger (mỗi 5 phút)');
+  }
+
   result.ok = true;
   result.code = 'TRIGGERS_OK';
   result.message = 'Triggers installed or already present';
@@ -69,6 +91,7 @@ function removeCbvTriggersImpl() {
   CBV_BOOTSTRAP_TRIGGERS.forEach(function(handler) {
     removed += _removeTriggersFor(handler);
   });
+  removed += _removeTriggersFor(CBV_WARM_HANDLER);
   return removed;
 }
 
@@ -91,6 +114,14 @@ function reinstallTriggers() {
       .create();
     result.data.createdTriggers.push(handler);
   });
+
+  var warmRemoved = _removeTriggersFor(CBV_WARM_HANDLER);
+  if (warmRemoved > 0) result.data.warnings.push('Removed ' + warmRemoved + ' existing trigger(s) for ' + CBV_WARM_HANDLER);
+  ScriptApp.newTrigger(CBV_WARM_HANDLER)
+    .timeBased()
+    .everyMinutes(5)
+    .create();
+  result.data.createdTriggers.push(CBV_WARM_HANDLER);
 
   result.ok = true;
   result.code = 'TRIGGERS_REINSTALLED';

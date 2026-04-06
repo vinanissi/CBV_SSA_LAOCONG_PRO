@@ -41,22 +41,57 @@ function doGet(e) {
 }
 
 /**
- * Xóa PENDING_ACTION về "" sau khi xử lý xong.
- * Tránh Bot AppSheet fire lại.
+ * Clear PENDING_ACTION bằng rowNumber đã biết — không gọi taskFindById() lại.
+ * @param {number} rowNumber
+ */
+function _clearPendingActionByRow(rowNumber) {
+  try {
+    if (!rowNumber) return;
+    var sheetName = (typeof CBV_CONFIG !== 'undefined' && CBV_CONFIG.SHEETS && CBV_CONFIG.SHEETS.TASK_MAIN)
+      ? CBV_CONFIG.SHEETS.TASK_MAIN : 'TASK_MAIN';
+    var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
+    if (!sh) return;
+    var headers = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0];
+    var colP = headers.indexOf('PENDING_ACTION') + 1;
+    var colUAt = headers.indexOf('UPDATED_AT') + 1;
+    var colUBy = headers.indexOf('UPDATED_BY') + 1;
+    var now = typeof cbvNow === 'function' ? cbvNow() : new Date();
+    if (colP > 0) sh.getRange(rowNumber, colP).setValue('');
+    if (colUAt > 0) sh.getRange(rowNumber, colUAt).setValue(now);
+    if (colUBy > 0) sh.getRange(rowNumber, colUBy).setValue(cbvUser());
+    if (typeof _invalidateRowsCache === 'function') {
+      _invalidateRowsCache(sheetName);
+    }
+  } catch (e) {
+    // Non-blocking
+  }
+}
+
+/**
+ * @deprecated Dùng _clearPendingActionByRow(rowNumber) để tránh đọc lại sheet.
  * @param {string} taskId
  */
 function _clearPendingAction(taskId) {
   try {
     var task = taskFindById(taskId);
-    if (task && task._rowNumber) {
-      taskUpdateMain(task._rowNumber, {
-        PENDING_ACTION: '',
-        UPDATED_AT: cbvNow(),
-        UPDATED_BY: cbvUser()
-      });
-    }
+    if (task && task._rowNumber) _clearPendingActionByRow(task._rowNumber);
   } catch (e) {
     // Non-blocking — không throw nếu clear thất bại
+  }
+}
+
+/**
+ * Sau khi action OK: clear PENDING_ACTION dùng _rowNumber từ result.data nếu có (addLog trả log row → fallback taskFindById).
+ * @param {Object} result
+ * @param {string} taskId
+ */
+function _clearPendingAfterOk(result, taskId) {
+  if (!result || !result.ok) return;
+  var rn = result.data && result.data._rowNumber;
+  if (rn) {
+    _clearPendingActionByRow(rn);
+  } else {
+    _clearPendingAction(taskId);
   }
 }
 
@@ -77,37 +112,37 @@ function _routeWebhookAction(body) {
     case 'taskStart':
       _webhookRequireParam(taskId, 'taskId');
       result = taskStartAction(taskId);
-      if (result && result.ok) _clearPendingAction(taskId);
+      _clearPendingAfterOk(result, taskId);
       return result;
     case 'taskWait':
       _webhookRequireParam(taskId, 'taskId');
       result = setTaskStatus(taskId, 'WAITING', note);
-      if (result && result.ok) _clearPendingAction(taskId);
+      _clearPendingAfterOk(result, taskId);
       return result;
     case 'taskResume':
       _webhookRequireParam(taskId, 'taskId');
       result = setTaskStatus(taskId, 'IN_PROGRESS', note);
-      if (result && result.ok) _clearPendingAction(taskId);
+      _clearPendingAfterOk(result, taskId);
       return result;
     case 'taskComplete':
       _webhookRequireParam(taskId, 'taskId');
       result = completeTask(taskId, resultSummary);
-      if (result && result.ok) _clearPendingAction(taskId);
+      _clearPendingAfterOk(result, taskId);
       return result;
     case 'taskCancel':
       _webhookRequireParam(taskId, 'taskId');
       result = cancelTask(taskId, note);
-      if (result && result.ok) _clearPendingAction(taskId);
+      _clearPendingAfterOk(result, taskId);
       return result;
     case 'taskReopen':
       _webhookRequireParam(taskId, 'taskId');
       result = taskReopenAction(taskId);
-      if (result && result.ok) _clearPendingAction(taskId);
+      _clearPendingAfterOk(result, taskId);
       return result;
     case 'taskArchive':
       _webhookRequireParam(taskId, 'taskId');
       result = setTaskStatus(taskId, 'ARCHIVED', note);
-      if (result && result.ok) _clearPendingAction(taskId);
+      _clearPendingAfterOk(result, taskId);
       return result;
     case 'checklistDone':
       _webhookRequireParam(checklistId, 'checklistId');
@@ -117,7 +152,7 @@ function _routeWebhookAction(body) {
       var updateType = String(body.updateType || 'NOTE');
       var content = String(body.content || '');
       result = addTaskLogEntry(taskId, updateType, content);
-      if (result && result.ok) _clearPendingAction(taskId);
+      _clearPendingAfterOk(result, taskId);
       return result;
     default:
       return cbvResponse(false, 'UNKNOWN_ACTION', 'Action không hợp lệ: ' + action, null, []);
