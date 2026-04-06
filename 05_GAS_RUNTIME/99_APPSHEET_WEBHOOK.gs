@@ -102,6 +102,9 @@ function _clearPendingAfterOk(result, taskId) {
  */
 function _routeWebhookAction(body) {
   var action = String(body.action || '').trim();
+  if (action.indexOf('CMD:') === 0) {
+    action = action.substring(4).trim();
+  }
   var taskId = String(body.taskId || '');
   var note = String(body.note || '');
   var checklistId = String(body.checklistId || '');
