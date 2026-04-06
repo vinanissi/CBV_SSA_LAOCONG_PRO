@@ -2,7 +2,7 @@
   "version": "3.23",
   "projectName": "CBV_SSA_LAOCONG_PRO",
   "isMultiEnv": true,
-  "currentEnvironment": "PROD",
+  "currentEnvironment": "DEV",
   "environments": {
     "PROD": {
       "scriptId": "1SPsNxiABAil6tqDyf2PezY4DCife3Z_NxXLv_mkvenXOe3hvFPU-APey",
