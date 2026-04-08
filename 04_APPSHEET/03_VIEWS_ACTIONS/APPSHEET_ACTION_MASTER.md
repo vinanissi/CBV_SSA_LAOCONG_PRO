@@ -16,14 +16,15 @@ Canonical action catalog. Actions must call GAS webhook — NOT "Update row" for
 
 ## TASK Actions (PRO)
 
-| Action | Label | GAS Function | When | Effect |
-|--------|-------|--------------|------|--------|
-| BẮT ĐẦU | Start | `taskStartAction([ID])` | NEW, ASSIGNED | STATUS → IN_PROGRESS; START_DATE if blank |
-| HOÀN THÀNH | Complete | `taskCompleteAction([ID], resultSummary)` | IN_PROGRESS, WAITING | STATUS → DONE, DONE_AT |
-| HỦY | Cancel | `taskCancelAction([ID], note)` | NEW, ASSIGNED, IN_PROGRESS, WAITING | STATUS → CANCELLED |
-| MỞ LẠI | Reopen | `taskReopenAction([ID])` | DONE, CANCELLED | STATUS → IN_PROGRESS |
-
-**Legacy aliases:** ACT_TASK_START → taskStartAction, ACT_TASK_COMPLETE → taskCompleteAction, ACT_TASK_CANCEL → taskCancelAction
+| Action | Label | PENDING_ACTION | validStatuses | Confirmation | Show_If |
+|--------|-------|----------------|---------------|--------------|---------|
+| ACT_TASK_START | Bắt đầu | CMD:taskStart | NEW, ASSIGNED | ✅ ~20s | STATUS = ASSIGNED + NOT ⏳ |
+| ACT_TASK_WAIT | Tạm chờ | CMD:taskWait | IN_PROGRESS | ✅ ~20s | STATUS = IN_PROGRESS + NOT ⏳ |
+| ACT_TASK_RESUME | Tiếp tục | CMD:taskResume | WAITING | ✅ ~20s | STATUS = WAITING + NOT ⏳ |
+| ACT_TASK_COMPLETE | Hoàn thành | CMD:taskComplete | IN_PROGRESS, WAITING | ✅ ~20s | STATUS + checklist + NOT ⏳ |
+| ACT_TASK_CANCEL | Huỷ | CMD:taskCancel | NEW,ASSIGNED,IN_PROGRESS,WAITING | ✅ ~20s | NOT terminal + NOT ⏳ |
+| ACT_TASK_REOPEN | Mở lại | CMD:taskReopen | DONE, CANCELLED | ✅ ~20s | STATUS in DONE/CANCELLED + NOT ⏳ |
+| ACT_TASK_ARCHIVE | Lưu trữ | CMD:taskArchive | DONE, CANCELLED | ✅ ~20s | STATUS in DONE/CANCELLED + NOT ⏳ |
 
 ---
 
@@ -51,3 +52,21 @@ Canonical action catalog. Actions must call GAS webhook — NOT "Update row" for
 - STATUS editable in form → user can bypass workflow
 - Action updates STATUS without GAS → no validation, no log
 - TASK_COMPLETE without checklist check → invalid DONE state
+
+---
+
+## CMD: Protocol — Action Feedback Pattern (Production)
+
+Pattern chuẩn cho tất cả TASK workflow actions trong CBV PRO.
+
+**3 lớp bảo vệ:**
+
+1. Confirmation message → user biết phải chờ ~20s
+2. `validStatuses` guard (GAS) → chặn Bot fire lần 2
+3. `FEEDBACK_DISPLAY` → user thấy trạng thái realtime
+
+**Tham chiếu:**
+
+- Spec đầy đủ: `APPSHEET_TASK_ACTION_RULES.md` Section 8
+- GAS implementation: `99_APPSHEET_WEBHOOK.gs` → `withTaskFeedback()`
+- Bot config: `BOT_TASK_WEBHOOK` → `EVENT_PENDING_ACTION_CHANGED`

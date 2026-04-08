@@ -100,6 +100,8 @@ function createTask(data) {
     CREATED_BY: cbvUser(),
     UPDATED_AT: cbvNow(),
     UPDATED_BY: cbvUser(),
+    IS_STARRED: false,
+    IS_PINNED: false,
     IS_DELETED: false
   };
   taskAppendMain(record);
@@ -478,4 +480,32 @@ function deleteTaskAttachment(attachmentId, note) {
     Object.assign({}, attachment, patch),
     []
   );
+}
+
+/**
+ * Backfill IS_STARRED = false và IS_PINNED = false cho các row đang blank.
+ * Chạy 1 lần sau khi deploy fix.
+ */
+function backfillStarPin() {
+  var sheet = SpreadsheetApp.getActive().getSheetByName(CBV_CONFIG.SHEETS.TASK_MAIN);
+  var data = sheet.getDataRange().getValues();
+  var headers = data[0];
+  var starIdx = headers.indexOf('IS_STARRED');
+  var pinIdx = headers.indexOf('IS_PINNED');
+  if (starIdx < 0 || pinIdx < 0) {
+    Logger.log('Không tìm thấy cột IS_STARRED hoặc IS_PINNED');
+    return;
+  }
+  var updates = 0;
+  for (var i = 1; i < data.length; i++) {
+    if (data[i][starIdx] === '' || data[i][starIdx] === null || data[i][starIdx] === undefined) {
+      sheet.getRange(i + 1, starIdx + 1).setValue(false);
+      updates++;
+    }
+    if (data[i][pinIdx] === '' || data[i][pinIdx] === null || data[i][pinIdx] === undefined) {
+      sheet.getRange(i + 1, pinIdx + 1).setValue(false);
+      updates++;
+    }
+  }
+  Logger.log('Backfill xong: ' + updates + ' ô đã cập nhật');
 }

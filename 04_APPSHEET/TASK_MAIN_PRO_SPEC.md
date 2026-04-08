@@ -112,7 +112,52 @@
 
 ---
 
-## 8. GAS Validation Helpers
+## 8. Visibility & Privacy Control
+
+### Cột IS_PRIVATE
+
+| Property | Value |
+|----------|-------|
+| Type | Yes/No |
+| Default | FALSE |
+| Editable | ADMIN only (`USERROLE() = "ADMIN"`) |
+| Show in Form | ADMIN only |
+| Show in Detail | ADMIN only |
+
+### Cột SHARED_WITH
+
+| Property | Value |
+|----------|-------|
+| Type | List → Ref USER_DIRECTORY (slice: ACTIVE_USERS) |
+| Default | blank |
+| Allow Adds | OFF |
+| Editable | ADMIN only |
+| Show in Form | `AND(USERROLE() = "ADMIN", [IS_PRIVATE] = TRUE)` |
+
+### Security Filter (Row-level)
+
+```
+OR(
+  USERROLE() = "ADMIN",
+  NOT([IS_PRIVATE]),
+  AND([IS_PRIVATE], OR(
+    [OWNER_ID] = ANY(SELECT(USER_DIRECTORY[ID], AND([STATUS]="ACTIVE", LOWER([EMAIL])=LOWER(USEREMAIL())))),
+    [REPORTER_ID] = ANY(SELECT(USER_DIRECTORY[ID], AND([STATUS]="ACTIVE", LOWER([EMAIL])=LOWER(USEREMAIL())))),
+    CONTAINS([SHARED_WITH], ANY(SELECT(USER_DIRECTORY[ID], AND([STATUS]="ACTIVE", LOWER([EMAIL])=LOWER(USEREMAIL())))))
+  ))
+)
+```
+
+### Logic tóm tắt
+
+| IS_PRIVATE | Ai thấy |
+|------------|---------|
+| FALSE (default) | Tất cả user |
+| TRUE | ADMIN + OWNER_ID + REPORTER_ID + SHARED_WITH |
+
+---
+
+## 9. GAS Validation Helpers
 
 | Function | Purpose |
 |----------|---------|
@@ -127,7 +172,7 @@
 
 ---
 
-## 9. Field Policy Summary
+## 10. Field Policy Summary
 
 | Field | Show_Form | Show_Detail | Editable | Valid_If |
 |-------|-----------|-------------|----------|----------|
@@ -146,7 +191,7 @@
 
 ---
 
-## 10. AppSheet UX Spec
+## 11. AppSheet UX Spec
 
 ### Form Layout
 1. **Section: Đơn vị & Phân loại** — DON_VI_ID, TASK_TYPE_ID
