@@ -120,3 +120,41 @@ IF(
 ```
 
 **Note:** AppSheet row style may use different syntax; check AppSheet docs for conditional formatting.
+
+---
+
+## 7. SORT_PRIORITY Virtual Column
+
+**Type:** Number (Virtual column)
+
+**Expression:**
+```
+SWITCH(
+  [STATUS],
+  "IN_PROGRESS", 1000,
+  "NEW",         2000,
+  "WAITING",     3000,
+  "ASSIGNED",    4000,
+  "DONE",        8000,
+  "CANCELLED",   9000,
+  "ARCHIVED",    9900,
+  9500
+)
++
+IF(
+  AND(
+    ISNOTBLANK([DUE_DATE]),
+    IN([STATUS], LIST("NEW", "ASSIGNED", "IN_PROGRESS", "WAITING"))
+  ),
+  TOTALHOURS(TODAY() - [DUE_DATE]) / 24,
+  0
+)
+```
+
+**Purpose:** Sort key cho TASK_LIST view. Nhóm status theo weight (1000-9900), tiebreaker là DUE_DATE urgency (chỉ áp dụng cho active tasks).
+
+**Sort config trong AppSheet View Options:**
+1. SORT_PRIORITY → Ascending
+2. DUE_DATE → Ascending
+
+**Lưu ý:** IS_STARRED và IS_PINNED KHÔNG dùng trong View Options sort nữa. Thay vào đó dùng `40_STAR_PIN_SERVICE.gs` để write IS_STARRED/IS_PINNED, và SORT_PRIORITY tự encode ưu tiên qua status weight.

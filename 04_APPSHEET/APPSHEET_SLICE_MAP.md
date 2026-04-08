@@ -103,16 +103,30 @@ Reusable slices for Ref targets, filters, and UI consistency. Prefer slice reuse
 |----------|-------|
 | Slice name | TASK_MY_OPEN |
 | Source table | TASK_MAIN |
-| Row filter | `AND(IN([STATUS], LIST("NEW", "ASSIGNED", "IN_PROGRESS", "WAITING")), [OWNER_ID] = FIRST(SELECT(USER_DIRECTORY[ID], AND([STATUS] = "ACTIVE", LOWER([EMAIL]) = LOWER(USEREMAIL())))))` |
-| Purpose | My open tasks |
+| Row filter | `AND(OR(USERROLE()="ADMIN", [OWNER_ID]=ANY(SELECT(USER_DIRECTORY[ID], AND([STATUS]="ACTIVE", LOWER([EMAIL])=LOWER(USEREMAIL())))), [REPORTER_ID]=ANY(SELECT(USER_DIRECTORY[ID], AND([STATUS]="ACTIVE", LOWER([EMAIL])=LOWER(USEREMAIL())))), CONTAINS([SHARED_WITH], ANY(SELECT(USER_DIRECTORY[ID], AND([STATUS]="ACTIVE", LOWER([EMAIL])=LOWER(USEREMAIL())))))), IN([STATUS], LIST("NEW","ASSIGNED","IN_PROGRESS","WAITING")))` |
+| Purpose | Task của tôi đang mở (owner + reporter + shared) |
 | Columns used | All |
 | Referenced by | TASK_INBOX |
+
+**Note:** Security Filter trên TASK_MAIN đã xử lý IS_PRIVATE — slice không cần lặp lại.
 
 **Before migration** (OWNER_ID=email): `AND(IN([STATUS], LIST("NEW", "ASSIGNED", "IN_PROGRESS", "WAITING")), [OWNER_ID] = USEREMAIL())`
 
 ---
 
-### I. FIN_DRAFT
+### I. TASK_MY_TASKS
+
+| Property | Value |
+|----------|-------|
+| Slice name | TASK_MY_TASKS |
+| Source table | TASK_MAIN |
+| Row filter | `OR([OWNER_ID]=ANY(SELECT(USER_DIRECTORY[ID], AND([STATUS]="ACTIVE", LOWER([EMAIL])=LOWER(USEREMAIL())))), [REPORTER_ID]=ANY(SELECT(USER_DIRECTORY[ID], AND([STATUS]="ACTIVE", LOWER([EMAIL])=LOWER(USEREMAIL())))), CONTAINS([SHARED_WITH], ANY(SELECT(USER_DIRECTORY[ID], AND([STATUS]="ACTIVE", LOWER([EMAIL])=LOWER(USEREMAIL()))))))` |
+| Purpose | Tất cả task liên quan đến tôi (mọi status) |
+| Referenced by | Personal view tùy chọn |
+
+---
+
+### J. FIN_DRAFT
 
 | Property | Value |
 |----------|-------|
@@ -125,7 +139,7 @@ Reusable slices for Ref targets, filters, and UI consistency. Prefer slice reuse
 
 ---
 
-### J. FIN_CONFIRMED
+### K. FIN_CONFIRMED
 
 | Property | Value |
 |----------|-------|
@@ -145,7 +159,7 @@ Reusable slices for Ref targets, filters, and UI consistency. Prefer slice reuse
 3. ACTIVE_HO_SO_TYPE (MASTER_CODE)
 4. ACTIVE_HTX (HO_SO_MASTER)
 5. HO_SO_ACTIVE (HO_SO_MASTER)
-6. TASK_OPEN, TASK_DONE, TASK_MY_OPEN (TASK_MAIN)
+6. TASK_OPEN, TASK_DONE, TASK_MY_OPEN, TASK_MY_TASKS (TASK_MAIN)
 7. FIN_DRAFT, FIN_CONFIRMED (FINANCE_TRANSACTION)
 
 ---

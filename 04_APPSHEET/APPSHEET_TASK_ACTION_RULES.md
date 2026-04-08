@@ -69,12 +69,13 @@ These actions **invoke GAS via webhook**. AppSheet shows a button; user taps; GA
 
 | Action | Show_If |
 |--------|---------|
-| TASK_ASSIGN | `[STATUS] = "NEW"` |
-| TASK_START | `[STATUS] = "ASSIGNED"` |
-| TASK_WAIT | `[STATUS] = "IN_PROGRESS"` |
-| TASK_RESUME | `[STATUS] = "WAITING"` |
-| TASK_DONE | `AND([STATUS] = "IN_PROGRESS", COUNT(SELECT(TASK_CHECKLIST[ID], AND([TASK_ID] = [_THISROW].[ID], [IS_REQUIRED] = TRUE, [IS_DONE] <> TRUE))) = 0)` |
-| TASK_CANCEL | `IN([STATUS], LIST("NEW", "ASSIGNED", "IN_PROGRESS", "WAITING"))` |
+| TASK_START | `AND([STATUS] = "ASSIGNED", NOT(LEFT([PENDING_ACTION], 2) = "⏳"))` |
+| TASK_WAIT | `AND([STATUS] = "IN_PROGRESS", NOT(LEFT([PENDING_ACTION], 2) = "⏳"))` |
+| TASK_RESUME | `AND([STATUS] = "WAITING", NOT(LEFT([PENDING_ACTION], 2) = "⏳"))` |
+| TASK_DONE | `AND([STATUS] = "IN_PROGRESS", COUNT(SELECT(TASK_CHECKLIST[ID], AND([TASK_ID] = [_THISROW].[ID], [IS_REQUIRED] = TRUE, [IS_DONE] <> TRUE))) = 0, NOT(LEFT([PENDING_ACTION], 2) = "⏳"))` |
+| TASK_CANCEL | `AND(IN([STATUS], LIST("NEW","ASSIGNED","IN_PROGRESS","WAITING")), NOT(LEFT([PENDING_ACTION], 2) = "⏳"))` |
+| TASK_REOPEN | `AND(IN([STATUS], LIST("DONE","CANCELLED")), NOT(LEFT([PENDING_ACTION], 2) = "⏳"))` |
+| TASK_ARCHIVE | `AND(IN([STATUS], LIST("DONE","CANCELLED")), NOT(LEFT([PENDING_ACTION], 2) = "⏳"))` |
 
 ---
 
@@ -112,22 +113,99 @@ These actions **invoke GAS via webhook**. AppSheet shows a button; user taps; GA
 
 ## 7. Webhook Contract (AppSheet → GAS)
 
-If AppSheet calls GAS via webhook/Apps Script run:
-
-| Action | Parameters | GAS Function |
-|--------|------------|--------------|
-| ACT_TASK_ASSIGN | taskId, ownerId | assignTask(taskId, ownerId) |
-| ACT_TASK_START | taskId | setTaskStatus(taskId, "IN_PROGRESS", "") |
-| ACT_TASK_WAIT | taskId | setTaskStatus(taskId, "WAITING", "") |
-| ACT_TASK_RESUME | taskId | setTaskStatus(taskId, "IN_PROGRESS", "") |
-| ACT_TASK_COMPLETE | taskId, resultSummary? | completeTask(taskId, resultSummary) |
-| ACT_TASK_CANCEL | taskId, note? | cancelTask(taskId, note) |
-| ACT_CHECKLIST_DONE | checklistId, note? | markChecklistDone(checklistId, note) |
-| ACT_ADD_LOG | taskId, updateType, content | addTaskUpdateLog({ taskId, updateType, content }) |
+| Action | Confirmation message | PENDING_ACTION | GAS case | validStatuses |
+|--------|---------------------|----------------|----------|---------------|
+| ACT_TASK_START | "Xác nhận bắt đầu task? Hệ thống cần ~20 giây xử lý, vui lòng chờ sau khi nhấn OK." | `CMD:taskStart` | taskStart | NEW, ASSIGNED |
+| ACT_TASK_WAIT | "Xác nhận tạm chờ task? Hệ thống cần ~20 giây xử lý, vui lòng chờ sau khi nhấn OK." | `CMD:taskWait` | taskWait | IN_PROGRESS |
+| ACT_TASK_RESUME | "Xác nhận tiếp tục task? Hệ thống cần ~20 giây xử lý, vui lòng chờ sau khi nhấn OK." | `CMD:taskResume` | taskResume | WAITING |
+| ACT_TASK_COMPLETE | "Xác nhận hoàn thành task? Hệ thống cần ~20 giây xử lý, vui lòng chờ sau khi nhấn OK." | `CMD:taskComplete` | taskComplete | IN_PROGRESS, WAITING |
+| ACT_TASK_CANCEL | "Xác nhận huỷ task? Hệ thống cần ~20 giây xử lý, vui lòng chờ sau khi nhấn OK." | `CMD:taskCancel` | taskCancel | NEW, ASSIGNED, IN_PROGRESS, WAITING |
+| ACT_TASK_REOPEN | "Xác nhận mở lại task? Hệ thống cần ~20 giây xử lý, vui lòng chờ sau khi nhấn OK." | `CMD:taskReopen` | taskReopen | DONE, CANCELLED |
+| ACT_TASK_ARCHIVE | "Xác nhận lưu trữ task? Hệ thống cần ~20 giây xử lý, vui lòng chờ sau khi nhấn OK." | `CMD:taskArchive` | taskArchive | DONE, CANCELLED |
 
 ---
 
-## 8. Summary
+## 8. Action Feedback Pattern — CMD: Protocol
+
+**Mục đích:** Thông báo trạng thái xử lý realtime, chặn Bot fire nhiều lần, hướng dẫn user chờ trong thời gian GAS xử lý (~20 giây).
+
+### Luồng hoàn chỉnh
+
+User tap button  
+↓  
+Confirmation dialog: "Xác nhận [action]? Hệ thống cần ~20 giây xử lý, vui lòng chờ sau khi nhấn OK."  
+↓ User nhấn OK  
+AppSheet ghi `PENDING_ACTION` = `"CMD:taskXxx"`  
+↓  
+`FEEDBACK_DISPLAY` = `"⏳ Đang gửi yêu cầu..."` ← user thấy ngay  
+Tất cả action buttons ẩn (`Show_If` có `NOT(LEFT([PENDING_ACTION], 2) = "⏳")`)  
+↓  
+Bot fire (`LEFT([PENDING_ACTION], 4) = "CMD:"`)  
+↓  
+GAS `withTaskFeedback(taskId, label, fn, validStatuses)`:  
+→ `validStatuses` guard: STATUS có hợp lệ không?  
+→ Không hợp lệ: silent skip, return `INVALID_STATUS`  
+→ Hợp lệ:  
+`PENDING_ACTION` = `"⏳ Đang xử lý [label]..."` + `flush()`  
+→ `fn()` chạy logic + ghi log  
+→ `PENDING_ACTION` = `"✅ [label] lúc HH:mm dd/MM"` hoặc `"❌ Lỗi: [message]"`  
+↓  
+AppSheet sync → `FEEDBACK_DISPLAY` cập nhật  
+Action buttons hiện lại
+
+### PENDING_ACTION value protocol
+
+| Giá trị | Nguồn | Bot fire? | FEEDBACK_DISPLAY |
+|---------|-------|-----------|------------------|
+| `""` | Reset | ❌ | Ẩn |
+| `"CMD:taskXxx"` | AppSheet action | ✅ | "⏳ Đang gửi yêu cầu..." |
+| `"⏳ Đang xử lý..."` | GAS bước 1 | ❌ | "⏳ Đang xử lý [label]..." |
+| `"✅ [label] lúc..."` | GAS thành công | ❌ | "✅ [label] lúc HH:mm" |
+| `"❌ Lỗi: ..."` | GAS thất bại | ❌ | "❌ Lỗi: [message]" |
+
+### Virtual column FEEDBACK_DISPLAY
+
+- **Formula:** `IF(LEFT([PENDING_ACTION], 4) = "CMD:", "⏳ Đang gửi yêu cầu...", [PENDING_ACTION])`
+- **Show_If:** `[PENDING_ACTION] <> ""`
+- **Position:** Đầu tiên trong Detail View
+- **Editable:** FALSE
+- **Label:** (để trống)
+
+### Bot BOT_TASK_WEBHOOK
+
+- **Event:** `EVENT_PENDING_ACTION_CHANGED` (TASK_MAIN, Updates)
+- **Condition:** `LEFT([PENDING_ACTION], 4) = "CMD:"`
+- **Process:** `STEP_CALL_GAS` → `POST { action: [PENDING_ACTION], taskId: [ID] }`
+
+### GAS withTaskFeedback()
+
+```js
+// Signature
+withTaskFeedback(taskId, label, fn, validStatuses)
+
+// validStatuses: Array STATUS hợp lệ
+// → Guard chặn Bot fire lần 2 khi STATUS đã thay đổi
+// → Silent skip nếu STATUS không trong validStatuses
+// → 1 lần flush() duy nhất sau ghi "⏳..."
+```
+
+### Performance settings (AppSheet)
+
+| Setting | Value |
+|---------|--------|
+| Delayed sync | OFF — tắt để auto-sync sau action |
+| Quick sync | ON |
+| Automatic updates | ON |
+
+### GAS Warm-up trigger
+
+- **Function:** `warmUpWebhook()`
+- **Trigger:** Time-driven, every 10 minutes
+- **Mục đích:** Tránh cold start ~5–8s
+
+---
+
+## 9. Summary
 
 - **Start / Complete / Cancel** are AppSheet-safe **only when they call GAS**.
 - No direct STATUS, DONE_AT, PROGRESS_PERCENT, IS_DONE edit in AppSheet.

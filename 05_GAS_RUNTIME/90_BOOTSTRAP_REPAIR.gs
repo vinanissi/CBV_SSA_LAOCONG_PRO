@@ -419,7 +419,8 @@ function repairSchemaAndData(options) {
     taskMainManualReview: [],
     rowsFixed: [],
     manualReview: [],
-    manualReviewTotal: 0
+    manualReviewTotal: 0,
+    errors: []
   };
 
   if (opts.skipSchema !== true) {
@@ -471,6 +472,13 @@ function repairSchemaAndData(options) {
   combined.manualReview = (combined.userManualReview || []).concat(combined.hoSoManualReview || []).concat(combined.financeManualReview || []).concat(combined.taskMainManualReview || []);
   combined.manualReviewTotal = combined.manualReview.length;
   combined.ok = combined.manualReviewTotal === 0;
+
+  var starPinResult = repairAddStarPinColumns();
+  combined.starPinRepair = starPinResult;
+  if (!starPinResult.ok) {
+    combined.ok = false;
+    combined.errors = combined.errors.concat(starPinResult.errors || []);
+  }
 
   combined.rerunOrder = ['seedEnumDictionary()', 'repairSchemaAndData({})', 'selfAuditBootstrap()', 'verifyAppSheetReadiness()'];
 
@@ -666,4 +674,220 @@ function repairResidualInvalidRecords() {
   var result = { repaired: repaired, repairsApplied: repairsApplied, manualReview: manualReview, ok: manualReview.length === 0 };
   if (typeof Logger !== 'undefined') Logger.log('repairResidualInvalidRecords: ' + JSON.stringify(result, null, 2));
   return result;
+}
+
+/**
+ * HOTFIX v2 — Star/Pin cleanup & repair
+ * Root cause fix: không anchor vào IS_DELETED hay bất kỳ tên cột cụ thể nào.
+ * Dùng "cột cuối cùng có header thực sự" làm anchor.
+ *
+ * Chạy thủ công theo thứ tự:
+ *   1. debugStarPinColumns()
+ *   2. cleanupStarPinColumnsV2()
+ *   3. repairAddStarPinColumnsV2()
+ *   4. debugStarPinColumns()  ← verify
+ *
+ * repairSchemaAndData() gọi repairAddStarPinColumns() = logic v2.
+ */
+
+/**
+ * Tìm index (0-based) của cột cuối cùng có header không blank.
+ * Bỏ qua phantom columns và cột IS_STARRED / IS_PINNED đang bị lạc chỗ.
+ *
+ * @param {string[]} headers - mảng header row 1
+ * @param {string[]} excludeNames - tên cột cần bỏ qua khi tìm anchor (mặc định: IS_STARRED, IS_PINNED)
+ * @returns {number} 0-based index, hoặc -1 nếu không tìm thấy
+ */
+function _findLastRealHeaderIdx(headers, excludeNames) {
+  var exclude = excludeNames || ['IS_STARRED', 'IS_PINNED'];
+  for (var i = headers.length - 1; i >= 0; i--) {
+    var h = String(headers[i]).trim();
+    if (h !== '' && exclude.indexOf(h) === -1) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+/**
+ * Debug: log thực trạng từng bảng.
+ */
+function debugStarPinColumns() {
+  var targets = [
+    CBV_CONFIG.SHEETS.TASK_MAIN,
+    CBV_CONFIG.SHEETS.HO_SO_MASTER,
+    CBV_CONFIG.SHEETS.FINANCE_TRANSACTION
+  ];
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  targets.forEach(function(sheetName) {
+    var sheet = ss.getSheetByName(sheetName);
+    if (!sheet) { Logger.log(sheetName + ': NOT FOUND'); return; }
+
+    var lastCol = sheet.getLastColumn();
+    var headers = lastCol > 0 ? sheet.getRange(1, 1, 1, lastCol).getValues()[0] : [];
+
+    var lastRealIdx = _findLastRealHeaderIdx(headers);
+    var starIdx = headers.indexOf('IS_STARRED');
+    var pinIdx = headers.indexOf('IS_PINNED');
+
+    Logger.log('=== ' + sheetName + ' ===');
+    Logger.log('  getLastColumn()         : ' + lastCol);
+    Logger.log('  last real header        : "' + (lastRealIdx >= 0 ? headers[lastRealIdx] : '?') + '" (col ' + (lastRealIdx + 1) + ')');
+    Logger.log('  IS_STARRED col (1-based): ' + (starIdx >= 0 ? starIdx + 1 : 'NOT FOUND'));
+    Logger.log('  IS_PINNED  col (1-based): ' + (pinIdx >= 0 ? pinIdx + 1 : 'NOT FOUND'));
+    if (starIdx >= 0 && pinIdx >= 0) {
+      Logger.log('  Gap between them        : ' + (pinIdx - starIdx - 1) + ' cột trống');
+    }
+  });
+}
+
+/**
+ * Cleanup v2: xóa mọi thứ SAU cột schema cuối (header không blank, không tính IS_STARRED/IS_PINNED).
+ * Có thể xóa luôn cả IS_STARRED/IS_PINNED đang ở cuối — chạy repairAddStarPinColumnsV2() sau để thêm lại đúng chỗ.
+ * Không anchor vào IS_DELETED — an toàn dù schema có thêm cột mới.
+ */
+function cleanupStarPinColumnsV2() {
+  var targets = [
+    CBV_CONFIG.SHEETS.TASK_MAIN,
+    CBV_CONFIG.SHEETS.HO_SO_MASTER,
+    CBV_CONFIG.SHEETS.FINANCE_TRANSACTION
+  ];
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var report = [];
+
+  targets.forEach(function(sheetName) {
+    try {
+      var sheet = ss.getSheetByName(sheetName);
+      if (!sheet) { report.push(sheetName + ': NOT FOUND'); return; }
+
+      var lastCol = sheet.getLastColumn();
+      var lastRow = sheet.getLastRow();
+      if (lastCol === 0) { report.push(sheetName + ': empty'); return; }
+
+      var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+
+      var lastRealIdx = _findLastRealHeaderIdx(headers);
+      if (lastRealIdx < 0) { report.push(sheetName + ': no real header found'); return; }
+
+      var lastLegitCol = lastRealIdx + 1; // 1-based
+      var colsToDelete = lastCol - lastLegitCol;
+
+      if (colsToDelete <= 0) {
+        report.push(sheetName + ': nothing to clean');
+        return;
+      }
+
+      report.push(sheetName + ': clearing cols ' + (lastLegitCol + 1) + ' → ' + lastCol + ' (' + colsToDelete + ' cols)');
+
+      // getRange(row, col, numRows, numCols)
+      sheet.getRange(1, lastLegitCol + 1, Math.max(lastRow, 1), colsToDelete).clearContent();
+
+      if (typeof _invalidateRowsCache === 'function') _invalidateRowsCache(sheetName);
+      report.push(sheetName + ': cleanup OK — last real col now = ' + lastLegitCol + ' ("' + headers[lastRealIdx] + '")');
+    } catch (e) {
+      report.push(sheetName + ': ERROR — ' + String(e.message || e));
+    }
+  });
+
+  Logger.log(report.join('\n'));
+  return report;
+}
+
+/**
+ * Cột 1-based để ghi IS_STARRED hoặc IS_PINNED (sau anchor schema, không dùng getLastColumn+1).
+ */
+function _starPinNewCol1Based(headers, colName) {
+  var lastRealIdx = _findLastRealHeaderIdx(headers);
+  if (lastRealIdx < 0) return -1;
+  var starIdx = headers.indexOf('IS_STARRED');
+  var pinIdx = headers.indexOf('IS_PINNED');
+
+  if (colName === 'IS_STARRED') {
+    if (starIdx >= 0) return -1;
+    return lastRealIdx + 2;
+  }
+  if (colName === 'IS_PINNED') {
+    if (pinIdx >= 0) return -1;
+    if (starIdx >= 0) return starIdx + 2;
+    return lastRealIdx + 2;
+  }
+  return -1;
+}
+
+function _ensureHeaderSlot(headers, col1Based) {
+  while (headers.length < col1Based) headers.push('');
+}
+
+/**
+ * Repair v2: thêm IS_STARRED và IS_PINNED ngay sau cột real cuối cùng (hoặc sau STAR nếu chỉ thiếu PIN).
+ * Idempotent: skip nếu đã có.
+ */
+function repairAddStarPinColumnsV2() {
+  var result = { ok: true, appended: {}, skipped: [], errors: [] };
+  var targets = [
+    CBV_CONFIG.SHEETS.TASK_MAIN,
+    CBV_CONFIG.SHEETS.HO_SO_MASTER,
+    CBV_CONFIG.SHEETS.FINANCE_TRANSACTION
+  ];
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  targets.forEach(function(sheetName) {
+    try {
+      var sheet = ss.getSheetByName(sheetName);
+      if (!sheet) { result.errors.push(sheetName + ': not found'); return; }
+
+      var lastCol = sheet.getLastColumn();
+      if (lastCol === 0) { result.errors.push(sheetName + ': empty sheet'); return; }
+
+      var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+      var added = [];
+
+      ['IS_STARRED', 'IS_PINNED'].forEach(function(col) {
+        if (headers.indexOf(col) !== -1) {
+          result.skipped.push(sheetName + '.' + col);
+          return;
+        }
+
+        var newCol = _starPinNewCol1Based(headers, col);
+        if (newCol < 0) {
+          result.errors.push(sheetName + ': cannot place ' + col);
+          return;
+        }
+
+        sheet.getRange(1, newCol).setValue(col);
+
+        var lastRow = sheet.getLastRow();
+        if (lastRow > 1) {
+          sheet.getRange(2, newCol, lastRow - 1, 1).setValue(false);
+        }
+
+        added.push(col);
+        _ensureHeaderSlot(headers, newCol);
+        headers[newCol - 1] = col;
+      });
+
+      if (added.length > 0) {
+        result.appended[sheetName] = added;
+        if (typeof _invalidateRowsCache === 'function') _invalidateRowsCache(sheetName);
+      }
+    } catch (e) {
+      result.ok = false;
+      result.errors.push(sheetName + ': ' + String(e.message || e));
+    }
+  });
+
+  if (result.errors.length > 0) result.ok = false;
+  if (typeof Logger !== 'undefined') Logger.log(JSON.stringify(result, null, 2));
+  return result;
+}
+
+/**
+ * Repair: thêm IS_STARRED và IS_PINNED vào 3 bảng nếu chưa có (logic v2 — anchor cột schema thực).
+ * Idempotent. Non-destructive. Backfill FALSE cho rows cũ.
+ * Gọi từ repairSchemaAndData() hoặc chạy tay.
+ * @returns {{ ok: boolean, appended: Object, skipped: string[], errors: string[] }}
+ */
+function repairAddStarPinColumns() {
+  return repairAddStarPinColumnsV2();
 }

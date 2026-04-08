@@ -6,3 +6,6 @@
 .clasp.json
 .idp-environments.json
 .project.json
+# Local secrets & env backups (never commit)
+WEBHOOK_URL.txt
+.idp-environments.json.backup
