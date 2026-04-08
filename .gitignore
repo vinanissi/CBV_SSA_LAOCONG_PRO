@@ -1,3 +1,8 @@
 
 # Google Auth Token (Local)
 .clasprc.json
+
+# Local / machine-specific project & deploy config
+.clasp.json
+.idp-environments.json
+.project.json
