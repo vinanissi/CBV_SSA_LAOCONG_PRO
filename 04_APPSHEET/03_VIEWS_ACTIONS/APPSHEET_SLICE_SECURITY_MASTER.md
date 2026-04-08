@@ -12,6 +12,8 @@ Slices, security filters, role-based visibility.
 | HO_SO_ACTIVE | HO_SO_MASTER | [STATUS] = "ACTIVE" |
 | TASK_OPEN | TASK_MAIN | IN([STATUS], LIST("NEW","ASSIGNED","IN_PROGRESS","WAITING")) |
 | TASK_DONE | TASK_MAIN | [STATUS] = "DONE" |
+| TASK_MY_OPEN | TASK_MAIN | AND(OR(USERROLE() = "ADMIN", [OWNER_ID] = ANY(SELECT(USER_DIRECTORY[ID], AND([STATUS]="ACTIVE", LOWER([EMAIL])=LOWER(USEREMAIL())))), [REPORTER_ID] = ANY(SELECT(USER_DIRECTORY[ID], AND([STATUS]="ACTIVE", LOWER([EMAIL])=LOWER(USEREMAIL())))), CONTAINS([SHARED_WITH], ANY(SELECT(USER_DIRECTORY[ID], AND([STATUS]="ACTIVE", LOWER([EMAIL])=LOWER(USEREMAIL())))))), IN([STATUS], LIST("NEW","ASSIGNED","IN_PROGRESS","WAITING"))) |
+| TASK_MY_TASKS | TASK_MAIN | OR([OWNER_ID] = ANY(SELECT(USER_DIRECTORY[ID], AND([STATUS]="ACTIVE", LOWER([EMAIL])=LOWER(USEREMAIL())))), [REPORTER_ID] = ANY(SELECT(USER_DIRECTORY[ID], AND([STATUS]="ACTIVE", LOWER([EMAIL])=LOWER(USEREMAIL())))), CONTAINS([SHARED_WITH], ANY(SELECT(USER_DIRECTORY[ID], AND([STATUS]="ACTIVE", LOWER([EMAIL])=LOWER(USEREMAIL())))))) |
 | FIN_DRAFT | FINANCE_TRANSACTION | [STATUS] = "NEW" |
 | FIN_CONFIRMED | FINANCE_TRANSACTION | [STATUS] = "CONFIRMED" |
 
@@ -25,9 +27,22 @@ Slices, security filters, role-based visibility.
 - VIEWER: `TRUE`
 
 ### TASK_MAIN
-- ADMIN: `TRUE`
-- OPERATOR: `OR([OWNER_ID] = USEREMAIL(), [REPORTER_ID] = USEREMAIL())`
-- VIEWER: `TRUE`
+- ADMIN: `TRUE` (override — ADMIN thấy tất cả)
+- ALL ROLES (single filter):
+  `OR(
+    USERROLE() = "ADMIN",
+    NOT([IS_PRIVATE]),
+    AND(
+      [IS_PRIVATE],
+      OR(
+        [OWNER_ID]    = ANY(SELECT(USER_DIRECTORY[ID], AND([STATUS]="ACTIVE", LOWER([EMAIL])=LOWER(USEREMAIL())))),
+        [REPORTER_ID] = ANY(SELECT(USER_DIRECTORY[ID], AND([STATUS]="ACTIVE", LOWER([EMAIL])=LOWER(USEREMAIL())))),
+        CONTAINS([SHARED_WITH], ANY(SELECT(USER_DIRECTORY[ID], AND([STATUS]="ACTIVE", LOWER([EMAIL])=LOWER(USEREMAIL())))))
+      )
+    )
+  )`
+
+Note: Dùng `ANY()` thay `FIRST()`. Dùng `CONTAINS([SHARED_WITH], …)` cho List column. `IS_PRIVATE=FALSE` → mọi user thấy; `IS_PRIVATE=TRUE` → chỉ ADMIN + OWNER + REPORTER + SHARED_WITH.
 
 ### FINANCE_TRANSACTION
 - ADMIN: `TRUE`
@@ -35,6 +50,14 @@ Slices, security filters, role-based visibility.
 - VIEWER: `TRUE`
 
 **Note:** If UNIT_ID is standardized later, filter by unit.
+
+---
+
+## AppSheet Formula Syntax — Validated
+
+- `ANY(SELECT(...))` — dùng thay `FIRST(SELECT(...))` trong filter/security context
+- `CONTAINS(list_col, value)` — dùng cho List column, không dùng `IN(value, list_col)`
+- `IN(value, LIST(...))` — hợp lệ với List literal
 
 ---
 
