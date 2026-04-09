@@ -1,5 +1,5 @@
 {
-  "scriptId": "1Hdv6dusB1aYuj_R9fkMbchNPQkfxhy7VUdzsq7uQKSjCHdZAZ-CXEIWz",
+  "scriptId": "1fWk2EdGbyYM7HTLFdmKkXh1nIdV7RgFkiD7i8mLpSwPUWiftzdbUZIHW",
   "rootDir": "05_GAS_RUNTIME",
   "filePushOrder": [
     "00_CORE_CONFIG.gs",
@@ -73,6 +73,8 @@
     "99_DEBUG_TEST_RUNNER.gs",
     "99_DEBUG_SAMPLE_DATA.gs",
     "99_APPSHEET_WEBHOOK.gs",
+    "60_HOSO_API_GATEWAY.gs",
+    "61_UNIFIED_ROUTER.gs",
     "90_BOOTSTRAP_MENU_HELPERS.gs",
     "90_BOOTSTRAP_MENU_WRAPPERS.gs",
     "10_HOSO_MENU.gs",
