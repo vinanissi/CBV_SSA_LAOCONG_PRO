@@ -50,6 +50,8 @@ function buildCbvProMenu_() {
       .addItem('🔒 Bảo vệ sheet nhạy cảm', 'menuProtectSensitiveSheets')
       .addItem('⏰ Cài đặt Triggers', 'menuInstallTriggers')
       .addItem('⏹ Gỡ Triggers', 'menuRemoveTriggers')
+      .addItem('📌 Cài onEdit (Task)', 'menuInstallOnEditTrigger')
+      .addItem('📌 Gỡ onEdit (Task)', 'menuUninstallOnEditTrigger')
   );
 
   // 3. Audit & Health
@@ -93,6 +95,9 @@ function buildCbvProMenu_() {
       .addItem('🔎 Audit Hồ sơ', 'menuAuditHoSo')
       .addItem('🌱 Gieo Hồ sơ Demo', 'menuSeedHoSoDemo')
       .addItem('🧪 Test Quan hệ Hồ sơ', 'menuTestHoSoRelations')
+      .addItem('🔍 Kiểm tra hồ sơ đầy đủ', 'menuCheckHoSoCompleteness')
+      .addItem('⏰ Giấy tờ sắp hết hạn (60 ngày)', 'menuGetExpiringDocs')
+      .addItem('📋 Xuất báo cáo hồ sơ', 'menuGenerateHoSoReport')
   );
 
   // 7. Tài chính Module

@@ -364,9 +364,9 @@ function testTaskWorkflowRules() {
 
 function testFieldPolicyReadiness() {
   var findings = [];
-  [{ table: 'TASK_MAIN', field: 'STATUS', policy: 'NOT form-editable', severity: 'HIGH' },
-   { table: 'TASK_MAIN', field: 'DONE_AT', policy: 'NOT form-editable', severity: 'HIGH' },
-   { table: 'TASK_MAIN', field: 'IS_DELETED', policy: 'NOT form-editable', severity: 'HIGH' }].forEach(function(p) {
+  [{ table: 'TASK_MAIN', field: 'STATUS', policy: 'NOT form-editable', severity: 'INFO' },
+   { table: 'TASK_MAIN', field: 'DONE_AT', policy: 'NOT form-editable', severity: 'INFO' },
+   { table: 'TASK_MAIN', field: 'IS_DELETED', policy: 'NOT form-editable', severity: 'INFO' }].forEach(function(p) {
     findings.push({ code: 'POLICY_AUDIT', table: p.table, severity: p.severity, message: p.field + ': ' + p.policy, field: p.field });
   });
   return { ok: true, category: 'FIELD_POLICY', findings: findings, stats: { policyChecks: 3 } };

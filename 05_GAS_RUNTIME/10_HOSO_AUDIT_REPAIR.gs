@@ -66,7 +66,7 @@ function auditHosoEnums() {
     { table: 'HO_SO_MASTER', col: 'RELATED_ENTITY_TYPE', group: 'RELATED_ENTITY_TYPE' },
     { table: 'HO_SO_MASTER', col: 'ID_TYPE', group: 'ID_TYPE' },
     { table: 'HO_SO_MASTER', col: 'SOURCE_CHANNEL', group: 'SOURCE_CHANNEL' },
-    { table: 'HO_SO_FILE', col: 'FILE_TYPE', group: 'FILE_TYPE' },
+    { table: 'HO_SO_FILE', col: 'FILE_GROUP', group: 'FILE_GROUP' },
     { table: 'HO_SO_UPDATE_LOG', col: 'ACTION_TYPE', group: 'HO_SO_ACTION_TYPE' }
   ];
   checks.forEach(function(c) {

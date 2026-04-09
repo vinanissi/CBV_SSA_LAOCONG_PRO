@@ -1,6 +1,7 @@
 {
-  "scriptId": "1Q1p1StpjqIjImG8Qg7cf6pAZLfwFSplGGMobF1SJaz6C6MLcOy3co30w",
-  "rootDir": "05_GAS_RUNTIME",
+  "scriptId": "1Hdv6dusB1aYuj_R9fkMbchNPQkfxhy7VUdzsq7uQKSjCHdZAZ-CXEIWz",
+  "rootDir": "./05_GAS_RUNTIME",
+  "fileExtension": "gs",
   "filePushOrder": [
     "00_CORE_CONFIG.gs",
     "00_CORE_CONSTANTS.gs",

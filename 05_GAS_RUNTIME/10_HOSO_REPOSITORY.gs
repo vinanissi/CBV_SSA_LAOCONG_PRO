@@ -48,8 +48,9 @@ function hosoRepoListFilesForHoso(hosoId) {
 }
 
 function hosoRepoListRelationsForHoso(hosoId) {
+  var hid = String(hosoId);
   return hosoRepoRows(CBV_CONFIG.SHEETS.HO_SO_RELATION).filter(function(r) {
-    return String(r.HO_SO_ID) === String(hosoId);
+    return String(r.HO_SO_ID) === hid || String(r.FROM_HO_SO_ID) === hid || String(r.TO_HO_SO_ID) === hid;
   });
 }
 
