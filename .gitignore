@@ -1,3 +1,6 @@
 
 # Google Auth Token (Local)
 .clasprc.json
+.idp-environments.json
+.idp-environments.json.backup
+WEBHOOK_URL.txt
