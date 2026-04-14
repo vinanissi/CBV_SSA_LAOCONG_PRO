@@ -1,4 +1,12 @@
 
+# Claude Finance handoff: mirrored tier copies (regenerate: scripts/export-claude-finance-pack.ps1)
+_handoff/CLAUDE_FINANCE_PACK/tier1_core_spec/
+_handoff/CLAUDE_FINANCE_PACK/tier2_architecture/
+_handoff/CLAUDE_FINANCE_PACK/tier3_schema/
+_handoff/CLAUDE_FINANCE_PACK/tier4_reference_task_center/
+_handoff/CLAUDE_FINANCE_PACK/tier5_gas_runtime/
+_handoff/CLAUDE_FINANCE_PACK/tier6_appsheet/
+
 # Google Auth Token (Local)
 .clasprc.json
 .idp-environments.json

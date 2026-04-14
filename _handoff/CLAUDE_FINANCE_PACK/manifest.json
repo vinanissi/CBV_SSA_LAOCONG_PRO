@@ -1,0 +1,49 @@
+{
+  "packVersion": 1,
+  "description": "Mirrored copies of repo files for Claude / external design work. Paths in \"source\" are relative to repository root; \"dest\" is relative to this pack folder.",
+  "entries": [
+    { "tier": 1, "source": "02_MODULES/FINANCE/MODULE_DESCRIPTOR.md", "dest": "tier1_core_spec/02_MODULES/FINANCE/MODULE_DESCRIPTOR.md" },
+    { "tier": 1, "source": "02_MODULES/FINANCE/DATA_MODEL.md", "dest": "tier1_core_spec/02_MODULES/FINANCE/DATA_MODEL.md" },
+    { "tier": 1, "source": "02_MODULES/FINANCE/WORKFLOW.md", "dest": "tier1_core_spec/02_MODULES/FINANCE/WORKFLOW.md" },
+    { "tier": 1, "source": "02_MODULES/FINANCE/BUSINESS_SPEC.md", "dest": "tier1_core_spec/02_MODULES/FINANCE/BUSINESS_SPEC.md" },
+    { "tier": 1, "source": "02_MODULES/FINANCE/SERVICE_MAP.md", "dest": "tier1_core_spec/02_MODULES/FINANCE/SERVICE_MAP.md" },
+    { "tier": 1, "source": "02_MODULES/FINANCE/SERVICE_CONTRACT.md", "dest": "tier1_core_spec/02_MODULES/FINANCE/SERVICE_CONTRACT.md" },
+    { "tier": 1, "source": "02_MODULES/FINANCE/APPSHEET_UX_SPEC.md", "dest": "tier1_core_spec/02_MODULES/FINANCE/APPSHEET_UX_SPEC.md" },
+    { "tier": 1, "source": "02_MODULES/FINANCE/SHEET_DICTIONARY.md", "dest": "tier1_core_spec/02_MODULES/FINANCE/SHEET_DICTIONARY.md" },
+    { "tier": 1, "source": "00_META/CBV_MODULE_BUILD_PROTOCOL.md", "dest": "tier1_core_spec/00_META/CBV_MODULE_BUILD_PROTOCOL.md" },
+
+    { "tier": 2, "source": "00_OVERVIEW/CBV_FINAL_ARCHITECTURE.md", "dest": "tier2_architecture/00_OVERVIEW/CBV_FINAL_ARCHITECTURE.md" },
+    { "tier": 2, "source": "03_SHARED/MODULE_MAP_MASTER.md", "dest": "tier2_architecture/03_SHARED/MODULE_MAP_MASTER.md" },
+    { "tier": 2, "source": "03_SHARED/USER_SYSTEM_ARCHITECTURE.md", "dest": "tier2_architecture/03_SHARED/USER_SYSTEM_ARCHITECTURE.md" },
+    { "tier": 2, "source": "03_SHARED/USER_TASK_FINANCE_MAPPING.md", "dest": "tier2_architecture/03_SHARED/USER_TASK_FINANCE_MAPPING.md" },
+    { "tier": 2, "source": "03_SHARED/TASK_SYSTEM_ARCHITECTURE.md", "dest": "tier2_architecture/03_SHARED/TASK_SYSTEM_ARCHITECTURE.md" },
+    { "tier": 2, "source": "03_SHARED/ENUM_DICTIONARY.md", "dest": "tier2_architecture/03_SHARED/ENUM_DICTIONARY.md" },
+    { "tier": 2, "source": "03_SHARED/ENUM_DICTIONARY_STANDARD.md", "dest": "tier2_architecture/03_SHARED/ENUM_DICTIONARY_STANDARD.md" },
+
+    { "tier": 3, "source": "01_SCHEMA/FINANCE_TRANSACTION_SCHEMA.md", "dest": "tier3_schema/01_SCHEMA/FINANCE_TRANSACTION_SCHEMA.md" },
+    { "tier": 3, "source": "06_DATABASE/schema_manifest.json", "dest": "tier3_schema/06_DATABASE/schema_manifest.json" },
+    { "tier": 3, "source": "06_DATABASE/_generated_schema/FINANCE_TRANSACTION.csv", "dest": "tier3_schema/06_DATABASE/_generated_schema/FINANCE_TRANSACTION.csv" },
+    { "tier": 3, "source": "06_DATABASE/_generated_schema/FINANCE_ATTACHMENT.csv", "dest": "tier3_schema/06_DATABASE/_generated_schema/FINANCE_ATTACHMENT.csv" },
+    { "tier": 3, "source": "06_DATABASE/_generated_schema/FINANCE_LOG.csv", "dest": "tier3_schema/06_DATABASE/_generated_schema/FINANCE_LOG.csv" },
+
+    { "tier": 4, "source": "02_MODULES/TASK_CENTER/MODULE_DESCRIPTOR.md", "dest": "tier4_reference_task_center/02_MODULES/TASK_CENTER/MODULE_DESCRIPTOR.md" },
+    { "tier": 4, "source": "02_MODULES/TASK_CENTER/DATA_MODEL.md", "dest": "tier4_reference_task_center/02_MODULES/TASK_CENTER/DATA_MODEL.md" },
+    { "tier": 4, "source": "02_MODULES/TASK_CENTER/WORKFLOW.md", "dest": "tier4_reference_task_center/02_MODULES/TASK_CENTER/WORKFLOW.md" },
+    { "tier": 4, "source": "02_MODULES/TASK_CENTER/BUSINESS_SPEC.md", "dest": "tier4_reference_task_center/02_MODULES/TASK_CENTER/BUSINESS_SPEC.md" },
+    { "tier": 4, "source": "02_MODULES/TASK_CENTER/SERVICE_MAP.md", "dest": "tier4_reference_task_center/02_MODULES/TASK_CENTER/SERVICE_MAP.md" },
+    { "tier": 4, "source": "02_MODULES/TASK_CENTER/SERVICE_CONTRACT.md", "dest": "tier4_reference_task_center/02_MODULES/TASK_CENTER/SERVICE_CONTRACT.md" },
+    { "tier": 4, "source": "02_MODULES/TASK_CENTER/APPSHEET_UX_SPEC.md", "dest": "tier4_reference_task_center/02_MODULES/TASK_CENTER/APPSHEET_UX_SPEC.md" },
+    { "tier": 4, "source": "02_MODULES/TASK_CENTER/SHEET_DICTIONARY.md", "dest": "tier4_reference_task_center/02_MODULES/TASK_CENTER/SHEET_DICTIONARY.md" },
+
+    { "tier": 5, "source": "05_GAS_RUNTIME/30_FINANCE_SERVICE.gs", "dest": "tier5_gas_runtime/05_GAS_RUNTIME/30_FINANCE_SERVICE.gs" },
+    { "tier": 5, "source": "05_GAS_RUNTIME/99_DEBUG_TEST_FINANCE.gs", "dest": "tier5_gas_runtime/05_GAS_RUNTIME/99_DEBUG_TEST_FINANCE.gs" },
+    { "tier": 5, "source": "05_GAS_RUNTIME/00_CORE_CONFIG.gs", "dest": "tier5_gas_runtime/05_GAS_RUNTIME/00_CORE_CONFIG.gs" },
+    { "tier": 5, "source": "05_GAS_RUNTIME/90_BOOTSTRAP_SCHEMA.gs", "dest": "tier5_gas_runtime/05_GAS_RUNTIME/90_BOOTSTRAP_SCHEMA.gs" },
+
+    { "tier": 6, "source": "04_APPSHEET/00_MASTER/APPSHEET_MASTER_REFERENCE.md", "dest": "tier6_appsheet/04_APPSHEET/00_MASTER/APPSHEET_MASTER_REFERENCE.md" },
+    { "tier": 6, "source": "04_APPSHEET/APPSHEET_FIELD_POLICY_MAP.md", "dest": "tier6_appsheet/04_APPSHEET/APPSHEET_FIELD_POLICY_MAP.md" },
+    { "tier": 6, "source": "04_APPSHEET/APPSHEET_REF_MAP.md", "dest": "tier6_appsheet/04_APPSHEET/APPSHEET_REF_MAP.md" },
+    { "tier": 6, "source": "04_APPSHEET/APPSHEET_KEY_LABEL_MAP.md", "dest": "tier6_appsheet/04_APPSHEET/APPSHEET_KEY_LABEL_MAP.md" },
+    { "tier": 6, "source": "04_APPSHEET/APPSHEET_BUILD_SPEC_LAOCONG_PRO.md", "dest": "tier6_appsheet/04_APPSHEET/APPSHEET_BUILD_SPEC_LAOCONG_PRO.md" }
+  ]
+}
