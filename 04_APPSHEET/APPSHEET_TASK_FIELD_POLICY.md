@@ -1,6 +1,6 @@
 # AppSheet Task Field Policy — Final
 
-**Model:** Task belongs to HTX; users shared. AppSheet is UI only; **GAS is the workflow engine**.
+**Model:** Task belongs to DON_VI; users shared. AppSheet is UI only; **GAS is the workflow engine**.
 
 **Purpose:** Prevent AppSheet users from breaking task workflow or corrupting data.
 
@@ -20,7 +20,7 @@
 | TASK_TYPE | ON | ON | Enum; Valid_If TASK_TYPE | |
 | STATUS | ON | **OFF** | **GAS only** | Never freely editable |
 | PRIORITY | ON | ON | Enum; Valid_If TASK_PRIORITY | |
-| HTX_ID | ON | ON | Ref → ACTIVE_HTX; Allow Adds OFF | Editable only when task open; state-aware if needed |
+| DON_VI_ID | ON | ON | Ref → ACTIVE_DON_VI; Allow Adds OFF | Editable only when task open; state-aware if needed |
 | OWNER_ID | ON | ON | Ref → ACTIVE_USERS; Allow Adds OFF | **Assignment via GAS preferred**; direct edit allowed when open |
 | REPORTER_ID | ON | ON | Ref → ACTIVE_USERS; Allow Adds OFF | Auto-filled from USEREMAIL; protected from arbitrary change |
 | START_DATE | ON | ON | | |
@@ -132,7 +132,7 @@ AND([STATUS] <> "DONE", [STATUS] <> "CANCELLED")
 - TASK_TYPE: `IN([TASK_TYPE], SELECT(ENUM_DICTIONARY[ENUM_VALUE], AND([ENUM_GROUP] = "TASK_TYPE", [IS_ACTIVE] = TRUE)))`
 - PRIORITY: `IN([PRIORITY], SELECT(ENUM_DICTIONARY[ENUM_VALUE], AND([ENUM_GROUP] = "TASK_PRIORITY", [IS_ACTIVE] = TRUE)))`
 - RELATED_ENTITY_TYPE: `IN([RELATED_ENTITY_TYPE], SELECT(ENUM_DICTIONARY[ENUM_VALUE], AND([ENUM_GROUP] = "RELATED_ENTITY_TYPE", [IS_ACTIVE] = TRUE)))`
-- HTX_ID: `IN([HTX_ID], SELECT(HO_SO_MASTER[ID], AND([HO_SO_TYPE] = "HTX", [IS_DELETED] = FALSE)))`
+- DON_VI_ID: `IN([DON_VI_ID], SELECT(DON_VI[ID], AND([STATUS] = "ACTIVE", [IS_DELETED] = FALSE)))`
 - OWNER_ID, REPORTER_ID: `IN([OWNER_ID], SELECT(USER_DIRECTORY[ID], AND([STATUS] = "ACTIVE", [IS_DELETED] = FALSE)))`
 
 ### TASK_ATTACHMENT

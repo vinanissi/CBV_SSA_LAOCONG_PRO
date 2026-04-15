@@ -109,7 +109,7 @@ function _api_getHoSoList_(payload) {
           String(r.NAME || ''),
           String(r.CODE || ''),
           String(r.HO_SO_CODE || ''),
-          String(r.TAGS_TEXT || '')
+          String(r.TAGS || '')
         ].join(' ').toLowerCase();
         return parts.indexOf(q) !== -1;
       });

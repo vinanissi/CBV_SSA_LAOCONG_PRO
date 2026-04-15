@@ -35,31 +35,6 @@ function hosoAppendLogEntry(hosoId, actionType, extra) {
 }
 
 /**
- * Append a row to HO_SO_LOG (lightweight audit trail). Failures are swallowed.
- * @param {string} hoSoId
- * @param {string} action
- * @param {*} oldVal
- * @param {*} newVal
- * @param {string} note
- */
-function _logHoSo(hoSoId, action, oldVal, newVal, note) {
-  try {
-    _appendRecord(CBV_CONFIG.SHEETS.HO_SO_LOG, {
-      ID: cbvMakeId('HSL'),
-      HO_SO_ID: hoSoId,
-      ACTION: action,
-      OLD_VALUE: oldVal ? JSON.stringify(oldVal) : '',
-      NEW_VALUE: newVal ? JSON.stringify(newVal) : '',
-      NOTE: note || '',
-      ACTOR_ID: cbvUser(),
-      CREATED_AT: cbvNow()
-    });
-  } catch (e) {
-    Logger.log('[_logHoSo] ERROR: ' + (e.message || e));
-  }
-}
-
-/**
  * Tạo HO_SO_MASTER (canonical contract name: createHoSo).
  * @param {Object} data
  * @returns {Object} cbvResponse
@@ -92,6 +67,9 @@ function createHoSo(data) {
   }
 
   hosoValidateDateOrder(data.START_DATE, data.END_DATE);
+
+  var tagsVal = '';
+  if (data.TAGS != null && String(data.TAGS).trim() !== '') tagsVal = String(data.TAGS).trim();
 
   var code = typeof hosoRepoAllocateHoSoCode === 'function'
     ? hosoRepoAllocateHoSoCode(data.HO_SO_TYPE_ID, 80)
@@ -131,7 +109,9 @@ function createHoSo(data) {
     SOURCE_CHANNEL: data.SOURCE_CHANNEL != null ? String(data.SOURCE_CHANNEL) : '',
     SUMMARY: data.SUMMARY || '',
     NOTE: data.NOTE || '',
-    TAGS_TEXT: data.TAGS_TEXT || '',
+    TAGS: tagsVal,
+    IS_STARRED: false,
+    IS_PINNED: false,
     IS_DELETED: false
   };
   Object.assign(record, stamp);
@@ -139,7 +119,6 @@ function createHoSo(data) {
   hosoAssertEnum('RELATED_ENTITY_TYPE', record.RELATED_ENTITY_TYPE, 'RELATED_ENTITY_TYPE');
 
   hosoRepoAppend(CBV_CONFIG.SHEETS.HO_SO_MASTER, record);
-  _logHoSo(record.ID, 'CREATED', null, { HO_SO_TYPE_ID: record.HO_SO_TYPE_ID, HO_SO_CODE: record.HO_SO_CODE, TITLE: record.TITLE }, '');
   hosoAppendLogEntry(id, 'CREATE', { NOTE: 'HO_SO created', NEW_VALUE: record.HO_SO_CODE });
 
   return cbvResponse(true, 'HOSO_CREATED', 'Hồ sơ đã tạo', record, []);
@@ -197,7 +176,6 @@ function updateHoso(id, patch) {
   Object.assign(next, hosoStampUpdate());
 
   hosoRepoUpdate(CBV_CONFIG.SHEETS.HO_SO_MASTER, current._rowNumber, next);
-  _logHoSo(id, 'UPDATED', current, next, '');
 
   if (changed.length) {
     hosoAppendLogEntry(id, 'UPDATE_INFO', {
@@ -225,7 +203,6 @@ function changeHosoStatus(id, newStatus, note) {
   next.STATUS = ns;
   Object.assign(next, hosoStampUpdate());
   hosoRepoUpdate(CBV_CONFIG.SHEETS.HO_SO_MASTER, current._rowNumber, next);
-  _logHoSo(id, 'STATUS_CHANGED', { STATUS: String(currentStatus) }, { STATUS: ns }, '');
 
   hosoAppendLogEntry(id, 'CHANGE_STATUS', {
     OLD_STATUS: current.STATUS,
@@ -475,7 +452,10 @@ function attachHoSoFile(hoSoId, fileMeta) {
   };
 
   _appendRecord(CBV_CONFIG.SHEETS.HO_SO_FILE, record);
-  _logHoSo(hoSoId, 'FILE_ADDED', null, { DOC_TYPE: record.DOC_TYPE, FILE_NAME: record.FILE_NAME }, '');
+  hosoAppendLogEntry(hoSoId, 'ADD_FILE', {
+    NEW_VALUE: record.FILE_NAME || '',
+    NOTE: record.DOC_TYPE || ''
+  });
 
   return cbvResponse(true, 'HOSO_FILE_ATTACHED', 'Đã đính kèm giấy tờ', record, []);
 }
@@ -521,7 +501,6 @@ function createHoSoRelation(data) {
   Object.assign(rec, stamp);
   hosoRepoAppend(CBV_CONFIG.SHEETS.HO_SO_RELATION, rec);
 
-  _logHoSo(ctx, 'RELATION_ADDED', null, { FROM: fromId, TO: toId, RELATION_TYPE: rt }, '');
   hosoAppendLogEntry(ctx, 'LINK_ENTITY', {
     NEW_VALUE: fromId + '→' + toId,
     NOTE: rt

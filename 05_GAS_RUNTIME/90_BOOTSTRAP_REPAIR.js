@@ -86,6 +86,20 @@ function repairSchemaColumns() {
     });
   }
 
+  var hoSoMaster = ss.getSheetByName(CBV_CONFIG.SHEETS.HO_SO_MASTER);
+  if (hoSoMaster) {
+    var hsmHeaders = hoSoMaster.getRange(1, 1, 1, hoSoMaster.getLastColumn() || 1).getValues()[0];
+    var hsmExpected = getSchemaHeaders(CBV_CONFIG.SHEETS.HO_SO_MASTER);
+    ['HO_SO_TYPE_ID'].forEach(function(col) {
+      if (hsmHeaders.indexOf(col) === -1) {
+        var pos = hsmExpected.indexOf(col) + 1;
+        if (pos > 0 && _repairInsertColumn(hoSoMaster, pos, col)) {
+          result.schemaRepairs.push('HO_SO_MASTER: added ' + col + ' at col ' + pos);
+        }
+      }
+    });
+  }
+
   var taskLog = ss.getSheetByName(CBV_CONFIG.SHEETS.TASK_UPDATE_LOG);
   if (taskLog) {
     var logHeaders = taskLog.getRange(1, 1, 1, taskLog.getLastColumn() || 1).getValues()[0];

@@ -20,9 +20,16 @@ See `CBV_LAOCONG_PRO_REFERENCE.md` for deployment order and GAS/AppSheet mapping
 | ACT_TASK_ARCHIVE | CMD:taskArchive | DONE, CANCELLED | ✅ |
 
 ## FINANCE
-- ACT_FIN_CONFIRM
-- ACT_FIN_CANCEL
-- ACT_FIN_ARCHIVE
+
+| Action          | PENDING_ACTION  | Valid STATUS         | GAS Function           | Confirmation |
+|-----------------|-----------------|----------------------|------------------------|--------------|
+| ACT_FIN_CONFIRM | CMD:finConfirm  | NEW                  | confirmTransaction(id) | ✅           |
+| ACT_FIN_CANCEL  | CMD:finCancel   | NEW                  | cancelTransaction(id)  | ✅           |
+| ACT_FIN_ARCHIVE | CMD:finArchive  | CONFIRMED, CANCELLED | archiveTransaction(id) | ✅           |
+
+### Routing FINANCE
+- `setFinanceStatus` KHÔNG còn tồn tại — dùng 3 hàm trên
+- `createFinanceAttachment` KHÔNG còn tồn tại — dùng `attachEvidence(id, url)`
 
 ## Quy tắc
 - Action không sửa raw status nếu không có guard.

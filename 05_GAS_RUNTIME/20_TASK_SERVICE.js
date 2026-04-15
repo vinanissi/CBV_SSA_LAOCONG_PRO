@@ -78,6 +78,18 @@ function createTask(data) {
   var taskTypeId = (data.TASK_TYPE_ID && String(data.TASK_TYPE_ID).trim()) ? data.TASK_TYPE_ID : '';
   if (taskTypeId && typeof assertActiveTaskTypeId === 'function') assertActiveTaskTypeId(taskTypeId, 'TASK_TYPE_ID');
 
+  if (typeof warnTaskPrivacyConsistency === 'function') warnTaskPrivacyConsistency(data);
+
+  var adminUser = typeof isAdminUser === 'function' && isAdminUser();
+  var isPrivate = false;
+  if (data.IS_PRIVATE === true || String(data.IS_PRIVATE).toLowerCase() === 'true') {
+    if (adminUser) isPrivate = true;
+  }
+  var sharedWith = '';
+  if (data.SHARED_WITH != null && String(data.SHARED_WITH).trim() !== '') {
+    if (adminUser) sharedWith = String(data.SHARED_WITH).trim();
+  }
+
   var record = {
     ID: cbvMakeId('TASK'),
     TASK_CODE: data.TASK_CODE || cbvMakeId('TK'),
@@ -89,6 +101,8 @@ function createTask(data) {
     DON_VI_ID: data.DON_VI_ID || '',
     OWNER_ID: data.OWNER_ID,
     REPORTER_ID: data.REPORTER_ID || (typeof mapCurrentUserEmailToInternalId === 'function' ? mapCurrentUserEmailToInternalId() : null) || '',
+    SHARED_WITH: sharedWith,
+    IS_PRIVATE: isPrivate,
     START_DATE: data.START_DATE || '',
     DUE_DATE: data.DUE_DATE || '',
     DONE_AT: '',
@@ -96,6 +110,7 @@ function createTask(data) {
     RESULT_SUMMARY: '',
     RELATED_ENTITY_TYPE: data.RELATED_ENTITY_TYPE || 'NONE',
     RELATED_ENTITY_ID: data.RELATED_ENTITY_ID || '',
+    PENDING_ACTION: data.PENDING_ACTION != null ? String(data.PENDING_ACTION) : '',
     CREATED_AT: cbvNow(),
     CREATED_BY: cbvUser(),
     UPDATED_AT: cbvNow(),
@@ -122,6 +137,15 @@ function updateTask(id, patch) {
   var task = taskFindById(id);
   cbvAssert(task, 'Task not found');
   ensureTaskEditable(id);
+
+  if (patch.SHARED_WITH !== undefined || patch.IS_PRIVATE !== undefined) {
+    if (!(typeof isAdminUser === 'function' && isAdminUser())) {
+      delete patch.SHARED_WITH;
+      delete patch.IS_PRIVATE;
+    } else if (patch.IS_PRIVATE !== undefined) {
+      patch.IS_PRIVATE = patch.IS_PRIVATE === true || String(patch.IS_PRIVATE).toLowerCase() === 'true';
+    }
+  }
 
   var blocked = ['STATUS', 'DONE_AT', 'PROGRESS_PERCENT'];
   blocked.forEach(function(k) {

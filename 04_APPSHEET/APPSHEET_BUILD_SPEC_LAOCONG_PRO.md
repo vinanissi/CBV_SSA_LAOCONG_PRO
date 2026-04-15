@@ -11,6 +11,7 @@ Add tables:
 - TASK_ATTACHMENT
 - FINANCE_TRANSACTION
 - FINANCE_LOG
+- FINANCE_ATTACHMENT
 
 ## 2. Key / Label
 - Key luôn là `ID`
@@ -18,11 +19,13 @@ Add tables:
   - HO_SO_MASTER -> `NAME`
   - TASK_MAIN -> `TITLE`
   - FINANCE_TRANSACTION -> `TRANS_CODE`
+  - FINANCE_ATTACHMENT -> ID (key); TITLE (label)
 
 ## 3. Editable rules
 - Các bảng log: read-only
 - `STATUS` không editable trực tiếp trên bảng chính
 - Các action chuyển trạng thái dùng grouped actions hoặc BOT/GAS callback tùy chiến lược triển khai
+- FINANCE_ATTACHMENT: CREATED_AT, CREATED_BY = readonly; thêm qua attachEvidence()
 
 ## 4. Suggested views
 - dashboard theo module

@@ -33,7 +33,7 @@ function seedUserDirectory(options) {
 
   var headers = getSchemaHeaders ? getSchemaHeaders(CBV_CONFIG.SHEETS.USER_DIRECTORY) : [];
   if (!headers || headers.length === 0) {
-    headers = ['ID', 'USER_CODE', 'FULL_NAME', 'DISPLAY_NAME', 'EMAIL', 'PHONE', 'ROLE', 'POSITION', 'HTX_ID', 'STATUS', 'IS_SYSTEM', 'ALLOW_LOGIN', 'NOTE', 'CREATED_AT', 'CREATED_BY', 'UPDATED_AT', 'UPDATED_BY', 'IS_DELETED'];
+    headers = ['ID', 'USER_CODE', 'FULL_NAME', 'DISPLAY_NAME', 'EMAIL', 'PHONE', 'ROLE', 'POSITION', 'STATUS', 'IS_SYSTEM', 'ALLOW_LOGIN', 'NOTE', 'CREATED_AT', 'CREATED_BY', 'UPDATED_AT', 'UPDATED_BY', 'IS_DELETED'];
   }
 
   var lastCol = sheet.getLastColumn();
@@ -93,7 +93,6 @@ function _seedSampleUsers(sheet, headers) {
       PHONE: '',
       ROLE: spec.ROLE || 'VIEWER',
       POSITION: '',
-      HTX_ID: '',
       STATUS: spec.STATUS || 'ACTIVE',
       IS_SYSTEM: false,
       ALLOW_LOGIN: false,

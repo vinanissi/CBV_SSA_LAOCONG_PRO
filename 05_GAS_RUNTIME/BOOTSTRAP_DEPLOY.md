@@ -8,7 +8,7 @@
 
 ---
 
-## Mandatory Sheets (9)
+## Mandatory Sheets (12)
 - HO_SO_MASTER
 - HO_SO_FILE
 - HO_SO_RELATION
@@ -18,6 +18,9 @@
 - TASK_ATTACHMENT
 - FINANCE_TRANSACTION
 - FINANCE_LOG
+- FINANCE_ATTACHMENT
+- USER_DIRECTORY
+- ADMIN_AUDIT_LOG
 
 ## Bootstrap Functions
 - `initAll()` - Full bootstrap (sheets, headers)

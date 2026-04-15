@@ -45,7 +45,7 @@
 | TASK | All | ✓ addTaskUpdate |
 | FINANCE | createTransaction, updateDraftTransaction, setFinanceStatus | ✓ logFinance |
 
-**Note:** No HO_SO_LOG table in schema. Recommend ADMIN_AUDIT_LOG or new HO_SO_LOG for traceability.
+**Note:** Legacy `HO_SO_LOG` sheet — **DEPRECATED — use `HO_SO_UPDATE_LOG`**. (This report predates removal; traceability is via `HO_SO_UPDATE_LOG` / `ADMIN_AUDIT_LOG`.)
 
 ---
 
@@ -70,7 +70,7 @@
 | 1 | updateHoSo: exclude STATUS from patch; document "use setHoSoStatus for status" |
 | 2 | setHoSoStatus: add idempotent check (if same status return success) |
 | 3 | setFinanceStatus: add idempotent check (if same status return success) |
-| 4 | HO_SO: add logAdminAudit or create HO_SO_LOG; log create, update, status, attach |
+| 4 | HO_SO: use `HO_SO_UPDATE_LOG` / `hosoAppendLogEntry` for traceability (**DEPRECATED — do not use `HO_SO_LOG`**) |
 | 5 | createFinanceAttachment: add logFinance(id, 'ATTACHMENT_ADDED', ...) |
 | 6 | updateDraftTransaction: if patch.AMOUNT != null, ensurePositiveNumber(patch.AMOUNT, 'AMOUNT') |
 

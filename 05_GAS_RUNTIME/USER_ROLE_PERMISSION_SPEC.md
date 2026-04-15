@@ -51,7 +51,8 @@
 1. **createTask:** ensureRequired(OWNER_ID); assertValidUserId(OWNER_ID); assertValidUserId(REPORTER_ID) when provided; REPORTER_ID defaults to mapCurrentUserEmailToInternalId() or cbvUser()
 2. **assignTask:** assertValidUserId(ownerId, 'OWNER_ID')
 3. **createHoSo:** assertValidUserId(OWNER_ID) when OWNER_ID provided
-4. **setFinanceStatus (CONFIRMED):** CONFIRMED_BY = mapCurrentUserEmailToInternalId() or cbvUser()
+4. **confirmTransaction(id, note):** CONFIRMED_BY = mapCurrentUserEmailToInternalId() hoặc cbvUser()
+4b. **cancelTransaction / archiveTransaction:** không cần CONFIRMED_BY; ghi ACTOR_ID = cbvUser() vào FINANCE_LOG
 5. **Admin USER_DIRECTORY create:** assertValidEnumValue('ROLE', ROLE)
 6. **Admin operations:** assertAdminAuthority() (checks ADMIN_EMAILS)
 

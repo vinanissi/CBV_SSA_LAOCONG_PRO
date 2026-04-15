@@ -27,13 +27,16 @@ Financial transactions. Unit attribution via DON_VI_ID (not UNIT_ID).
 | 13 | RELATED_ENTITY_ID | Text | No | Polymorphic |
 | 14 | DESCRIPTION | Text | No | |
 | 15 | EVIDENCE_URL | Text | No | |
-| 16 | CONFIRMED_AT | Datetime | No | |
-| 17 | CONFIRMED_BY | Text | No | Ref USER_DIRECTORY |
-| 18 | CREATED_AT | Datetime | No | |
-| 19 | CREATED_BY | Text | No | |
-| 20 | UPDATED_AT | Datetime | No | |
-| 21 | UPDATED_BY | Text | No | |
-| 22 | IS_DELETED | Yes/No | Yes | Soft delete |
+| 16 | IS_STARRED | Yes/No | No | User highlight flag; AppSheet editable |
+| 17 | IS_PINNED | Yes/No | No | Pin to top of lists; AppSheet editable |
+| 18 | PENDING_ACTION | Text | No | CMD:finConfirm \| CMD:finCancel \| CMD:finArchive; GAS set; AppSheet readonly |
+| 19 | CONFIRMED_AT | Datetime | No | |
+| 20 | CONFIRMED_BY | Text | No | Ref USER_DIRECTORY |
+| 21 | CREATED_AT | Datetime | No | |
+| 22 | CREATED_BY | Text | No | |
+| 23 | UPDATED_AT | Datetime | No | |
+| 24 | UPDATED_BY | Text | No | |
+| 25 | IS_DELETED | Yes/No | Yes | Soft delete |
 
 ---
 

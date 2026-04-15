@@ -19,7 +19,7 @@
 - `FULL_NAME`, `PHONE`, `EMAIL`, `ID_TYPE`, `ID_NO`, `DOB`, `ADDRESS`
 - `START_DATE`, `END_DATE`
 - `PRIORITY` — mặc định `TRUNG_BINH` nếu không gửi
-- `SOURCE_CHANNEL`, `SUMMARY`, `NOTE`, `TAGS_TEXT`
+- `SOURCE_CHANNEL`, `SUMMARY`, `NOTE`, `TAGS`
 
 ### Validation
 
@@ -32,7 +32,6 @@
 
 - `record` master đã ghi
 - `HO_SO_UPDATE_LOG` action `CREATE`
-- `HO_SO_LOG` action `CREATED` (nếu sheet log tồn tại)
 
 ---
 
@@ -54,7 +53,7 @@
 ### Output
 
 - Bản ghi `HO_SO_FILE` immutable (CREATED only)
-- `HO_SO_LOG` action `FILE_ADDED`
+- `HO_SO_UPDATE_LOG` action `ADD_FILE`
 
 ---
 
@@ -82,5 +81,5 @@
 ### Output
 
 - Bản ghi `HO_SO_RELATION` đầy đủ audit
-- `HO_SO_LOG` action `RELATION_ADDED`
+- `HO_SO_UPDATE_LOG` action `RELATION_ADDED`
 - `HO_SO_UPDATE_LOG` `LINK_ENTITY`

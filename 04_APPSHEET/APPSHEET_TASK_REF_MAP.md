@@ -1,6 +1,6 @@
 # AppSheet Task Reference Map
 
-**Model:** Task belongs to HTX; users shared. Ref targets use slices; Allow Adds = OFF.
+**Model:** Task belongs to DON_VI; users shared. Ref targets use slices; Allow Adds = OFF.
 
 ---
 
@@ -8,16 +8,16 @@
 
 | Column | Ref Target | Valid_If | Display | Allow Adds |
 |--------|------------|----------|---------|------------|
-| HTX_ID | ACTIVE_HTX | `IN([HTX_ID], SELECT(HO_SO_MASTER[ID], AND([HO_SO_TYPE] = "HTX", [IS_DELETED] = FALSE)))` | NAME | OFF |
+| DON_VI_ID | ACTIVE_DON_VI | `IN([DON_VI_ID], SELECT(DON_VI[ID], AND([STATUS] = "ACTIVE", [IS_DELETED] = FALSE)))` | NAME | OFF |
 | OWNER_ID | ACTIVE_USERS | `IN([OWNER_ID], SELECT(USER_DIRECTORY[ID], AND([STATUS] = "ACTIVE", [IS_DELETED] = FALSE)))` | DISPLAY_NAME or FULL_NAME | OFF |
 | REPORTER_ID | ACTIVE_USERS | Same as OWNER_ID | DISPLAY_NAME or FULL_NAME | OFF |
 | SHARED_WITH | ACTIVE_USERS | `IN([SHARED_WITH], SELECT(USER_DIRECTORY[ID], AND([STATUS]="ACTIVE", [IS_DELETED]=FALSE)))` | DISPLAY_NAME or FULL_NAME | OFF |
 | RELATED_ENTITY_ID | Polymorphic | — | By RELATED_ENTITY_TYPE | — |
 
-### ACTIVE_HTX Slice
+### ACTIVE_DON_VI Slice
 
-- Source: HO_SO_MASTER
-- Filter: `AND([HO_SO_TYPE] = "HTX", [IS_DELETED] = FALSE)`
+- Source: DON_VI
+- Filter: `AND([STATUS] = "ACTIVE", [IS_DELETED] = FALSE)`
 - Label column: NAME
 
 ### ACTIVE_USERS Slice
@@ -60,7 +60,7 @@
 
 | From Table | Column | To Slice/Table | Label Source |
 |------------|--------|----------------|--------------|
-| TASK_MAIN | HTX_ID | ACTIVE_HTX | NAME |
+| TASK_MAIN | DON_VI_ID | ACTIVE_DON_VI | NAME |
 | TASK_MAIN | OWNER_ID | ACTIVE_USERS | DISPLAY_NAME or FULL_NAME |
 | TASK_MAIN | REPORTER_ID | ACTIVE_USERS | DISPLAY_NAME or FULL_NAME |
 | TASK_MAIN | SHARED_WITH | ACTIVE_USERS | DISPLAY_NAME or FULL_NAME |

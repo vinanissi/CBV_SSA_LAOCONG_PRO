@@ -26,9 +26,9 @@ Reusable slices for Ref targets, filters, and UI consistency. Prefer slice reuse
 | Slice name | ACTIVE_MASTER_CODES |
 | Source table | MASTER_CODE |
 | Row filter | `AND([STATUS] = "ACTIVE", [IS_DELETED] = FALSE)` |
-| Purpose | Generic active master codes; UNIT_ID, future MASTER_GROUP refs |
+| Purpose | Generic active master codes; future MASTER_GROUP refs |
 | Columns used | ID, CODE, DISPLAY_TEXT, NAME, MASTER_GROUP |
-| Referenced by | FINANCE_TRANSACTION.UNIT_ID (when MASTER_GROUP=UNIT exists) |
+| Referenced by | FINANCE_TRANSACTION.DON_VI_ID (via DON_VI table, not MASTER_CODE) |
 
 ---
 

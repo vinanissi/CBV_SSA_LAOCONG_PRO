@@ -7,6 +7,12 @@ _handoff/CLAUDE_FINANCE_PACK/tier4_reference_task_center/
 _handoff/CLAUDE_FINANCE_PACK/tier5_gas_runtime/
 _handoff/CLAUDE_FINANCE_PACK/tier6_appsheet/
 
+# Claude upload pack (regenerate: scripts/export-claude-finance-upload.ps1)
+claude/
+
+# Claude full / module packs (regenerate: scripts/export-claude-full.ps1, export-claude-module.ps1)
+claude_exports/
+
 # Google Auth Token (Local)
 .clasprc.json
 

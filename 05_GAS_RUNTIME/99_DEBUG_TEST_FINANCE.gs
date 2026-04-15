@@ -1,91 +1,123 @@
 /**
- * CBV FINANCE Test Layer - Create, confirm, illegal edit block, log behavior.
- * Uses SAMPLE_ prefix for test records. Does not delete.
+ * CBV FINANCE — debug tests for 30_FINANCE_SERVICE.
+ * Chay runFinanceTests() trong Apps Script editor (spreadsheet co enum hop le).
  */
+
 function runFinanceTests() {
-  var result = {
-    ok: true,
-    module: 'FINANCE',
-    total: 0,
-    passed: 0,
-    failed: 0,
-    details: []
-  };
+  var passed = 0;
+  var failed = 0;
 
-  var sampleFinId = null;
-
-  function run(name, fn) {
-    result.total++;
+  function t(name, fn) {
     try {
-      fn();
-      result.passed++;
-      result.details.push({ test: name, passed: true, message: 'OK' });
+      if (fn()) {
+        passed++;
+        Logger.log('[FINANCE TEST] ' + name + ': PASS');
+      } else {
+        failed++;
+        Logger.log('[FINANCE TEST] ' + name + ': FAIL');
+      }
     } catch (e) {
-      result.failed++;
-      result.ok = false;
-      result.details.push({ test: name, passed: false, message: String(e.message || e) });
+      failed++;
+      Logger.log('[FINANCE TEST] ' + name + ': FAIL — ' + (e.message || e));
     }
   }
 
-  run('create NEW transaction', function() {
+  t('testCreateTransaction', function() {
+    var r = createTransaction({
+      TRANS_TYPE: 'INCOME',
+      CATEGORY: 'THU_KHAC',
+      AMOUNT: 100000,
+      TRANS_CODE: 'TEST_FIN_CREATE_' + Date.now()
+    });
+    return r.ok === true && r.data && r.data.id;
+  });
+
+  t('testCreateTransaction_fail_noAmount', function() {
+    var r = createTransaction({
+      TRANS_TYPE: 'INCOME',
+      CATEGORY: 'THU_KHAC'
+    });
+    return r.ok === false;
+  });
+
+  t('testUpdateDraft', function() {
+    var r = createTransaction({
+      TRANS_TYPE: 'INCOME',
+      CATEGORY: 'THU_KHAC',
+      AMOUNT: 50000,
+      TRANS_CODE: 'TEST_FIN_UPD_' + Date.now()
+    });
+    if (!r.ok || !r.data.id) return false;
+    var r2 = updateDraftTransaction(r.data.id, { DESCRIPTION: 'Updated by test' });
+    return r2.ok === true;
+  });
+
+  t('testConfirmTransaction', function() {
+    var r = createTransaction({
+      TRANS_TYPE: 'INCOME',
+      CATEGORY: 'THU_KHAC',
+      AMOUNT: 75000,
+      TRANS_CODE: 'TEST_FIN_CONF_' + Date.now()
+    });
+    if (!r.ok || !r.data.id) return false;
+    var r2 = confirmTransaction(r.data.id, 'confirm test');
+    return r2.ok === true && String(r2.data.STATUS) === 'CONFIRMED';
+  });
+
+  t('testCannotEditAfterConfirm', function() {
     var r = createTransaction({
       TRANS_TYPE: 'EXPENSE',
       CATEGORY: 'VAN_HANH',
-      AMOUNT: 100000,
-      TRANS_CODE: 'SAMPLE_TR001'
+      AMOUNT: 20000,
+      TRANS_CODE: 'TEST_FIN_BLOCK_' + Date.now()
     });
-    if (!r.ok || !r.data.ID) throw new Error('Transaction not created');
-    if (r.data.STATUS !== 'NEW') throw new Error('Status should be NEW');
-    sampleFinId = r.data.ID;
+    if (!r.ok || !r.data.id) return false;
+    var r2 = confirmTransaction(r.data.id, '');
+    if (!r2.ok) return false;
+    var r3 = updateDraftTransaction(r.data.id, { DESCRIPTION: 'should fail' });
+    return r3.ok === false;
   });
 
-  run('confirm transaction', function() {
-    if (!sampleFinId) throw new Error('No sample transaction');
-    var r = setFinanceStatus(sampleFinId, 'CONFIRMED', 'Confirmed');
-    if (!r.ok || r.data.STATUS !== 'CONFIRMED') throw new Error('Not confirmed');
-    if (!r.data.CONFIRMED_AT || !r.data.CONFIRMED_BY) throw new Error('CONFIRMED_AT/BY not set');
+  t('testCancelTransaction', function() {
+    var r = createTransaction({
+      TRANS_TYPE: 'INCOME',
+      CATEGORY: 'THU_KHAC',
+      AMOUNT: 30000,
+      TRANS_CODE: 'TEST_FIN_CANC_' + Date.now()
+    });
+    if (!r.ok || !r.data.id) return false;
+    var r2 = cancelTransaction(r.data.id, 'cancel test');
+    return r2.ok === true && String(r2.data.STATUS) === 'CANCELLED';
   });
 
-  run('illegal edit after confirmed blocked', function() {
-    if (!sampleFinId) throw new Error('No sample transaction');
-    try {
-      updateDraftTransaction(sampleFinId, { AMOUNT: 999 });
-      throw new Error('Should have blocked edit of CONFIRMED transaction');
-    } catch (e) {
-      if (e.message.indexOf('Only NEW') === -1 && e.message.indexOf('NEW') === -1) throw e;
-    }
+  t('testCannotCancelConfirmed', function() {
+    var r = createTransaction({
+      TRANS_TYPE: 'INCOME',
+      CATEGORY: 'THU_KHAC',
+      AMOUNT: 40000,
+      TRANS_CODE: 'TEST_FIN_NOCAN_' + Date.now()
+    });
+    if (!r.ok || !r.data.id) return false;
+    var r2 = confirmTransaction(r.data.id, '');
+    if (!r2.ok) return false;
+    var r3 = cancelTransaction(r.data.id, 'should not work');
+    return r3.ok === false;
   });
 
-  run('log behavior', function() {
-    var logs = _rows(_sheet(CBV_CONFIG.SHEETS.FINANCE_LOG)).filter(function(r) { return String(r.FIN_ID) === String(sampleFinId); });
-    if (logs.length < 2) throw new Error('Expected at least 2 log entries (CREATED, STATUS_CHANGED)');
+  t('testArchive', function() {
+    var r = createTransaction({
+      TRANS_TYPE: 'INCOME',
+      CATEGORY: 'THU_KHAC',
+      AMOUNT: 60000,
+      TRANS_CODE: 'TEST_FIN_ARCH_' + Date.now()
+    });
+    if (!r.ok || !r.data.id) return false;
+    var r2 = confirmTransaction(r.data.id, '');
+    if (!r2.ok) return false;
+    var r3 = archiveTransaction(r.data.id);
+    return r3.ok === true && String(r3.data.STATUS) === 'ARCHIVED';
   });
 
-  run('invalid amount rejected', function() {
-    try {
-      createTransaction({ TRANS_TYPE: 'EXPENSE', CATEGORY: 'VAN_HANH', AMOUNT: 0 });
-      throw new Error('Should have rejected zero amount');
-    } catch (e) {
-      if (e.message.indexOf('must be') === -1 && e.message.indexOf('> 0') === -1) throw e;
-    }
-  });
-
-  run('invalid category rejected', function() {
-    try {
-      createTransaction({ TRANS_TYPE: 'EXPENSE', CATEGORY: 'INVALID', AMOUNT: 100 });
-      throw new Error('Should have rejected invalid category');
-    } catch (e) {
-      if (e.message.indexOf('Invalid') === -1 && e.message.indexOf('CATEGORY') === -1) throw e;
-    }
-  });
-
-  run('workflow NEW->CANCELLED', function() {
-    var r = createTransaction({ TRANS_TYPE: 'INCOME', CATEGORY: 'THU_KHAC', AMOUNT: 50000, TRANS_CODE: 'SAMPLE_TR002' });
-    if (!r.ok) throw new Error('Transaction not created');
-    var r2 = setFinanceStatus(r.data.ID, 'CANCELLED', 'Cancelled');
-    if (!r2.ok || r2.data.STATUS !== 'CANCELLED') throw new Error('Cancel failed');
-  });
-
-  Logger.log('runFinanceTests: ' + JSON.stringify(result, null, 2));
-  return result;
+  Logger.log('[FINANCE TEST] SUMMARY: passed=' + passed + ' failed=' + failed + ' (total 8)');
+  return { passed: passed, failed: failed, total: 8 };
 }

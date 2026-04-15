@@ -24,7 +24,7 @@ Canonical tables per **CBV final architecture**. Legacy columns (`HO_SO_TYPE`, `
 | FULL_NAME, PHONE, EMAIL, ID_TYPE, ID_NO, DOB, ADDRESS | | |
 | START_DATE, END_DATE | date | |
 | PRIORITY, SOURCE_CHANNEL | enum | |
-| SUMMARY, NOTE, TAGS_TEXT | string | |
+| SUMMARY, NOTE, TAGS | string | |
 | CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY | audit | |
 | IS_DELETED | bool | Soft delete |
 

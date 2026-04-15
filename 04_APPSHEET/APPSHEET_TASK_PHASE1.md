@@ -1,6 +1,6 @@
 # AppSheet Task Phase 1 Configuration
 
-**Model:** Task belongs to HTX; users shared. AppSheet UI only; workflow via GAS.  
+**Model:** Task belongs to DON_VI; users shared. AppSheet UI only; workflow via GAS.  
 **Consolidated reference:** 02_MODULES/TASK_CENTER/TASK_SYSTEM_REFERENCE.md
 
 ---
@@ -20,7 +20,7 @@
 
 | Slice | Source | Condition |
 |-------|--------|-----------|
-| ACTIVE_HTX | HO_SO_MASTER | `AND([HO_SO_TYPE] = "HTX", [IS_DELETED] = FALSE)` |
+| ACTIVE_DON_VI | DON_VI | `AND([STATUS] = "ACTIVE", [IS_DELETED] = FALSE)` |
 | ACTIVE_USERS | USER_DIRECTORY | `AND([STATUS] = "ACTIVE", [IS_DELETED] = FALSE)` |
 | TASK_OPEN | TASK_MAIN | `IN([STATUS], LIST("NEW", "ASSIGNED", "IN_PROGRESS", "WAITING"))` |
 | TASK_DONE | TASK_MAIN | `[STATUS] = "DONE"` |
@@ -31,7 +31,7 @@
 
 | Table | Column | Ref Target | Allow Adds |
 |-------|--------|------------|------------|
-| TASK_MAIN | HTX_ID | ACTIVE_HTX | OFF |
+| TASK_MAIN | DON_VI_ID | ACTIVE_DON_VI | OFF |
 | TASK_MAIN | OWNER_ID | ACTIVE_USERS | OFF |
 | TASK_MAIN | REPORTER_ID | ACTIVE_USERS | OFF |
 | TASK_CHECKLIST | TASK_ID | TASK_MAIN | OFF |
@@ -46,7 +46,7 @@
 
 | Ref Column | Label Source | Fallback |
 |------------|--------------|----------|
-| TASK_MAIN.HTX_ID | ACTIVE_HTX.NAME | CODE |
+| TASK_MAIN.DON_VI_ID | ACTIVE_DON_VI.NAME | CODE |
 | TASK_MAIN.OWNER_ID | ACTIVE_USERS.DISPLAY_NAME | FULL_NAME |
 | TASK_MAIN.REPORTER_ID | ACTIVE_USERS.DISPLAY_NAME | FULL_NAME |
 | TASK_CHECKLIST.TASK_ID | TASK_MAIN.TITLE | TASK_CODE |
@@ -95,7 +95,7 @@ Apply as **Initial Value** on TASK_FORM for REPORTER_ID. Empty if no match; user
 
 | Safeguard | Setting |
 |-----------|---------|
-| Allow Adds on HTX_ID, OWNER_ID, REPORTER_ID | OFF |
+| Allow Adds on DON_VI_ID, OWNER_ID, REPORTER_ID | OFF |
 | Allow Adds on TASK_ID (children) | OFF |
 | Allow Adds on DONE_BY, ACTOR_ID | OFF |
 | STATUS editable | OFF |
@@ -109,10 +109,10 @@ Apply as **Initial Value** on TASK_FORM for REPORTER_ID. Empty if no match; user
 
 ## 9. Summary
 
-- Task belongs to HTX: HTX_ID → ACTIVE_HTX
+- Task belongs to DON_VI: DON_VI_ID → ACTIVE_DON_VI
 - Users shared: OWNER_ID, REPORTER_ID, DONE_BY, ACTOR_ID → ACTIVE_USERS
 - User display: DISPLAY_NAME or FULL_NAME
-- HTX display: NAME
+- Đơn vị display: NAME (DON_VI)
 - Allow Adds = OFF on all operational refs
 - STATUS workflow via GAS only
 - REPORTER_ID auto-fill from USEREMAIL when available

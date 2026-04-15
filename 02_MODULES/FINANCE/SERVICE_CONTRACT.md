@@ -6,6 +6,7 @@
 - status = NEW
 - amount > 0
 - category hợp lệ
+- assertValidEnumValue('FINANCE_TYPE', TRANS_TYPE) — group thực tế trong seed, không phải 'TRANS_TYPE'
 
 ### Side effects
 - set CONFIRMED

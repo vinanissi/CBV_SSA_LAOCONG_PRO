@@ -92,6 +92,17 @@ function assertValidUpdateType(updateType) {
 }
 
 /**
+ * Logs a warning when SHARED_WITH is set but IS_PRIVATE is false (expected only when task is private).
+ * @param {Object} data
+ */
+function warnTaskPrivacyConsistency(data) {
+  if (!data || typeof data !== 'object') return;
+  var sw = data.SHARED_WITH != null && String(data.SHARED_WITH).trim() !== '';
+  var priv = data.IS_PRIVATE === true || String(data.IS_PRIVATE).toLowerCase() === 'true';
+  if (sw && !priv) Logger.log('[TASK_VALIDATION] Warning: SHARED_WITH has value but IS_PRIVATE is false');
+}
+
+/**
  * Validates task create/update payload for PRO architecture.
  * @param {Object} data - Create/update payload
  * @param {boolean} isCreate - true for create

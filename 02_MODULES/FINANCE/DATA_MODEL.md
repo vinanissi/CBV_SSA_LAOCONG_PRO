@@ -8,7 +8,7 @@
 - STATUS
 - CATEGORY
 - AMOUNT
-- UNIT_ID
+- DON_VI_ID  # ref DON_VI; replaces legacy UNIT_ID
 - COUNTERPARTY
 - PAYMENT_METHOD
 - REFERENCE_NO
@@ -16,6 +16,9 @@
 - RELATED_ENTITY_ID
 - DESCRIPTION
 - EVIDENCE_URL
+- IS_STARRED  # Yes/No, default false
+- IS_PINNED   # Yes/No, default false
+- PENDING_ACTION  # CMD:fin* prefix; GAS set; AppSheet readonly
 - CONFIRMED_AT
 - CONFIRMED_BY
 - CREATED_AT

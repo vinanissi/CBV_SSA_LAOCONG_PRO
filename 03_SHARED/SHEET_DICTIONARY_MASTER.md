@@ -91,7 +91,7 @@
 - STATUS: enum FIN_STATUS
 - CATEGORY: enum FIN_CATEGORY
 - AMOUNT: number
-- UNIT_ID: text
+- DON_VI_ID: ref DON_VI
 - COUNTERPARTY: text
 - PAYMENT_METHOD: enum PAYMENT_METHOD
 - REFERENCE_NO: text
@@ -99,6 +99,9 @@
 - RELATED_ENTITY_ID: text
 - DESCRIPTION: long text
 - EVIDENCE_URL: url
+- IS_STARRED: yes/no — user highlight flag
+- IS_PINNED: yes/no — pin to top
+- PENDING_ACTION: text — CMD:fin* prefix; GAS set; AppSheet readonly
 - CONFIRMED_AT: datetime
 - CONFIRMED_BY: ref USER_DIRECTORY
 - CREATED_AT: datetime

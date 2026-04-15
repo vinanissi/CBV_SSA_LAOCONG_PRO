@@ -2,6 +2,7 @@
   "packVersion": 1,
   "description": "Mirrored copies of repo files for Claude / external design work. Paths in \"source\" are relative to repository root; \"dest\" is relative to this pack folder.",
   "entries": [
+    { "tier": 1, "source": "00_META/CBV_MODULE_BUILD_PROTOCOL.md", "dest": "tier1_core_spec/00_META/CBV_MODULE_BUILD_PROTOCOL.md" },
     { "tier": 1, "source": "02_MODULES/FINANCE/MODULE_DESCRIPTOR.md", "dest": "tier1_core_spec/02_MODULES/FINANCE/MODULE_DESCRIPTOR.md" },
     { "tier": 1, "source": "02_MODULES/FINANCE/DATA_MODEL.md", "dest": "tier1_core_spec/02_MODULES/FINANCE/DATA_MODEL.md" },
     { "tier": 1, "source": "02_MODULES/FINANCE/WORKFLOW.md", "dest": "tier1_core_spec/02_MODULES/FINANCE/WORKFLOW.md" },
@@ -10,7 +11,6 @@
     { "tier": 1, "source": "02_MODULES/FINANCE/SERVICE_CONTRACT.md", "dest": "tier1_core_spec/02_MODULES/FINANCE/SERVICE_CONTRACT.md" },
     { "tier": 1, "source": "02_MODULES/FINANCE/APPSHEET_UX_SPEC.md", "dest": "tier1_core_spec/02_MODULES/FINANCE/APPSHEET_UX_SPEC.md" },
     { "tier": 1, "source": "02_MODULES/FINANCE/SHEET_DICTIONARY.md", "dest": "tier1_core_spec/02_MODULES/FINANCE/SHEET_DICTIONARY.md" },
-    { "tier": 1, "source": "00_META/CBV_MODULE_BUILD_PROTOCOL.md", "dest": "tier1_core_spec/00_META/CBV_MODULE_BUILD_PROTOCOL.md" },
 
     { "tier": 2, "source": "00_OVERVIEW/CBV_FINAL_ARCHITECTURE.md", "dest": "tier2_architecture/00_OVERVIEW/CBV_FINAL_ARCHITECTURE.md" },
     { "tier": 2, "source": "03_SHARED/MODULE_MAP_MASTER.md", "dest": "tier2_architecture/03_SHARED/MODULE_MAP_MASTER.md" },
@@ -38,7 +38,9 @@
     { "tier": 5, "source": "05_GAS_RUNTIME/30_FINANCE_SERVICE.gs", "dest": "tier5_gas_runtime/05_GAS_RUNTIME/30_FINANCE_SERVICE.gs" },
     { "tier": 5, "source": "05_GAS_RUNTIME/99_DEBUG_TEST_FINANCE.gs", "dest": "tier5_gas_runtime/05_GAS_RUNTIME/99_DEBUG_TEST_FINANCE.gs" },
     { "tier": 5, "source": "05_GAS_RUNTIME/00_CORE_CONFIG.gs", "dest": "tier5_gas_runtime/05_GAS_RUNTIME/00_CORE_CONFIG.gs" },
+    { "tier": 5, "source": "05_GAS_RUNTIME/01_ENUM_CONFIG.gs", "dest": "tier5_gas_runtime/05_GAS_RUNTIME/01_ENUM_CONFIG.gs" },
     { "tier": 5, "source": "05_GAS_RUNTIME/90_BOOTSTRAP_SCHEMA.gs", "dest": "tier5_gas_runtime/05_GAS_RUNTIME/90_BOOTSTRAP_SCHEMA.gs" },
+    { "tier": 5, "source": "05_GAS_RUNTIME/90_BOOTSTRAP_AUDIT_SCHEMA.gs", "dest": "tier5_gas_runtime/05_GAS_RUNTIME/90_BOOTSTRAP_AUDIT_SCHEMA.gs" },
 
     { "tier": 6, "source": "04_APPSHEET/00_MASTER/APPSHEET_MASTER_REFERENCE.md", "dest": "tier6_appsheet/04_APPSHEET/00_MASTER/APPSHEET_MASTER_REFERENCE.md" },
     { "tier": 6, "source": "04_APPSHEET/APPSHEET_FIELD_POLICY_MAP.md", "dest": "tier6_appsheet/04_APPSHEET/APPSHEET_FIELD_POLICY_MAP.md" },

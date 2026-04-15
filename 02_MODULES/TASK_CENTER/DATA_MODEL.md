@@ -1,6 +1,6 @@
 # DATA MODEL - TASK_CENTER
 
-**Model:** Task belongs to HTX; users are shared across the system.  
+**Model:** Task belongs to DON_VI; users are shared across the system.  
 **Consolidated reference:** 02_MODULES/TASK_CENTER/TASK_SYSTEM_REFERENCE.md
 
 ---
@@ -26,11 +26,16 @@
 | 15 | RESULT_SUMMARY | Text | | Completion summary |
 | 16 | RELATED_ENTITY_TYPE | Enum | | RELATED_ENTITY_TYPE |
 | 17 | RELATED_ENTITY_ID | Text | Polymorphic | By type |
-| 18 | CREATED_AT | DateTime | | |
-| 19 | CREATED_BY | Text | | |
-| 20 | UPDATED_AT | DateTime | | |
-| 21 | UPDATED_BY | Text | | |
-| 22 | IS_DELETED | Yes/No | | Soft delete |
+| 18 | SHARED_WITH | Text | | List USER_DIRECTORY; ADMIN only |
+| 19 | IS_PRIVATE | Yes/No | | Default FALSE; ADMIN only |
+| 20 | PENDING_ACTION | Text | | CMD:xxx; AppSheet writes; GAS reads & clears |
+| 21 | IS_STARRED | Yes/No | | AppSheet editable |
+| 22 | IS_PINNED | Yes/No | | AppSheet editable |
+| 23 | CREATED_AT | DateTime | | |
+| 24 | CREATED_BY | Text | | |
+| 25 | UPDATED_AT | DateTime | | |
+| 26 | UPDATED_BY | Text | | |
+| 27 | IS_DELETED | Yes/No | | Soft delete |
 
 ---
 
@@ -42,17 +47,16 @@
 | 2 | TASK_ID | Text | → TASK_MAIN | Child of task |
 | 3 | ITEM_NO | Number | | Item number |
 | 4 | TITLE | Text | | Required |
-| 5 | DESCRIPTION | Text | | |
-| 6 | IS_REQUIRED | Yes/No | | Required for completion |
-| 7 | IS_DONE | Yes/No | | GAS or action |
-| 8 | DONE_AT | DateTime | | GAS set |
-| 9 | DONE_BY | Text | → ACTIVE_USERS | Who completed |
-| 10 | NOTE | Text | | |
-| 11 | CREATED_AT | DateTime | | |
-| 12 | CREATED_BY | Text | | |
-| 13 | UPDATED_AT | DateTime | | |
-| 14 | UPDATED_BY | Text | | |
-| 15 | IS_DELETED | Yes/No | | Soft delete |
+| 5 | IS_REQUIRED | Yes/No | | Required for completion |
+| 6 | IS_DONE | Yes/No | | GAS or action |
+| 7 | DONE_AT | DateTime | | GAS set |
+| 8 | DONE_BY | Text | → ACTIVE_USERS | Who completed |
+| 9 | NOTE | Text | | |
+| 10 | CREATED_AT | DateTime | | |
+| 11 | CREATED_BY | Text | | |
+| 12 | UPDATED_AT | DateTime | | |
+| 13 | UPDATED_BY | Text | | |
+| 14 | IS_DELETED | Yes/No | | Soft delete |
 
 ---
 
@@ -62,16 +66,23 @@
 |---|--------|------|-----|-------|
 | 1 | ID | Text | Key | System key |
 | 2 | TASK_ID | Text | → TASK_MAIN | Child of task |
-| 3 | ATTACHMENT_TYPE | Enum | | TASK_ATTACHMENT_TYPE |
-| 4 | TITLE | Text | | |
-| 5 | FILE_URL | Text/File | | AppSheet Type = File |
-| 6 | DRIVE_FILE_ID | Text | | Internal |
-| 7 | NOTE | Text | | |
-| 8 | CREATED_AT | DateTime | | |
-| 9 | CREATED_BY | Text | | |
-| 10 | UPDATED_AT | DateTime | | |
-| 11 | UPDATED_BY | Text | | |
-| 12 | IS_DELETED | Yes/No | | Soft delete |
+| 3 | SOURCE_MODE | Enum | | UPLOAD \| LINK \| DRIVE |
+| 4 | ATTACHMENT_TYPE | Enum | | TASK_ATTACHMENT_TYPE |
+| 5 | TITLE | Text | | |
+| 6 | FILE_NAME | Text | | Original filename |
+| 7 | UPLOAD_FILE | File | | AppSheet file upload |
+| 8 | FILE_URL | Text/File | | URL or legacy file column |
+| 9 | FILE_EXT | Text | | Extension; GAS set |
+| 10 | DRIVE_FILE_ID | Text | | Internal |
+| 11 | LINK_DOMAIN | Text | | Domain when SOURCE_MODE=LINK; GAS set |
+| 12 | SORT_ORDER | Number | | Display order |
+| 13 | STATUS | Enum | | ACTIVE \| ARCHIVED |
+| 14 | NOTE | Text | | |
+| 15 | CREATED_AT | DateTime | | |
+| 16 | CREATED_BY | Text | | |
+| 17 | UPDATED_AT | DateTime | | |
+| 18 | UPDATED_BY | Text | | |
+| 19 | IS_DELETED | Yes/No | | Soft delete |
 
 ---
 
@@ -81,14 +92,17 @@
 |---|--------|------|-----|-------|
 | 1 | ID | Text | Key | System key |
 | 2 | TASK_ID | Text | → TASK_MAIN | Child of task |
-| 3 | UPDATE_TYPE | Enum | | NOTE, QUESTION, ANSWER, STATUS_CHANGE |
-| 4 | CONTENT | Text | | Log content |
-| 5 | ACTOR_ID | Text | → ACTIVE_USERS | Who performed |
-| 6 | CREATED_AT | DateTime | | |
-| 7 | CREATED_BY | Text | | |
-| 8 | UPDATED_AT | DateTime | | |
-| 9 | UPDATED_BY | Text | | |
-| 10 | IS_DELETED | Yes/No | | Soft delete |
+| 3 | UPDATE_TYPE | Enum | | NOTE \| QUESTION \| ANSWER \| STATUS_CHANGE |
+| 4 | ACTION | Text | | Action code (e.g. taskStart, taskComplete) |
+| 5 | OLD_STATUS | Text | | Trạng thái trước khi đổi |
+| 6 | NEW_STATUS | Text | | Trạng thái sau khi đổi |
+| 7 | NOTE | Text | | Ghi chú thêm |
+| 8 | ACTOR_ID | Text | → ACTIVE_USERS | Who performed |
+| 9 | CREATED_AT | DateTime | | |
+| 10 | CREATED_BY | Text | | |
+| 11 | UPDATED_AT | DateTime | | |
+| 12 | UPDATED_BY | Text | | |
+| 13 | IS_DELETED | Yes/No | | Soft delete |
 
 ---
 

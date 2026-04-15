@@ -373,7 +373,7 @@ function _goldenSeedHTX(now, user, summary) {
       SOURCE_CHANNEL: 'DIRECT',
       SUMMARY: '',
       NOTE: '[GOLDEN] Demo hồ sơ (slot legacy HTX) — PRO schema, safe to delete',
-      TAGS_TEXT: '',
+      TAGS: '',
       CREATED_AT: now,
       CREATED_BY: user,
       UPDATED_AT: now,

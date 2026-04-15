@@ -138,13 +138,18 @@ Enum dictionary only.
 | DONE_AT | Datetime | No | When completed |
 | RESULT_SUMMARY | Text | No | Completion summary |
 | PROGRESS_PERCENT | Number | No | Checklist-derived |
+| SHARED_WITH | Text | No | List ref USER_DIRECTORY; ADMIN only |
+| IS_PRIVATE | Yes/No | No | Row-level privacy; default FALSE; ADMIN only |
+| PENDING_ACTION | Text | No | Pending action description; GAS set; AppSheet readonly |
+| IS_STARRED | Yes/No | No | User highlight flag; AppSheet editable |
+| IS_PINNED | Yes/No | No | Pin to top of lists; AppSheet editable |
 | CREATED_AT | Datetime | No | |
 | CREATED_BY | Text | No | |
 | UPDATED_AT | Datetime | No | |
 | UPDATED_BY | Text | No | |
 | IS_DELETED | Yes/No | Yes | Soft delete |
 
-**Removed:** TASK_TYPE, HTX_ID, RESULT_NOTE.
+**Removed:** TASK_TYPE, HTX_ID, RESULT_NOTE, CONTENT.
 
 ---
 
@@ -199,11 +204,17 @@ Enum dictionary only.
 |--------|------|----------|-------|
 | ID | Text | Yes | Unique key |
 | TASK_ID | Text | Yes | Ref TASK_MAIN |
+| SOURCE_MODE | Text | No | UPLOAD \| LINK \| DRIVE |
 | FILE_NAME | Text | No | Original filename |
+| UPLOAD_FILE | File | No | AppSheet file upload column |
 | FILE_URL | Text | No | URL |
+| FILE_EXT | Text | No | Extension (.jpg, .pdf, …); GAS set |
 | DRIVE_FILE_ID | Text | No | Drive ID |
+| LINK_DOMAIN | Text | No | Link domain when SOURCE_MODE=LINK; GAS set |
 | ATTACHMENT_TYPE | Text | No | Enum |
 | TITLE | Text | No | Display label |
+| SORT_ORDER | Number | No | Display order |
+| STATUS | Text | No | ACTIVE \| ARCHIVED |
 | NOTE | Text | No | |
 | CREATED_AT | Datetime | No | |
 | CREATED_BY | Text | No | |
@@ -234,6 +245,9 @@ Enum dictionary only.
 | RELATED_ENTITY_ID | Text | No | Polymorphic |
 | DESCRIPTION | Text | No | |
 | EVIDENCE_URL | Text | No | |
+| IS_STARRED | Yes/No | No | User highlight flag; AppSheet editable |
+| IS_PINNED | Yes/No | No | Pin to top of lists; AppSheet editable |
+| PENDING_ACTION | Text | No | CMD:fin* prefix; GAS set; AppSheet readonly |
 | CONFIRMED_AT | Datetime | No | |
 | CONFIRMED_BY | Text | No | Ref USER_DIRECTORY |
 | CREATED_AT | Datetime | No | |
