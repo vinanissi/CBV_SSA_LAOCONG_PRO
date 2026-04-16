@@ -44,10 +44,14 @@ function createHoSo(data) {
   hosoValidateTypeMasterId(data.HO_SO_TYPE_ID, 'HO_SO_TYPE_ID');
   ensureRequired(data.TITLE || data.DISPLAY_NAME, 'TITLE or DISPLAY_NAME');
 
+  if (typeof hosoValidateHtxIdForHoSoType === 'function') {
+    hosoValidateHtxIdForHoSoType(data.HO_SO_TYPE_ID, data.HTX_ID);
+  }
+
   if (data.DON_VI_ID) hosoValidateOptionalRefDonVi(data.DON_VI_ID);
   hosoValidateOptionalRefUser(data.OWNER_ID);
   hosoValidateOptionalRefUser(data.MANAGER_USER_ID);
-  if (data.HTX_ID) {
+  if (data.HTX_ID != null && String(data.HTX_ID).trim() !== '') {
     var htxRow = hosoRepoFindMasterById(data.HTX_ID);
     cbvAssert(htxRow, 'HTX_ID invalid (HO_SO_MASTER not found)');
     cbvAssert(typeof hosoMasterRowIsHtx === 'function' && hosoMasterRowIsHtx(htxRow), 'HTX_ID must reference HTX (HO_SO_TYPE_ID → MASTER_CODE.CODE=HTX)');
@@ -59,7 +63,8 @@ function createHoSo(data) {
   var pr = data.PRIORITY != null && String(data.PRIORITY).trim() !== '' ? String(data.PRIORITY).trim() : 'TRUNG_BINH';
   hosoAssertEnum('PRIORITY', pr, 'PRIORITY');
   if (data.RELATED_ENTITY_TYPE != null && String(data.RELATED_ENTITY_TYPE).trim() !== '') {
-    hosoAssertEnum('RELATED_ENTITY_TYPE', data.RELATED_ENTITY_TYPE, 'RELATED_ENTITY_TYPE');
+    if (typeof assertValidRelatedEntityType === 'function') assertValidRelatedEntityType(data.RELATED_ENTITY_TYPE, 'RELATED_ENTITY_TYPE');
+    else hosoAssertEnum('RELATED_ENTITY_TYPE', data.RELATED_ENTITY_TYPE, 'RELATED_ENTITY_TYPE');
   }
   if (data.ID_TYPE != null && String(data.ID_TYPE).trim() !== '') hosoAssertEnum('ID_TYPE', data.ID_TYPE, 'ID_TYPE');
   if (data.SOURCE_CHANNEL != null && String(data.SOURCE_CHANNEL).trim() !== '') {
@@ -113,7 +118,8 @@ function createHoSo(data) {
   };
   Object.assign(record, stamp);
 
-  hosoAssertEnum('RELATED_ENTITY_TYPE', record.RELATED_ENTITY_TYPE, 'RELATED_ENTITY_TYPE');
+  if (typeof assertValidRelatedEntityType === 'function') assertValidRelatedEntityType(record.RELATED_ENTITY_TYPE, 'RELATED_ENTITY_TYPE');
+  else hosoAssertEnum('RELATED_ENTITY_TYPE', record.RELATED_ENTITY_TYPE, 'RELATED_ENTITY_TYPE');
 
   hosoRepoAppend(CBV_CONFIG.SHEETS.HO_SO_MASTER, record);
   hosoAppendLogEntry(id, 'CREATE', { NOTE: 'HO_SO created', NEW_VALUE: record.HO_SO_CODE });
@@ -145,14 +151,25 @@ function updateHoso(id, patch) {
   if (patch.DON_VI_ID !== undefined) hosoValidateOptionalRefDonVi(patch.DON_VI_ID);
   if (patch.OWNER_ID !== undefined) hosoValidateOptionalRefUser(patch.OWNER_ID);
   if (patch.MANAGER_USER_ID !== undefined) hosoValidateOptionalRefUser(patch.MANAGER_USER_ID);
-  if (patch.HTX_ID !== undefined && patch.HTX_ID) {
+
+  var effTypeId = patch.HO_SO_TYPE_ID !== undefined && patch.HO_SO_TYPE_ID != null ? patch.HO_SO_TYPE_ID : current.HO_SO_TYPE_ID;
+  var effHtxId = patch.HTX_ID !== undefined ? patch.HTX_ID : current.HTX_ID;
+  if (patch.HO_SO_TYPE_ID !== undefined || patch.HTX_ID !== undefined) {
+    if (typeof hosoValidateHtxIdForHoSoType === 'function') {
+      hosoValidateHtxIdForHoSoType(effTypeId, effHtxId);
+    }
+  }
+  if (patch.HTX_ID !== undefined && patch.HTX_ID != null && String(patch.HTX_ID).trim() !== '') {
     var pHtx = hosoRepoFindMasterById(patch.HTX_ID);
     cbvAssert(pHtx, 'HTX_ID invalid (HO_SO_MASTER not found)');
     cbvAssert(typeof hosoMasterRowIsHtx === 'function' && hosoMasterRowIsHtx(pHtx), 'HTX_ID must reference HTX (HO_SO_TYPE_ID → MASTER_CODE.CODE=HTX)');
   }
 
   hosoAssertEnum('PRIORITY', patch.PRIORITY, 'PRIORITY');
-  hosoAssertEnum('RELATED_ENTITY_TYPE', patch.RELATED_ENTITY_TYPE, 'RELATED_ENTITY_TYPE');
+  if (patch.RELATED_ENTITY_TYPE !== undefined) {
+    if (typeof assertValidRelatedEntityType === 'function') assertValidRelatedEntityType(patch.RELATED_ENTITY_TYPE, 'RELATED_ENTITY_TYPE');
+    else hosoAssertEnum('RELATED_ENTITY_TYPE', patch.RELATED_ENTITY_TYPE, 'RELATED_ENTITY_TYPE');
+  }
   hosoAssertEnum('ID_TYPE', patch.ID_TYPE, 'ID_TYPE');
   hosoAssertEnum('SOURCE_CHANNEL', patch.SOURCE_CHANNEL, 'SOURCE_CHANNEL');
 
@@ -224,6 +241,7 @@ function addHosoFile(data) {
   var rec = {
     ID: cbvMakeId('HFILE'),
     HO_SO_ID: data.HO_SO_ID,
+    LINKED_RELATION_ID: data.LINKED_RELATION_ID != null && String(data.LINKED_RELATION_ID).trim() !== '' ? String(data.LINKED_RELATION_ID).trim() : '',
     FILE_GROUP: fg,
     FILE_NAME: data.FILE_NAME || '',
     FILE_URL: data.FILE_URL || '',
@@ -249,7 +267,8 @@ function addHosoFile(data) {
 
 function addHosoRelation(data) {
   data = data || {};
-  cbvAssert(hosoRepoFindMasterById(data.HO_SO_ID), 'HO_SO not found');
+  ensureRequired(data.FROM_HO_SO_ID, 'FROM_HO_SO_ID');
+  cbvAssert(hosoRepoFindMasterById(data.FROM_HO_SO_ID), 'HO_SO not found');
   ensureRequired(data.RELATED_TABLE, 'RELATED_TABLE');
   ensureRequired(data.RELATED_RECORD_ID, 'RELATED_RECORD_ID');
   ensureRequired(data.RELATION_TYPE, 'RELATION_TYPE');
@@ -257,7 +276,7 @@ function addHosoRelation(data) {
     hosoValidateRelationTarget(data.RELATED_TABLE, data.RELATED_RECORD_ID);
   }
 
-  var fromId = String(data.HO_SO_ID).trim();
+  var fromId = String(data.FROM_HO_SO_ID).trim();
   var relTable = String(data.RELATED_TABLE || '').trim();
   var relId = String(data.RELATED_RECORD_ID || '').trim();
   var toHoSo = '';
@@ -275,7 +294,6 @@ function addHosoRelation(data) {
     TO_HO_SO_ID: toHoSo,
     RELATION_TYPE: rt,
     STATUS: 'ACTIVE',
-    HO_SO_ID: fromId,
     RELATED_TABLE: relTable,
     RELATED_RECORD_ID: relId,
     NOTE: data.NOTE || '',
@@ -286,7 +304,7 @@ function addHosoRelation(data) {
   Object.assign(rec, stamp);
   hosoRepoAppend(CBV_CONFIG.SHEETS.HO_SO_RELATION, rec);
 
-  hosoAppendLogEntry(data.HO_SO_ID, 'LINK_ENTITY', {
+  hosoAppendLogEntry(fromId, 'LINK_ENTITY', {
     NEW_VALUE: rec.RELATED_TABLE + ':' + rec.RELATED_RECORD_ID,
     NOTE: rec.RELATION_TYPE
   });
@@ -311,12 +329,13 @@ function removeHosoFile(fileId, note) {
 function removeHosoRelation(relationId, note) {
   var row = typeof hosoRepoFindRelationById === 'function' ? hosoRepoFindRelationById(relationId) : null;
   cbvAssert(row, 'HO_SO_RELATION not found');
-  cbvAssert(hosoRepoFindMasterById(row.HO_SO_ID), 'HO_SO not found');
+  var logCtx = String(row.FROM_HO_SO_ID || row.TO_HO_SO_ID || '').trim();
+  cbvAssert(logCtx && hosoRepoFindMasterById(logCtx), 'HO_SO not found');
   var next = cbvClone(row);
   next.IS_DELETED = true;
   Object.assign(next, hosoStampUpdate());
   hosoRepoUpdate(CBV_CONFIG.SHEETS.HO_SO_RELATION, row._rowNumber, next);
-  hosoAppendLogEntry(row.HO_SO_ID, 'UNLINK_ENTITY', {
+  hosoAppendLogEntry(logCtx, 'UNLINK_ENTITY', {
     OLD_VALUE: String(row.RELATED_TABLE || '') + ':' + String(row.RELATED_RECORD_ID || ''),
     NOTE: note || ''
   });
@@ -369,7 +388,7 @@ function getHosoRelations(hosoId) {
   var all = typeof hosoRepoRows === 'function' ? hosoRepoRows(CBV_CONFIG.SHEETS.HO_SO_RELATION) : [];
   return hosoFilterActiveRows((all || []).filter(function(r) {
     var hid = String(hosoId);
-    return String(r.HO_SO_ID) === hid || String(r.FROM_HO_SO_ID) === hid || String(r.TO_HO_SO_ID) === hid;
+    return String(r.FROM_HO_SO_ID) === hid || String(r.TO_HO_SO_ID) === hid;
   }));
 }
 
@@ -436,6 +455,7 @@ function attachHoSoFile(hoSoId, fileMeta) {
   var record = {
     ID: cbvMakeId('HFILE'),
     HO_SO_ID: hoSoId,
+    LINKED_RELATION_ID: fileMeta.LINKED_RELATION_ID != null && String(fileMeta.LINKED_RELATION_ID).trim() !== '' ? String(fileMeta.LINKED_RELATION_ID).trim() : '',
     FILE_GROUP: fileGroup,
     FILE_NAME: fileMeta.FILE_NAME != null ? String(fileMeta.FILE_NAME) : '',
     FILE_URL: url,
@@ -480,8 +500,6 @@ function createHoSoRelation(data) {
   var rt = String(data.RELATION_TYPE).trim();
   hosoAssertEnum('HO_SO_RELATION_TYPE', rt, 'RELATION_TYPE');
 
-  var ctx = data.HO_SO_ID != null && String(data.HO_SO_ID).trim() !== '' ? String(data.HO_SO_ID).trim() : fromId;
-
   var stamp = hosoStampCreate();
   var rec = {
     ID: cbvMakeId('HREL'),
@@ -489,7 +507,6 @@ function createHoSoRelation(data) {
     TO_HO_SO_ID: toId,
     RELATION_TYPE: rt,
     STATUS: st,
-    HO_SO_ID: ctx,
     RELATED_TABLE: data.RELATED_TABLE != null ? String(data.RELATED_TABLE) : '',
     RELATED_RECORD_ID: data.RELATED_RECORD_ID != null ? String(data.RELATED_RECORD_ID) : '',
     NOTE: data.NOTE || '',
@@ -500,7 +517,7 @@ function createHoSoRelation(data) {
   Object.assign(rec, stamp);
   hosoRepoAppend(CBV_CONFIG.SHEETS.HO_SO_RELATION, rec);
 
-  hosoAppendLogEntry(ctx, 'LINK_ENTITY', {
+  hosoAppendLogEntry(fromId, 'LINK_ENTITY', {
     NEW_VALUE: fromId + '→' + toId,
     NOTE: rt
   });
@@ -587,7 +604,7 @@ function generateHoSoReport(hoSoId) {
 
   var relations = _rows(_sheet(CBV_CONFIG.SHEETS.HO_SO_RELATION)).filter(function(r) {
     var hid = String(hoSoId);
-    var ok = String(r.HO_SO_ID) === hid || String(r.FROM_HO_SO_ID) === hid || String(r.TO_HO_SO_ID) === hid;
+    var ok = String(r.FROM_HO_SO_ID) === hid || String(r.TO_HO_SO_ID) === hid;
     return ok && !(typeof hosoIsRowDeleted === 'function' && hosoIsRowDeleted(r));
   });
 

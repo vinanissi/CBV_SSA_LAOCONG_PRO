@@ -3,7 +3,7 @@
 ## HO_SO_MASTER
 - HO_SO_TYPE: enum {HTX, XA_VIEN, XE, TAI_XE} (legacy; đồng bộ với loại MASTER)
 - STATUS: enum {NEW, ACTIVE, INACTIVE, ARCHIVED}
-- HTX_ID: ref → HO_SO_MASTER.ID where HO_SO_TYPE=HTX
+- HTX_ID: ref → HO_SO_MASTER.ID (bản ghi có `HO_SO_TYPE` = HTX). Để **trống** nếu chính bản ghi này là loại HTX; bắt buộc có giá trị cho các loại khác (thuộc một HTX).
 - OWNER_ID: user or staff id
 - DON_VI_ID: đơn vị gắn hồ sơ
 - MANAGER_USER_ID: người phụ trách chính (USER_DIRECTORY)
@@ -22,6 +22,6 @@
 - EXPIRY_DATE: ngày hết hạn
 
 ## HO_SO_RELATION
-- HO_SO_ID: ngữ cảnh hồ sơ chính (thường trùng FROM)
+- FROM_HO_SO_ID / TO_HO_SO_ID: hai đầu quan hệ; lọc inline theo `OR` (một trong hai = hồ sơ hiện tại)
 - RELATED_TABLE: tên bảng đích khi ref ngoài
 - RELATED_RECORD_ID: ID bản ghi trong RELATED_TABLE

@@ -28,7 +28,7 @@ POLICY = {
 }
 
 def load_schema():
-    with (PACK_ROOT / "06_DATABASE" / "schema_manifest.json").open(encoding="utf-8") as f:
+    with (PACK_ROOT / "06_DATABASE" / "schema_manifest.json").open(encoding="utf-8-sig") as f:
         return json.load(f)
 
 def default_policy(table: str, col: str) -> tuple:
@@ -47,6 +47,8 @@ def build_full_policy():
     enum_cols = ["ID", "ENUM_GROUP", "ENUM_VALUE", "DISPLAY_TEXT", "SORT_ORDER", "IS_ACTIVE", "NOTE", "CREATED_AT", "CREATED_BY", "UPDATED_AT", "UPDATED_BY"]
     rows = []
     for table, cols in schema.items():
+        if not isinstance(cols, list):
+            continue
         for col in cols:
             key = (table, col)
             if key in POLICY:

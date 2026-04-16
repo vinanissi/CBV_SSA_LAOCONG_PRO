@@ -59,6 +59,29 @@
 
 ---
 
+## addHosoRelation(data)
+
+Wrapper polymorphic (liên kết từ một `HO_SO_MASTER` tới bản ghi ngoài qua `RELATED_TABLE` / `RELATED_RECORD_ID`). Không ghi cột `HO_SO_ID` trên `HO_SO_RELATION` (đã bỏ khỏi schema).
+
+### Input
+
+**Bắt buộc**
+
+- `FROM_HO_SO_ID` — tồn tại trong `HO_SO_MASTER` (đầu “gốc” của quan hệ; trước đây từng truyền qua `HO_SO_ID`)
+- `RELATED_TABLE`, `RELATED_RECORD_ID`
+- `RELATION_TYPE` — enum `HO_SO_RELATION_TYPE`
+
+**Tùy chọn**
+
+- `NOTE`, `START_DATE`, `END_DATE`
+
+### Output
+
+- Bản ghi `HO_SO_RELATION` (có `FROM_HO_SO_ID` / `TO_HO_SO_ID` khi đích là `HO_SO`; không có `HO_SO_ID`)
+- Log `LINK_ENTITY` trên hồ sơ `FROM_HO_SO_ID`
+
+---
+
 ## createHoSoRelation(data)
 
 ### Input
@@ -71,7 +94,6 @@
 **Tùy chọn**
 
 - `STATUS` — mặc định `ACTIVE` (`HO_SO_STATUS`)
-- `HO_SO_ID` — context log (mặc định = `FROM_HO_SO_ID`)
 - `RELATED_TABLE`, `RELATED_RECORD_ID` — polymorphic (optional)
 - `START_DATE`, `END_DATE`, `NOTE`
 

@@ -7,6 +7,12 @@
 - OPERATOR: `OR(ISBLANK([OWNER_ID]), [OWNER_ID] = ANY(SELECT(USER_DIRECTORY[ID], AND([STATUS] = "ACTIVE", LOWER([EMAIL]) = LOWER(USEREMAIL())))))`
 - VIEWER: `TRUE`
 
+**Phạm vi HTX (multi-tenant):** Nếu dùng filter theo tổ chức, ví dụ `[HTX_ID] = [_USERINFO("htx_id")]`, **không** được áp dụng thuần cho bản ghi **gốc HTX** (`HO_SO_TYPE_ID` → `MASTER_CODE.CODE = "HTX"`, `HTX_ID` luôn trống). Dùng dạng:
+
+`OR([HO_SO_TYPE_ID].[CODE] = "HTX", [HTX_ID] = [_USERINFO("htx_id")])`
+
+(kết hợp thêm `USERROLE() = "ADMIN"` hoặc điều kiện org khác nếu cần).
+
 ## TASK_MAIN
 - ADMIN: `TRUE` (override bởi Security Filter bên dưới — ADMIN thấy tất cả)
 - ALL ROLES (single filter):

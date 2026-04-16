@@ -45,6 +45,8 @@
 | USER_DIRECTORY_STATUS | USER_DIRECTORY.STATUS | USER_DIRECTORY_SCHEMA.md |
 | RELATED_ENTITY_TYPE | TASK_MAIN.RELATED_ENTITY_TYPE, FINANCE_TRANSACTION.RELATED_ENTITY_TYPE | SHEET_DICTIONARY |
 
+**Polymorphic `RELATED_ENTITY_TYPE` (runtime chặt):** mã hợp lệ phải trùng **`MASTER_CODE.CODE`** với **`MASTER_GROUP = ENTITY_TYPE`** (ví dụ HO_SO, TASK, DON_VI trong seed `MASTER_CODE`). Khác với các giá trị rộng có thể còn trong `ENUM_DICTIONARY`/`RELATED_ENTITY_TYPE` group lịch sử — GAS dùng `isValidMasterCode('ENTITY_TYPE', …)` (xem `05_GAS_RUNTIME/03_RELATED_ENTITY_HELPER.js`).
+
 ## Minimal Seed Strategy
 - Run seedEnumDictionary() after initAll() or separately
 - Idempotent: inserts only missing (ENUM_GROUP, ENUM_VALUE) rows

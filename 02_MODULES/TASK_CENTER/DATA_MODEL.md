@@ -1,5 +1,7 @@
 # DATA MODEL - TASK_CENTER
 
+**Manifest-aligned field catalog (PRO):** [`../TASK/DATA_MODEL.md`](../TASK/DATA_MODEL.md) — cột đầy đủ theo `schema_manifest.json` (SHARED_WITH, IS_PRIVATE, PENDING_ACTION, TASK_ATTACHMENT mở rộng, …).
+
 **Model:** Task belongs to HTX; users are shared across the system.  
 **Consolidated reference:** 02_MODULES/TASK_CENTER/TASK_SYSTEM_REFERENCE.md
 

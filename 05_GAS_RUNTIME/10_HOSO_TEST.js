@@ -132,7 +132,7 @@ function runHosoTestsImpl(options) {
       return String(r.ID || '').trim() && !hosoIsRowDeleted(r);
     }) : null;
     if (!taskRow) throw new Error('need at least one TASK_MAIN row for relation test');
-    addHosoRelation({ HO_SO_ID: id, RELATED_TABLE: 'TASK', RELATED_RECORD_ID: taskRow.ID, RELATION_TYPE: 'LINK' });
+    addHosoRelation({ FROM_HO_SO_ID: id, TO_HO_SO_ID: id, RELATED_TABLE: 'TASK', RELATED_RECORD_ID: taskRow.ID, RELATION_TYPE: 'LINK' });
     var rels = getHosoRelations(id);
     if (!rels || !rels.length) throw new Error('expected relation row');
     var logs = getHosoLogs(id);

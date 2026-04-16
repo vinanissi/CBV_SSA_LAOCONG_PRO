@@ -89,6 +89,24 @@ function hosoMasterRowIsHtx(row) {
   return mc ? String(mc.CODE || '').trim() === 'HTX' : false;
 }
 
+/**
+ * HTX_ID: blank when type is HTX (root org row); required for any other HO_SO type with a known MASTER_CODE.CODE.
+ * @param {string} hoSoTypeId MASTER_CODE.ID (HO_SO_TYPE)
+ * @param {*} htxId
+ */
+function hosoValidateHtxIdForHoSoType(hoSoTypeId, htxId) {
+  var mc = typeof _findById === 'function' ? _findById(CBV_CONFIG.SHEETS.MASTER_CODE, String(hoSoTypeId || '').trim()) : null;
+  var code = mc ? String(mc.CODE || '').trim() : '';
+  var blank = htxId == null || String(htxId).trim() === '';
+  if (code === 'HTX') {
+    if (!blank) throw new Error('HTX_ID phải trống khi loại hồ sơ là HTX (không self-reference).');
+    return;
+  }
+  if (code !== '' && blank) {
+    throw new Error('HTX_ID bắt buộc với type ' + code);
+  }
+}
+
 function hosoNormalizeIdNo(n) {
   if (n == null) return '';
   return String(n).replace(/\s+/g, '').trim();

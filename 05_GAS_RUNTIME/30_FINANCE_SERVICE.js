@@ -11,7 +11,10 @@ function createTransaction(data) {
   assertValidEnumValue('FINANCE_TYPE', data.TRANS_TYPE, 'TRANS_TYPE');
   assertValidEnumValue('FIN_CATEGORY', data.CATEGORY, 'CATEGORY');
   assertValidEnumValue('PAYMENT_METHOD', data.PAYMENT_METHOD || 'OTHER', 'PAYMENT_METHOD');
-  if (data.RELATED_ENTITY_TYPE != null) assertValidEnumValue('RELATED_ENTITY_TYPE', data.RELATED_ENTITY_TYPE, 'RELATED_ENTITY_TYPE');
+  if (data.RELATED_ENTITY_TYPE != null && String(data.RELATED_ENTITY_TYPE).trim() !== '') {
+    if (typeof assertValidRelatedEntityType === 'function') assertValidRelatedEntityType(data.RELATED_ENTITY_TYPE, 'RELATED_ENTITY_TYPE');
+    else assertValidEnumValue('RELATED_ENTITY_TYPE', data.RELATED_ENTITY_TYPE, 'RELATED_ENTITY_TYPE');
+  }
 
   const record = {
     ID: cbvMakeId('FIN'),
@@ -65,7 +68,10 @@ function updateDraftTransaction(id, patch) {
   if (patch && patch.TRANS_TYPE != null) assertValidEnumValue('FINANCE_TYPE', patch.TRANS_TYPE, 'TRANS_TYPE');
   if (patch && patch.CATEGORY != null) assertValidEnumValue('FIN_CATEGORY', patch.CATEGORY, 'CATEGORY');
   if (patch && patch.PAYMENT_METHOD != null) assertValidEnumValue('PAYMENT_METHOD', patch.PAYMENT_METHOD, 'PAYMENT_METHOD');
-  if (patch && patch.RELATED_ENTITY_TYPE != null) assertValidEnumValue('RELATED_ENTITY_TYPE', patch.RELATED_ENTITY_TYPE, 'RELATED_ENTITY_TYPE');
+  if (patch && patch.RELATED_ENTITY_TYPE != null && String(patch.RELATED_ENTITY_TYPE).trim() !== '') {
+    if (typeof assertValidRelatedEntityType === 'function') assertValidRelatedEntityType(patch.RELATED_ENTITY_TYPE, 'RELATED_ENTITY_TYPE');
+    else assertValidEnumValue('RELATED_ENTITY_TYPE', patch.RELATED_ENTITY_TYPE, 'RELATED_ENTITY_TYPE');
+  }
 
   const beforeObj = cbvClone(current);
   Object.keys(patch || {}).forEach(function(k) {

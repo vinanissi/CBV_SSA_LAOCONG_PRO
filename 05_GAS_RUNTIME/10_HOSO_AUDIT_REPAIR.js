@@ -35,7 +35,8 @@ function auditHosoRefs() {
     { child: 'HO_SO_MASTER', col: 'OWNER_ID', parent: 'USER_DIRECTORY' },
     { child: 'HO_SO_MASTER', col: 'MANAGER_USER_ID', parent: 'USER_DIRECTORY' },
     { child: 'HO_SO_FILE', col: 'HO_SO_ID', parent: 'HO_SO_MASTER' },
-    { child: 'HO_SO_RELATION', col: 'HO_SO_ID', parent: 'HO_SO_MASTER' },
+    { child: 'HO_SO_RELATION', col: 'FROM_HO_SO_ID', parent: 'HO_SO_MASTER' },
+    { child: 'HO_SO_RELATION', col: 'TO_HO_SO_ID', parent: 'HO_SO_MASTER' },
     { child: 'HO_SO_UPDATE_LOG', col: 'HO_SO_ID', parent: 'HO_SO_MASTER' },
     { child: 'HO_SO_UPDATE_LOG', col: 'ACTOR_ID', parent: 'USER_DIRECTORY' }
   ];
@@ -109,18 +110,43 @@ function auditHosoDataQuality() {
     });
   }
 
-  ['HO_SO_FILE', 'HO_SO_RELATION', 'HO_SO_UPDATE_LOG'].forEach(function(tbl) {
-    var ch = _hosoLoaded(tbl);
-    if (!ch || !ch.rowCount) return;
-    ch.rows.forEach(function(r) {
-      var hid = String(r.HO_SO_ID || '').trim();
-      if (!hid) {
-        findings.push({ severity: 'MEDIUM', code: 'ORPHAN_CHILD', table: tbl, row: r._rowNumber, message: 'Missing HO_SO_ID' });
-        return;
-      }
-      if (!masterIds[hid]) findings.push({ severity: 'MEDIUM', code: 'ORPHAN_CHILD', table: tbl, row: r._rowNumber, message: 'HO_SO_ID not in HO_SO_MASTER: ' + hid });
-    });
-  });
+  (function() {
+    var ch = _hosoLoaded('HO_SO_FILE');
+    if (ch && ch.rowCount) {
+      ch.rows.forEach(function(r) {
+        var hid = String(r.HO_SO_ID || '').trim();
+        if (!hid) {
+          findings.push({ severity: 'MEDIUM', code: 'ORPHAN_CHILD', table: 'HO_SO_FILE', row: r._rowNumber, message: 'Missing HO_SO_ID' });
+          return;
+        }
+        if (!masterIds[hid]) findings.push({ severity: 'MEDIUM', code: 'ORPHAN_CHILD', table: 'HO_SO_FILE', row: r._rowNumber, message: 'HO_SO_ID not in HO_SO_MASTER: ' + hid });
+      });
+    }
+    ch = _hosoLoaded('HO_SO_RELATION');
+    if (ch && ch.rowCount) {
+      ch.rows.forEach(function(r) {
+        var f = String(r.FROM_HO_SO_ID || '').trim();
+        var t = String(r.TO_HO_SO_ID || '').trim();
+        if (!f && !t) {
+          findings.push({ severity: 'MEDIUM', code: 'ORPHAN_CHILD', table: 'HO_SO_RELATION', row: r._rowNumber, message: 'Missing FROM_HO_SO_ID and TO_HO_SO_ID' });
+          return;
+        }
+        if (f && !masterIds[f]) findings.push({ severity: 'MEDIUM', code: 'ORPHAN_CHILD', table: 'HO_SO_RELATION', row: r._rowNumber, message: 'FROM_HO_SO_ID not in HO_SO_MASTER: ' + f });
+        if (t && !masterIds[t]) findings.push({ severity: 'MEDIUM', code: 'ORPHAN_CHILD', table: 'HO_SO_RELATION', row: r._rowNumber, message: 'TO_HO_SO_ID not in HO_SO_MASTER: ' + t });
+      });
+    }
+    ch = _hosoLoaded('HO_SO_UPDATE_LOG');
+    if (ch && ch.rowCount) {
+      ch.rows.forEach(function(r) {
+        var hid = String(r.HO_SO_ID || '').trim();
+        if (!hid) {
+          findings.push({ severity: 'MEDIUM', code: 'ORPHAN_CHILD', table: 'HO_SO_UPDATE_LOG', row: r._rowNumber, message: 'Missing HO_SO_ID' });
+          return;
+        }
+        if (!masterIds[hid]) findings.push({ severity: 'MEDIUM', code: 'ORPHAN_CHILD', table: 'HO_SO_UPDATE_LOG', row: r._rowNumber, message: 'HO_SO_ID not in HO_SO_MASTER: ' + hid });
+      });
+    }
+  })();
 
   return { ok: findings.length === 0, findings: findings };
 }

@@ -82,19 +82,27 @@ var CBV_AUDIT_SCHEMA = {
   },
   HO_SO_FILE: {
     requiredColumns: ['ID', 'HO_SO_ID', 'FILE_GROUP'],
-    optionalColumns: ['FILE_NAME', 'FILE_URL', 'DRIVE_FILE_ID', 'STATUS', 'NOTE', 'DOC_TYPE', 'DOC_NO', 'ISSUED_DATE', 'EXPIRY_DATE', 'CREATED_AT', 'CREATED_BY'],
+    optionalColumns: ['LINKED_RELATION_ID', 'FILE_NAME', 'FILE_URL', 'DRIVE_FILE_ID', 'STATUS', 'NOTE', 'DOC_TYPE', 'DOC_NO', 'ISSUED_DATE', 'EXPIRY_DATE', 'CREATED_AT', 'CREATED_BY'],
     key: 'ID',
     auditColumns: ['CREATED_AT', 'CREATED_BY'],
-    refColumns: { HO_SO_ID: 'HO_SO_MASTER' },
+    refColumns: { HO_SO_ID: 'HO_SO_MASTER', LINKED_RELATION_ID: 'HO_SO_RELATION' },
     enumColumns: { FILE_GROUP: 'FILE_GROUP', STATUS: 'HO_SO_STATUS' }
   },
   HO_SO_RELATION: {
     requiredColumns: ['ID', 'FROM_HO_SO_ID', 'TO_HO_SO_ID', 'RELATION_TYPE', 'STATUS'],
-    optionalColumns: ['HO_SO_ID', 'RELATED_TABLE', 'RELATED_RECORD_ID', 'NOTE', 'START_DATE', 'END_DATE', 'CREATED_AT', 'CREATED_BY', 'UPDATED_AT', 'UPDATED_BY', 'IS_DELETED'],
+    optionalColumns: ['RELATED_TABLE', 'RELATED_RECORD_ID', 'NOTE', 'START_DATE', 'END_DATE', 'CREATED_AT', 'CREATED_BY', 'UPDATED_AT', 'UPDATED_BY', 'IS_DELETED'],
     key: 'ID',
     auditColumns: ['CREATED_AT', 'CREATED_BY', 'UPDATED_AT', 'UPDATED_BY'],
-    refColumns: { FROM_HO_SO_ID: 'HO_SO_MASTER', TO_HO_SO_ID: 'HO_SO_MASTER', HO_SO_ID: 'HO_SO_MASTER' },
+    refColumns: { FROM_HO_SO_ID: 'HO_SO_MASTER', TO_HO_SO_ID: 'HO_SO_MASTER' },
     enumColumns: { RELATION_TYPE: 'HO_SO_RELATION_TYPE', STATUS: 'HO_SO_STATUS' }
+  },
+  HO_SO_DETAIL_PHUONG_TIEN: {
+    requiredColumns: ['ID', 'HO_SO_ID', 'HTX_ID', 'PLATE_NO', 'IS_DELETED'],
+    optionalColumns: ['VEHICLE_TYPE_ID', 'VIN', 'CAPACITY_TON', 'NOTE', 'CREATED_AT', 'CREATED_BY', 'UPDATED_AT', 'UPDATED_BY'],
+    key: 'ID',
+    auditColumns: ['CREATED_AT', 'CREATED_BY', 'UPDATED_AT', 'UPDATED_BY'],
+    refColumns: { HO_SO_ID: 'HO_SO_MASTER', HTX_ID: 'HO_SO_MASTER', VEHICLE_TYPE_ID: 'MASTER_CODE' },
+    enumColumns: {}
   },
   HO_SO_UPDATE_LOG: {
     requiredColumns: ['ID', 'HO_SO_ID', 'ACTION_TYPE', 'CREATED_AT'],
@@ -177,7 +185,9 @@ var CBV_AUDIT_REFS = [
   { child: 'TASK_ATTACHMENT', childCol: 'TASK_ID', parent: 'TASK_MAIN', parentKey: 'ID' },
   { child: 'TASK_UPDATE_LOG', childCol: 'TASK_ID', parent: 'TASK_MAIN', parentKey: 'ID' },
   { child: 'HO_SO_FILE', childCol: 'HO_SO_ID', parent: 'HO_SO_MASTER', parentKey: 'ID' },
-  { child: 'HO_SO_RELATION', childCol: 'HO_SO_ID', parent: 'HO_SO_MASTER', parentKey: 'ID' },
+  { child: 'HO_SO_DETAIL_PHUONG_TIEN', childCol: 'HO_SO_ID', parent: 'HO_SO_MASTER', parentKey: 'ID' },
+  { child: 'HO_SO_DETAIL_PHUONG_TIEN', childCol: 'HTX_ID', parent: 'HO_SO_MASTER', parentKey: 'ID' },
+  { child: 'HO_SO_DETAIL_PHUONG_TIEN', childCol: 'VEHICLE_TYPE_ID', parent: 'MASTER_CODE', parentKey: 'ID' },
   { child: 'HO_SO_RELATION', childCol: 'FROM_HO_SO_ID', parent: 'HO_SO_MASTER', parentKey: 'ID' },
   { child: 'HO_SO_RELATION', childCol: 'TO_HO_SO_ID', parent: 'HO_SO_MASTER', parentKey: 'ID' },
   { child: 'HO_SO_UPDATE_LOG', childCol: 'HO_SO_ID', parent: 'HO_SO_MASTER', parentKey: 'ID' },
@@ -187,4 +197,4 @@ var CBV_AUDIT_REFS = [
 ];
 
 /** Tables that use IS_DELETED soft delete */
-var CBV_SOFT_DELETE_TABLES = ['USER_DIRECTORY', 'DON_VI', 'MASTER_CODE', 'HO_SO_MASTER', 'HO_SO_RELATION', 'HO_SO_UPDATE_LOG', 'TASK_MAIN', 'TASK_CHECKLIST', 'TASK_ATTACHMENT', 'TASK_UPDATE_LOG', 'FINANCE_TRANSACTION'];
+var CBV_SOFT_DELETE_TABLES = ['USER_DIRECTORY', 'DON_VI', 'MASTER_CODE', 'HO_SO_MASTER', 'HO_SO_DETAIL_PHUONG_TIEN', 'HO_SO_RELATION', 'HO_SO_UPDATE_LOG', 'TASK_MAIN', 'TASK_CHECKLIST', 'TASK_ATTACHMENT', 'TASK_UPDATE_LOG', 'FINANCE_TRANSACTION'];

@@ -266,7 +266,16 @@ Enum dictionary only.
 
 ---
 
-## 6. Deprecated / Removed (Do Not Reintroduce)
+## 6. Luồng vận hành (HO_SO / HTX)
+
+- **Tạo HTX:** `HO_SO_TYPE_ID` trỏ tới `MASTER_CODE` với `CODE = HTX`. **`HTX_ID` để NULL/blank** (không self-ref tới chính bản ghi; bản ghi này là root hợp tác xã).
+- **Tạo hồ sơ con** (xe, xã viên, hợp đồng, …): `HO_SO_TYPE_ID` khác HTX; **`HTX_ID` bắt buộc** trỏ tới một `HO_SO_MASTER` đã tồn tại có loại HTX.
+
+Chi tiết cột và validation: `02_MODULES/HO_SO/DATA_MODEL.md`, `05_GAS_RUNTIME/10_HOSO_VALIDATION.js` (`hosoValidateHtxIdForHoSoType`).
+
+---
+
+## 7. Deprecated / Removed (Do Not Reintroduce)
 
 See **09_AUDIT/DEPRECATED_OLD_DESIGN_ITEMS.md** for full list. Key removals:
 

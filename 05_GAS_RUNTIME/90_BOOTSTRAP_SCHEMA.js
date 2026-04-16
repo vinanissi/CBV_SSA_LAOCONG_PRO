@@ -55,18 +55,19 @@ const CBV_SCHEMA_MANIFEST = {
     // ── Đúng thứ tự Sheet ───────────────────────────────────────────
     'ID',           // col 1
     'HO_SO_ID',     // col 2
-    'FILE_GROUP',   // col 3
-    'FILE_NAME',    // col 4
-    'FILE_URL',     // col 5
-    'DRIVE_FILE_ID',// col 6
-    'STATUS',       // col 7
-    'NOTE',         // col 8
-    'CREATED_AT',   // col 9  ← Sheet: CREATED_AT trước DOC_TYPE
-    'CREATED_BY',   // col 10
-    'DOC_TYPE',     // col 11
-    'ISSUED_DATE',  // col 12
-    'EXPIRY_DATE',  // col 13
-    'DOC_NO',       // col 14  ← Sheet: DOC_NO ở cuối
+    'LINKED_RELATION_ID', // col 3 — optional → HO_SO_RELATION.ID
+    'FILE_GROUP',   // col 4
+    'FILE_NAME',    // col 5
+    'FILE_URL',     // col 6
+    'DRIVE_FILE_ID',// col 7
+    'STATUS',       // col 8
+    'NOTE',         // col 9
+    'CREATED_AT',   // col 10  ← Sheet: CREATED_AT trước DOC_TYPE
+    'CREATED_BY',   // col 11
+    'DOC_TYPE',     // col 12
+    'ISSUED_DATE',  // col 13
+    'EXPIRY_DATE',  // col 14
+    'DOC_NO',       // col 15  ← Sheet: DOC_NO ở cuối
   ],
  
   HO_SO_RELATION: [
@@ -81,15 +82,30 @@ const CBV_SCHEMA_MANIFEST = {
     'NOTE',             // col 8
     'CREATED_AT',       // col 9
     'CREATED_BY',       // col 10
-    'HO_SO_ID',         // col 11
-    'RELATED_TABLE',    // col 12
-    'RELATED_RECORD_ID',// col 13
-    'UPDATED_AT',       // col 14  ← cols 14-16 chưa có trên Sheet
-    'UPDATED_BY',       // col 15  ← ensureSchemas sẽ thêm
-    'IS_DELETED',       // col 16  ← ensureSchemas sẽ thêm
+    'RELATED_TABLE',    // col 11
+    'RELATED_RECORD_ID',// col 12
+    'UPDATED_AT',       // col 13  ← ensureSchemas sẽ thêm
+    'UPDATED_BY',       // col 14
+    'IS_DELETED',       // col 15
   ],
  
 // ===== HẾT PHẦN DÁN =====
+
+  HO_SO_DETAIL_PHUONG_TIEN: [
+    'ID',
+    'HO_SO_ID',
+    'HTX_ID',
+    'PLATE_NO',
+    'VEHICLE_TYPE_ID',
+    'VIN',
+    'CAPACITY_TON',
+    'NOTE',
+    'CREATED_AT',
+    'CREATED_BY',
+    'UPDATED_AT',
+    'UPDATED_BY',
+    'IS_DELETED'
+  ],
   
   HO_SO_UPDATE_LOG: ['ID', 'HO_SO_ID', 'ACTION_TYPE', 'OLD_STATUS', 'NEW_STATUS', 'FIELD_CHANGED', 'OLD_VALUE', 'NEW_VALUE', 'NOTE', 'ACTOR_ID', 'CREATED_AT', 'CREATED_BY', 'UPDATED_AT', 'UPDATED_BY', 'IS_DELETED'],
   DOC_REQUIREMENT: ['ID', 'HO_SO_TYPE', 'DOC_TYPE', 'IS_REQUIRED', 'VALID_MONTHS', 'DESCRIPTION', 'SORT_ORDER', 'IS_ACTIVE', 'NOTE', 'CREATED_AT', 'CREATED_BY'],

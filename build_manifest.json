@@ -83,6 +83,7 @@
   "06_DATABASE/SCHEMA_SHEETS_LAOCONG_PRO.md",
   "06_DATABASE/_generated_schema/FINANCE_LOG.csv",
   "06_DATABASE/_generated_schema/FINANCE_TRANSACTION.csv",
+  "06_DATABASE/_generated_schema/HO_SO_DETAIL_PHUONG_TIEN.csv",
   "06_DATABASE/_generated_schema/HO_SO_FILE.csv",
   "06_DATABASE/_generated_schema/HO_SO_MASTER.csv",
   "06_DATABASE/_generated_schema/HO_SO_RELATION.csv",

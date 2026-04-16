@@ -11,7 +11,7 @@ Implementation: `05_GAS_RUNTIME/10_HOSO_SERVICE.js` (+ repository / validation /
 | `changeHosoStatus(id, newStatus, note)` | Đổi trạng thái; log `CHANGE_STATUS` |
 | `closeHoso(id, note)` | `STATUS=CLOSED`; log `CLOSE` |
 | `addHosoFile(data)` / `removeHosoFile(fileId, note)` | File; log `ADD_FILE` / `REMOVE_FILE` |
-| `addHosoRelation(data)` / `removeHosoRelation(relationId, note)` | Quan hệ (FROM/TO + polymorphic); log `LINK_ENTITY` / `UNLINK_ENTITY` |
+| `addHosoRelation(data)` / `removeHosoRelation(relationId, note)` | Quan hệ: bắt buộc `FROM_HO_SO_ID` + polymorphic (`RELATED_TABLE` / `RELATED_RECORD_ID`); không cột `HO_SO_ID` trên sheet; log `LINK_ENTITY` / `UNLINK_ENTITY` |
 | `createHoSoRelation(data)` | Tạo quan hệ 2 hồ sơ (FROM→TO) + optional polymorphic; log `RELATION_ADDED` / `LINK_ENTITY` |
 | `softDeleteHoso(id)` | `IS_DELETED`; log `ARCHIVE` |
 | `getHosoById` / `getHosoFiles` / `getHosoRelations` / `getHosoLogs` | Đọc |

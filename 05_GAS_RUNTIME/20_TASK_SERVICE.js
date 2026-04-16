@@ -60,6 +60,22 @@ function _addTaskUpdateLog(taskId, updateType, content, oldStatus, newStatus) {
 }
 
 /**
+ * TASK PRO: SHARED_WITH (comma-separated IDs), IS_PRIVATE, PENDING_ACTION (Bot/AppSheet CMD).
+ * Defaults: empty list, not private, no pending command. Caller may override via data.
+ * @param {Object} data
+ * @returns {{ SHARED_WITH: string, IS_PRIVATE: boolean, PENDING_ACTION: string }}
+ */
+function _taskProFieldsFromCreatePayload(data) {
+  data = data || {};
+  var sw = data.SHARED_WITH != null && String(data.SHARED_WITH).trim() !== ''
+    ? String(data.SHARED_WITH).trim() : '';
+  var priv = data.IS_PRIVATE === true || String(data.IS_PRIVATE || '').toLowerCase() === 'true';
+  var pend = data.PENDING_ACTION != null && String(data.PENDING_ACTION).trim() !== ''
+    ? String(data.PENDING_ACTION).trim() : '';
+  return { SHARED_WITH: sw, IS_PRIVATE: priv, PENDING_ACTION: pend };
+}
+
+/**
  * Create task. DON_VI_ID, OWNER_ID, TITLE, PRIORITY required.
  * @param {Object} data
  * @returns {Object} cbvResponse
@@ -74,9 +90,14 @@ function createTask(data) {
   if (typeof assertActiveDonViId === 'function') assertActiveDonViId(data.DON_VI_ID, 'DON_VI_ID');
   if (data.REPORTER_ID && typeof assertActiveUserId === 'function') assertActiveUserId(data.REPORTER_ID, 'REPORTER_ID');
   assertValidEnumValue('TASK_PRIORITY', data.PRIORITY, 'PRIORITY');
-  if (data.RELATED_ENTITY_TYPE != null) assertValidEnumValue('RELATED_ENTITY_TYPE', data.RELATED_ENTITY_TYPE, 'RELATED_ENTITY_TYPE');
+  if (data.RELATED_ENTITY_TYPE != null && String(data.RELATED_ENTITY_TYPE).trim() !== '') {
+    if (typeof assertValidRelatedEntityType === 'function') assertValidRelatedEntityType(data.RELATED_ENTITY_TYPE, 'RELATED_ENTITY_TYPE');
+    else assertValidEnumValue('RELATED_ENTITY_TYPE', data.RELATED_ENTITY_TYPE, 'RELATED_ENTITY_TYPE');
+  }
   var taskTypeId = (data.TASK_TYPE_ID && String(data.TASK_TYPE_ID).trim()) ? data.TASK_TYPE_ID : '';
   if (taskTypeId && typeof assertActiveTaskTypeId === 'function') assertActiveTaskTypeId(taskTypeId, 'TASK_TYPE_ID');
+
+  var pro = _taskProFieldsFromCreatePayload(data);
 
   var record = {
     ID: cbvMakeId('TASK'),
@@ -89,6 +110,8 @@ function createTask(data) {
     DON_VI_ID: data.DON_VI_ID || '',
     OWNER_ID: data.OWNER_ID,
     REPORTER_ID: data.REPORTER_ID || (typeof mapCurrentUserEmailToInternalId === 'function' ? mapCurrentUserEmailToInternalId() : null) || '',
+    SHARED_WITH: pro.SHARED_WITH,
+    IS_PRIVATE: pro.IS_PRIVATE,
     START_DATE: data.START_DATE || '',
     DUE_DATE: data.DUE_DATE || '',
     DONE_AT: '',
@@ -102,7 +125,8 @@ function createTask(data) {
     UPDATED_BY: cbvUser(),
     IS_STARRED: false,
     IS_PINNED: false,
-    IS_DELETED: false
+    IS_DELETED: false,
+    PENDING_ACTION: pro.PENDING_ACTION
   };
   taskAppendMain(record);
   _addTaskUpdateLog(record.ID, 'NOTE', 'Task created', 'NEW', 'NEW');
@@ -129,12 +153,18 @@ function updateTask(id, patch) {
   });
   if (Object.keys(patch).length === 0) return cbvResponse(true, 'TASK_NO_CHANGE', 'No editable fields', task, []);
 
+  // TODO(phase-FUTURE): if patch touches SHARED_WITH / IS_PRIVATE / PENDING_ACTION, align validation
+  // with 45_SHARED_WITH_SERVICE (shareTaskWith, setTaskPrivate) and pending-feedback rules.
+
   if (patch.DON_VI_ID != null && String(patch.DON_VI_ID).trim() && typeof assertActiveDonViId === 'function') assertActiveDonViId(patch.DON_VI_ID, 'DON_VI_ID');
   if (patch.TASK_TYPE_ID != null && String(patch.TASK_TYPE_ID).trim() && typeof assertActiveTaskTypeId === 'function') assertActiveTaskTypeId(patch.TASK_TYPE_ID, 'TASK_TYPE_ID');
   if (patch.OWNER_ID != null && typeof assertActiveUserId === 'function') assertActiveUserId(patch.OWNER_ID, 'OWNER_ID');
   if (patch.REPORTER_ID != null && patch.REPORTER_ID !== '' && typeof assertActiveUserId === 'function') assertActiveUserId(patch.REPORTER_ID, 'REPORTER_ID');
   if (patch.PRIORITY != null) assertValidEnumValue('TASK_PRIORITY', patch.PRIORITY, 'PRIORITY');
-  if (patch.RELATED_ENTITY_TYPE != null) assertValidEnumValue('RELATED_ENTITY_TYPE', patch.RELATED_ENTITY_TYPE, 'RELATED_ENTITY_TYPE');
+  if (patch.RELATED_ENTITY_TYPE != null && String(patch.RELATED_ENTITY_TYPE).trim() !== '') {
+    if (typeof assertValidRelatedEntityType === 'function') assertValidRelatedEntityType(patch.RELATED_ENTITY_TYPE, 'RELATED_ENTITY_TYPE');
+    else assertValidEnumValue('RELATED_ENTITY_TYPE', patch.RELATED_ENTITY_TYPE, 'RELATED_ENTITY_TYPE');
+  }
 
   patch.UPDATED_AT = cbvNow();
   patch.UPDATED_BY = cbvUser();
@@ -448,4 +478,20 @@ function backfillStarPin() {
     }
   }
   Logger.log('Backfill xong: ' + updates + ' ô đã cập nhật');
+}
+
+/**
+ * Self-test: TASK PRO defaults on create (no sheet I/O). Safe to run in debugger.
+ * @returns {boolean}
+ */
+function taskSelfTestCreateProDefaults() {
+  var p0 = _taskProFieldsFromCreatePayload({});
+  if (p0.SHARED_WITH !== '' || p0.IS_PRIVATE !== false || p0.PENDING_ACTION !== '') {
+    throw new Error('taskSelfTestCreateProDefaults: expected empty SHARED_WITH, IS_PRIVATE false, PENDING_ACTION empty');
+  }
+  var p1 = _taskProFieldsFromCreatePayload({ IS_PRIVATE: true });
+  if (p1.IS_PRIVATE !== true) {
+    throw new Error('taskSelfTestCreateProDefaults: IS_PRIVATE override should be true');
+  }
+  return true;
 }

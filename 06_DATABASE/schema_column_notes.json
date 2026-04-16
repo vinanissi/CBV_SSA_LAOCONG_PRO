@@ -1,0 +1,81 @@
+{
+  "_meta": {
+    "version": 2,
+    "source_runtime": "CBV_CONFIG + 05_GAS_RUNTIME; polymorphic FK docs maintained here (JSON không hỗ trợ // inline trong schema_manifest).",
+    "master_code_enum_gaps": "no outstanding gaps — VEHICLE_TYPE và DON_VI_TYPE đã seed trong 02_SEED/seed_master_code.tsv (2026-04-16)."
+  },
+  "_polymorphic_fk": {
+    "HO_SO_MASTER.RELATED_ENTITY_TYPE": {
+      "type": "enum",
+      "ref": "MASTER_CODE[ENTITY_TYPE]",
+      "whitelist": ["HO_SO", "TASK", "DON_VI"],
+      "paired_column": "HO_SO_MASTER.RELATED_ENTITY_ID",
+      "validated_by": "assertValidRelatedEntityType() in 05_GAS_RUNTIME/03_RELATED_ENTITY_HELPER.js (isValidMasterCode('ENTITY_TYPE', code)); empty/NONE allowed"
+    },
+    "HO_SO_MASTER.RELATED_ENTITY_ID": {
+      "type": "polymorphic_id",
+      "paired_with": "HO_SO_MASTER.RELATED_ENTITY_TYPE",
+      "resolve": "ID row trong bảng map theo type (HO_SO_MASTER | TASK_MAIN | DON_VI); xem getRelatedEntity()",
+      "validated_by": "Không có FK DB cứng; type phải pass assertValidRelatedEntityType trước khi resolve"
+    },
+    "TASK_MAIN.RELATED_ENTITY_TYPE": {
+      "type": "enum",
+      "ref": "MASTER_CODE[ENTITY_TYPE]",
+      "whitelist": ["HO_SO", "TASK", "DON_VI"],
+      "paired_column": "TASK_MAIN.RELATED_ENTITY_ID",
+      "validated_by": "assertValidRelatedEntityType() in 03_RELATED_ENTITY_HELPER.js"
+    },
+    "TASK_MAIN.RELATED_ENTITY_ID": {
+      "type": "polymorphic_id",
+      "paired_with": "TASK_MAIN.RELATED_ENTITY_TYPE"
+    },
+    "FINANCE_TRANSACTION.RELATED_ENTITY_TYPE": {
+      "type": "enum",
+      "ref": "MASTER_CODE[ENTITY_TYPE]",
+      "whitelist": ["HO_SO", "TASK", "DON_VI"],
+      "paired_column": "FINANCE_TRANSACTION.RELATED_ENTITY_ID",
+      "validated_by": "assertValidRelatedEntityType() in 03_RELATED_ENTITY_HELPER.js"
+    },
+    "FINANCE_TRANSACTION.RELATED_ENTITY_ID": {
+      "type": "polymorphic_id",
+      "paired_with": "FINANCE_TRANSACTION.RELATED_ENTITY_TYPE"
+    },
+    "HO_SO_RELATION.RELATED_TABLE": {
+      "type": "table_code",
+      "ref": "logical table name (string), không phải MASTER_CODE",
+      "whitelist": ["TASK", "DON_VI", "FINANCE_TRANSACTION", "USER_DIRECTORY", "HO_SO", "HO_SO_MASTER"],
+      "paired_column": "HO_SO_RELATION.RELATED_RECORD_ID",
+      "validated_by": "hosoValidateRelationTarget() in 10_HOSO_VALIDATION.js via HOSO_RELATION_TABLE_TO_SHEET (10_HOSO_CONSTANTS.js); HO_SO_MASTER alias maps như HO_SO"
+    },
+    "HO_SO_RELATION.RELATED_RECORD_ID": {
+      "type": "polymorphic_id",
+      "paired_with": "HO_SO_RELATION.RELATED_TABLE",
+      "validated_by": "_findById(sheet, id) + not soft-deleted where applicable"
+    },
+    "ADMIN_AUDIT_LOG.ENTITY_TYPE": {
+      "type": "admin_contract",
+      "ref": "không phải MASTER_CODE ENTITY_TYPE",
+      "allowed_values_documented": ["ENUM_DICTIONARY", "MASTER_CODE", "USER_ROLE"],
+      "paired_column": "ADMIN_AUDIT_LOG.ENTITY_ID",
+      "validated_by": "Theo contract 03_ADMIN_AUDIT_SERVICE.js; không dùng assertValidRelatedEntityType"
+    },
+    "ADMIN_AUDIT_LOG.ENTITY_ID": {
+      "type": "polymorphic_id",
+      "paired_with": "ADMIN_AUDIT_LOG.ENTITY_TYPE",
+      "note": "ID dòng trong sheet mục tiêu admin (ENUM_DICTIONARY / MASTER_CODE / role context)"
+    }
+  },
+  "HO_SO_DETAIL_PHUONG_TIEN.VEHICLE_TYPE_ID": {
+    "ref": "MASTER_CODE.ID WHERE MASTER_GROUP = 'VEHICLE_TYPE'",
+    "seeded": true,
+    "master_group": "VEHICLE_TYPE",
+    "seed_file": "02_SEED/seed_master_code.tsv"
+  },
+  "DON_VI.DON_VI_TYPE": {
+    "ref": "MASTER_CODE.CODE WHERE MASTER_GROUP = 'DON_VI_TYPE' (cột lưu CODE; đối chiếu seed)",
+    "seeded": true,
+    "master_group": "DON_VI_TYPE",
+    "seed_file": "02_SEED/seed_master_code.tsv"
+  },
+  "_master_code_enum_gaps": []
+}

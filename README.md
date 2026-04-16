@@ -52,6 +52,13 @@ python 99_TOOLS/generate_sample_data.py "D:/Workspace/projects/CBV_SSA_LAOCONG_P
 python 99_TOOLS/build_manifest.py
 ```
 
+### After schema changes
+
+Sau mỗi lần cập nhật `06_DATABASE/schema_manifest.json` (merge từ GAS bootstrap, thêm cột, v.v.):
+
+1. Regenerate CSV nếu dùng `_generated_schema`: `python 99_TOOLS/export_sheet_schema_csv.py` (xem mục **2) Xuất schema CSV** ở trên).
+2. Chạy checklist AppSheet: [`04_APPSHEET/APPSHEET_READINESS_CHECKLIST.md`](04_APPSHEET/APPSHEET_READINESS_CHECKLIST.md) (**run after every manifest update**).
+
 ## Thứ tự triển khai khuyến nghị
 1. Đọc `00_META/*`
 2. Đọc `03_SHARED/SYSTEM_DATA_FLOW_MASTER.md`

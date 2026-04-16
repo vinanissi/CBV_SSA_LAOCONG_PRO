@@ -269,8 +269,7 @@ function _api_getHoSoRelations_(payload) {
       var del = r.IS_DELETED === true || String(r.IS_DELETED).toLowerCase() === 'true';
       if (del) return false;
       return String(r.FROM_HO_SO_ID || '') === hoSoId ||
-        String(r.TO_HO_SO_ID || '') === hoSoId ||
-        String(r.HO_SO_ID || '') === hoSoId;
+        String(r.TO_HO_SO_ID || '') === hoSoId;
     });
     var out = rels.map(function(r) {
       var o = _hosoStripRowNumber_(r);
