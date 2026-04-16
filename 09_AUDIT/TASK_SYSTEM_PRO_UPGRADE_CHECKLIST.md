@@ -22,7 +22,7 @@
 ## Safe Rollout Order
 
 1. **Backup** — Export Spreadsheet and GAS project.
-2. **GAS deploy** — Push 95_TASK_SYSTEM_BOOTSTRAP.gs, 21_MASTER_DATA_HELPER.gs, updated 20_TASK_*.
+2. **GAS deploy** — Push 95_TASK_SYSTEM_BOOTSTRAP.js, 21_MASTER_DATA_HELPER.js, updated 20_TASK_*.
 3. **Run bootstrap** — `ensureDonViSheet()`, `ensureSeedDonVi()`, `ensureSeedTaskType()`, `ensureTaskMainSchemaPro()`.
 4. **Seed ENUM** — Load `seed_enum_dictionary_task_pro.tsv` if TASK_PRIORITY lacks CAO/TRUNG_BINH/THAP.
 5. **AppSheet** — Add DON_VI, ACTIVE_DON_VI, ACTIVE_TASK_TYPE. Add DON_VI_ID, TASK_TYPE_ID to TASK_MAIN form (optional at first).

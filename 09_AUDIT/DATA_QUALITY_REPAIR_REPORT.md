@@ -50,7 +50,7 @@ After `repairSchemaAndData()`, inspect `manualReview`:
 
 | File | Change |
 |------|--------|
-| 90_BOOTSTRAP_REPAIR.gs | Extended repairUserDirectoryBlanks (rowsFixed, ACCOUNTANT normalize); repairHoSoMasterBlanks (STATUS=ACTIVE/NEW by HO_SO_FILE, rowsFixed); repairHoSoFileBlanks (new); repairFinanceTransactionBlanks (new); repairTaskUpdateLogBlanks (rowsFixed); repairSchemaAndData (hoSoFile, finance, rowsFixed, manualReview, rerunOrder) |
+| 90_BOOTSTRAP_REPAIR.js | Extended repairUserDirectoryBlanks (rowsFixed, ACCOUNTANT normalize); repairHoSoMasterBlanks (STATUS=ACTIVE/NEW by HO_SO_FILE, rowsFixed); repairHoSoFileBlanks (new); repairFinanceTransactionBlanks (new); repairTaskUpdateLogBlanks (rowsFixed); repairSchemaAndData (hoSoFile, finance, rowsFixed, manualReview, rerunOrder) |
 
 ---
 

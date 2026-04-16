@@ -14,7 +14,7 @@ Complete field policy classification for Phase 1 deployment. Use for Show?, Edit
 
 | # | Table | Source |
 |---|-------|--------|
-| 1 | ENUM_DICTIONARY | 01_ENUM_SEED.gs, ENUM_DICTIONARY_SCHEMA.md |
+| 1 | ENUM_DICTIONARY | 01_ENUM_SEED.js, ENUM_DICTIONARY_SCHEMA.md |
 | 2 | MASTER_CODE | schema_manifest.json |
 | 3 | ADMIN_AUDIT_LOG | schema_manifest.json |
 | 4 | HO_SO_MASTER | schema_manifest.json |

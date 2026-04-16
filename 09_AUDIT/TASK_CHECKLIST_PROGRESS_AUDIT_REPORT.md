@@ -26,7 +26,7 @@
 | Check | Result |
 |-------|--------|
 | ensureTaskCanComplete before DONE transition | ✓ setTaskStatus line 122 |
-| Checks all required items done | ✓ 03_SHARED_VALIDATION.gs |
+| Checks all required items done | ✓ 03_SHARED_VALIDATION.js |
 | Blocks with clear message | ✓ "Required checklist items are not completed" |
 
 ---

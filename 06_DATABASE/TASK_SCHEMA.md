@@ -1,7 +1,7 @@
 # TASK Schema — Copy-Paste Ready
 
 **Model:** Task belongs to HTX; users shared across system.  
-**Source:** schema_manifest.json, 90_BOOTSTRAP_SCHEMA.gs  
+**Source:** schema_manifest.json, 90_BOOTSTRAP_SCHEMA.js  
 **Reference:** 02_MODULES/TASK_CENTER/TASK_SYSTEM_REFERENCE.md
 
 ---
@@ -162,7 +162,7 @@ ID, TASK_ID, UPDATE_TYPE, CONTENT, ACTOR_ID, CREATED_AT, CREATED_BY, UPDATED_AT,
 
 ## Next Implementation Step
 
-1. **GAS 20_TASK_SERVICE.gs**
+1. **GAS 20_TASK_SERVICE.js**
    - Replace `RESULT_NOTE` with `RESULT_SUMMARY`.
    - Add `HTX_ID` to `createTask` (required); validate against ACTIVE_HTX.
    - Update `addTaskUpdate` to use `UPDATE_TYPE` and `CONTENT` instead of `ACTION`, `OLD_STATUS`, `NEW_STATUS`, `NOTE`. Map: `ACTION` → `UPDATE_TYPE`; for status changes store old/new in CONTENT or keep UPDATE_TYPE=STATUS_CHANGE with CONTENT as note.

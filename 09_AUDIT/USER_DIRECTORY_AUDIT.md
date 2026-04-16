@@ -2,7 +2,7 @@
 
 ## Audit Function
 
-`auditUserDirectory()` — in 90_BOOTSTRAP_AUDIT.gs. Also invoked from selfAuditBootstrap().
+`auditUserDirectory()` — in 90_BOOTSTRAP_AUDIT.js. Also invoked from selfAuditBootstrap().
 
 ---
 
@@ -29,7 +29,7 @@
 
 ## DISPLAY_NAME Auto-Fill
 
-`ensureDisplayTextForUserDirectoryRows()` — in 40_DISPLAY_MAPPING_SERVICE.gs.
+`ensureDisplayTextForUserDirectoryRows()` — in 40_DISPLAY_MAPPING_SERVICE.js.
 - Fills empty DISPLAY_NAME with FULL_NAME or USER_CODE.
 - Called from initAll() via ensureDisplayTextForUserDirectoryRows.
 

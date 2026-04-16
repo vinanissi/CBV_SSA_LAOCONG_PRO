@@ -9,7 +9,7 @@
 
 **PASS**
 
-All 48 `.gs` files follow `NN_PREFIX_NAME.gs`:
+All 48 `.js` files follow `NN_PREFIX_NAME.js`:
 - 00_* (3): CONFIG, CONSTANTS, UTILS
 - 01_* (6): ENUM_CONFIG, REPOSITORY, SYNC_SERVICE, SERVICE, SEED, AUDIT, ADMIN_SERVICE
 - 02_* (4): MASTER_CODE_SERVICE, MASTER_CODE_ADMIN_SERVICE, USER_SERVICE, USER_VALIDATION
@@ -44,21 +44,21 @@ All 48 `.gs` files follow `NN_PREFIX_NAME.gs`:
 | 09_AUDIT/TASK_GAS_RUNTIME_AUDIT.md | "task_validation loads after task_service" | → "20_TASK_VALIDATION loads after 20_TASK_SERVICE" |
 | 09_AUDIT/TASK_GAS_RUNTIME_AUDIT.md | "task_validation, task_service, task_bootstrap, task_test" in checklist | → "20_TASK_VALIDATION, 20_TASK_SERVICE, 90_BOOTSTRAP_TASK, 99_DEBUG_TASK_TEST" |
 | 02_MODULES/TASK_CENTER/TASK_SYSTEM_REFERENCE.md | "user_migration_helper" | → "03_USER_MIGRATION_HELPER" |
-| 03_SHARED/USER_RUNTIME_STANDARD.md | "02_USER_SEED.gs" | → "90_BOOTSTRAP_USER_SEED.gs" |
+| 03_SHARED/USER_RUNTIME_STANDARD.md | "02_USER_SEED.js" | → "90_BOOTSTRAP_USER_SEED.js" |
 | 03_SHARED/USER_RUNTIME_STANDARD.md | "02_USER_SEED: ..." deps | → "90_BOOTSTRAP_USER_SEED: ..." |
 
 **Intentional "before" references:** GAS_FILE_LOAD_ORDER_AUDIT.md and GAS_REFACTOR_PLAN.md keep old names in rename/mapping tables. Correct.
 
 ---
 
-## 4. Was 30_FINANCE_SERVICE fixed to 30_FINANCE_SERVICE.gs?
+## 4. Was 30_FINANCE_SERVICE fixed to 30_FINANCE_SERVICE.js?
 
 **PASS** (N/A — no issue existed)
 
-- File on disk: `30_FINANCE_SERVICE.gs` ✓
-- .clasp.json: `"30_FINANCE_SERVICE.gs"` ✓
-- build_manifest.json: `"05_GAS_RUNTIME/30_FINANCE_SERVICE.gs"` ✓
-- No references omit `.gs`. Original requirement likely referred to a different or hypothetical case.
+- File on disk: `30_FINANCE_SERVICE.js` ✓
+- .clasp.json: `"30_FINANCE_SERVICE.js"` ✓
+- build_manifest.json: `"05_GAS_RUNTIME/30_FINANCE_SERVICE.js"` ✓
+- No references omit `.js`. Original requirement likely referred to a different or hypothetical case.
 
 ---
 
@@ -67,11 +67,11 @@ All 48 `.gs` files follow `NN_PREFIX_NAME.gs`:
 **PASS**
 
 Checked top-level `var` initialization:
-- 01_ENUM_CONFIG.gs: `ENUM_CONFIG` — object literal, no cross-file refs
-- 20_TASK_VALIDATION.gs: `TASK_VALID_TRANSITIONS`, `TASK_UPDATE_TYPES` — plain objects
-- 20_TASK_MIGRATION_HELPER.gs: `TASK_MIGRATION_COLUMN_ALIASES`, `TASK_STATUS_MAPPING` — plain objects
-- 03_USER_MIGRATION_HELPER.gs: `USER_MIGRATION_FIELDS`, `HO_SO_PREFIXES` — plain arrays/objects
-- 90_BOOTSTRAP_USER_SEED.gs: `USER_SEED_SAMPLE_PREFIX` — plain string
+- 01_ENUM_CONFIG.js: `ENUM_CONFIG` — object literal, no cross-file refs
+- 20_TASK_VALIDATION.js: `TASK_VALID_TRANSITIONS`, `TASK_UPDATE_TYPES` — plain objects
+- 20_TASK_MIGRATION_HELPER.js: `TASK_MIGRATION_COLUMN_ALIASES`, `TASK_STATUS_MAPPING` — plain objects
+- 03_USER_MIGRATION_HELPER.js: `USER_MIGRATION_FIELDS`, `HO_SO_PREFIXES` — plain arrays/objects
+- 90_BOOTSTRAP_USER_SEED.js: `USER_SEED_SAMPLE_PREFIX` — plain string
 
 No cross-file references at parse/init time. Lazy/function-based refactor not needed.
 
@@ -105,12 +105,12 @@ Trace of dependencies:
 **PASS**
 
 All debug/test files use `99_DEBUG_*`:
-- 99_DEBUG_TEST_HOSO.gs
-- 99_DEBUG_TASK_TEST.gs
-- 99_DEBUG_TEST_TASK.gs
-- 99_DEBUG_TEST_FINANCE.gs
-- 99_DEBUG_TEST_RUNNER.gs
-- 99_DEBUG_SAMPLE_DATA.gs
+- 99_DEBUG_TEST_HOSO.js
+- 99_DEBUG_TASK_TEST.js
+- 99_DEBUG_TEST_TASK.js
+- 99_DEBUG_TEST_FINANCE.js
+- 99_DEBUG_TEST_RUNNER.js
+- 99_DEBUG_SAMPLE_DATA.js
 
 ---
 
@@ -143,7 +143,7 @@ All debug/test files use `99_DEBUG_*`:
 | 1 | Numbered naming convention | PASS |
 | 2 | Naming vs dependency DAG | PASS |
 | 3 | References updated | PASS |
-| 4 | 30_FINANCE_SERVICE.gs | PASS (N/A) |
+| 4 | 30_FINANCE_SERVICE.js | PASS (N/A) |
 | 5 | Top-level load-order risks | PASS |
 | 6 | Backward references | PASS |
 | 7 | Bootstrap separation | PASS |
@@ -157,7 +157,7 @@ All debug/test files use `99_DEBUG_*`:
 
 1. 09_AUDIT/TASK_GAS_RUNTIME_AUDIT.md — updated stale file names in note and checklist.
 2. 02_MODULES/TASK_CENTER/TASK_SYSTEM_REFERENCE.md — `user_migration_helper` → `03_USER_MIGRATION_HELPER`.
-3. 03_SHARED/USER_RUNTIME_STANDARD.md — `02_USER_SEED.gs` → `90_BOOTSTRAP_USER_SEED.gs` and deps.
+3. 03_SHARED/USER_RUNTIME_STANDARD.md — `02_USER_SEED.js` → `90_BOOTSTRAP_USER_SEED.js` and deps.
 
 ---
 

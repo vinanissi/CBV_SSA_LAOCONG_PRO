@@ -74,14 +74,14 @@
 ├── TEST_EXPECTED_RESULTS.md
 ├── test_seed_data.tsv              # Good baseline
 ├── test_corrupted_seed_samples.tsv # Intentionally broken rows
-├── task_system_assertions.gs       # assertEquals, assertRefExists, etc.
-├── task_system_mock_data.gs        # Fixtures (good + broken)
-├── task_system_test_runner.gs      # runAllSystemTests, category runners
+├── task_system_assertions.js       # assertEquals, assertRefExists, etc.
+├── task_system_mock_data.js        # Fixtures (good + broken)
+├── task_system_test_runner.js      # runAllSystemTests, category runners
 └── task_system_regression_report_template.md
 05_GAS_RUNTIME/                     # Deployed to Apps Script
-├── 97_TASK_SYSTEM_TEST_ASSERTIONS.gs
-├── 97_TASK_SYSTEM_TEST_MOCK.gs
-└── 97_TASK_SYSTEM_TEST_RUNNER.gs   # runAllSystemTests, runTaskSystemTests
+├── 97_TASK_SYSTEM_TEST_ASSERTIONS.js
+├── 97_TASK_SYSTEM_TEST_MOCK.js
+└── 97_TASK_SYSTEM_TEST_RUNNER.js   # runAllSystemTests, runTaskSystemTests
 09_AUDIT/
 └── SYSTEM_HEALTH_TEST_CHECKLIST.md
 ```

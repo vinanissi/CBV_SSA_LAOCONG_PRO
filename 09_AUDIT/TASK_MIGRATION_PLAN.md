@@ -2,7 +2,7 @@
 
 **Purpose:** Safe migration from old single-sheet BangCongViec-style task table to normalized TASK_MAIN, TASK_CHECKLIST, TASK_ATTACHMENT, TASK_UPDATE_LOG.
 
-**Related:** 06_DATABASE/TASK_SCHEMA.md, 05_GAS_RUNTIME/20_TASK_MIGRATION_HELPER.gs, 05_GAS_RUNTIME/03_USER_MIGRATION_HELPER.gs, 09_AUDIT/USER_MIGRATION_PLAN.md
+**Related:** 06_DATABASE/TASK_SCHEMA.md, 05_GAS_RUNTIME/20_TASK_MIGRATION_HELPER.js, 05_GAS_RUNTIME/03_USER_MIGRATION_HELPER.js, 09_AUDIT/USER_MIGRATION_PLAN.md
 
 ---
 
@@ -177,7 +177,7 @@ Old sheet may use different header names. Helper should accept aliases:
 | `buildTaskMigrationReport(opts)` | Build per-row mapping report. No writes. Use `dryRun: true` by default. |
 | `runTaskMigration(opts)` | Execute migration. Requires `dryRun: false`, `defaultHtxId`. |
 
-**User resolution:** Uses `resolveValueToUserDirectoryId` from `03_USER_MIGRATION_HELPER.gs`. Pass `userOverrides` to force mapping, e.g. `{ "email@old.com": "UD_xxx", "Tên người": "UD_yyy" }`.
+**User resolution:** Uses `resolveValueToUserDirectoryId` from `03_USER_MIGRATION_HELPER.js`. Pass `userOverrides` to force mapping, e.g. `{ "email@old.com": "UD_xxx", "Tên người": "UD_yyy" }`.
 
 ---
 

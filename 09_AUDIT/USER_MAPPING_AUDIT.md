@@ -37,10 +37,10 @@
 
 | File | Function | Change |
 |------|----------|--------|
-| 20_TASK_SERVICE.gs | addTaskUpdate | ACTOR_ID = mapCurrentUserEmailToInternalId() \|\| cbvUser() |
-| 30_FINANCE_SERVICE.gs | logFinance | ACTOR_ID = mapCurrentUserEmailToInternalId() \|\| cbvUser() |
-| 03_SHARED_LOGGER.gs | logAdminAudit | ACTOR_ID = mapCurrentUserEmailToInternalId() \|\| cbvUser() |
-| 03_SHARED_LOGGER.gs | logAction | ACTOR_ID = mapCurrentUserEmailToInternalId() \|\| cbvUser() |
+| 20_TASK_SERVICE.js | addTaskUpdate | ACTOR_ID = mapCurrentUserEmailToInternalId() \|\| cbvUser() |
+| 30_FINANCE_SERVICE.js | logFinance | ACTOR_ID = mapCurrentUserEmailToInternalId() \|\| cbvUser() |
+| 03_SHARED_LOGGER.js | logAdminAudit | ACTOR_ID = mapCurrentUserEmailToInternalId() \|\| cbvUser() |
+| 03_SHARED_LOGGER.js | logAction | ACTOR_ID = mapCurrentUserEmailToInternalId() \|\| cbvUser() |
 
 ---
 

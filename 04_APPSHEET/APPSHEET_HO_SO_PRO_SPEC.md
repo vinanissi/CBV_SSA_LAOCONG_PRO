@@ -75,4 +75,4 @@ HO_SO_UPDATE_LOG_Active: IS_DELETED = FALSE
 
 ---
 
-*Bản spec này align với `05_GAS_RUNTIME/10_HOSO_*.gs` và `02_MODULES/HO_SO/HO_SO_MODULE_PRO.md`.*
+*Bản spec này align với `05_GAS_RUNTIME/10_HOSO_*.js` và `02_MODULES/HO_SO/HO_SO_MODULE_PRO.md`.*

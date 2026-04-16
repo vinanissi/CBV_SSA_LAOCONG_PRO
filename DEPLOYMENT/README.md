@@ -20,11 +20,11 @@ One-click deployment for the CBV system. Idempotent, safe, production-ready.
 
 | File | Purpose |
 |------|---------|
-| `98_deployment_bootstrap.gs` | `runFullDeployment()` orchestrator |
-| `98_schema_manager.gs` | `ensureAllSchemas()` — sheets + columns |
-| `98_seed_manager.gs` | `seedAllData()` — DON_VI, ENUM, MASTER_CODE |
-| `98_validation_engine.gs` | `validateAllEnums()`, `validateAllRefs()`, `validateDonViHierarchy()` |
-| `98_audit_logger.gs` | `generateDeploymentReport()` — writes to ADMIN_AUDIT_LOG |
+| `98_deployment_bootstrap.js` | `runFullDeployment()` orchestrator |
+| `98_schema_manager.js` | `ensureAllSchemas()` — sheets + columns |
+| `98_seed_manager.js` | `seedAllData()` — DON_VI, ENUM, MASTER_CODE |
+| `98_validation_engine.js` | `validateAllEnums()`, `validateAllRefs()`, `validateDonViHierarchy()` |
+| `98_audit_logger.js` | `generateDeploymentReport()` — writes to ADMIN_AUDIT_LOG |
 
 ## Flow
 

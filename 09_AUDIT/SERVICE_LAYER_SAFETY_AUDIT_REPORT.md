@@ -11,7 +11,7 @@
 
 | Issue | Location | Risk |
 |-------|----------|------|
-| updateHoSo allows patch.STATUS | 10_HOSO_SERVICE.gs | Caller can set STATUS directly (e.g. NEW→ARCHIVED) bypassing setHoSoStatus workflow |
+| updateHoSo allows patch.STATUS | 10_HOSO_SERVICE.js | Caller can set STATUS directly (e.g. NEW→ARCHIVED) bypassing setHoSoStatus workflow |
 | 40_DISPLAY_MAPPING_SERVICE direct setValue | ensureDisplayTextForEnumRows, ensureDisplayTextForMasterCodeRows | Bypasses ENUM_ADMIN, MASTER_CODE_ADMIN; batch fill-only, lower risk |
 
 **TASK, FINANCE:** All writes via service; no STATUS patch bypass.
@@ -24,8 +24,8 @@
 
 | Issue | Location | Fix |
 |-------|----------|-----|
-| updateHoSo validates STATUS as enum but not as transition | 10_HOSO_SERVICE.gs | Block STATUS in patch; require setHoSoStatus for status changes |
-| updateDraftTransaction allows AMOUNT patch without ensurePositiveNumber | 30_FINANCE_SERVICE.gs | If patch.AMOUNT present, ensurePositiveNumber |
+| updateHoSo validates STATUS as enum but not as transition | 10_HOSO_SERVICE.js | Block STATUS in patch; require setHoSoStatus for status changes |
+| updateDraftTransaction allows AMOUNT patch without ensurePositiveNumber | 30_FINANCE_SERVICE.js | If patch.AMOUNT present, ensurePositiveNumber |
 
 **TASK:** ✓ All functions validated.
 

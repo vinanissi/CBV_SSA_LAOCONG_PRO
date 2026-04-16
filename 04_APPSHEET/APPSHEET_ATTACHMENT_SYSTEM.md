@@ -71,9 +71,9 @@ When IsPartOf is enabled and the attachment table is shown as inline child of pa
 
 | Function | File | Use |
 |----------|------|-----|
-| attachHoSoFile(hoSoId, fileMeta) | 10_HOSO_SERVICE.gs | Create HO_SO_FILE row |
-| createTaskAttachment(data) | 20_TASK_SERVICE.gs | Create TASK_ATTACHMENT row |
-| createFinanceAttachment(data) | 30_FINANCE_SERVICE.gs | Create FINANCE_ATTACHMENT row |
+| attachHoSoFile(hoSoId, fileMeta) | 10_HOSO_SERVICE.js | Create HO_SO_FILE row |
+| createTaskAttachment(data) | 20_TASK_SERVICE.js | Create TASK_ATTACHMENT row |
+| createFinanceAttachment(data) | 30_FINANCE_SERVICE.js | Create FINANCE_ATTACHMENT row |
 
 **AppSheet flow:** Option A: Direct add to Sheet (AppSheet handles). Option B: Form action that calls GAS with file data. Phase 1: prefer direct add; GAS validates when used.
 

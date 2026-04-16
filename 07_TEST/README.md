@@ -17,16 +17,16 @@ Validation and regression tests for the CBV Google Sheets + AppSheet + GAS archi
 | TEST_EXPECTED_RESULTS.md | Expected pass/fail reference |
 | test_seed_data.tsv | Good baseline (for manual validation) |
 | test_corrupted_seed_samples.tsv | Corrupted samples |
-| task_system_assertions.gs | Assertion helpers |
-| task_system_mock_data.gs | Mock fixtures (good + bad) |
-| task_system_test_runner.gs | Full runner (07_TEST source) |
+| task_system_assertions.js | Assertion helpers |
+| task_system_mock_data.js | Mock fixtures (good + bad) |
+| task_system_test_runner.js | Full runner (07_TEST source) |
 | task_system_regression_report_template.md | Report template |
 
 ## Deployed GAS (05_GAS_RUNTIME)
 
-- `97_TASK_SYSTEM_TEST_ASSERTIONS.gs`
-- `97_TASK_SYSTEM_TEST_MOCK.gs`
-- `97_TASK_SYSTEM_TEST_RUNNER.gs` — contains `runAllSystemTests()`, `runTaskSystemTests()`
+- `97_TASK_SYSTEM_TEST_ASSERTIONS.js`
+- `97_TASK_SYSTEM_TEST_MOCK.js`
+- `97_TASK_SYSTEM_TEST_RUNNER.js` — contains `runAllSystemTests()`, `runTaskSystemTests()`
 
 ## Deployment Checklist
 

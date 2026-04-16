@@ -2,7 +2,7 @@
 
 **Audit date:** 2025-03-18  
 **Scope:** 04_APPSHEET/APPSHEET_FIELD_POLICY_MAP.md  
-**Reference:** schema_manifest.json, 01_ENUM_SEED.gs, APPSHEET_PHASE1_CONFIG.md, APPSHEET_ENUM_BINDING.md
+**Reference:** schema_manifest.json, 01_ENUM_SEED.js, APPSHEET_PHASE1_CONFIG.md, APPSHEET_ENUM_BINDING.md
 
 ---
 
@@ -144,7 +144,7 @@ No business-critical field incorrectly hidden.
 
 ### Verdict: **PASS**
 
-All columns in policy map match schema_manifest.json and ENUM_DICTIONARY_HEADERS from 01_ENUM_SEED.gs. No invented fields.
+All columns in policy map match schema_manifest.json and ENUM_DICTIONARY_HEADERS from 01_ENUM_SEED.js. No invented fields.
 
 ---
 

@@ -10,8 +10,8 @@ alwaysApply: true
 ## Gói tính năng (tham chiếu)
 
 - **Tag Git:** `v2.2.4` trở đi (feat: SHARED_WITH + IS_PRIVATE — service, schema, audit, AppSheet docs).
-- **Schema (`90_BOOTSTRAP_SCHEMA.gs` — `CBV_SCHEMA_MANIFEST.TASK_MAIN`):** có **`SHARED_WITH`** (list ID, comma-separated) và **`IS_PRIVATE`** (Yes/No, default logic nghiệp vụ false/blank) đúng thứ tự manifest; đồng bộ **`90_BOOTSTRAP_AUDIT_SCHEMA.gs`** (`optionalColumns`).
-- **GAS:** `05_GAS_RUNTIME/45_SHARED_WITH_SERVICE.gs` — thêm cột, `canUserSeeTask`, `shareTaskWith` / `unshareTaskWith`, `setTaskPrivate`, audit helpers.
+- **Schema (`90_BOOTSTRAP_SCHEMA.js` — `CBV_SCHEMA_MANIFEST.TASK_MAIN`):** có **`SHARED_WITH`** (list ID, comma-separated) và **`IS_PRIVATE`** (Yes/No, default logic nghiệp vụ false/blank) đúng thứ tự manifest; đồng bộ **`90_BOOTSTRAP_AUDIT_SCHEMA.js`** (`optionalColumns`).
+- **GAS:** `05_GAS_RUNTIME/45_SHARED_WITH_SERVICE.js` — thêm cột, `canUserSeeTask`, `shareTaskWith` / `unshareTaskWith`, `setTaskPrivate`, audit helpers.
 - **Hiển thị (AppSheet):** Security Filter row-level dùng **`ANY(SELECT(...))`** (không `FIRST` trong ngữ cảnh filter/security), **`CONTAINS([SHARED_WITH], ...)`** cho list — xem `04_APPSHEET/APPSHEET_SECURITY_FILTERS.md`, `APPSHEET_SLICE_MAP.md` (TASK_MY_OPEN, TASK_MY_TASKS), `TASK_MAIN_PRO_SPEC.md` (Visibility & Privacy).
 
 ## Logic visibility (tóm tắt)

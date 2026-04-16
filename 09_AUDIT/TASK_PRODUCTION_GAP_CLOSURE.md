@@ -31,8 +31,8 @@
 
 | Action | File | Change |
 |--------|------|--------|
-| New GAS file | 05_GAS_RUNTIME/90_BOOTSTRAP_PROTECTION.gs | protectSensitiveSheets() — protects TASK_CHECKLIST, TASK_UPDATE_LOG, ENUM_DICTIONARY, MASTER_CODE |
-| Menu | 90_BOOTSTRAP_MENU.gs | Added "Protect Sensitive Sheets" → protectSensitiveSheets |
+| New GAS file | 05_GAS_RUNTIME/90_BOOTSTRAP_PROTECTION.js | protectSensitiveSheets() — protects TASK_CHECKLIST, TASK_UPDATE_LOG, ENUM_DICTIONARY, MASTER_CODE |
+| Menu | 90_BOOTSTRAP_MENU.js | Added "Protect Sensitive Sheets" → protectSensitiveSheets |
 | Deploy checklist | DEPLOY_CHECKLIST_LAOCONG_PRO.md | Added: run protectSensitiveSheets() after initAll() |
 
 **Sheets protected:** TASK_CHECKLIST, TASK_UPDATE_LOG, ENUM_DICTIONARY, MASTER_CODE

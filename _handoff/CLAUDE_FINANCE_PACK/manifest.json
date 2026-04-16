@@ -35,10 +35,10 @@
     { "tier": 4, "source": "02_MODULES/TASK_CENTER/APPSHEET_UX_SPEC.md", "dest": "tier4_reference_task_center/02_MODULES/TASK_CENTER/APPSHEET_UX_SPEC.md" },
     { "tier": 4, "source": "02_MODULES/TASK_CENTER/SHEET_DICTIONARY.md", "dest": "tier4_reference_task_center/02_MODULES/TASK_CENTER/SHEET_DICTIONARY.md" },
 
-    { "tier": 5, "source": "05_GAS_RUNTIME/30_FINANCE_SERVICE.gs", "dest": "tier5_gas_runtime/05_GAS_RUNTIME/30_FINANCE_SERVICE.gs" },
-    { "tier": 5, "source": "05_GAS_RUNTIME/99_DEBUG_TEST_FINANCE.gs", "dest": "tier5_gas_runtime/05_GAS_RUNTIME/99_DEBUG_TEST_FINANCE.gs" },
-    { "tier": 5, "source": "05_GAS_RUNTIME/00_CORE_CONFIG.gs", "dest": "tier5_gas_runtime/05_GAS_RUNTIME/00_CORE_CONFIG.gs" },
-    { "tier": 5, "source": "05_GAS_RUNTIME/90_BOOTSTRAP_SCHEMA.gs", "dest": "tier5_gas_runtime/05_GAS_RUNTIME/90_BOOTSTRAP_SCHEMA.gs" },
+    { "tier": 5, "source": "05_GAS_RUNTIME/30_FINANCE_SERVICE.js", "dest": "tier5_gas_runtime/05_GAS_RUNTIME/30_FINANCE_SERVICE.js" },
+    { "tier": 5, "source": "05_GAS_RUNTIME/99_DEBUG_TEST_FINANCE.js", "dest": "tier5_gas_runtime/05_GAS_RUNTIME/99_DEBUG_TEST_FINANCE.js" },
+    { "tier": 5, "source": "05_GAS_RUNTIME/00_CORE_CONFIG.js", "dest": "tier5_gas_runtime/05_GAS_RUNTIME/00_CORE_CONFIG.js" },
+    { "tier": 5, "source": "05_GAS_RUNTIME/90_BOOTSTRAP_SCHEMA.js", "dest": "tier5_gas_runtime/05_GAS_RUNTIME/90_BOOTSTRAP_SCHEMA.js" },
 
     { "tier": 6, "source": "04_APPSHEET/00_MASTER/APPSHEET_MASTER_REFERENCE.md", "dest": "tier6_appsheet/04_APPSHEET/00_MASTER/APPSHEET_MASTER_REFERENCE.md" },
     { "tier": 6, "source": "04_APPSHEET/APPSHEET_FIELD_POLICY_MAP.md", "dest": "tier6_appsheet/04_APPSHEET/APPSHEET_FIELD_POLICY_MAP.md" },

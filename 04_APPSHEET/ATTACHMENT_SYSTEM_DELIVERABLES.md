@@ -17,14 +17,14 @@
 | File | Change |
 |------|--------|
 | 06_DATABASE/schema_manifest.json | TASK_ATTACHMENT +ATTACHMENT_TYPE, TITLE; +FINANCE_ATTACHMENT |
-| 05_GAS_RUNTIME/90_BOOTSTRAP_SCHEMA.gs | Same |
-| 05_GAS_RUNTIME/00_CORE_CONFIG.gs | +FINANCE_ATTACHMENT sheet |
-| 05_GAS_RUNTIME/01_ENUM_SEED.gs | +TASK_ATTACHMENT_TYPE, FINANCE_ATTACHMENT_TYPE |
-| 05_GAS_RUNTIME/20_TASK_SERVICE.gs | +createTaskAttachment() |
-| 05_GAS_RUNTIME/30_FINANCE_SERVICE.gs | +createFinanceAttachment() |
-| 05_GAS_RUNTIME/03_SHARED_FILE_HELPER.gs | New: path helpers |
-| 05_GAS_RUNTIME/50_APPSHEET_VERIFY.gs | +FINANCE_ATTACHMENT, TASK_ATTACHMENT refs |
-| .clasp.json | +03_SHARED_FILE_HELPER.gs |
+| 05_GAS_RUNTIME/90_BOOTSTRAP_SCHEMA.js | Same |
+| 05_GAS_RUNTIME/00_CORE_CONFIG.js | +FINANCE_ATTACHMENT sheet |
+| 05_GAS_RUNTIME/01_ENUM_SEED.js | +TASK_ATTACHMENT_TYPE, FINANCE_ATTACHMENT_TYPE |
+| 05_GAS_RUNTIME/20_TASK_SERVICE.js | +createTaskAttachment() |
+| 05_GAS_RUNTIME/30_FINANCE_SERVICE.js | +createFinanceAttachment() |
+| 05_GAS_RUNTIME/03_SHARED_FILE_HELPER.js | New: path helpers |
+| 05_GAS_RUNTIME/50_APPSHEET_VERIFY.js | +FINANCE_ATTACHMENT, TASK_ATTACHMENT refs |
+| .clasp.json | +03_SHARED_FILE_HELPER.js |
 | 04_APPSHEET/APPSHEET_ATTACHMENT_SYSTEM.md | New |
 | 04_APPSHEET/APPSHEET_ATTACHMENT_POLICY.md | New |
 | 04_APPSHEET/APPSHEET_FIELD_POLICY_MAP.md | TASK_ATTACHMENT, +FINANCE_ATTACHMENT |
@@ -92,12 +92,12 @@ ID, FINANCE_ID, ATTACHMENT_TYPE, TITLE, FILE_NAME, FILE_URL, DRIVE_FILE_ID, NOTE
 
 | Function | File |
 |----------|------|
-| attachHoSoFile(hoSoId, fileMeta) | 10_HOSO_SERVICE.gs |
-| createTaskAttachment(data) | 20_TASK_SERVICE.gs |
-| createFinanceAttachment(data) | 30_FINANCE_SERVICE.gs |
-| buildHoSoStoragePath(hoSoType, hoSoId) | 03_SHARED_FILE_HELPER.gs |
-| buildTaskStoragePath(taskId) | 03_SHARED_FILE_HELPER.gs |
-| buildFinanceStoragePath(financeId) | 03_SHARED_FILE_HELPER.gs |
+| attachHoSoFile(hoSoId, fileMeta) | 10_HOSO_SERVICE.js |
+| createTaskAttachment(data) | 20_TASK_SERVICE.js |
+| createFinanceAttachment(data) | 30_FINANCE_SERVICE.js |
+| buildHoSoStoragePath(hoSoType, hoSoId) | 03_SHARED_FILE_HELPER.js |
+| buildTaskStoragePath(taskId) | 03_SHARED_FILE_HELPER.js |
+| buildFinanceStoragePath(financeId) | 03_SHARED_FILE_HELPER.js |
 
 ---
 

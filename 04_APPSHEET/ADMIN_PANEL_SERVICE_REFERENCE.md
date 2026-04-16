@@ -4,13 +4,13 @@
 
 | File | Purpose |
 |------|---------|
-| 01_ENUM_ADMIN_SERVICE.gs | ENUM_DICTIONARY admin CRUD |
-| 02_MASTER_CODE_ADMIN_SERVICE.gs | MASTER_CODE admin CRUD |
-| 03_ADMIN_AUDIT_SERVICE.gs | logAdminAction alias, contract docs |
+| 01_ENUM_ADMIN_SERVICE.js | ENUM_DICTIONARY admin CRUD |
+| 02_MASTER_CODE_ADMIN_SERVICE.js | MASTER_CODE admin CRUD |
+| 03_ADMIN_AUDIT_SERVICE.js | logAdminAction alias, contract docs |
 
 ## Public Admin Functions
 
-### Enum (01_ENUM_ADMIN_SERVICE.gs)
+### Enum (01_ENUM_ADMIN_SERVICE.js)
 
 | Function | Description |
 |----------|-------------|
@@ -18,7 +18,7 @@
 | adminUpdateEnumRow(id, patch) | Update DISPLAY_TEXT, SORT_ORDER, NOTE |
 | adminSetEnumActive(id, isActive) | Set IS_ACTIVE true/false |
 
-### Master Code (02_MASTER_CODE_ADMIN_SERVICE.gs)
+### Master Code (02_MASTER_CODE_ADMIN_SERVICE.js)
 
 | Function | Description |
 |----------|-------------|
@@ -26,7 +26,7 @@
 | adminUpdateMasterCodeRow(id, patch) | Update NAME, DISPLAY_TEXT, SHORT_NAME, NOTE, SORT_ORDER (only when ALLOW_EDIT=TRUE, !IS_SYSTEM) |
 | adminSetMasterCodeStatus(id, status) | Set STATUS: ACTIVE, INACTIVE, ARCHIVED |
 
-### Audit (03_SHARED_LOGGER.gs / 03_ADMIN_AUDIT_SERVICE.gs)
+### Audit (03_SHARED_LOGGER.js / 03_ADMIN_AUDIT_SERVICE.js)
 
 | Function | Description |
 |----------|-------------|
@@ -36,7 +36,7 @@
 ## Authority Check
 
 - **assertAdminAuthority()** — Called at entry of every admin function. Throws if cbvUser() not in CBV_CONFIG.ADMIN_EMAILS.
-- **Required:** Add admin email(s) to `CBV_CONFIG.ADMIN_EMAILS` in 00_CORE_CONFIG.gs before using admin panel.
+- **Required:** Add admin email(s) to `CBV_CONFIG.ADMIN_EMAILS` in 00_CORE_CONFIG.js before using admin panel.
 - See 00_META/CBV_ADMIN_GOVERNANCE_STANDARD.md.
 
 ## Protection Rules Enforced

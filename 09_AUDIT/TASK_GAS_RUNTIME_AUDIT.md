@@ -1,7 +1,7 @@
 # TASK GAS Runtime Audit
 
 **Audit date:** 2025-03-21  
-**Scope:** 20_TASK_SERVICE.gs, 20_TASK_VALIDATION.gs, 20_TASK_REPOSITORY.gs
+**Scope:** 20_TASK_SERVICE.js, 20_TASK_VALIDATION.js, 20_TASK_REPOSITORY.js
 
 ---
 
@@ -38,8 +38,8 @@
 
 | Check | Result | Evidence |
 |-------|--------|----------|
-| TASK_VALID_TRANSITIONS defined | ✓ | 20_TASK_VALIDATION.gs lines 8–15 |
-| setTaskStatus calls validateTaskTransition | ✓ | 20_TASK_SERVICE.gs line 192 |
+| TASK_VALID_TRANSITIONS defined | ✓ | 20_TASK_VALIDATION.js lines 8–15 |
+| setTaskStatus calls validateTaskTransition | ✓ | 20_TASK_SERVICE.js line 192 |
 | Invalid transition throws | ✓ | cbvAssert(validateTaskTransition(...)) |
 | ARCHIVED blocks edits | ✓ | ensureTaskEditable; cbvAssert(STATUS !== 'ARCHIVED') |
 | NEW→DONE blocked | ✓ | NEW allows only ASSIGNED, CANCELLED |
@@ -93,7 +93,7 @@
 
 | Check | Result | Evidence |
 |-------|--------|----------|
-| 20_TASK_*.gs in filePushOrder | ✓ | 20_TASK_REPOSITORY, 20_TASK_VALIDATION, 20_TASK_SERVICE, 90_BOOTSTRAP_TASK, 99_DEBUG_TASK_TEST |
+| 20_TASK_*.js in filePushOrder | ✓ | 20_TASK_REPOSITORY, 20_TASK_VALIDATION, 20_TASK_SERVICE, 90_BOOTSTRAP_TASK, 99_DEBUG_TASK_TEST |
 | Correct load order | ✓ | repository → validation → service → 20_TASK_SERVICE |
 | rootDir | ✓ | 05_GAS_RUNTIME |
 | Dependencies before task_* | ✓ | 02_USER_SERVICE, 03_SHARED_*, 01_ENUM_SERVICE load first |

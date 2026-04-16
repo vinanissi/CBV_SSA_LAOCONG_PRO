@@ -6,7 +6,7 @@
 
 ---
 
-## 1. Valid Status Transitions (GAS: 20_TASK_VALIDATION.gs)
+## 1. Valid Status Transitions (GAS: 20_TASK_VALIDATION.js)
 
 | From | To | GAS Function |
 |------|-----|--------------|
@@ -180,7 +180,7 @@ Action buttons hiện lại
 ### GAS runtime (registry + `withPendingFeedback`)
 
 - Webhook `_routeWebhookAction`: strip `CMD:` → `getRegisteredAction(action)` → nếu có entry thì `withPendingFeedback(id, label, fn, validStatuses, adapter)` (adapter TASK / FINANCE / … tùy module).
-- Task workflow: `withTaskFeedback(...)` trong `99_APPSHEET_WEBHOOK.gs` chỉ chuyển tiếp sang `withPendingFeedback` + `PENDING_ADAPTER_TASK` — cùng guard và cùng chuỗi ⏳ / ✅ / ❌.
+- Task workflow: `withTaskFeedback(...)` trong `99_APPSHEET_WEBHOOK.js` chỉ chuyển tiếp sang `withPendingFeedback` + `PENDING_ADAPTER_TASK` — cùng guard và cùng chuỗi ⏳ / ✅ / ❌.
 
 ```text
 validStatuses: danh sách STATUS hợp lệ

@@ -14,7 +14,7 @@
 
 ## Solution Implemented
 
-- **Centralized blank-row detection** in `03_SHARED_ROW_READER.gs`
+- **Centralized blank-row detection** in `03_SHARED_ROW_READER.js`
 - **Shared helpers**: `isEffectivelyBlankRow`, `filterRealDataRows`, `readNormalizedRows`
 - **Meaningful-fields map** per table; audit-only columns excluded
 - **Consistent application** in `_rows`, `_auditGetRows`, `_goldenAllRows`
@@ -31,11 +31,11 @@
 
 | File | Change |
 |------|--------|
-| `05_GAS_RUNTIME/03_SHARED_ROW_READER.gs` | **NEW** — helpers, meaningful-fields map |
-| `05_GAS_RUNTIME/03_SHARED_REPOSITORY.gs` | `_rows()` uses `readNormalizedRows` |
-| `05_GAS_RUNTIME/90_BOOTSTRAP_AUDIT.gs` | `_auditGetRows()` uses `readNormalizedRows` |
-| `05_GAS_RUNTIME/99_DEBUG_SAMPLE_DATA.gs` | `_goldenAllRows()` uses `readNormalizedRows` |
-| `.clasp.json` | Added `03_SHARED_ROW_READER.gs` to filePushOrder |
+| `05_GAS_RUNTIME/03_SHARED_ROW_READER.js` | **NEW** — helpers, meaningful-fields map |
+| `05_GAS_RUNTIME/03_SHARED_REPOSITORY.js` | `_rows()` uses `readNormalizedRows` |
+| `05_GAS_RUNTIME/90_BOOTSTRAP_AUDIT.js` | `_auditGetRows()` uses `readNormalizedRows` |
+| `05_GAS_RUNTIME/99_DEBUG_SAMPLE_DATA.js` | `_goldenAllRows()` uses `readNormalizedRows` |
+| `.clasp.json` | Added `03_SHARED_ROW_READER.js` to filePushOrder |
 
 ## Helpers Added
 

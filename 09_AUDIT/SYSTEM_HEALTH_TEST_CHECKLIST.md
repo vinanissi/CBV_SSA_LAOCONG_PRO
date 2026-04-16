@@ -88,4 +88,4 @@ After first PASS:
 | Corruption Cases | 07_TEST/TEST_SEED_CORRUPTION_CASES.md |
 | Expected Results | 07_TEST/TEST_EXPECTED_RESULTS.md |
 | Regression Template | 07_TEST/task_system_regression_report_template.md |
-| GAS Runner | 05_GAS_RUNTIME/97_TASK_SYSTEM_TEST_RUNNER.gs |
+| GAS Runner | 05_GAS_RUNTIME/97_TASK_SYSTEM_TEST_RUNNER.js |

@@ -7,7 +7,7 @@ Behavior, schema, GAS/AppSheet mapping, enum/master-code layers, and admin gover
 ## Functions to Run (in order)
 
 1. **initAll()** — sheets, headers, enum seed, display fill
-2. **Configure ADMIN_EMAILS** in 00_CORE_CONFIG.gs (before admin panel use)
+2. **Configure ADMIN_EMAILS** in 00_CORE_CONFIG.js (before admin panel use)
 3. **installTriggers()** — if using triggers
 4. **auditEnumConsistency()** — verify enum layer
 5. **verifyAppSheetReadiness()** — tables, keys, enum coverage
@@ -18,38 +18,38 @@ Behavior, schema, GAS/AppSheet mapping, enum/master-code layers, and admin gover
 
 ```
 05_GAS_RUNTIME/
-├── 00_CORE_CONFIG.gs         # CBV_CONFIG, SHEETS
-├── 00_CORE_CONSTANTS.gs      # CBV_ENUM fallback (when sheet empty)
-├── 00_CORE_UTILS.gs          # cbvNow, cbvUser, cbvAssert, isAdminUser, assertAdminAuthority
-├── 01_ENUM_REPOSITORY.gs     # ENUM_DICTIONARY sheet loader
-├── 01_ENUM_SERVICE.gs        # getEnumValues, assertValidEnumValue
-├── 01_ENUM_SEED.gs           # seedEnumDictionary()
-├── 01_ENUM_AUDIT.gs          # auditEnumConsistency()
-├── 02_MASTER_CODE_SERVICE.gs # getMasterCodes, assertValidMasterCode
-├── 02_USER_SERVICE.gs        # getActiveUsers, getUserByEmail, getUserDisplay, assertValidUserId, mapCurrentUserEmailToInternalId
-├── 03_SHARED_REPOSITORY.gs   # _sheet, _rows, _findById, _appendRecord, _updateRow
-├── 03_SHARED_VALIDATION.gs   # ensureRequired, ensureEnum, ensureTransition
-├── 03_SHARED_LOGGER.gs       # logAdminAudit, logAction
-├── 01_ENUM_ADMIN_SERVICE.gs  # adminCreateEnumRow, adminUpdateEnumRow, adminSetEnumActive
-├── 02_MASTER_CODE_ADMIN_SERVICE.gs # adminCreateMasterCodeRow, adminUpdateMasterCodeRow, adminSetMasterCodeStatus
-├── 03_ADMIN_AUDIT_SERVICE.gs # logAdminAction (alias)
-├── 10_HOSO_SERVICE.gs
-├── 20_TASK_REPOSITORY.gs   # TASK low-level
-├── 20_TASK_VALIDATION.gs   # TASK guards
-├── 20_TASK_SERVICE.gs      # TASK public API
-├── 20_TASK_MIGRATION_HELPER.gs
-├── 30_FINANCE_SERVICE.gs
-├── 40_DISPLAY_MAPPING_SERVICE.gs # getEnumDisplay, getMasterCodeDisplay, ensureDisplayText*
-├── 50_APPSHEET_VERIFY.gs
-├── 90_BOOTSTRAP_SCHEMA.gs    # CBV_SCHEMA_MANIFEST, getRequiredSheetNames
-├── 90_BOOTSTRAP_INIT.gs      # initAll(), initCoreSheets()
-├── 90_BOOTSTRAP_TASK.gs     # taskBootstrapSheets()
-├── 90_BOOTSTRAP_AUDIT.gs     # selfAuditBootstrap(), auditSystem()
-├── 90_BOOTSTRAP_MENU.gs
-├── 90_BOOTSTRAP_TRIGGER.gs
-├── 90_BOOTSTRAP_INSTALL.gs
-├── 99_DEBUG_TASK_TEST.gs     # runTaskTests()
-└── 99_DEBUG_*.gs             # test_hoso, test_task, test_finance, test_runner, sample_data
+├── 00_CORE_CONFIG.js         # CBV_CONFIG, SHEETS
+├── 00_CORE_CONSTANTS.js      # CBV_ENUM fallback (when sheet empty)
+├── 00_CORE_UTILS.js          # cbvNow, cbvUser, cbvAssert, isAdminUser, assertAdminAuthority
+├── 01_ENUM_REPOSITORY.js     # ENUM_DICTIONARY sheet loader
+├── 01_ENUM_SERVICE.js        # getEnumValues, assertValidEnumValue
+├── 01_ENUM_SEED.js           # seedEnumDictionary()
+├── 01_ENUM_AUDIT.js          # auditEnumConsistency()
+├── 02_MASTER_CODE_SERVICE.js # getMasterCodes, assertValidMasterCode
+├── 02_USER_SERVICE.js        # getActiveUsers, getUserByEmail, getUserDisplay, assertValidUserId, mapCurrentUserEmailToInternalId
+├── 03_SHARED_REPOSITORY.js   # _sheet, _rows, _findById, _appendRecord, _updateRow
+├── 03_SHARED_VALIDATION.js   # ensureRequired, ensureEnum, ensureTransition
+├── 03_SHARED_LOGGER.js       # logAdminAudit, logAction
+├── 01_ENUM_ADMIN_SERVICE.js  # adminCreateEnumRow, adminUpdateEnumRow, adminSetEnumActive
+├── 02_MASTER_CODE_ADMIN_SERVICE.js # adminCreateMasterCodeRow, adminUpdateMasterCodeRow, adminSetMasterCodeStatus
+├── 03_ADMIN_AUDIT_SERVICE.js # logAdminAction (alias)
+├── 10_HOSO_SERVICE.js
+├── 20_TASK_REPOSITORY.js   # TASK low-level
+├── 20_TASK_VALIDATION.js   # TASK guards
+├── 20_TASK_SERVICE.js      # TASK public API
+├── 20_TASK_MIGRATION_HELPER.js
+├── 30_FINANCE_SERVICE.js
+├── 40_DISPLAY_MAPPING_SERVICE.js # getEnumDisplay, getMasterCodeDisplay, ensureDisplayText*
+├── 50_APPSHEET_VERIFY.js
+├── 90_BOOTSTRAP_SCHEMA.js    # CBV_SCHEMA_MANIFEST, getRequiredSheetNames
+├── 90_BOOTSTRAP_INIT.js      # initAll(), initCoreSheets()
+├── 90_BOOTSTRAP_TASK.js     # taskBootstrapSheets()
+├── 90_BOOTSTRAP_AUDIT.js     # selfAuditBootstrap(), auditSystem()
+├── 90_BOOTSTRAP_MENU.js
+├── 90_BOOTSTRAP_TRIGGER.js
+├── 90_BOOTSTRAP_INSTALL.js
+├── 99_DEBUG_TASK_TEST.js     # runTaskTests()
+└── 99_DEBUG_*.js             # test_hoso, test_task, test_finance, test_runner, sample_data
 
 02_MODULES/TASK_CENTER/
 ├── TASK_SYSTEM_REFERENCE.md   # Single entry point; schema, GAS, AppSheet, deployment
@@ -188,7 +188,7 @@ Behavior, schema, GAS/AppSheet mapping, enum/master-code layers, and admin gover
 
 ```
 1. clasp push                    # Deploy GAS (30 files; order in .clasp.json)
-2. Configure ADMIN_EMAILS        # In 00_CORE_CONFIG.gs: add admin email(s)
+2. Configure ADMIN_EMAILS        # In 00_CORE_CONFIG.js: add admin email(s)
 3. initAll()                     # Sheets + headers + enum seed + display fill
 4. installTriggers()             # If using triggers
 5. auditEnumConsistency()        # Verify enum layer
@@ -305,6 +305,6 @@ See **04_APPSHEET/ADMIN_OPERATING_CHECKLIST.md**.
 ## 10. Limitations / Deferred Items
 
 - **auditMasterCodeConsistency():** Not implemented. Master code integrity is maintained via Admin Panel guards and ALLOW_EDIT/IS_SYSTEM checks.
-- **ENUM_DICTIONARY:** Not in schema_manifest.json. Created by `seedEnumDictionary()` (01_ENUM_SEED.gs). `verifyAppSheetReadiness()` checks the 11 schema sheets only; ENUM_DICTIONARY must exist after `initAll()`.
+- **ENUM_DICTIONARY:** Not in schema_manifest.json. Created by `seedEnumDictionary()` (01_ENUM_SEED.js). `verifyAppSheetReadiness()` checks the 11 schema sheets only; ENUM_DICTIONARY must exist after `initAll()`.
 - **Role automation:** Role assignment is manual (AppSheet Accounts). No USER_ROLE sheet or automatic role sync.
 - **Triggers:** Optional. `dailyHealthCheck` is the only scheduled trigger; no automatic workflow transitions.

@@ -1,6 +1,6 @@
 # TASK Module Schema — Normalized (PRO Level)
 
-**Source:** schema_manifest.json, 90_BOOTSTRAP_SCHEMA.gs  
+**Source:** schema_manifest.json, 90_BOOTSTRAP_SCHEMA.js  
 **Audit:** 09_AUDIT/TASK_MODULE_SCHEMA_AUDIT.md
 
 ---

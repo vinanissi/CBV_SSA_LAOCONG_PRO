@@ -1,6 +1,6 @@
 /**
  * CBV Task System Assertions - Test helpers for validation.
- * Idempotent, safe. Use with task_system_test_runner.gs.
+ * Idempotent, safe. Use with task_system_test_runner.js.
  * Dependencies: 00_CORE_CONFIG (optional; uses CBV_CONFIG.SHEETS if available)
  */
 

@@ -94,7 +94,7 @@
 
 ```
 1. clasp push
-2. Configure ADMIN_EMAILS in 00_CORE_CONFIG.gs
+2. Configure ADMIN_EMAILS in 00_CORE_CONFIG.js
 3. initAll()
 4. installTriggers() (if using triggers)
 5. auditEnumConsistency()

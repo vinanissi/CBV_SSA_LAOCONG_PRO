@@ -27,7 +27,7 @@ Operator-focused procedures for daily operations, recovery, and troubleshooting.
 
 1. Create Google Sheets file, bind Apps Script.
 2. `clasp push` (order in `.clasp.json`).
-3. Configure `ADMIN_EMAILS` in 00_CORE_CONFIG.gs.
+3. Configure `ADMIN_EMAILS` in 00_CORE_CONFIG.js.
 4. Run `initAll()`.
 5. Run `installTriggers()` if using triggers.
 6. Run `auditEnumConsistency()`.
@@ -54,7 +54,7 @@ Operator-focused procedures for daily operations, recovery, and troubleshooting.
 1. Do NOT overwrite headers blindly.
 2. Run `selfAuditBootstrap()` — review `mismatchedSheets`.
 3. For `EXTRA_COLUMNS`: decide whether to remove columns manually (risky) or accept.
-4. For `HEADER_MISMATCH`: align sheet headers with 90_BOOTSTRAP_SCHEMA.gs `CBV_SCHEMA_MANIFEST` (or 06_DATABASE/schema_manifest.json).
+4. For `HEADER_MISMATCH`: align sheet headers with 90_BOOTSTRAP_SCHEMA.js `CBV_SCHEMA_MANIFEST` (or 06_DATABASE/schema_manifest.json).
 5. If column order/name differs: fix sheet to match schema; rerun `initAll()`.
 
 **⚠️ Never:** Clear business data to "fix" schema. Export first.
@@ -69,7 +69,7 @@ Operator-focused procedures for daily operations, recovery, and troubleshooting.
 1. Run `auditEnumConsistency()` — note mismatches.
 2. If ENUM_DICTIONARY missing rows: run `seedEnumDictionary()`.
 3. If DISPLAY_TEXT empty: run `ensureDisplayTextForEnumRows()`.
-4. If enum values drifted: do NOT hardcode in AppSheet. Add rows via Admin Panel `adminCreateEnumRow` or fix ENUM_DICTIONARY sheet to match 01_ENUM_SEED.gs `ENUM_SEED_SPEC`.
+4. If enum values drifted: do NOT hardcode in AppSheet. Add rows via Admin Panel `adminCreateEnumRow` or fix ENUM_DICTIONARY sheet to match 01_ENUM_SEED.js `ENUM_SEED_SPEC`.
 5. Run `clearEnumCache()` if code changed; rerun `auditEnumConsistency()`.
 
 **⚠️ Never:** Store display labels as source of truth in business sheets.
@@ -121,7 +121,7 @@ Operator-focused procedures for daily operations, recovery, and troubleshooting.
 **Steps:**
 1. In Apps Script: Edit → Current project's triggers.
 2. Remove duplicate entries for same function.
-3. Run `reinstallTriggers()` (in 90_BOOTSTRAP_INSTALL.gs) — uses `ensureNoDuplicateTrigger` before install.
+3. Run `reinstallTriggers()` (in 90_BOOTSTRAP_INSTALL.js) — uses `ensureNoDuplicateTrigger` before install.
 4. Verify single trigger per handler.
 
 ---
@@ -144,7 +144,7 @@ Operator-focused procedures for daily operations, recovery, and troubleshooting.
 
 **Steps:**
 1. Use separate Admin Panel app; share only with ADMIN_EMAILS.
-2. Verify ADMIN_EMAILS in 00_CORE_CONFIG.gs.
+2. Verify ADMIN_EMAILS in 00_CORE_CONFIG.js.
 3. Ensure ENUM_DICTIONARY, MASTER_CODE, ADMIN_AUDIT_LOG views have Valid_If restricting to admin.
 4. See 04_APPSHEET/APPSHEET_ADMIN_SECURITY.md.
 5. No inline add/edit for enum/master code — GAS actions only.

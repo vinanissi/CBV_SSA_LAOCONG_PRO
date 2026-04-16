@@ -1,7 +1,7 @@
 # USER SYSTEM AUDIT REPORT
 
 **Date:** 2025-03-18  
-**Scope:** USER_SYSTEM_ARCHITECTURE, APPSHEET_USER_BINDING, 02_USER_SERVICE.gs, USER_ROLE_PERMISSION_SPEC, business table bindings
+**Scope:** USER_SYSTEM_ARCHITECTURE, APPSHEET_USER_BINDING, 02_USER_SERVICE.js, USER_ROLE_PERMISSION_SPEC, business table bindings
 
 ---
 
@@ -105,10 +105,10 @@
 
 | # | Issue | Severity | Location |
 |---|-------|----------|----------|
-| 1 | adminCreateMasterCodeRow does not validate PARENT_CODE for USER rows | Medium | 02_MASTER_CODE_ADMIN_SERVICE.gs |
-| 2 | createHoSo does not validate OWNER_ID when provided | Medium | 10_HOSO_SERVICE.gs |
-| 3 | setFinanceStatus uses cbvUser() for CONFIRMED_BY; should prefer user ID | Low | 30_FINANCE_SERVICE.gs |
-| 4 | REPORTER_ID not validated in createTask when provided | Low | 20_TASK_SERVICE.gs |
+| 1 | adminCreateMasterCodeRow does not validate PARENT_CODE for USER rows | Medium | 02_MASTER_CODE_ADMIN_SERVICE.js |
+| 2 | createHoSo does not validate OWNER_ID when provided | Medium | 10_HOSO_SERVICE.js |
+| 3 | setFinanceStatus uses cbvUser() for CONFIRMED_BY; should prefer user ID | Low | 30_FINANCE_SERVICE.js |
+| 4 | REPORTER_ID not validated in createTask when provided | Low | 20_TASK_SERVICE.js |
 | 5 | Slice/security filters assume [OWNER_ID]=USEREMAIL(); breaks after migration | Medium | APPSHEET_SECURITY_FILTERS, APPSHEET_SLICE_SPEC |
 | 6 | AppSheet LOOKUP formula syntax may need verification | Low | APPSHEET_USER_BINDING |
 
@@ -118,10 +118,10 @@
 
 | # | Fix | File |
 |---|-----|------|
-| 1 | Add PARENT_CODE validation in adminCreateMasterCodeRow when MASTER_GROUP=USER | 02_MASTER_CODE_ADMIN_SERVICE.gs |
-| 2 | Add assertValidUserId for OWNER_ID in createHoSo when provided | 10_HOSO_SERVICE.gs |
-| 3 | Use mapCurrentUserEmailToInternalId() \|\| cbvUser() for CONFIRMED_BY in setFinanceStatus | 30_FINANCE_SERVICE.gs |
-| 4 | Add assertValidUserId for REPORTER_ID in createTask when provided | 20_TASK_SERVICE.gs |
+| 1 | Add PARENT_CODE validation in adminCreateMasterCodeRow when MASTER_GROUP=USER | 02_MASTER_CODE_ADMIN_SERVICE.js |
+| 2 | Add assertValidUserId for OWNER_ID in createHoSo when provided | 10_HOSO_SERVICE.js |
+| 3 | Use mapCurrentUserEmailToInternalId() \|\| cbvUser() for CONFIRMED_BY in setFinanceStatus | 30_FINANCE_SERVICE.js |
+| 4 | Add assertValidUserId for REPORTER_ID in createTask when provided | 20_TASK_SERVICE.js |
 | 5 | Document slice filter migration in APPSHEET_USER_BINDING | APPSHEET_USER_BINDING.md |
 | 6 | Add alternative LOOKUP formula (FIRST+SELECT) in APPSHEET_USER_BINDING | APPSHEET_USER_BINDING.md |
 

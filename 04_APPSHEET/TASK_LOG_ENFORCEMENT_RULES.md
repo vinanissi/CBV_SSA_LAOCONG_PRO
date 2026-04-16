@@ -69,7 +69,7 @@ For `setTaskStatus(taskId, newStatus, note)`:
 
 ## 6. Sheet Protection
 
-- TASK_UPDATE_LOG sheet protected (90_BOOTSTRAP_PROTECTION.gs)
+- TASK_UPDATE_LOG sheet protected (90_BOOTSTRAP_PROTECTION.js)
 - Only GAS service account can write
 
 ---

@@ -22,7 +22,7 @@
 ### Phase 1: Schema & Data (GAS only)
 
 1. **Backup** — Export Spreadsheet, GAS project
-2. **Push GAS** — 96_TASK_SYSTEM_AUDIT_REPAIR.gs, 95_TASK_SYSTEM_BOOTSTRAP.gs, 21_MASTER_DATA_HELPER.gs, 20_TASK_*
+2. **Push GAS** — 96_TASK_SYSTEM_AUDIT_REPAIR.js, 95_TASK_SYSTEM_BOOTSTRAP.js, 21_MASTER_DATA_HELPER.js, 20_TASK_*
 3. **Run audit** — `selfAuditTaskSystemFull()`; address CRITICAL and HIGH
 4. **Run bootstrap** — `taskSystemProBootstrapAll()` (ensureDonViSheet, ensureSeedDonVi, ensureSeedTaskType, ensureTaskMainSchemaPro)
 5. **Run repair** — `repairTaskSystemSafely({ dryRun: true })`; then `repairTaskSystemSafely({})` to append columns

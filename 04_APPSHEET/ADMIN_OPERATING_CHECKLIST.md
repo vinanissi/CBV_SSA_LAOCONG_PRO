@@ -6,7 +6,7 @@ Single checklist for admin panel deployment and operations. See 00_META/CBV_ADMI
 
 ## Before First Use
 
-- [ ] **ADMIN_EMAILS** configured in 00_CORE_CONFIG.gs — add at least one admin email
+- [ ] **ADMIN_EMAILS** configured in 00_CORE_CONFIG.js — add at least one admin email
 - [ ] **initAll()** run — ADMIN_AUDIT_LOG sheet exists
 - [ ] **Admin Panel app** created (separate from operational app)
 - [ ] **Share** Admin Panel app only with ADMIN_EMAILS

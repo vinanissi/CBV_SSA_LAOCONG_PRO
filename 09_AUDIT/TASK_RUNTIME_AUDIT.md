@@ -5,9 +5,9 @@
 
 ## Load Order (.clasp.json filePushOrder)
 
-20_TASK_REPOSITORY.gs → 20_TASK_VALIDATION.gs → 20_TASK_SERVICE.gs → 20_TASK_MIGRATION_HELPER.gs
-90_BOOTSTRAP_TASK.gs (after 90_BOOTSTRAP_INIT)
-99_DEBUG_TASK_TEST.gs (before 99_DEBUG_TEST_TASK)
+20_TASK_REPOSITORY.js → 20_TASK_VALIDATION.js → 20_TASK_SERVICE.js → 20_TASK_MIGRATION_HELPER.js
+90_BOOTSTRAP_TASK.js (after 90_BOOTSTRAP_INIT)
+99_DEBUG_TASK_TEST.js (before 99_DEBUG_TEST_TASK)
 
 ---
 
@@ -15,19 +15,19 @@
 
 | File | Action |
 |------|--------|
-| 20_TASK_REPOSITORY.gs | Created |
-| 20_TASK_VALIDATION.gs | Created |
-| 20_TASK_SERVICE.gs | Created |
-| 90_BOOTSTRAP_TASK.gs | Created |
-| 99_DEBUG_TASK_TEST.gs | Created |
-| 20_TASK_SERVICE.gs | Replaced with stub; implementation in task_*.gs |
-| 99_DEBUG_TEST_TASK.gs | Replaced with stub; runTaskTests in 99_DEBUG_TASK_TEST.gs |
+| 20_TASK_REPOSITORY.js | Created |
+| 20_TASK_VALIDATION.js | Created |
+| 20_TASK_SERVICE.js | Created |
+| 90_BOOTSTRAP_TASK.js | Created |
+| 99_DEBUG_TASK_TEST.js | Created |
+| 20_TASK_SERVICE.js | Replaced with stub; implementation in task_*.js |
+| 99_DEBUG_TEST_TASK.js | Replaced with stub; runTaskTests in 99_DEBUG_TASK_TEST.js |
 
 ---
 
 ## 2. Functions Added
 
-### 20_TASK_REPOSITORY.gs
+### 20_TASK_REPOSITORY.js
 | Function | Purpose |
 |----------|---------|
 | taskFindById(taskId) | Find task by ID |
@@ -41,7 +41,7 @@
 | taskAppendAttachment(record) | Append TASK_ATTACHMENT row |
 | taskAppendUpdateLog(record) | Append TASK_UPDATE_LOG row |
 
-### 20_TASK_VALIDATION.gs
+### 20_TASK_VALIDATION.js
 | Function | Purpose |
 |----------|---------|
 | assertActiveHtxId(htxId, fieldName) | HTX_ID → active HTX |
@@ -50,7 +50,7 @@
 | ensureTaskCanComplete(taskId) | Block DONE if required checklist incomplete |
 | assertValidUpdateType(updateType) | UPDATE_TYPE enum |
 
-### 20_TASK_SERVICE.gs (Public API)
+### 20_TASK_SERVICE.js (Public API)
 | Function | Purpose |
 |----------|---------|
 | createTask(data) | Create task; HTX_ID, OWNER_ID required |
@@ -67,12 +67,12 @@
 | addTaskLogEntry(taskId, action, note) | Legacy alias |
 | createTaskAttachment(data) | Legacy alias |
 
-### 90_BOOTSTRAP_TASK.gs
+### 90_BOOTSTRAP_TASK.js
 | Function | Purpose |
 |----------|---------|
 | taskBootstrapSheets() | Ensure TASK sheets exist with headers |
 
-### 99_DEBUG_TASK_TEST.gs
+### 99_DEBUG_TASK_TEST.js
 | Function | Purpose |
 |----------|---------|
 | runTaskTests() | Full test suite |

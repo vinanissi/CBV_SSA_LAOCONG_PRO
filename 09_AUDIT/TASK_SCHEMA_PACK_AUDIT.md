@@ -87,15 +87,15 @@ CBV standard: CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY.
 | Check | Result | Notes |
 |-------|--------|-------|
 | schema_manifest.json | ✓ | All 4 tables, columns match TASK_SCHEMA |
-| 90_BOOTSTRAP_SCHEMA.gs | ✓ | CBV_SCHEMA_MANIFEST aligned |
-| 90_BOOTSTRAP_AUDIT_SCHEMA.gs | ✓ | required/optional, refs, enums |
+| 90_BOOTSTRAP_SCHEMA.js | ✓ | CBV_SCHEMA_MANIFEST aligned |
+| 90_BOOTSTRAP_AUDIT_SCHEMA.js | ✓ | required/optional, refs, enums |
 | _generated_schema/*.csv | ✓ | Headers match manifest |
 | Copy-paste headers | ✓ | TASK_SCHEMA.md has CSV-style headers |
-| GAS 20_TASK_SERVICE.gs | ✗ | Still uses RESULT_NOTE, no HTX_ID, addTaskUpdate uses ACTION/OLD_STATUS/NEW_STATUS/NOTE |
+| GAS 20_TASK_SERVICE.js | ✗ | Still uses RESULT_NOTE, no HTX_ID, addTaskUpdate uses ACTION/OLD_STATUS/NEW_STATUS/NOTE |
 
 **PASS for schema pack.** Structure, manifest, and bootstrap files are ready.
 
-**Implementation gap:** GAS 20_TASK_SERVICE.gs must be updated per TASK_SCHEMA.md "Next Implementation Step" before runtime will work with new schema.
+**Implementation gap:** GAS 20_TASK_SERVICE.js must be updated per TASK_SCHEMA.md "Next Implementation Step" before runtime will work with new schema.
 
 ---
 
@@ -130,7 +130,7 @@ CBV standard: CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY.
 
 1. **TASK_SCHEMA.md** (line ~141): Change "STATUS active" → "IS_DELETED=FALSE" for ACTIVE_HTX note.
 2. **TASK_PRO_OPERATIONAL_LOCK.md**: Update to use UPDATE_TYPE, RESULT_SUMMARY, HTX_ID.
-3. **20_TASK_SERVICE.gs**: Implement Next Implementation Step from TASK_SCHEMA.md.
+3. **20_TASK_SERVICE.js**: Implement Next Implementation Step from TASK_SCHEMA.md.
 
 ---
 

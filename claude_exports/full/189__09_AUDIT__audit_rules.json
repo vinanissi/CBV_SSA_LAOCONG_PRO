@@ -1,0 +1,34 @@
+{
+  "required_meta_files": [
+    "CBV_APPSHEET_SECURITY_MODEL.md",
+    "CBV_GOVERNANCE_HIERARCHY.md",
+    "CBV_ID_STANDARD.md",
+    "CBV_LOG_STANDARD.md",
+    "CBV_MODULE_BUILD_PROTOCOL.md",
+    "CBV_NAMING_STANDARD.md",
+    "CBV_SERVICE_CONTRACT_STANDARD.md",
+    "CBV_TABLE_STANDARD.md",
+    "CBV_WORKFLOW_STATUS_STANDARD.md"
+  ],
+  "required_module_files": [
+    "MODULE_DESCRIPTOR.md",
+    "DATA_MODEL.md",
+    "WORKFLOW.md",
+    "BUSINESS_SPEC.md",
+    "SERVICE_MAP.md",
+    "SERVICE_CONTRACT.md",
+    "APPSHEET_UX_SPEC.md",
+    "SHEET_DICTIONARY.md"
+  ],
+  "required_sheets": [
+    "HO_SO_MASTER",
+    "HO_SO_FILE",
+    "HO_SO_RELATION",
+    "TASK_MAIN",
+    "TASK_CHECKLIST",
+    "TASK_UPDATE_LOG",
+    "TASK_ATTACHMENT",
+    "FINANCE_TRANSACTION",
+    "FINANCE_LOG"
+  ]
+}

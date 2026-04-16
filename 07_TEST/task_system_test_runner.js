@@ -2,7 +2,7 @@
  * CBV Task System Test Runner - Full validation and regression.
  * Idempotent, safe, non-destructive. Run before AppSheet deploy.
  * Dependencies: 00_CORE_CONFIG, 90_BOOTSTRAP_SCHEMA (optional),
- *               task_system_assertions.gs, task_system_mock_data.gs
+ *               task_system_assertions.js, task_system_mock_data.js
  */
 
 /** Required sheets for task system */
@@ -27,7 +27,7 @@ var TEST_REQUIRED_COLS = {
 /** Valid TASK_STATUS */
 var TEST_VALID_STATUS = ['NEW', 'ASSIGNED', 'IN_PROGRESS', 'WAITING', 'DONE', 'CANCELLED', 'ARCHIVED'];
 
-/** Valid transitions (from 20_TASK_VALIDATION.gs) */
+/** Valid transitions (from 20_TASK_VALIDATION.js) */
 var TEST_VALID_TRANSITIONS = {
   NEW: ['ASSIGNED', 'IN_PROGRESS', 'CANCELLED'],
   ASSIGNED: ['IN_PROGRESS', 'CANCELLED'],

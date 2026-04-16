@@ -53,7 +53,7 @@
 
 **Add HTX_ID to TASK_MAIN**
 
-1. Schema: Add HTX_ID to TASK_MAIN in schema_manifest.json, 90_BOOTSTRAP_SCHEMA.gs, _generated_schema/TASK_MAIN.csv.
+1. Schema: Add HTX_ID to TASK_MAIN in schema_manifest.json, 90_BOOTSTRAP_SCHEMA.js, _generated_schema/TASK_MAIN.csv.
 2. GAS: In createTask, accept optional HTX_ID; validate against HO_SO_MASTER (HO_SO_TYPE=HTX) when provided.
 3. AppSheet: Add HTX_ID ref → ACTIVE_HTX; Allow Adds OFF.
 4. Migration: Backfill HTX_ID for existing tasks if business rules allow (or leave blank for legacy).
@@ -65,4 +65,4 @@
 - 03_SHARED/TASK_SYSTEM_ARCHITECTURE.md
 - 03_SHARED/TASK_DATA_FLOW.md
 - 06_DATABASE/schema_manifest.json
-- 05_GAS_RUNTIME/90_BOOTSTRAP_SCHEMA.gs
+- 05_GAS_RUNTIME/90_BOOTSTRAP_SCHEMA.js

@@ -9,14 +9,14 @@
 
 | File | Change |
 |------|--------|
-| 01_ENUM_CONFIG.gs | Added ACCOUNTANT to ROLE enum |
-| 00_CORE_CONSTANTS.gs | Added ACCOUNTANT to CBV_ENUM.ROLE |
-| 02_USER_SERVICE.gs | Added ACCOUNTANT to CBV_USER_ROLES |
-| 01_ENUM_SEED.gs | Added ACCOUNTANT to ENUM_SEED_SPEC |
-| 90_BOOTSTRAP_AUDIT_SCHEMA.gs | Added ACTION, OLD_STATUS, NEW_STATUS, NOTE, RESULT_NOTE, FILE_NAME to TASK_UPDATE_LOG optionalColumns |
-| 90_BOOTSTRAP_REPAIR.gs | **New** — repairSchemaColumns, repairUserDirectoryBlanks, repairHoSoMasterBlanks, repairTaskUpdateLogBlanks, repairTaskMainHtxIdBlanks, repairSchemaAndData |
-| 90_BOOTSTRAP_MENU.gs | Added Run Schema & Data Repair menu item; runSchemaAndDataRepair handler |
-| .clasp.json | Added 90_BOOTSTRAP_REPAIR.gs to filePushOrder |
+| 01_ENUM_CONFIG.js | Added ACCOUNTANT to ROLE enum |
+| 00_CORE_CONSTANTS.js | Added ACCOUNTANT to CBV_ENUM.ROLE |
+| 02_USER_SERVICE.js | Added ACCOUNTANT to CBV_USER_ROLES |
+| 01_ENUM_SEED.js | Added ACCOUNTANT to ENUM_SEED_SPEC |
+| 90_BOOTSTRAP_AUDIT_SCHEMA.js | Added ACTION, OLD_STATUS, NEW_STATUS, NOTE, RESULT_NOTE, FILE_NAME to TASK_UPDATE_LOG optionalColumns |
+| 90_BOOTSTRAP_REPAIR.js | **New** — repairSchemaColumns, repairUserDirectoryBlanks, repairHoSoMasterBlanks, repairTaskUpdateLogBlanks, repairTaskMainHtxIdBlanks, repairSchemaAndData |
+| 90_BOOTSTRAP_MENU.js | Added Run Schema & Data Repair menu item; runSchemaAndDataRepair handler |
+| .clasp.json | Added 90_BOOTSTRAP_REPAIR.js to filePushOrder |
 
 ---
 

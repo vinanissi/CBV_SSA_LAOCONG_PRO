@@ -2,17 +2,17 @@
 
 ## File Tree (Created/Updated)
 
-*Note: GAS files renamed in CBV refactor to 99_DEBUG_*, 50_APPSHEET_VERIFY.gs, 90_BOOTSTRAP_MENU.gs.*
+*Note: GAS files renamed in CBV refactor to 99_DEBUG_*, 50_APPSHEET_VERIFY.js, 90_BOOTSTRAP_MENU.js.*
 
 ```
 05_GAS_RUNTIME/
-  test_hoso.gs          → 99_DEBUG_TEST_HOSO.gs
-  test_task.gs          → 99_DEBUG_TEST_TASK.gs
-  test_finance.gs       → 99_DEBUG_TEST_FINANCE.gs
-  test_runner.gs        → 99_DEBUG_TEST_RUNNER.gs
-  sample_data.gs        → 99_DEBUG_SAMPLE_DATA.gs
-  verify_appsheet.gs    → 50_APPSHEET_VERIFY.gs
-  bootstrap_menu.gs     → 90_BOOTSTRAP_MENU.gs (added Run All Tests, Seed Golden Data, Verify AppSheet Ready)
+  test_hoso.js          → 99_DEBUG_TEST_HOSO.js
+  test_task.js          → 99_DEBUG_TEST_TASK.js
+  test_finance.js       → 99_DEBUG_TEST_FINANCE.js
+  test_runner.js        → 99_DEBUG_TEST_RUNNER.js
+  sample_data.js        → 99_DEBUG_SAMPLE_DATA.js
+  verify_appsheet.js    → 50_APPSHEET_VERIFY.js
+  bootstrap_menu.js     → 90_BOOTSTRAP_MENU.js (added Run All Tests, Seed Golden Data, Verify AppSheet Ready)
 
 04_APPSHEET/
   APPSHEET_TABLE_READY_CHECKLIST.md  (new)

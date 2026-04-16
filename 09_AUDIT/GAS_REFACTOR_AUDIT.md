@@ -45,7 +45,7 @@
 
 **PASS**
 
-- Before: flat names (config.gs, enum.gs, ho_so_service.gs, ...).
+- Before: flat names (config.js, enum.js, ho_so_service.js, ...).
 - After: numbered prefixes (00_CORE_*, 01_ENUM_*, 10_HOSO_*, ...) group by concern.
 - Module 10/20/30 clearly separate HO_SO, TASK, FINANCE.
 - 90_* centralizes bootstrap; 99_* centralizes debug.
@@ -56,9 +56,9 @@
 
 **PASS** (with minor note)
 
-- `00_CORE_CONSTANTS.gs` — contains only CBV_ENUM. "Constants" is accurate (enum values are constants). Could be `00_CORE_ENUM_FALLBACK` but target spec used CONSTANTS.
-- `90_BOOTSTRAP_AUDIT.gs` — contains `auditSystem()` (full system) and `selfAuditBootstrap()`. Both relate to setup/health verification; grouping under BOOTSTRAP is acceptable.
-- `03_SHARED_LOGGER.gs` — old name was log_service; "LOGGER" is consistent with shared role.
+- `00_CORE_CONSTANTS.js` — contains only CBV_ENUM. "Constants" is accurate (enum values are constants). Could be `00_CORE_ENUM_FALLBACK` but target spec used CONSTANTS.
+- `90_BOOTSTRAP_AUDIT.js` — contains `auditSystem()` (full system) and `selfAuditBootstrap()`. Both relate to setup/health verification; grouping under BOOTSTRAP is acceptable.
+- `03_SHARED_LOGGER.js` — old name was log_service; "LOGGER" is consistent with shared role.
 
 ---
 
@@ -68,25 +68,25 @@
 
 | Entry point | Source file | Status |
 |-------------|-------------|--------|
-| initAll | 90_BOOTSTRAP_INIT.gs | ✓ |
-| installTriggers | 90_BOOTSTRAP_INSTALL.gs | ✓ |
-| seedEnumDictionary | 01_ENUM_SEED.gs | ✓ |
-| auditEnumConsistency | 01_ENUM_AUDIT.gs | ✓ |
-| verifyAppSheetReadiness | 50_APPSHEET_VERIFY.gs | ✓ |
-| selfAuditBootstrap | 90_BOOTSTRAP_AUDIT.gs | ✓ |
-| auditSystem | 90_BOOTSTRAP_AUDIT.gs | ✓ |
-| onOpen | 90_BOOTSTRAP_MENU.gs | ✓ |
-| runAllModuleTests | 99_DEBUG_TEST_RUNNER.gs | ✓ |
-| seedGoldenDataset | 99_DEBUG_SAMPLE_DATA.gs | ✓ |
-| dailyHealthCheck | 90_BOOTSTRAP_TRIGGER.gs | ✓ |
-| createHoSo, updateHoSo, setHoSoStatus, attachHoSoFile | 10_HOSO_SERVICE.gs | ✓ |
-| createTask, addTaskUpdate, setTaskStatus, addChecklistItem, markChecklistDone | 20_TASK_SERVICE.gs | ✓ |
-| createTransaction, updateDraftTransaction, setFinanceStatus | 30_FINANCE_SERVICE.gs | ✓ |
-| getEnumValues, assertValidEnumValue | 01_ENUM_SERVICE.gs | ✓ |
-| getMasterCodes, assertValidMasterCode | 02_MASTER_CODE_SERVICE.gs | ✓ |
-| getEnumDisplay, getMasterCodeDisplay, ensureDisplayTextForEnumRows, ensureDisplayTextForMasterCodeRows | 40_DISPLAY_MAPPING_SERVICE.gs | ✓ |
+| initAll | 90_BOOTSTRAP_INIT.js | ✓ |
+| installTriggers | 90_BOOTSTRAP_INSTALL.js | ✓ |
+| seedEnumDictionary | 01_ENUM_SEED.js | ✓ |
+| auditEnumConsistency | 01_ENUM_AUDIT.js | ✓ |
+| verifyAppSheetReadiness | 50_APPSHEET_VERIFY.js | ✓ |
+| selfAuditBootstrap | 90_BOOTSTRAP_AUDIT.js | ✓ |
+| auditSystem | 90_BOOTSTRAP_AUDIT.js | ✓ |
+| onOpen | 90_BOOTSTRAP_MENU.js | ✓ |
+| runAllModuleTests | 99_DEBUG_TEST_RUNNER.js | ✓ |
+| seedGoldenDataset | 99_DEBUG_SAMPLE_DATA.js | ✓ |
+| dailyHealthCheck | 90_BOOTSTRAP_TRIGGER.js | ✓ |
+| createHoSo, updateHoSo, setHoSoStatus, attachHoSoFile | 10_HOSO_SERVICE.js | ✓ |
+| createTask, addTaskUpdate, setTaskStatus, addChecklistItem, markChecklistDone | 20_TASK_SERVICE.js | ✓ |
+| createTransaction, updateDraftTransaction, setFinanceStatus | 30_FINANCE_SERVICE.js | ✓ |
+| getEnumValues, assertValidEnumValue | 01_ENUM_SERVICE.js | ✓ |
+| getMasterCodes, assertValidMasterCode | 02_MASTER_CODE_SERVICE.js | ✓ |
+| getEnumDisplay, getMasterCodeDisplay, ensureDisplayTextForEnumRows, ensureDisplayTextForMasterCodeRows | 40_DISPLAY_MAPPING_SERVICE.js | ✓ |
 
-GAS loads all .gs files into a single scope before any function runs. Load order only affects definition order, not runtime callability.
+GAS loads all .js files into a single scope before any function runs. Load order only affects definition order, not runtime callability.
 
 ---
 
@@ -105,12 +105,12 @@ GAS loads all .gs files into a single scope before any function runs. Load order
 | 03_SHARED/ENUM_DICTIONARY_STANDARD.md | ✓ Updated |
 | 09_AUDIT/ENUM_SYNC_AUDIT.md | ✓ Updated |
 | DEPLOY_CHECKLIST_LAOCONG_PRO.md | ✓ Updated |
-| 01_ENUM_REPOSITORY.gs inline comment | ✓ Updated |
-| 90_BOOTSTRAP_INIT.gs inline comment | ✓ Updated |
+| 01_ENUM_REPOSITORY.js inline comment | ✓ Updated |
+| 90_BOOTSTRAP_INIT.js inline comment | ✓ Updated |
 
 **Stale references (non-blocking):**
 
-1. `DEPLOYMENT_PHASE_2_NOTES.md` — File Tree still lists old names (test_hoso.gs, etc.). Historical doc; update optional.
+1. `DEPLOYMENT_PHASE_2_NOTES.md` — File Tree still lists old names (test_hoso.js, etc.). Historical doc; update optional.
 2. `BOOTSTRAP_DEPLOY.md` line 59 — "log_service.logAction" and "task_service and finance_service" use old file names. Behavioral note; update for consistency.
 
 ---
@@ -120,7 +120,7 @@ GAS loads all .gs files into a single scope before any function runs. Load order
 **PASS**
 
 - CBV_NAMING_STANDARD: UPPER_SNAKE_CASE for docs; camelCase for public GAS functions; `_` prefix for private. No explicit GAS file naming.
-- New names use `PREFIX_DESCRIPTIVE.gs` (e.g. `00_CORE_CONFIG`, `10_HOSO_SERVICE`). Descriptive, module-aligned, no cryptic abbreviations.
+- New names use `PREFIX_DESCRIPTIVE.js` (e.g. `00_CORE_CONFIG`, `10_HOSO_SERVICE`). Descriptive, module-aligned, no cryptic abbreviations.
 - Aligned with target spec in the refactor task.
 
 ---

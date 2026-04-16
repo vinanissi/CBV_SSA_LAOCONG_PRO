@@ -7,7 +7,7 @@
 - Valid JSON syntax
 - Required keys present: `scriptId`, `rootDir`, `filePushOrder`
 - `filePushOrder` is an array of 30 strings
-- All 30 entries match existing `.gs` files in `05_GAS_RUNTIME/`
+- All 30 entries match existing `.js` files in `05_GAS_RUNTIME/`
 - No duplicate entries
 - No references to non-existent files
 

@@ -42,7 +42,7 @@
 ## 2. Role Source Clarification
 
 **Current state:**
-- ROLE values: ADMIN, OPERATOR, VIEWER — defined in CBV_ENUM.ROLE (00_CORE_CONSTANTS.gs)
+- ROLE values: ADMIN, OPERATOR, VIEWER — defined in CBV_ENUM.ROLE (00_CORE_CONSTANTS.js)
 - Role assignment: AppSheet-side (Account list, slice filters). No in-sheet mapping.
 - No USER_DIRECTORY or USER_ROLE sheet exists.
 
@@ -73,7 +73,7 @@
 logAdminAudit(auditType, entityType, entityId, action, beforeObj, afterObj, note)
 ```
 
-- **Implemented:** 05_GAS_RUNTIME/03_SHARED_LOGGER.gs — appends to ADMIN_AUDIT_LOG via _appendRecord
+- **Implemented:** 05_GAS_RUNTIME/03_SHARED_LOGGER.js — appends to ADMIN_AUDIT_LOG via _appendRecord
 - Called by admin service layer after each mutating operation
 - BEFORE_JSON / AFTER_JSON: JSON.stringify of record snapshots (redact secrets if any)
 
@@ -83,14 +83,14 @@ logAdminAudit(auditType, entityType, entityId, action, beforeObj, afterObj, note
 
 | Operation | Service function | File | Validation |
 |-----------|------------------|------|------------|
-| create enum row | adminCreateEnumRow(data) | 01_ENUM_ADMIN_SERVICE.gs | allowed enum group, no duplicate (ENUM_GROUP, ENUM_VALUE) |
-| update enum row | adminUpdateEnumRow(id, patch) | 01_ENUM_ADMIN_SERVICE.gs | row exists, patch DISPLAY_TEXT, SORT_ORDER, NOTE only |
-| activate/inactivate enum | adminSetEnumActive(id, isActive) | 01_ENUM_ADMIN_SERVICE.gs | row exists |
-| create master code row | adminCreateMasterCodeRow(data) | 02_MASTER_CODE_ADMIN_SERVICE.gs | no duplicate (MASTER_GROUP, CODE), STATUS in MASTER_CODE_STATUS |
-| update master code row | adminUpdateMasterCodeRow(id, patch) | 02_MASTER_CODE_ADMIN_SERVICE.gs | row exists, !IS_SYSTEM, ALLOW_EDIT=TRUE |
-| activate/inactivate master code | adminSetMasterCodeStatus(id, status) | 02_MASTER_CODE_ADMIN_SERVICE.gs | row exists, status in MASTER_CODE_STATUS |
+| create enum row | adminCreateEnumRow(data) | 01_ENUM_ADMIN_SERVICE.js | allowed enum group, no duplicate (ENUM_GROUP, ENUM_VALUE) |
+| update enum row | adminUpdateEnumRow(id, patch) | 01_ENUM_ADMIN_SERVICE.js | row exists, patch DISPLAY_TEXT, SORT_ORDER, NOTE only |
+| activate/inactivate enum | adminSetEnumActive(id, isActive) | 01_ENUM_ADMIN_SERVICE.js | row exists |
+| create master code row | adminCreateMasterCodeRow(data) | 02_MASTER_CODE_ADMIN_SERVICE.js | no duplicate (MASTER_GROUP, CODE), STATUS in MASTER_CODE_STATUS |
+| update master code row | adminUpdateMasterCodeRow(id, patch) | 02_MASTER_CODE_ADMIN_SERVICE.js | row exists, !IS_SYSTEM, ALLOW_EDIT=TRUE |
+| activate/inactivate master code | adminSetMasterCodeStatus(id, status) | 02_MASTER_CODE_ADMIN_SERVICE.js | row exists, status in MASTER_CODE_STATUS |
 | adjust display text | via adminUpdateEnumRow / adminUpdateMasterCodeRow (DISPLAY_TEXT in patch) | — | — |
-| log admin action | logAdminAudit / logAdminAction | 03_SHARED_LOGGER.gs, 03_ADMIN_AUDIT_SERVICE.gs | — |
+| log admin action | logAdminAudit / logAdminAction | 03_SHARED_LOGGER.js, 03_ADMIN_AUDIT_SERVICE.js | — |
 
 ---
 

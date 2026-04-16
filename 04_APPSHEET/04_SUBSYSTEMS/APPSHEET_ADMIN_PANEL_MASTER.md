@@ -37,7 +37,7 @@ Columns: ID, AUDIT_TYPE, ENTITY_TYPE, ENTITY_ID, ACTION, BEFORE_JSON, AFTER_JSON
 ## Admin-Only Restrictions
 
 - **Separate app** recommended; share only with ADMIN_EMAILS
-- ADMIN_EMAILS must be configured in 00_CORE_CONFIG.gs
+- ADMIN_EMAILS must be configured in 00_CORE_CONFIG.js
 - assertAdminAuthority() in every admin GAS function
 
 ---

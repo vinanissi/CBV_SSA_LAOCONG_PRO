@@ -1,6 +1,6 @@
 # CBV Test Runner Documentation
 
-**File:** `07_TEST/CBV_TEST_RUNNER.gs` (copy-paste into Apps Script)
+**File:** `07_TEST/CBV_TEST_RUNNER.js` (copy-paste into Apps Script)
 
 ---
 

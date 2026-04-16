@@ -1,6 +1,6 @@
 # Test Seed Corruption Cases
 
-**Purpose:** Intentionally broken data samples for validation testing. Used by `test_corrupted_seed_samples.tsv` and `task_system_mock_data.gs`.
+**Purpose:** Intentionally broken data samples for validation testing. Used by `test_corrupted_seed_samples.tsv` and `task_system_mock_data.js`.
 
 ---
 

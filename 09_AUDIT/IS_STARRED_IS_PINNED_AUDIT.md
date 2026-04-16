@@ -10,7 +10,7 @@ createTask() không khởi tạo IS_STARRED=false và IS_PINNED=false. Google Sh
 
 ## Fix đã áp dụng
 
-- 20_TASK_SERVICE.gs: thêm IS_STARRED: false, IS_PINNED: false vào record createTask()
+- 20_TASK_SERVICE.js: thêm IS_STARRED: false, IS_PINNED: false vào record createTask()
 - Thêm hàm backfillStarPin() để fix data cũ (chạy 1 lần)
 - SORT_PRIORITY formula: tách status weight (x1000) khỏi DUE_DATE offset, chỉ áp DUE_DATE offset cho active tasks
 

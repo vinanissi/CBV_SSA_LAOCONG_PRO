@@ -1131,8 +1131,8 @@
 
 | File | Change |
 |------|--------|
-| 05_GAS_RUNTIME/03_SHARED_VALIDATION.gs | Added ensureMaxLength(value, maxLen, fieldName) |
-| 05_GAS_RUNTIME/20_TASK_SERVICE.gs | TITLE max 500; block addChecklistItem when STATUS=DONE |
+| 05_GAS_RUNTIME/03_SHARED_VALIDATION.js | Added ensureMaxLength(value, maxLen, fieldName) |
+| 05_GAS_RUNTIME/20_TASK_SERVICE.js | TITLE max 500; block addChecklistItem when STATUS=DONE |
 | 09_AUDIT/TASK_REALISTIC_TEST_SCENARIOS.md | 9 new scenarios; strengthened 1,2,3,12; CRITICAL reclassification; PRODUCTION GATE |
 | 04_APPSHEET/APPSHEET_TASK_POLICY.md | **New** — workflow lock checklist, bypass risk |
 | 04_APPSHEET/TASK_MODULE_FIELD_POLICY.md | Added Section 5: Bypass Risk |

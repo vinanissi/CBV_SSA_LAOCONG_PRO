@@ -60,4 +60,4 @@ Dedicated sheet for health check run summaries.
 - `SYSTEM_HEALTH_LOG_SHEET` — sheet name
 - `SYSTEM_HEALTH_LOG_HEADERS` — column array
 
-Defined in `90_BOOTSTRAP_SCHEMA.gs`.
+Defined in `90_BOOTSTRAP_SCHEMA.js`.

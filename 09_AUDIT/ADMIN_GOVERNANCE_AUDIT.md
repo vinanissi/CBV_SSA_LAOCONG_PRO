@@ -4,7 +4,7 @@
 
 - 00_META/CBV_ADMIN_GOVERNANCE_STANDARD.md
 - 04_APPSHEET/ADMIN_PANEL_DATA_MODEL.md
-- 05_GAS_RUNTIME/01_ENUM_ADMIN_SERVICE.gs, 02_MASTER_CODE_ADMIN_SERVICE.gs
+- 05_GAS_RUNTIME/01_ENUM_ADMIN_SERVICE.js, 02_MASTER_CODE_ADMIN_SERVICE.js
 
 ---
 
@@ -36,7 +36,7 @@
 
 | Check | Status | Evidence |
 |-------|--------|----------|
-| assertAdminAuthority exists | ☐ | 00_CORE_UTILS.gs |
+| assertAdminAuthority exists | ☐ | 00_CORE_UTILS.js |
 | assertAdminAuthority called at admin function entry | ☐ | All 6 admin functions |
 | Throws when ADMIN_EMAILS empty | ☐ | Clear error message |
 | Throws when user not in whitelist | ☐ | Clear error message |

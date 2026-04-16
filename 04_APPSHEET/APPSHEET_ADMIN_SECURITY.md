@@ -93,7 +93,7 @@ If admin tables exist in the same app:
 
 ## 7. Checklist Before Go-Live
 
-- [ ] CBV_CONFIG.ADMIN_EMAILS configured in 00_CORE_CONFIG.gs (add at least one admin email)
+- [ ] CBV_CONFIG.ADMIN_EMAILS configured in 00_CORE_CONFIG.js (add at least one admin email)
 - [ ] Admin Panel app shared only with ADMIN accounts
 - [ ] ENUM_DICTIONARY, MASTER_CODE, ADMIN_AUDIT_LOG tables added
 - [ ] No inline add/edit for ENUM and MASTER_CODE; all writes via GAS actions

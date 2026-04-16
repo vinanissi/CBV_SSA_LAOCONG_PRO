@@ -118,7 +118,7 @@ None. USER_DIRECTORY.ROLE uses ADMIN, OPERATOR, VIEWER correctly.
 
 1. **Resolve M-1 (duplicate seeds):**
    - Choose 02_SEED or 06_DATABASE/SEED as canonical.
-   - Update GAS `DON_VI_SEED` in 95_TASK_SYSTEM_BOOTSTRAP.gs to match chosen TSV, or document that GAS seed is independent.
+   - Update GAS `DON_VI_SEED` in 95_TASK_SYSTEM_BOOTSTRAP.js to match chosen TSV, or document that GAS seed is independent.
    - Add README in 02_SEED and 06_DATABASE/SEED stating which is authoritative.
 
 ---

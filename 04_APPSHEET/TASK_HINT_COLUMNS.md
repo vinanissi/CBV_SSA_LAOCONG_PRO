@@ -157,4 +157,4 @@ IF(
 1. SORT_PRIORITY → Ascending
 2. DUE_DATE → Ascending
 
-**Lưu ý:** IS_STARRED và IS_PINNED KHÔNG dùng trong View Options sort nữa. Thay vào đó dùng `40_STAR_PIN_SERVICE.gs` để write IS_STARRED/IS_PINNED, và SORT_PRIORITY tự encode ưu tiên qua status weight.
+**Lưu ý:** IS_STARRED và IS_PINNED KHÔNG dùng trong View Options sort nữa. Thay vào đó dùng `40_STAR_PIN_SERVICE.js` để write IS_STARRED/IS_PINNED, và SORT_PRIORITY tự encode ưu tiên qua status weight.

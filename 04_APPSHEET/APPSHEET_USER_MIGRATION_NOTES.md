@@ -27,7 +27,7 @@
 - Users might see empty or invalid selections
 
 **Correct order:**
-1. Run data migration (03_USER_MIGRATION_HELPER.gs) so all values are USER_DIRECTORY.ID
+1. Run data migration (03_USER_MIGRATION_HELPER.js) so all values are USER_DIRECTORY.ID
 2. Then update AppSheet slice and ref config
 
 ---
@@ -124,4 +124,4 @@ If migration must be rolled back:
 - 04_APPSHEET/APPSHEET_USER_LAYER.md
 - 04_APPSHEET/APPSHEET_USER_REF_RULES.md
 - 04_APPSHEET/APPSHEET_USER_SECURITY_NOTES.md
-- 05_GAS_RUNTIME/03_USER_MIGRATION_HELPER.gs
+- 05_GAS_RUNTIME/03_USER_MIGRATION_HELPER.js

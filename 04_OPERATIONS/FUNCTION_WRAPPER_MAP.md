@@ -25,34 +25,34 @@ Hệ thống CBV sử dụng **Wrapper + Impl** để:
 
 | Wrapper | Impl | Module/File | Status | Description |
 |---------|------|-------------|--------|-------------|
-| runFullDeployment | runFullDeploymentImpl | 98_deployment_bootstrap.gs | Implemented | Triển khai một chạm đầy đủ |
-| ensureAllSchemas | ensureAllSchemasImpl | 98_schema_manager.gs | Implemented | Đảm bảo tất cả sheet và cột |
-| seedAllData | seedAllDataImpl | 98_seed_manager.gs | Implemented | Gieo DON_VI, USER, ENUM, MASTER_CODE |
-| installTriggers | installTriggersImpl | 90_BOOTSTRAP_INSTALL.gs | Implemented | Cài trigger dailyHealthCheck |
-| removeCbvTriggers | removeCbvTriggersImpl | 90_BOOTSTRAP_INSTALL.gs | Implemented | Gỡ tất cả trigger CBV |
-| (initAll) | initAll | 90_BOOTSTRAP_INIT.gs | Implemented | Gọi qua runSafeMenuStep_, không wrapper |
-| (protectSensitiveSheets) | protectSensitiveSheets | 90_BOOTSTRAP_PROTECTION.gs | Implemented | Gọi qua runSafeMenuStep_ |
+| runFullDeployment | runFullDeploymentImpl | 98_deployment_bootstrap.js | Implemented | Triển khai một chạm đầy đủ |
+| ensureAllSchemas | ensureAllSchemasImpl | 98_schema_manager.js | Implemented | Đảm bảo tất cả sheet và cột |
+| seedAllData | seedAllDataImpl | 98_seed_manager.js | Implemented | Gieo DON_VI, USER, ENUM, MASTER_CODE |
+| installTriggers | installTriggersImpl | 90_BOOTSTRAP_INSTALL.js | Implemented | Cài trigger dailyHealthCheck |
+| removeCbvTriggers | removeCbvTriggersImpl | 90_BOOTSTRAP_INSTALL.js | Implemented | Gỡ tất cả trigger CBV |
+| (initAll) | initAll | 90_BOOTSTRAP_INIT.js | Implemented | Gọi qua runSafeMenuStep_, không wrapper |
+| (protectSensitiveSheets) | protectSensitiveSheets | 90_BOOTSTRAP_PROTECTION.js | Implemented | Gọi qua runSafeMenuStep_ |
 
 ### Audit
 
 | Wrapper | Impl | Module/File | Status | Description |
 |---------|------|-------------|--------|-------------|
-| selfAuditBootstrap | selfAuditBootstrapImpl | 90_BOOTSTRAP_AUDIT.gs | Implemented | Audit bootstrap đầy đủ |
-| verifyAppSheetReadiness | verifyAppSheetReadinessImpl | 50_APPSHEET_VERIFY.gs | Implemented | Xác minh sẵn sàng AppSheet |
-| testSchemaIntegrity | testSchemaIntegrity | 97_TASK_SYSTEM_TEST_RUNNER.gs | Implemented | Kiểm tra schema |
-| validateAllEnums | validateAllEnumsImpl | 98_validation_engine.gs | Implemented | Validate ENUM_DICTIONARY |
-| validateAllRefs | validateAllRefsImpl | 98_validation_engine.gs | Implemented | Validate ref integrity |
-| validateDonViHierarchy | validateDonViHierarchyImpl | 98_validation_engine.gs | Implemented | Validate DON_VI hierarchy |
-| runAllSystemTests | runAllSystemTestsImpl | 97_TASK_SYSTEM_TEST_RUNNER.gs | Implemented | Chạy tất cả test |
+| selfAuditBootstrap | selfAuditBootstrapImpl | 90_BOOTSTRAP_AUDIT.js | Implemented | Audit bootstrap đầy đủ |
+| verifyAppSheetReadiness | verifyAppSheetReadinessImpl | 50_APPSHEET_VERIFY.js | Implemented | Xác minh sẵn sàng AppSheet |
+| testSchemaIntegrity | testSchemaIntegrity | 97_TASK_SYSTEM_TEST_RUNNER.js | Implemented | Kiểm tra schema |
+| validateAllEnums | validateAllEnumsImpl | 98_validation_engine.js | Implemented | Validate ENUM_DICTIONARY |
+| validateAllRefs | validateAllRefsImpl | 98_validation_engine.js | Implemented | Validate ref integrity |
+| validateDonViHierarchy | validateDonViHierarchyImpl | 98_validation_engine.js | Implemented | Validate DON_VI hierarchy |
+| runAllSystemTests | runAllSystemTestsImpl | 97_TASK_SYSTEM_TEST_RUNNER.js | Implemented | Chạy tất cả test |
 | generateDeploymentReport | runFullDeploymentImpl + generateDeploymentReportImpl | 98_*, 98_audit_logger | Implemented | Chạy deployment + ghi report |
 
 ### Repair
 
 | Wrapper | Impl | Module/File | Status | Description |
 |---------|------|-------------|--------|-------------|
-| repairTaskSystemSafely | repairTaskSystemSafelyImpl | 95_TASK_SYSTEM_BOOTSTRAP.gs | Implemented | Sửa task system (cột, schema) |
-| repairSchemaSafely | repairSchemaColumns, repairSchemaAndData | 90_BOOTSTRAP_REPAIR.gs | Implemented | Thêm cột thiếu, sửa schema |
-| repairEnumSafely | runSafeRepair | 01_ENUM_SYNC_SERVICE.gs | Implemented | Sửa enum thiếu/trùng |
+| repairTaskSystemSafely | repairTaskSystemSafelyImpl | 95_TASK_SYSTEM_BOOTSTRAP.js | Implemented | Sửa task system (cột, schema) |
+| repairSchemaSafely | repairSchemaColumns, repairSchemaAndData | 90_BOOTSTRAP_REPAIR.js | Implemented | Thêm cột thiếu, sửa schema |
+| repairEnumSafely | runSafeRepair | 01_ENUM_SYNC_SERVICE.js | Implemented | Sửa enum thiếu/trùng |
 | repairRefSafely | (informational) | — | Stub | Chỉ hướng dẫn; dùng Sửa toàn hệ thống |
 | enforceFinalSchemaSafely | repairSchemaColumns, ensureAllSchemasImpl | 90_BOOTSTRAP_REPAIR, 98_schema | Implemented | Áp dụng schema cuối |
 
@@ -60,11 +60,11 @@ Hệ thống CBV sử dụng **Wrapper + Impl** để:
 
 | Wrapper | Impl | Module/File | Status | Description |
 |---------|------|-------------|--------|-------------|
-| ensureSeedEnumDictionary | seedEnumDictionary | 01_ENUM_SEED.gs | Implemented | Gieo ENUM_DICTIONARY |
-| ensureSeedDonVi | ensureSeedDonVi | 95_TASK_SYSTEM_BOOTSTRAP.gs | Implemented | Gieo DON_VI |
-| ensureSeedMasterCode | ensureSeedTaskType | 95_TASK_SYSTEM_BOOTSTRAP.gs | Implemented | Gieo MASTER_CODE (TASK_TYPE) |
-| ensureSeedUserDirectory | seedUserDirectory | 90_BOOTSTRAP_USER_SEED.gs | Implemented | Gieo USER_DIRECTORY (optional) |
-| buildActiveSlicesSpec | buildActiveSlicesSpecImpl (95) | 95_TASK_SYSTEM_BOOTSTRAP.gs | **⚠ Known Issue** | Xây slice spec — xem mục Known Issues |
+| ensureSeedEnumDictionary | seedEnumDictionary | 01_ENUM_SEED.js | Implemented | Gieo ENUM_DICTIONARY |
+| ensureSeedDonVi | ensureSeedDonVi | 95_TASK_SYSTEM_BOOTSTRAP.js | Implemented | Gieo DON_VI |
+| ensureSeedMasterCode | ensureSeedTaskType | 95_TASK_SYSTEM_BOOTSTRAP.js | Implemented | Gieo MASTER_CODE (TASK_TYPE) |
+| ensureSeedUserDirectory | seedUserDirectory | 90_BOOTSTRAP_USER_SEED.js | Implemented | Gieo USER_DIRECTORY (optional) |
+| buildActiveSlicesSpec | buildActiveSlicesSpecImpl (95) | 95_TASK_SYSTEM_BOOTSTRAP.js | **⚠ Known Issue** | Xây slice spec — xem mục Known Issues |
 | buildEnumSpecReport | auditEnumConsistency, enumHealthCheck | 01_ENUM_AUDIT | Implemented | Báo cáo enum |
 
 ### Task
@@ -72,7 +72,7 @@ Hệ thống CBV sử dụng **Wrapper + Impl** để:
 | Wrapper | Impl | Module/File | Status | Description |
 |---------|------|-------------|--------|-------------|
 | auditTaskModule | selfAuditTaskSystemFull, selfAuditTaskSystem | 95, 96 | Implemented | Audit task module |
-| seedTaskDemo | seedGoldenDataset | 99_DEBUG_SAMPLE_DATA.gs | Implemented | Gieo dữ liệu mẫu Task |
+| seedTaskDemo | seedGoldenDataset | 99_DEBUG_SAMPLE_DATA.js | Implemented | Gieo dữ liệu mẫu Task |
 | testTaskWorkflowRules | runTaskSystemTests, runAllSystemTestsImpl | 97 | Implemented | Test workflow Task |
 | testFieldPolicyReadiness | testFieldPolicyReadiness, runTaskSystemTests | 97 | Implemented | Test field policy |
 | createSampleTaskRows | seedTaskDemo | — | Implemented | Ủy quyền seedTaskDemo |
@@ -81,35 +81,35 @@ Hệ thống CBV sử dụng **Wrapper + Impl** để:
 
 | Wrapper | Impl | Module/File | Status | Description |
 |---------|------|-------------|--------|-------------|
-| auditHoSoModule | runHoSoTests | 99_DEBUG_TEST_HOSO.gs | Implemented | Audit hồ sơ |
-| seedHoSoDemo | seedGoldenDataset | 99_DEBUG_SAMPLE_DATA.gs | Implemented | Gieo demo hồ sơ |
+| auditHoSoModule | runHoSoTests | 99_DEBUG_TEST_HOSO.js | Implemented | Audit hồ sơ |
+| seedHoSoDemo | seedGoldenDataset | 99_DEBUG_SAMPLE_DATA.js | Implemented | Gieo demo hồ sơ |
 | testHoSoRelations | auditHoSoModule | — | Implemented | Ủy quyền auditHoSoModule |
 
 ### Finance
 
 | Wrapper | Impl | Module/File | Status | Description |
 |---------|------|-------------|--------|-------------|
-| auditFinanceModule | runFinanceTests | 99_DEBUG_TEST_FINANCE.gs | Implemented | Audit tài chính |
-| seedFinanceDemo | seedGoldenDataset | 99_DEBUG_SAMPLE_DATA.gs | Implemented | Gieo demo tài chính |
+| auditFinanceModule | runFinanceTests | 99_DEBUG_TEST_FINANCE.js | Implemented | Audit tài chính |
+| seedFinanceDemo | seedGoldenDataset | 99_DEBUG_SAMPLE_DATA.js | Implemented | Gieo demo tài chính |
 | testFinanceDonViMapping | auditFinanceModule | — | Implemented | Ủy quyền auditFinanceModule |
 
 ### Schema Tools
 
 | Wrapper | Impl | Module/File | Status | Description |
 |---------|------|-------------|--------|-------------|
-| dumpAllSheetSchemas | getRequiredSheetNames, getSchemaHeaders | 90_BOOTSTRAP_SCHEMA.gs | Implemented | Dump schema tất cả sheet |
-| auditSchemaMismatch | selfAuditBootstrapImpl | 90_BOOTSTRAP_AUDIT.gs | Implemented | Kiểm tra lệch schema |
+| dumpAllSheetSchemas | getRequiredSheetNames, getSchemaHeaders | 90_BOOTSTRAP_SCHEMA.js | Implemented | Dump schema tất cả sheet |
+| auditSchemaMismatch | selfAuditBootstrapImpl | 90_BOOTSTRAP_AUDIT.js | Implemented | Kiểm tra lệch schema |
 | dumpSchemaProfileFull | dumpAllSheetSchemas | — | Implemented | Ủy quyền dumpAllSheetSchemas |
 
 ### Admin
 
 | Wrapper/Helper | Impl | Module/File | Status | Description |
 |----------------|------|-------------|--------|-------------|
-| openSystemHealthLogSheet | openSheetByName_ | 90_BOOTSTRAP_MENU_HELPERS.gs | Implemented | Mở SYSTEM_HEALTH_LOG |
-| openAdminAuditLogSheet | openSheetByName_ | 90_BOOTSTRAP_MENU_HELPERS.gs | Implemented | Mở ADMIN_AUDIT_LOG |
-| showMissingFunctionReport | — | 90_BOOTSTRAP_MENU_HELPERS.gs | Implemented | Báo cáo hàm Impl thiếu |
-| verifyMenuBindings | — | 90_BOOTSTRAP_MENU_HELPERS.gs | Implemented | Kiểm tra binding menu |
-| showDailyAdminGuide | — | 90_BOOTSTRAP_MENU_HELPERS.gs | Implemented | Hướng dẫn admin hàng ngày |
+| openSystemHealthLogSheet | openSheetByName_ | 90_BOOTSTRAP_MENU_HELPERS.js | Implemented | Mở SYSTEM_HEALTH_LOG |
+| openAdminAuditLogSheet | openSheetByName_ | 90_BOOTSTRAP_MENU_HELPERS.js | Implemented | Mở ADMIN_AUDIT_LOG |
+| showMissingFunctionReport | — | 90_BOOTSTRAP_MENU_HELPERS.js | Implemented | Báo cáo hàm Impl thiếu |
+| verifyMenuBindings | — | 90_BOOTSTRAP_MENU_HELPERS.js | Implemented | Kiểm tra binding menu |
+| showDailyAdminGuide | — | 90_BOOTSTRAP_MENU_HELPERS.js | Implemented | Hướng dẫn admin hàng ngày |
 
 ---
 
@@ -134,7 +134,7 @@ Hệ thống CBV sử dụng **Wrapper + Impl** để:
 ### Phát hiện Impl thiếu (Missing Impl)
 
 1. Chạy menu **Dev / Admin → Báo cáo hàm thiếu** (`showMissingFunctionReport`).
-2. Kiểm tra danh sách Impl trong `90_BOOTSTRAP_MENU_HELPERS.gs` → `requiredImpl`.
+2. Kiểm tra danh sách Impl trong `90_BOOTSTRAP_MENU_HELPERS.js` → `requiredImpl`.
 3. Nếu wrapper gọi `callIfExists_('xyzImpl')` và `xyzImpl` không tồn tại → wrapper sẽ báo "chưa được tải".
 
 ### Phát hiện Impl không dùng (Unused Impl)
@@ -155,12 +155,12 @@ Hệ thống CBV sử dụng **Wrapper + Impl** để:
 ### Thêm hàm mới
 
 1. **Tạo Impl** (`xyzImpl`) trong file logic phù hợp.
-2. **Tạo Wrapper** (`xyz`) trong `90_BOOTSTRAP_MENU_WRAPPERS.gs`:
+2. **Tạo Wrapper** (`xyz`) trong `90_BOOTSTRAP_MENU_WRAPPERS.js`:
    - Gọi `callIfExists_('xyzImpl', ...)`
    - Nếu null → `SpreadsheetApp.getUi().alert('xyzImpl chưa được tải')`; return
    - Nếu có kết quả → hiển thị UI phù hợp
 3. **Tạo menu handler** `menuXyz` gọi `xyz()` (wrapper).
-4. **Thêm vào menu** trong `90_BOOTSTRAP_MENU.gs` → `addItem('Label', 'menuXyz')`.
+4. **Thêm vào menu** trong `90_BOOTSTRAP_MENU.js` → `addItem('Label', 'menuXyz')`.
 5. **Cập nhật** `showMissingFunctionReport` nếu cần.
 
 ### Quy ước đặt tên

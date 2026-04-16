@@ -34,7 +34,7 @@ TASK_CANCEL: NEW | ASSIGNED | IN_PROGRESS | WAITING → CANCELLED
 
 ---
 
-## 2. Valid Transitions (GAS: 20_TASK_SERVICE.gs)
+## 2. Valid Transitions (GAS: 20_TASK_SERVICE.js)
 
 | From       | To          | Action        |
 |------------|-------------|---------------|
