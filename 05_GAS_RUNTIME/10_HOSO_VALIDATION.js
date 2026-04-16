@@ -76,6 +76,19 @@ function hosoNormalizeEmail(e) {
   return String(e).trim().toLowerCase();
 }
 
+/**
+ * True if HO_SO_MASTER row is an HTX cooperative (MASTER_CODE.CODE === HTX for HO_SO_TYPE_ID).
+ * @param {Object} row
+ * @returns {boolean}
+ */
+function hosoMasterRowIsHtx(row) {
+  if (!row) return false;
+  var tid = String(row.HO_SO_TYPE_ID || '').trim();
+  if (!tid) return false;
+  var mc = typeof _findById === 'function' ? _findById(CBV_CONFIG.SHEETS.MASTER_CODE, tid) : null;
+  return mc ? String(mc.CODE || '').trim() === 'HTX' : false;
+}
+
 function hosoNormalizeIdNo(n) {
   if (n == null) return '';
   return String(n).replace(/\s+/g, '').trim();

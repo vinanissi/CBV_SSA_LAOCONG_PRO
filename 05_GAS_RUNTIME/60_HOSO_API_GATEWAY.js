@@ -96,7 +96,12 @@ function _api_getHoSoList_(payload) {
     }
     if (payload.ho_so_type != null && String(payload.ho_so_type).trim() !== '') {
       var ht = String(payload.ho_so_type).trim();
-      rows = rows.filter(function(r) { return String(r.HO_SO_TYPE || '') === ht; });
+      rows = rows.filter(function(r) {
+        var tid = String(r.HO_SO_TYPE_ID || '').trim();
+        if (!tid) return false;
+        var mc = typeof _findById === 'function' ? _findById(CBV_CONFIG.SHEETS.MASTER_CODE, tid) : null;
+        return mc && String(mc.CODE || '').trim() === ht;
+      });
     }
     if (payload.htx_id != null && String(payload.htx_id).trim() !== '') {
       var hx = String(payload.htx_id).trim();
@@ -162,7 +167,7 @@ function _api_updateHoSo_(payload) {
     cbvAssert(payload && payload.id, 'id required');
     cbvAssert(payload.patch, 'patch required');
     var patch = payload.patch || {};
-    var forbidden = ['STATUS', 'ID', 'HO_SO_CODE', 'CREATED_AT', 'CREATED_BY', 'IS_DELETED'];
+    var forbidden = ['STATUS', 'ID', 'HO_SO_CODE', 'CREATED_AT', 'CREATED_BY', 'IS_DELETED', 'PENDING_ACTION'];
     for (var i = 0; i < forbidden.length; i++) {
       var k = forbidden[i];
       if (patch[k] !== undefined) throw new Error('Cannot patch field: ' + k);

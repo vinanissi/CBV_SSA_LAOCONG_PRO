@@ -3,9 +3,16 @@
 See `CBV_LAOCONG_PRO_REFERENCE.md` for deployment order and GAS/AppSheet mapping.
 
 ## HO_SO
-- ACT_HO_SO_ACTIVATE
-- ACT_HO_SO_DEACTIVATE
-- ACT_HO_SO_ARCHIVE
+
+| Action | PENDING_ACTION | GAS (after `CMD:`) | Body id param | Confirmation |
+|--------|----------------|-------------------|-----------------|---------------|
+| ACT_HO_SO_ACTIVATE | CMD:hosoActivate | `changeHosoStatus` → ACTIVE | `hoSoId` | optional |
+| ACT_HO_SO_CLOSE | CMD:hosoClose | `changeHosoStatus` → CLOSED | `hoSoId` | optional |
+| ACT_HO_SO_ARCHIVE | CMD:hosoArchive | `changeHosoStatus` → ARCHIVED | `hoSoId` | optional |
+
+Automation (mirror TASK): table `HO_SO_MASTER`, event Updates, condition `LEFT([PENDING_ACTION], 4) = "CMD:"`, POST Web App JSON `{ "action": [PENDING_ACTION], "hoSoId": [ID], "note": "" }`.
+
+`HO_SO_MASTER` cần cột `PENDING_ACTION`; adapter `PENDING_ADAPTER_HOSO` trong `03_SHARED_PENDING_FEEDBACK.js`.
 
 ## TASK_CENTER
 

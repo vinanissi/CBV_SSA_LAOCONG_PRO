@@ -2,7 +2,7 @@
 
 ## Mục tiêu
 
-Quản lý hồ sơ tập trung: master, file đính kèm, quan hệ nghiệp vụ, nhật ký thay đổi — **non-hybrid**, chỉ **ID ref**, không `HTX_ID`, không `HO_SO_TYPE` text song song với `HO_SO_TYPE_ID`.
+Quản lý hồ sơ tập trung: master, file đính kèm, quan hệ nghiệp vụ, nhật ký thay đổi — **chỉ `HO_SO_TYPE_ID`** → `MASTER_CODE` (group `HO_SO_TYPE`). Không cột `HO_SO_TYPE` text trên sheet; slice ACTIVE_HTX dùng `[HO_SO_TYPE_ID].[CODE]="HTX"`.
 
 ## Schema (final)
 
@@ -32,7 +32,7 @@ Chi tiết cột: `05_GAS_RUNTIME/90_BOOTSTRAP_SCHEMA.js` và `06_DATABASE/schem
 
 ## Migration
 
-Chạy `migrateHosoLegacyToPro_()` sau khi có `MASTER_CODE` nhóm `HO_SO_TYPE`. Map cột cũ `HO_SO_TYPE` / `CODE` / `NAME` / `HTX_ID` (nếu là `DON_VI` hợp lệ) sang cột PRO — **không xóa cột** trên sheet.
+Chạy `migrateHosoLegacyToPro_()` trước khi gỡ cột legacy (nếu từng có `HO_SO_TYPE` text). Sau khi AppSheet/GAS không còn phụ thuộc cột đó, có thể **xóa cột** `HO_SO_TYPE` khỏi Google Sheet và chạy `ensureSchemas` theo `90_BOOTSTRAP_SCHEMA.js`.
 
 ## Tài liệu liên quan
 

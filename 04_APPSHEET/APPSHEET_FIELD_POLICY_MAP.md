@@ -45,7 +45,7 @@ Complete field policy classification for Phase 1 deployment. Use for Show?, Edit
 
 | Table | Field | ENUM_GROUP | Policy |
 |-------|-------|------------|--------|
-| HO_SO_MASTER | HO_SO_TYPE | HO_SO_TYPE | VISIBLE_CONTROLLED |
+| HO_SO_MASTER | HO_SO_TYPE_ID | — | Ref MASTER_CODE (group HO_SO_TYPE); VISIBLE_CONTROLLED |
 | HO_SO_MASTER | STATUS | HO_SO_STATUS | VISIBLE_CONTROLLED (GAS action only) |
 | HO_SO_FILE | FILE_GROUP | FILE_GROUP | VISIBLE_CONTROLLED |
 | HO_SO_FILE | STATUS | HO_SO_STATUS | VISIBLE_CONTROLLED |
@@ -74,7 +74,7 @@ Complete field policy classification for Phase 1 deployment. Use for Show?, Edit
 | TASK_MAIN | TASK_TYPE_ID | TASK_TYPE | REF to ACTIVE_TASK_TYPE slice |
 | TASK_MAIN | DON_VI_ID | — | REF to ACTIVE_DON_VI |
 | FINANCE_TRANSACTION | DON_VI_ID | — | REF to ACTIVE_DON_VI (unit attribution) |
-| HO_SO_MASTER | HTX_ID | — | REF to HO_SO_MASTER where HO_SO_TYPE=HTX |
+| HO_SO_MASTER | HTX_ID | — | REF ACTIVE_HTX (`HO_SO_TYPE_ID` → CODE HTX) |
 
 **Note:** TASK_GROUP_CODE, CATEGORY_CODE, DOC_GROUP_CODE are NOT in schema. Do not add to policy map.
 
@@ -155,7 +155,7 @@ Complete field policy classification for Phase 1 deployment. Use for Show?, Edit
 | COLUMN_NAME | FIELD_ROLE | POLICY_TYPE | SHOW_DEFAULT | EDITABLE_DEFAULT | SHOW_IF | EDITABLE_IF | DATA_SOURCE | RISK_NOTE | APPSHEET_NOTE |
 |-------------|------------|-------------|--------------|------------------|---------|-------------|-------------|------------|----------------|
 | ID | SYSTEM_KEY | HIDDEN_READONLY | OFF | OFF | — | FALSE | SYSTEM | | |
-| HO_SO_TYPE | ENUM_FIELD | VISIBLE_CONTROLLED | ON | ON | — | TRUE | ENUM | Valid_If ENUM_DICTIONARY | |
+| HO_SO_TYPE_ID | REF_FIELD | VISIBLE_CONTROLLED | ON | ON | — | TRUE | REF | Valid_If MASTER_CODE HO_SO_TYPE | |
 | CODE | BUSINESS_INPUT | VISIBLE_EDITABLE | ON | ON | — | TRUE | BUSINESS | GAS validates duplicate | |
 | NAME | BUSINESS_INPUT | VISIBLE_EDITABLE | ON | ON | — | TRUE | BUSINESS | | |
 | STATUS | WORKFLOW_FIELD | VISIBLE_CONTROLLED | ON | OFF | — | FALSE | ENUM | GAS action only | |
@@ -168,7 +168,8 @@ Complete field policy classification for Phase 1 deployment. Use for Show?, Edit
 | START_DATE | BUSINESS_INPUT | VISIBLE_EDITABLE | ON | ON | — | TRUE | BUSINESS | | |
 | END_DATE | BUSINESS_INPUT | VISIBLE_EDITABLE | ON | ON | — | TRUE | BUSINESS | | |
 | NOTE | BUSINESS_INPUT | VISIBLE_EDITABLE | ON | ON | — | TRUE | BUSINESS | | |
-| TAGS | BUSINESS_INPUT | VISIBLE_EDITABLE | ON | ON | — | TRUE | BUSINESS | | |
+| TAGS_TEXT | BUSINESS_INPUT | VISIBLE_EDITABLE | ON | ON | — | TRUE | BUSINESS | | |
+| PENDING_ACTION | WORKFLOW_FIELD | VISIBLE_READONLY | ON | OFF | — | FALSE | WEBHOOK | CMD: + bot | |
 | CREATED_AT | AUDIT_FIELD | HIDDEN_READONLY | OFF | OFF | — | FALSE | AUDIT | | |
 | CREATED_BY | AUDIT_FIELD | HIDDEN_READONLY | OFF | OFF | — | FALSE | AUDIT | | |
 | UPDATED_AT | AUDIT_FIELD | HIDDEN_READONLY | OFF | OFF | — | FALSE | AUDIT | | |
@@ -419,8 +420,8 @@ Editable_If: AND([IS_SYSTEM] = FALSE, [ALLOW_EDIT] = TRUE)
 ## PART 5 — Safe Defaults by Table
 
 ### HO_SO_MASTER
-- **List:** NAME, CODE, HO_SO_TYPE, STATUS, PHONE
-- **Form:** NAME, CODE, HO_SO_TYPE, HTX_ID, OWNER_ID, PHONE, EMAIL, ADDRESS, NOTE (STATUS readonly)
+- **List:** NAME, CODE, HO_SO_TYPE_ID, STATUS, PHONE
+- **Form:** NAME, CODE, HO_SO_TYPE_ID, HTX_ID, OWNER_ID, PHONE, EMAIL, ADDRESS, NOTE, TAGS_TEXT (STATUS readonly; PENDING_ACTION cho bot)
 - **Hide:** ID, CREATED_*, UPDATED_*, IS_DELETED
 
 ### TASK_MAIN

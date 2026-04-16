@@ -6,7 +6,7 @@ Implementation: `05_GAS_RUNTIME/10_HOSO_SERVICE.js` (+ repository / validation /
 
 | Function | Mô tả |
 |----------|--------|
-| `createHoSo(data)` / `createHoso(data)` | Tạo master; sinh `ID`, `HO_SO_CODE`; ghi legacy `HO_SO_TYPE`/`CODE`/`NAME` khi có; log `CREATE` |
+| `createHoSo(data)` / `createHoso(data)` | Tạo master; sinh `ID`, `HO_SO_CODE`; bắt buộc `HO_SO_TYPE_ID`; `TAGS_TEXT`; `IS_STARRED`/`IS_PINNED`/`PENDING_ACTION` mặc định; log `CREATE` |
 | `updateHoso(id, patch)` | Patch (không `STATUS`, không `HO_SO_CODE`); log `UPDATE_INFO` |
 | `changeHosoStatus(id, newStatus, note)` | Đổi trạng thái; log `CHANGE_STATUS` |
 | `closeHoso(id, note)` | `STATUS=CLOSED`; log `CLOSE` |

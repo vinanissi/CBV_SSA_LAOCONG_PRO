@@ -3,7 +3,7 @@
  * Aligned with 06_DATABASE/schema_manifest.json and _generated_schema/*.csv
  */
 /**
- * CBV PRO final schema. No hybrid/legacy columns.
+ * CBV PRO final schema. HO_SO_MASTER: loại hồ sơ chỉ qua HO_SO_TYPE_ID (MASTER_CODE); không cột HO_SO_TYPE text.
  */
 const CBV_SCHEMA_MANIFEST = {
   USER_DIRECTORY: ['ID', 'USER_CODE', 'FULL_NAME', 'DISPLAY_NAME', 'EMAIL', 'PHONE', 'ROLE', 'POSITION', 'STATUS', 'IS_SYSTEM', 'ALLOW_LOGIN', 'NOTE', 'CREATED_AT', 'CREATED_BY', 'UPDATED_AT', 'UPDATED_BY', 'IS_DELETED'],
@@ -13,43 +13,42 @@ const CBV_SCHEMA_MANIFEST = {
   // ===== DÁN VÀO CBV_SCHEMA_MANIFEST =====
  
   HO_SO_MASTER: [
-    // ── Cột gốc (đúng thứ tự Sheet) ────────────────────────────────
-    'ID',           // col 1
-    'HO_SO_TYPE',   // col 2
-    'CODE',         // col 3
-    'NAME',         // col 4
-    'STATUS',       // col 5  ← Sheet đặt STATUS ở đây
-    'HTX_ID',       // col 6
-    'OWNER_ID',     // col 7
-    'PHONE',        // col 8
-    'EMAIL',        // col 9
-    'ID_NO',        // col 10
-    'ADDRESS',      // col 11
-    'START_DATE',   // col 12
-    'END_DATE',     // col 13
-    'NOTE',         // col 14
-    'TAGS',         // col 15
-    'CREATED_AT',   // col 16
-    'CREATED_BY',   // col 17
-    'UPDATED_AT',   // col 18
-    'UPDATED_BY',   // col 19
-    'IS_DELETED',   // col 20
+    'ID',
+    'CODE',
+    'NAME',
+    'HO_SO_CODE',
+    'TITLE',
+    'DISPLAY_NAME',
+    'HO_SO_TYPE_ID',
+    'STATUS',
+    'DON_VI_ID',
+    'OWNER_ID',
+    'HTX_ID',
+    'MANAGER_USER_ID',
+    'RELATED_ENTITY_TYPE',
+    'RELATED_ENTITY_ID',
+    'FULL_NAME',
+    'PHONE',
+    'EMAIL',
+    'ID_TYPE',
+    'ID_NO',
+    'DOB',
+    'ADDRESS',
+    'START_DATE',
+    'END_DATE',
+    'PRIORITY',
+    'SOURCE_CHANNEL',
+    'SUMMARY',
+    'NOTE',
+    'TAGS_TEXT',
+    'CREATED_AT',
+    'CREATED_BY',
+    'UPDATED_AT',
+    'UPDATED_BY',
     'IS_STARRED',
     'IS_PINNED',
-    // ── Cột mở rộng PRO (Sheet đặt sau IS_DELETED) ──────────────────
-    'HO_SO_CODE',           // col 21
-    'TITLE',                // col 22
-    'DISPLAY_NAME',         // col 23
-    'DON_VI_ID',            // col 24
-    'MANAGER_USER_ID',      // col 25
-    'RELATED_ENTITY_TYPE',  // col 26
-    'RELATED_ENTITY_ID',    // col 27
-    'FULL_NAME',            // col 28
-    'ID_TYPE',              // col 39
-    'DOB',                  // col 30
-    'PRIORITY',             // col 31
-    'SOURCE_CHANNEL',       // col 32
-    'SUMMARY',              // col 33
+    'IS_DELETED',
+    'PENDING_ACTION'
   ],
  
   HO_SO_FILE: [

@@ -1,4 +1,17 @@
 /**
+ * HTX check via HO_SO_TYPE_ID → MASTER_CODE (no HO_SO_TYPE column).
+ * @param {Object} hoSoRow
+ * @returns {boolean}
+ */
+function _userValidationHosoRowIsHtx_(hoSoRow) {
+  if (!hoSoRow) return false;
+  var tid = String(hoSoRow.HO_SO_TYPE_ID || '').trim();
+  if (!tid) return false;
+  var mc = typeof _findById === 'function' ? _findById(CBV_CONFIG.SHEETS.MASTER_CODE, tid) : null;
+  return mc ? String(mc.CODE || '').trim() === 'HTX' : false;
+}
+
+/**
  * CBV User Validation - Reusable validation for USER_DIRECTORY.
  * Used by TASK and FINANCE services, admin create/update flows.
  * Dependencies: 02_USER_SERVICE, 01_ENUM_SERVICE, 03_SHARED_VALIDATION, 03_SHARED_REPOSITORY
@@ -39,8 +52,8 @@ function validateUserRecordForCreate(record) {
 
   if (record.HTX_ID) {
     var hoSo = typeof _findById === 'function' ? _findById(CBV_CONFIG.SHEETS.HO_SO_MASTER, record.HTX_ID) : null;
-    if (!hoSo || String(hoSo.HO_SO_TYPE || '').trim() !== 'HTX') {
-      throw new Error('HTX_ID must reference a valid HTX (HO_SO_TYPE=HTX)');
+    if (!hoSo || !_userValidationHosoRowIsHtx_(hoSo)) {
+      throw new Error('HTX_ID must reference a valid HTX (HO_SO_TYPE_ID → MASTER_CODE.CODE=HTX)');
     }
   }
 }
@@ -82,9 +95,9 @@ function validateUserRecordForUpdate(id, patch) {
     });
   }
   if (patch.HTX_ID != null && String(patch.HTX_ID).trim() !== '') {
-    var hoSo = typeof _findById === 'function' ? _findById(CBV_CONFIG.SHEETS.HO_SO_MASTER, patch.HTX_ID) : null;
-    if (!hoSo || String(hoSo.HO_SO_TYPE || '').trim() !== 'HTX') {
-      throw new Error('HTX_ID must reference a valid HTX (HO_SO_TYPE=HTX)');
+    var hoSo2 = typeof _findById === 'function' ? _findById(CBV_CONFIG.SHEETS.HO_SO_MASTER, patch.HTX_ID) : null;
+    if (!hoSo2 || !_userValidationHosoRowIsHtx_(hoSo2)) {
+      throw new Error('HTX_ID must reference a valid HTX (HO_SO_TYPE_ID → MASTER_CODE.CODE=HTX)');
     }
   }
 }

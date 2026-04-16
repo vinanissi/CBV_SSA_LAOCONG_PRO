@@ -9,16 +9,16 @@
  * - MASTER_CODE = static/semi-static master data only
  *
  * Menu structure:
- * 1. Daily Admin Flow (most important, top)
- * 2. Bootstrap & Init
- * 3. Audit & Health
- * 4. Master Data
- * 5. Task Module
- * 6. Hồ sơ Module
- * 7. Tài chính Module
- * 8. Schema Tools
- * 9. Repair Zone (dangerous, separated)
- * 10. Dev / Admin
+ * 1. Daily operations
+ * 2. Bootstrap & init
+ * 3. Audit & health
+ * 4. Master data
+ * 5. Tasks
+ * 6. Records (HO_SO)
+ * 7. Finance
+ * 8. Schema tools
+ * 9. Repair zone (dangerous)
+ * 10. Developer / admin
  */
 
 /**
@@ -28,112 +28,112 @@ function buildCbvProMenu_() {
   var ui = SpreadsheetApp.getUi();
   if (!ui) return;
 
-  var menu = ui.createMenu('🚀 CBV PRO');
+  var menu = ui.createMenu('CBV PRO');
 
-  // 1. Daily Admin Flow - most important
+  // 1. Daily operations
   menu.addSubMenu(
-    ui.createMenu('📅 Daily Admin Flow')
-      .addItem('✔ Kiểm tra sức khỏe', 'menuDailyHealthCheck')
-      .addItem('✔ Xác minh AppSheet', 'menuVerifyAppSheetReadiness')
-      .addItem('📄 Mở SYSTEM_HEALTH_LOG', 'menuOpenHealthLog')
-      .addItem('📄 Mở ADMIN_AUDIT_LOG', 'menuOpenAuditLog')
-      .addItem('🔎 Chạy Audit nhanh', 'menuQuickAuditRun')
-      .addItem('📖 Hướng dẫn Admin hàng ngày', 'showDailyAdminGuide')
+    ui.createMenu('Daily operations')
+      .addItem('Run system health check', 'menuDailyHealthCheck')
+      .addItem('Verify AppSheet readiness', 'menuVerifyAppSheetReadiness')
+      .addItem('Open SYSTEM_HEALTH_LOG', 'menuOpenHealthLog')
+      .addItem('Open ADMIN_AUDIT_LOG', 'menuOpenAuditLog')
+      .addItem('Quick audit run', 'menuQuickAuditRun')
+      .addItem('Daily admin guide', 'showDailyAdminGuide')
   );
 
-  // 2. Bootstrap & Init
+  // 2. Bootstrap & init
   menu.addSubMenu(
-    ui.createMenu('🏗️ Bootstrap & Init')
-      .addItem('▶ Triển khai đầy đủ', 'menuRunFullDeployment')
-      .addItem('📐 Đảm bảo schema', 'menuEnsureSchemas')
-      .addItem('🌱 Gieo tất cả dữ liệu', 'menuSeedAllData')
-      .addItem('🔒 Bảo vệ sheet nhạy cảm', 'menuProtectSensitiveSheets')
-      .addItem('⏰ Cài đặt Triggers', 'menuInstallTriggers')
-      .addItem('⏹ Gỡ Triggers', 'menuRemoveTriggers')
-      .addItem('📌 Cài onEdit (Task)', 'menuInstallOnEditTrigger')
-      .addItem('📌 Gỡ onEdit (Task)', 'menuUninstallOnEditTrigger')
+    ui.createMenu('Bootstrap & init')
+      .addItem('Run full deployment', 'menuRunFullDeployment')
+      .addItem('Ensure sheet schemas (headers)', 'menuEnsureSchemas')
+      .addItem('Seed all reference data', 'menuSeedAllData')
+      .addItem('Protect sensitive sheets', 'menuProtectSensitiveSheets')
+      .addItem('Install time-based triggers', 'menuInstallTriggers')
+      .addItem('Remove time-based triggers', 'menuRemoveTriggers')
+      .addItem('Install onEdit trigger (tasks)', 'menuInstallOnEditTrigger')
+      .addItem('Remove onEdit trigger (tasks)', 'menuUninstallOnEditTrigger')
   );
 
-  // 3. Audit & Health
+  // 3. Audit & health
   menu.addSubMenu(
-    ui.createMenu('🔎 Audit & Health')
-      .addItem('🩺 Self Audit', 'menuSelfAuditBootstrap')
-      .addItem('✅ Xác minh AppSheet', 'menuVerifyAppSheet')
-      .addItem('📐 Kiểm tra Schema', 'menuTestSchemaIntegrity')
-      .addItem('📊 Kiểm tra Enum', 'menuValidateEnums')
-      .addItem('🔗 Kiểm tra Ref', 'menuValidateRefs')
-      .addItem('🏢 Kiểm tra DON_VI', 'menuValidateDonViHierarchy')
-      .addItem('🧪 Chạy tất cả test', 'menuRunAllTests')
-      .addItem('📋 Báo cáo triển khai', 'menuGenerateDeploymentReport')
+    ui.createMenu('Audit & health')
+      .addItem('Self-audit (bootstrap)', 'menuSelfAuditBootstrap')
+      .addItem('Verify AppSheet (full)', 'menuVerifyAppSheet')
+      .addItem('Validate schema integrity', 'menuTestSchemaIntegrity')
+      .addItem('Validate enums', 'menuValidateEnums')
+      .addItem('Validate references', 'menuValidateRefs')
+      .addItem('Validate DON_VI hierarchy', 'menuValidateDonViHierarchy')
+      .addItem('Run all automated tests', 'menuRunAllTests')
+      .addItem('Generate deployment report', 'menuGenerateDeploymentReport')
   );
 
-  // 4. Master Data
+  // 4. Master data
   menu.addSubMenu(
-    ui.createMenu('🗂️ Master Data')
-      .addItem('📊 Gieo ENUM_DICTIONARY', 'menuSeedEnumDictionary')
-      .addItem('🏢 Gieo DON_VI', 'menuSeedDonVi')
-      .addItem('📑 Gieo MASTER_CODE', 'menuSeedMasterCode')
-      .addItem('👤 Gieo USER_DIRECTORY', 'menuSeedUserDirectory')
-      .addItem('📋 Xây Slice Spec', 'menuBuildSliceSpec')
-      .addItem('📋 Báo cáo Enum', 'menuBuildEnumSpecReport')
+    ui.createMenu('Master data')
+      .addItem('Seed ENUM_DICTIONARY', 'menuSeedEnumDictionary')
+      .addItem('Seed DON_VI', 'menuSeedDonVi')
+      .addItem('Seed MASTER_CODE', 'menuSeedMasterCode')
+      .addItem('Seed USER_DIRECTORY', 'menuSeedUserDirectory')
+      .addItem('Build slice specification', 'menuBuildSliceSpec')
+      .addItem('Build enum specification report', 'menuBuildEnumSpecReport')
   );
 
-  // 5. Task Module
+  // 5. Tasks
   menu.addSubMenu(
-    ui.createMenu('✅ Task Module')
-      .addItem('🔎 Audit Task', 'menuAuditTaskModule')
-      .addItem('🌱 Gieo Task Demo', 'menuSeedTaskDemo')
-      .addItem('🧪 Test Task Workflow', 'menuTestTaskWorkflow')
-      .addItem('📋 Test Field Policy', 'menuTestTaskFieldPolicy')
-      .addItem('➕ Tạo mẫu Task', 'menuCreateSampleTaskRows')
+    ui.createMenu('Tasks')
+      .addItem('Audit task module', 'menuAuditTaskModule')
+      .addItem('Seed task demo data', 'menuSeedTaskDemo')
+      .addItem('Test task workflow', 'menuTestTaskWorkflow')
+      .addItem('Test field policy', 'menuTestTaskFieldPolicy')
+      .addItem('Create sample task rows', 'menuCreateSampleTaskRows')
   );
 
-  // 6. Hồ sơ Module
+  // 6. Records (HO_SO)
   menu.addSubMenu(
-    ui.createMenu('📁 Hồ sơ Module')
-      .addItem('▶ Triển khai HO_SO (bootstrap+seed+audit+smoke)', 'menuHosoFullDeploy')
-      .addItem('🔎 Audit Hồ sơ', 'menuAuditHoSo')
-      .addItem('🌱 Gieo Hồ sơ Demo', 'menuSeedHoSoDemo')
-      .addItem('🧪 Test Quan hệ Hồ sơ', 'menuTestHoSoRelations')
-      .addItem('🔍 Kiểm tra hồ sơ đầy đủ', 'menuCheckHoSoCompleteness')
-      .addItem('⏰ Giấy tờ sắp hết hạn (60 ngày)', 'menuGetExpiringDocs')
-      .addItem('📋 Xuất báo cáo hồ sơ', 'menuGenerateHoSoReport')
+    ui.createMenu('Records (HO_SO)')
+      .addItem('Deploy HO_SO (bootstrap + seed + audit)', 'menuHosoFullDeploy')
+      .addItem('Audit HO_SO module', 'menuAuditHoSo')
+      .addItem('Seed HO_SO demo data', 'menuSeedHoSoDemo')
+      .addItem('Test HO_SO relations', 'menuTestHoSoRelations')
+      .addItem('Check HO_SO completeness', 'menuCheckHoSoCompleteness')
+      .addItem('Expiring documents (60 days)', 'menuGetExpiringDocs')
+      .addItem('Generate HO_SO report', 'menuGenerateHoSoReport')
   );
 
-  // 7. Tài chính Module
+  // 7. Finance
   menu.addSubMenu(
-    ui.createMenu('💰 Tài chính Module')
-      .addItem('🔎 Audit Tài chính', 'menuAuditFinance')
-      .addItem('🌱 Gieo Tài chính Demo', 'menuSeedFinanceDemo')
-      .addItem('🧪 Test DON_VI mapping', 'menuTestFinanceDonViMapping')
+    ui.createMenu('Finance')
+      .addItem('Audit finance module', 'menuAuditFinance')
+      .addItem('Seed finance demo data', 'menuSeedFinanceDemo')
+      .addItem('Test DON_VI mapping', 'menuTestFinanceDonViMapping')
   );
 
-  // 8. Schema Tools
+  // 8. Schema tools
   menu.addSubMenu(
-    ui.createMenu('🧰 Schema Tools')
-      .addItem('📋 Dump tất cả Schema', 'menuDumpAllSheetSchemas')
-      .addItem('⚠ Kiểm tra lệch Schema', 'menuAuditSchemaMismatch')
-      .addItem('📋 Schema Profile đầy đủ', 'menuDumpFullSchemaProfile')
+    ui.createMenu('Schema tools')
+      .addItem('Dump all sheet schemas', 'menuDumpAllSheetSchemas')
+      .addItem('Audit schema vs manifest', 'menuAuditSchemaMismatch')
+      .addItem('Dump full schema profile', 'menuDumpFullSchemaProfile')
   );
 
-  // 9. Repair Zone - dangerous, clearly separated
+  // 9. Repair zone
   menu.addSubMenu(
-    ui.createMenu('🛠️ Repair Zone')
-      .addItem('⚠ Sửa toàn hệ thống', 'menuRepairWholeSystemSafely')
-      .addItem('⚠ Sửa Schema', 'menuRepairSchemaSafely')
-      .addItem('⚠ Sửa Enum', 'menuRepairEnumSafely')
-      .addItem('⚠ Sửa Ref', 'menuRepairRefSafely')
-      .addItem('⚠ Áp dụng Schema cuối', 'menuEnforceFinalSchemaSafely')
+    ui.createMenu('Repair zone')
+      .addItem('Repair whole system (safe)', 'menuRepairWholeSystemSafely')
+      .addItem('Repair schema columns', 'menuRepairSchemaSafely')
+      .addItem('Repair enums', 'menuRepairEnumSafely')
+      .addItem('Repair references (info)', 'menuRepairRefSafely')
+      .addItem('Enforce final schema', 'menuEnforceFinalSchemaSafely')
   );
 
-  // 10. Dev / Admin
+  // 10. Developer / admin
   menu.addSubMenu(
-    ui.createMenu('⚙️ Dev / Admin')
-      .addItem('📄 Mở SYSTEM_HEALTH_LOG', 'menuOpenSystemHealthLog')
-      .addItem('📄 Mở ADMIN_AUDIT_LOG', 'menuOpenAdminAuditLog')
-      .addItem('🔍 Báo cáo hàm thiếu', 'showMissingFunctionReport')
-      .addItem('🔗 Kiểm tra Menu', 'verifyMenuBindings')
-      .addItem('📖 Hướng dẫn Admin', 'showDailyAdminGuide')
+    ui.createMenu('Developer / admin')
+      .addItem('Open SYSTEM_HEALTH_LOG', 'menuOpenSystemHealthLog')
+      .addItem('Open ADMIN_AUDIT_LOG', 'menuOpenAdminAuditLog')
+      .addItem('Show missing Impl report', 'showMissingFunctionReport')
+      .addItem('Verify menu bindings', 'verifyMenuBindings')
+      .addItem('Admin guide', 'showDailyAdminGuide')
   );
 
   menu.addToUi();

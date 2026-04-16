@@ -148,7 +148,7 @@ Create slices before configuring Ref columns. See APPSHEET_SLICE_MAP.md.
 
 - [ ] **ACTIVE_USERS** — Source: MASTER_CODE; Filter: `AND([MASTER_GROUP] = "USER", [STATUS] = "ACTIVE", [IS_DELETED] = FALSE)`
 - [ ] **ACTIVE_MASTER_CODES** — Source: MASTER_CODE; Filter: `AND([STATUS] = "ACTIVE", [IS_DELETED] = FALSE)`
-- [ ] **ACTIVE_HTX** — Source: HO_SO_MASTER; Filter: `AND([HO_SO_TYPE] = "HTX", [IS_DELETED] = FALSE)`
+- [ ] **ACTIVE_HTX** — Source: HO_SO_MASTER; Filter: `AND([HO_SO_TYPE_ID].[CODE] = "HTX", [IS_DELETED] = FALSE)` (cột `HO_SO_TYPE_ID` là Ref → `MASTER_CODE`)
 - [ ] **HO_SO_ACTIVE** — Source: HO_SO_MASTER; Filter: `[IS_DELETED] = FALSE`
 - [ ] **TASK_OPEN** — Source: TASK_MAIN; Filter: `IN([STATUS], LIST("NEW", "ASSIGNED", "IN_PROGRESS", "WAITING"))`
 - [ ] **TASK_DONE** — Source: TASK_MAIN; Filter: `[STATUS] = "DONE"`
@@ -167,7 +167,7 @@ For each table, go to **Data → Columns → [Table name]** and configure.
 
 **Step 2:** Set column types (leave as Text unless noted):
 - ID → Text (Key)
-- HO_SO_TYPE → Text (enum; Valid_If later)
+- HO_SO_TYPE_ID → Ref → `MASTER_CODE` (slice loại HO_SO_TYPE); không cột `HO_SO_TYPE` text
 - CODE → Text
 - NAME → Text
 - STATUS → Text (readonly)
@@ -385,12 +385,12 @@ For each enum-controlled field, go to **Data → Columns → [Table] → [Column
 
 **AppSheet Valid_If:** Paste the exact formula. Do NOT enable "Allow other values" in List/Choice.
 
-### 4.1 HO_SO_MASTER.HO_SO_TYPE
+### 4.1 HO_SO_MASTER.HO_SO_TYPE_ID
 
-- Table: HO_SO_MASTER | Column: HO_SO_TYPE
+- Table: HO_SO_MASTER | Column: HO_SO_TYPE_ID (Ref → MASTER_CODE)
 - Valid_If:
 ```
-IN([HO_SO_TYPE], SELECT(ENUM_DICTIONARY[ENUM_VALUE], AND(ENUM_DICTIONARY[ENUM_GROUP] = "HO_SO_TYPE", ENUM_DICTIONARY[IS_ACTIVE] = TRUE)))
+IN([HO_SO_TYPE_ID], SELECT(MASTER_CODE[ID], AND([MASTER_GROUP] = "HO_SO_TYPE", [STATUS] = "ACTIVE", [IS_DELETED] = FALSE)))
 ```
 
 ### 4.2 HO_SO_MASTER.STATUS
@@ -560,7 +560,7 @@ For each form view, set column order and visibility.
 ### 7.1 HO_SO_FORM
 
 - [ ] Open UX → HO_SO_FORM → Form columns
-- [ ] Order: HO_SO_TYPE, CODE, NAME, HTX_ID, OWNER_ID, PHONE, EMAIL, ID_NO, ADDRESS, START_DATE, END_DATE, NOTE, TAGS, STATUS
+- [ ] Order: HO_SO_TYPE_ID, CODE, NAME, HTX_ID, OWNER_ID, PHONE, EMAIL, ID_NO, ADDRESS, START_DATE, END_DATE, NOTE, TAGS_TEXT, STATUS, PENDING_ACTION
 - [ ] Hide: ID, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY, IS_DELETED
 - [ ] STATUS: Editable? = FALSE
 
@@ -736,7 +736,7 @@ For each Related/Inline section under parent Detail, configure visible columns.
 
 | Table | Key | Label | Ref Columns | IsPartOf | File Column | Valid_If Fields |
 |-------|-----|-------|-------------|----------|-------------|----------------|
-| HO_SO_MASTER | ID | NAME | HTX_ID | — | — | HO_SO_TYPE, STATUS |
+| HO_SO_MASTER | ID | NAME | HTX_ID | — | — | HO_SO_TYPE_ID, STATUS |
 | HO_SO_FILE | ID | FILE_NAME | HO_SO_ID | ON | FILE_URL | FILE_GROUP |
 | HO_SO_RELATION | ID | RELATION_TYPE | FROM, TO | OFF | — | STATUS |
 | TASK_MAIN | ID | TITLE | RELATED_ENTITY_ID | — | — | TASK_TYPE, STATUS, PRIORITY, RELATED_ENTITY_TYPE |

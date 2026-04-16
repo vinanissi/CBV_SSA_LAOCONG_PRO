@@ -139,7 +139,7 @@ ID, TASK_ID, UPDATE_TYPE, CONTENT, ACTOR_ID, CREATED_AT, CREATED_BY, UPDATED_AT,
 
 ## Notes
 
-- **ACTIVE_HTX:** Slice of HO_SO_MASTER where HO_SO_TYPE = 'HTX' and STATUS active.
+- **ACTIVE_HTX:** Slice of `HO_SO_MASTER` where `HO_SO_TYPE_ID` references `MASTER_CODE` with `CODE = 'HTX'`, `IS_DELETED = FALSE` (AppSheet: `AND([HO_SO_TYPE_ID].[CODE]="HTX", [IS_DELETED]=FALSE)`).
 - **ACTIVE_USERS:** Slice of USER_DIRECTORY where STATUS active (or equivalent).
 - No attachments in TASK_MAIN; no logs in TASK_MAIN.
 

@@ -313,7 +313,7 @@ function _goldenSeedUsers(now, user, summary) {
  */
 function _goldenResolveHoSoTypeIdForSeed(legacyToken) {
   var raw = String(legacyToken || '').trim();
-  var map = { HTX: 'KHAC', XA_VIEN: 'HO_SO_XA_VIEN', XE: 'HO_SO_PHUONG_TIEN', TAI_XE: 'HO_SO_TAI_XE' };
+  var map = { HTX: 'HTX', XA_VIEN: 'XA_VIEN', XE: 'XE', TAI_XE: 'TAI_XE' };
   var mcCode = map[raw] || raw || 'KHAC';
   if (typeof hosoRepoRows !== 'function') return '';
   var rows = hosoRepoRows(CBV_CONFIG.SHEETS.MASTER_CODE);
@@ -369,7 +369,7 @@ function _goldenSeedHTX(now, user, summary) {
       ADDRESS: '',
       START_DATE: '',
       END_DATE: '',
-      PRIORITY: 'MEDIUM',
+      PRIORITY: 'TRUNG_BINH',
       SOURCE_CHANNEL: 'DIRECT',
       SUMMARY: '',
       NOTE: '[GOLDEN] Demo hồ sơ (slot legacy HTX) — PRO schema, safe to delete',
@@ -378,7 +378,10 @@ function _goldenSeedHTX(now, user, summary) {
       CREATED_BY: user,
       UPDATED_AT: now,
       UPDATED_BY: user,
-      IS_DELETED: false
+      IS_STARRED: false,
+      IS_PINNED: false,
+      IS_DELETED: false,
+      PENDING_ACTION: ''
     };
     if (typeof _appendRecord === 'function') {
       _appendRecord(sheetName, record);

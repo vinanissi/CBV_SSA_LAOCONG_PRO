@@ -130,7 +130,6 @@ var ENUM_USAGE_CONFIG = [
   { table: 'MASTER_CODE', column: 'STATUS', enumGroup: 'MASTER_CODE_STATUS', required: true },
   { table: 'USER_DIRECTORY', column: 'ROLE', enumGroup: 'ROLE', required: true },
   { table: 'USER_DIRECTORY', column: 'STATUS', enumGroup: 'USER_DIRECTORY_STATUS', required: true },
-  { table: 'HO_SO_MASTER', column: 'HO_SO_TYPE', enumGroup: 'HO_SO_TYPE', required: true },
   { table: 'HO_SO_MASTER', column: 'STATUS', enumGroup: 'HO_SO_STATUS', required: true },
   { table: 'HO_SO_FILE', column: 'FILE_GROUP', enumGroup: 'FILE_GROUP', required: true },
   { table: 'FINANCE_TRANSACTION', column: 'STATUS', enumGroup: 'FINANCE_STATUS', required: true },

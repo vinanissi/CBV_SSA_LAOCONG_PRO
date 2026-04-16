@@ -16,7 +16,7 @@ CBV_STORAGE/
 
 | Module | Base Path | Entity Subfolder |
 |--------|-----------|------------------|
-| HO_SO | CBV_STORAGE/01_HO_SO/{HO_SO_TYPE}/ | Optional: {HO_SO_ID}/ |
+| HO_SO | CBV_STORAGE/01_HO_SO/{MASTER_CODE.CODE}/ | Folder segment = `MASTER_CODE.CODE` resolved from `HO_SO_MASTER.HO_SO_TYPE_ID` (not a text column on the sheet). Optional: {HO_SO_ID}/ |
 | TASK | CBV_STORAGE/02_TASK_ATTACHMENTS/ | Optional: {TASK_ID}/ |
 | FINANCE | CBV_STORAGE/03_FINANCE_EVIDENCE/ | Optional: {FINANCE_ID}/ |
 
@@ -24,7 +24,7 @@ CBV_STORAGE/
 
 - **Static default:** Use base path only. Simple; no entity-specific subfolders.
 - **Entity-based (optional):** Add subfolder per parent ID for organization. Use when volume grows.
-- **GAS helpers:** buildHoSoStoragePath(), buildTaskStoragePath(), buildFinanceStoragePath() — return recommended paths; do not create folders.
+- **GAS helpers:** `buildHoSoStoragePath(code, hoSoId)`, `buildHoSoStoragePathFromHoSoRow(row)`, `buildTaskStoragePath()`, `buildFinanceStoragePath()` — return recommended paths; do not create folders.
 
 ## Rules
 

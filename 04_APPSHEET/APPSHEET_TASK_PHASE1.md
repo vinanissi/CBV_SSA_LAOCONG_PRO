@@ -20,7 +20,7 @@
 
 | Slice | Source | Condition |
 |-------|--------|-----------|
-| ACTIVE_HTX | HO_SO_MASTER | `AND([HO_SO_TYPE] = "HTX", [IS_DELETED] = FALSE)` |
+| ACTIVE_HTX | HO_SO_MASTER | `AND([HO_SO_TYPE_ID].[CODE] = "HTX", [IS_DELETED] = FALSE)` |
 | ACTIVE_USERS | USER_DIRECTORY | `AND([STATUS] = "ACTIVE", [IS_DELETED] = FALSE)` |
 | TASK_OPEN | TASK_MAIN | `IN([STATUS], LIST("NEW", "ASSIGNED", "IN_PROGRESS", "WAITING"))` |
 | TASK_DONE | TASK_MAIN | `[STATUS] = "DONE"` |

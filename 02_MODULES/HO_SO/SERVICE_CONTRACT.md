@@ -11,7 +11,7 @@
 
 **Tùy chọn / mở rộng**
 
-- `HO_SO_TYPE`, `CODE`, `NAME` — legacy (nếu thiếu, `HO_SO_TYPE` có thể suy từ MASTER_CODE theo `HO_SO_TYPE_ID`; `NAME` fallback từ TITLE/DISPLAY_NAME)
+- `CODE`, `NAME` — legacy optional (`NAME` fallback từ TITLE/DISPLAY_NAME)
 - `HO_SO_CODE` — thường để hệ thống sinh; không patch trực tiếp sau tạo
 - `STATUS` — mặc định `NEW`
 - `DON_VI_ID`, `OWNER_ID`, `HTX_ID`, `MANAGER_USER_ID`
@@ -25,7 +25,8 @@
 
 - `HO_SO_TYPE_ID` tồn tại và `MASTER_GROUP=HO_SO_TYPE`, `STATUS=ACTIVE`
 - Nếu có `DON_VI_ID` / `OWNER_ID` / `MANAGER_USER_ID` / `HTX_ID` — ref hợp lệ (HTX_ID → HO_SO_MASTER)
-- Enum: `HO_SO_STATUS`, `PRIORITY`, `RELATED_ENTITY_TYPE`, `ID_TYPE`, `SOURCE_CHANNEL`, `HO_SO_TYPE` (khi có giá trị)
+- Enum: `HO_SO_STATUS`, `PRIORITY`, `RELATED_ENTITY_TYPE`, `ID_TYPE`, `SOURCE_CHANNEL`
+- `HTX_ID` (nếu có) phải trỏ tới bản ghi HTX: `HO_SO_TYPE_ID` → `MASTER_CODE.CODE = HTX`
 - `END_DATE` ≥ `START_DATE` khi cả hai có
 
 ### Output

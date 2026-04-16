@@ -47,14 +47,14 @@ function createHoSo(data) {
   if (data.DON_VI_ID) hosoValidateOptionalRefDonVi(data.DON_VI_ID);
   hosoValidateOptionalRefUser(data.OWNER_ID);
   hosoValidateOptionalRefUser(data.MANAGER_USER_ID);
-  if (data.HTX_ID) cbvAssert(hosoRepoFindMasterById(data.HTX_ID), 'HTX_ID invalid (HO_SO_MASTER not found)');
+  if (data.HTX_ID) {
+    var htxRow = hosoRepoFindMasterById(data.HTX_ID);
+    cbvAssert(htxRow, 'HTX_ID invalid (HO_SO_MASTER not found)');
+    cbvAssert(typeof hosoMasterRowIsHtx === 'function' && hosoMasterRowIsHtx(htxRow), 'HTX_ID must reference HTX (HO_SO_TYPE_ID → MASTER_CODE.CODE=HTX)');
+  }
 
   var st = data.STATUS != null && String(data.STATUS).trim() !== '' ? String(data.STATUS).trim() : 'NEW';
   hosoAssertEnum('HO_SO_STATUS', st, 'STATUS');
-
-  var mcRow = typeof _findById === 'function' ? _findById(CBV_CONFIG.SHEETS.MASTER_CODE, data.HO_SO_TYPE_ID) : null;
-  var hoSoTypeLegacy = data.HO_SO_TYPE != null && String(data.HO_SO_TYPE).trim() !== '' ? String(data.HO_SO_TYPE).trim() : (mcRow ? String(mcRow.CODE || '').trim() : '');
-  if (hoSoTypeLegacy) hosoAssertEnum('HO_SO_TYPE', hoSoTypeLegacy, 'HO_SO_TYPE');
 
   var pr = data.PRIORITY != null && String(data.PRIORITY).trim() !== '' ? String(data.PRIORITY).trim() : 'TRUNG_BINH';
   hosoAssertEnum('PRIORITY', pr, 'PRIORITY');
@@ -79,7 +79,6 @@ function createHoSo(data) {
   var id = cbvMakeId('HS');
   var record = {
     ID: id,
-    HO_SO_TYPE: hoSoTypeLegacy,
     CODE: codeLegacy,
     NAME: nameLegacy,
     HO_SO_CODE: code,
@@ -107,6 +106,9 @@ function createHoSo(data) {
     SUMMARY: data.SUMMARY || '',
     NOTE: data.NOTE || '',
     TAGS_TEXT: data.TAGS_TEXT || '',
+    IS_STARRED: false,
+    IS_PINNED: false,
+    PENDING_ACTION: '',
     IS_DELETED: false
   };
   Object.assign(record, stamp);
@@ -144,7 +146,9 @@ function updateHoso(id, patch) {
   if (patch.OWNER_ID !== undefined) hosoValidateOptionalRefUser(patch.OWNER_ID);
   if (patch.MANAGER_USER_ID !== undefined) hosoValidateOptionalRefUser(patch.MANAGER_USER_ID);
   if (patch.HTX_ID !== undefined && patch.HTX_ID) {
-    cbvAssert(hosoRepoFindMasterById(patch.HTX_ID), 'HTX_ID invalid (HO_SO_MASTER not found)');
+    var pHtx = hosoRepoFindMasterById(patch.HTX_ID);
+    cbvAssert(pHtx, 'HTX_ID invalid (HO_SO_MASTER not found)');
+    cbvAssert(typeof hosoMasterRowIsHtx === 'function' && hosoMasterRowIsHtx(pHtx), 'HTX_ID must reference HTX (HO_SO_TYPE_ID → MASTER_CODE.CODE=HTX)');
   }
 
   hosoAssertEnum('PRIORITY', patch.PRIORITY, 'PRIORITY');

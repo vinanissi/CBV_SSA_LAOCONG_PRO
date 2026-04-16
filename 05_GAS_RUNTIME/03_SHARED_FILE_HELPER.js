@@ -5,14 +5,40 @@
  */
 
 /**
+ * Resolve MASTER_CODE.CODE from HO_SO_MASTER.HO_SO_TYPE_ID (no sheet column HO_SO_TYPE).
+ * @param {Object} hoSoRow
+ * @returns {string}
+ */
+function resolveHoSoTypeCodeFromMasterRow(hoSoRow) {
+  if (!hoSoRow) return 'MISC';
+  var tid = String(hoSoRow.HO_SO_TYPE_ID || '').trim();
+  if (!tid) return 'MISC';
+  var mc = typeof _findById === 'function' && typeof CBV_CONFIG !== 'undefined'
+    ? _findById(CBV_CONFIG.SHEETS.MASTER_CODE, tid)
+    : null;
+  var code = mc && mc.CODE != null ? String(mc.CODE).trim() : '';
+  return code || 'MISC';
+}
+
+/**
+ * Recommended path from a HO_SO_MASTER row (uses HO_SO_TYPE_ID → MASTER_CODE.CODE).
+ * @param {Object} hoSoRow
+ * @returns {string}
+ */
+function buildHoSoStoragePathFromHoSoRow(hoSoRow) {
+  var id = hoSoRow && hoSoRow.ID != null ? String(hoSoRow.ID).trim() : '';
+  return buildHoSoStoragePath(resolveHoSoTypeCodeFromMasterRow(hoSoRow), id);
+}
+
+/**
  * Returns recommended folder path for HO_SO files.
- * @param {string} hoSoType - HO_SO_TYPE (HTX, XA_VIEN, XE, TAI_XE); empty uses MISC
+ * @param {string} hoSoTypeCode - MASTER_CODE.CODE in group HO_SO_TYPE (HTX, XE, …); empty uses MISC
  * @param {string} hoSoId - Optional ho so ID for entity-specific subfolder
  * @returns {string} Recommended path, e.g. "CBV_STORAGE/01_HO_SO/HTX/"
  */
-function buildHoSoStoragePath(hoSoType, hoSoId) {
+function buildHoSoStoragePath(hoSoTypeCode, hoSoId) {
   var base = 'CBV_STORAGE/01_HO_SO/';
-  var typeFolder = (hoSoType || 'MISC').toUpperCase();
+  var typeFolder = (hoSoTypeCode || 'MISC').toUpperCase();
   if (hoSoId) return base + typeFolder + '/' + hoSoId + '/';
   return base + typeFolder + '/';
 }

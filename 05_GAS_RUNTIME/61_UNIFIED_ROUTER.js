@@ -12,6 +12,7 @@ var WEBHOOK_ACTIONS_ = [
   'taskStart', 'taskWait', 'taskResume', 'taskComplete',
   'taskCancel', 'taskReopen', 'taskArchive',
   'finConfirm', 'finCancel', 'finArchive',
+  'hosoActivate', 'hosoClose', 'hosoArchive',
   'checklistDone', 'addLog', 'deleteAttachment'
 ];
 

@@ -180,3 +180,36 @@ registerAction({
     return setTaskStatus(id, 'ARCHIVED', String(body.note || ''));
   }
 });
+
+registerAction({
+  action: 'hosoActivate',
+  idParam: 'hoSoId',
+  label: 'Kích hoạt hồ sơ',
+  validStatuses: [],
+  adapter: PENDING_ADAPTER_HOSO,
+  handler: function(id, body) {
+    return changeHosoStatus(id, 'ACTIVE', String(body.note || ''));
+  }
+});
+
+registerAction({
+  action: 'hosoClose',
+  idParam: 'hoSoId',
+  label: 'Đóng hồ sơ',
+  validStatuses: [],
+  adapter: PENDING_ADAPTER_HOSO,
+  handler: function(id, body) {
+    return changeHosoStatus(id, 'CLOSED', String(body.note || ''));
+  }
+});
+
+registerAction({
+  action: 'hosoArchive',
+  idParam: 'hoSoId',
+  label: 'Lưu trữ hồ sơ',
+  validStatuses: [],
+  adapter: PENDING_ADAPTER_HOSO,
+  handler: function(id, body) {
+    return changeHosoStatus(id, 'ARCHIVED', String(body.note || ''));
+  }
+});

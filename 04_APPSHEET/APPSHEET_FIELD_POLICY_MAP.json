@@ -60,7 +60,7 @@
         "OWNER_ID": {"target": "ACTIVE_USERS", "label_source": "FULL_NAME"}
       },
       "system_hidden": ["ID", "CREATED_AT", "CREATED_BY", "UPDATED_AT", "UPDATED_BY", "IS_DELETED"],
-      "workflow_readonly": ["STATUS"]
+      "workflow_readonly": ["STATUS", "PENDING_ACTION"]
     },
     "TASK_CHECKLIST": {
       "label_column": "TITLE",
@@ -88,7 +88,7 @@
   "slices": {
     "ACTIVE_USERS": {"source": "USER_DIRECTORY", "filter": "AND([STATUS]=\"ACTIVE\", [IS_DELETED]=FALSE)"},
     "ACTIVE_MASTER_CODES": {"source": "MASTER_CODE", "filter": "AND([STATUS]=\"ACTIVE\", [IS_DELETED]=FALSE)"},
-    "ACTIVE_HTX": {"source": "HO_SO_MASTER", "filter": "AND([HO_SO_TYPE]=\"HTX\", [IS_DELETED]=FALSE)"},
+    "ACTIVE_HTX": {"source": "HO_SO_MASTER", "filter": "AND([HO_SO_TYPE_ID].[CODE]=\"HTX\", [IS_DELETED]=FALSE)"},
     "HO_SO_ACTIVE": {"source": "HO_SO_MASTER", "filter": "[IS_DELETED]=FALSE"},
     "TASK_OPEN": {"source": "TASK_MAIN", "filter": "IN([STATUS], LIST(\"NEW\", \"ASSIGNED\", \"IN_PROGRESS\", \"WAITING\"))"},
     "TASK_DONE": {"source": "TASK_MAIN", "filter": "[STATUS]=\"DONE\""},

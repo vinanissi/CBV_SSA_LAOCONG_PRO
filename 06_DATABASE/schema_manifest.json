@@ -160,7 +160,6 @@
   ],
   "HO_SO_MASTER": [
     "ID",
-    "HO_SO_TYPE",
     "CODE",
     "NAME",
     "HO_SO_CODE",
@@ -192,7 +191,10 @@
     "CREATED_BY",
     "UPDATED_AT",
     "UPDATED_BY",
-    "IS_DELETED"
+    "IS_STARRED",
+    "IS_PINNED",
+    "IS_DELETED",
+    "PENDING_ACTION"
   ],
   "HO_SO_FILE": [
     "ID",

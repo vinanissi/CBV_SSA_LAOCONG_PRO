@@ -60,20 +60,20 @@ function runSafeMenuStep_(fnName, friendlyName, formatter, args) {
   } catch (e) {}
   if (typeof fn !== 'function') {
     SpreadsheetApp.getUi().alert(
-      'Chưa tải',
-      friendlyName + ' chưa được tải. Kiểm tra file GAS và CLASP_PUSH_ORDER.',
+      'Not loaded',
+      friendlyName + ' is not loaded. Check GAS files and CLASP_PUSH_ORDER.',
       SpreadsheetApp.getUi().ButtonSet.OK
     );
     return false;
   }
   try {
     var result = args && args.length ? fn.apply(null, args) : fn();
-    var msg = (typeof formatter === 'function' && result !== undefined) ? formatter(result) : (result ? String(result) : 'Xong');
+    var msg = (typeof formatter === 'function' && result !== undefined) ? formatter(result) : (result ? String(result) : 'Done');
     SpreadsheetApp.getUi().alert(friendlyName, msg, SpreadsheetApp.getUi().ButtonSet.OK);
     return true;
   } catch (e) {
     SpreadsheetApp.getUi().alert(
-      'Lỗi',
+      'Error',
       friendlyName + ': ' + (e.message || String(e)),
       SpreadsheetApp.getUi().ButtonSet.OK
     );
@@ -113,9 +113,9 @@ function showMissingFunctionReport() {
   ];
   var missing = requiredImpl.filter(function(name) { return !_menuFnExists_(name); });
   var msg = missing.length === 0
-    ? 'Tất cả hàm Impl cần thiết đã được tải.'
-    : 'Chưa tải (' + missing.length + '):\n' + missing.slice(0, 20).join('\n') + (missing.length > 20 ? '\n... +' + (missing.length - 20) : '');
-  SpreadsheetApp.getUi().alert('Kiểm tra hàm Impl', msg, SpreadsheetApp.getUi().ButtonSet.OK);
+    ? 'All required Impl functions are loaded.'
+    : 'Not loaded (' + missing.length + '):\n' + missing.slice(0, 20).join('\n') + (missing.length > 20 ? '\n... +' + (missing.length - 20) : '');
+  SpreadsheetApp.getUi().alert('Impl function check', msg, SpreadsheetApp.getUi().ButtonSet.OK);
 }
 
 /**
@@ -128,9 +128,9 @@ function verifyMenuBindings() {
   var menuOk = menuHandlers.every(function(fn) { return _menuFnExists_(fn); });
   var ok = wrapperOk && menuOk;
   var msg = ok
-    ? 'Menu bindings OK. Wrappers và menu* handlers đều tồn tại.'
-    : 'Một số binding thiếu. Wrappers: ' + (wrapperOk ? 'OK' : 'FAIL') + ', Menu: ' + (menuOk ? 'OK' : 'FAIL') + '. Chạy showMissingFunctionReport().';
-  SpreadsheetApp.getUi().alert('Menu Bindings', msg, SpreadsheetApp.getUi().ButtonSet.OK);
+    ? 'Menu bindings OK. Wrappers and menu* handlers exist.'
+    : 'Some bindings missing. Wrappers: ' + (wrapperOk ? 'OK' : 'FAIL') + ', Menu: ' + (menuOk ? 'OK' : 'FAIL') + '. Run showMissingFunctionReport().';
+  SpreadsheetApp.getUi().alert('Menu bindings', msg, SpreadsheetApp.getUi().ButtonSet.OK);
 }
 
 /**
@@ -138,20 +138,20 @@ function verifyMenuBindings() {
  */
 function showDailyAdminGuide() {
   var msg = [
-    '📅 QUY TRÌNH HÀNG NGÀY',
+    'DAILY WORKFLOW',
     '',
-    '1. Kiểm tra sức khỏe: Daily Admin Flow → Kiểm tra sức khỏe',
-    '2. Xem nhật ký: Mở SYSTEM_HEALTH_LOG hoặc ADMIN_AUDIT_LOG',
-    '3. Audit nhanh: Daily Admin Flow → Chạy Audit nhanh',
+    '1. Health check: Daily operations → Run system health check',
+    '2. Logs: Open SYSTEM_HEALTH_LOG or ADMIN_AUDIT_LOG',
+    '3. Quick audit: Daily operations → Quick audit run',
     '',
-    '🔎 Khi có cảnh báo:',
-    '- WARN: Xem chi tiết, sửa nếu cần',
-    '- FAIL: Dùng Repair Zone (cẩn thận)',
+    'WHEN YOU SEE WARNINGS:',
+    '- WARN: Review details; fix if needed',
+    '- FAIL: Use Repair zone (careful)',
     '',
-    '🛠️ Sửa chữa chỉ khi:',
-    '- Đã xác định nguyên nhân',
-    '- Đã backup dữ liệu',
-    '- Repair Zone → Sửa schema/data an toàn'
+    'REPAIR ONLY WHEN:',
+    '- Root cause is known',
+    '- Data is backed up',
+    '- Repair zone → safe schema/data repair'
   ].join('\n');
-  SpreadsheetApp.getUi().alert('Hướng dẫn Admin hàng ngày', msg, SpreadsheetApp.getUi().ButtonSet.OK);
+  SpreadsheetApp.getUi().alert('Daily admin guide', msg, SpreadsheetApp.getUi().ButtonSet.OK);
 }

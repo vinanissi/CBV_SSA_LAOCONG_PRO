@@ -53,6 +53,10 @@
   99_DEBUG_*.js
 ```
 
+## HO_SO_MASTER column cutover
+
+Sau khi chỉ còn `HO_SO_TYPE_ID` (không cột `HO_SO_TYPE` text), xem [`02_MODULES/HO_SO/HO_SO_SHEET_CUTOVER.md`](../02_MODULES/HO_SO/HO_SO_SHEET_CUTOVER.md).
+
 ## Schema vs Docs
 - schema_manifest.json and _generated_schema/*.csv are aligned
 - No enum/config sheets in schema - initEnumData and initSystemConfig return skipped

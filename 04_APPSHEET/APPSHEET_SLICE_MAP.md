@@ -38,7 +38,7 @@ Reusable slices for Ref targets, filters, and UI consistency. Prefer slice reuse
 |----------|-------|
 | Slice name | ACTIVE_HTX |
 | Source table | HO_SO_MASTER |
-| Row filter | `AND([HO_SO_TYPE] = "HTX", [IS_DELETED] = FALSE)` |
+| Row filter | `AND([HO_SO_TYPE_ID].[CODE] = "HTX", [IS_DELETED] = FALSE)` |
 | Purpose | HTX dropdown for HO_SO_MASTER.HTX_ID |
 | Columns used | ID, NAME, CODE |
 | Referenced by | HO_SO_MASTER.HTX_ID |
