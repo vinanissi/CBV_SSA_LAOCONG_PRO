@@ -77,5 +77,9 @@
     "master_group": "DON_VI_TYPE",
     "seed_file": "02_SEED/seed_master_code.tsv"
   },
+  "FINANCE_TRANSACTION.PENDING_ACTION": {
+    "type": "workflow_queue",
+    "note": "Tùy chọn; hàng đợi lệnh bot/AppSheet (cùng pattern TASK_MAIN.PENDING_ACTION, HO_SO_MASTER.PENDING_ACTION). GAS: createTransaction mặc định rỗng."
+  },
   "_master_code_enum_gaps": []
 }

@@ -362,7 +362,8 @@
     "UPDATED_BY",
     "IS_DELETED",
     "IS_STARRED",
-    "IS_PINNED"
+    "IS_PINNED",
+    "PENDING_ACTION"
   ],
   "FINANCE_LOG": [
     "ID",

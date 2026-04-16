@@ -31,6 +31,7 @@ Giao dịch thu/chi; trạng thái workflow (`NEW` → `CONFIRMED` / `CANCELLED`
 | IS_DELETED | bool | default false | Soft delete |
 | IS_STARRED | bool | default false | UX |
 | IS_PINNED | bool | default false | UX |
+| PENDING_ACTION | text | optional, default `''` | Hàng đợi lệnh bot/AppSheet (`CMD:…`), cùng ý tưởng `TASK_MAIN` / `HO_SO_MASTER`; GAS `createTransaction` gán mặc định rỗng |
 
 ### Quan hệ
 

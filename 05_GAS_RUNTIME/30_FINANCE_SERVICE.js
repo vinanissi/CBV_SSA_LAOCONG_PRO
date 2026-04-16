@@ -16,6 +16,9 @@ function createTransaction(data) {
     else assertValidEnumValue('RELATED_ENTITY_TYPE', data.RELATED_ENTITY_TYPE, 'RELATED_ENTITY_TYPE');
   }
 
+  var pending = data.PENDING_ACTION != null && String(data.PENDING_ACTION).trim() !== ''
+    ? String(data.PENDING_ACTION).trim() : '';
+
   const record = {
     ID: cbvMakeId('FIN'),
     TRANS_CODE: data.TRANS_CODE || cbvMakeId('TR'),
@@ -38,7 +41,10 @@ function createTransaction(data) {
     CREATED_BY: cbvUser(),
     UPDATED_AT: cbvNow(),
     UPDATED_BY: cbvUser(),
-    IS_DELETED: false
+    IS_DELETED: false,
+    IS_STARRED: false,
+    IS_PINNED: false,
+    PENDING_ACTION: pending
   };
   _appendRecord(CBV_CONFIG.SHEETS.FINANCE_TRANSACTION, record);
   logFinance(record.ID, 'CREATED', {}, record, 'Transaction created');
