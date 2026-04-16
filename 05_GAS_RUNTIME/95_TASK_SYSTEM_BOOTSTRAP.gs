@@ -202,7 +202,7 @@ function ensureTaskMainSchemaPro() {
  * Builds slice spec for AppSheet/GAS reference.
  * @returns {Object}
  */
-function buildActiveSlicesSpec() {
+function buildActiveSlicesSpecImpl() {
   return {
     ACTIVE_USERS: {
       source: 'USER_DIRECTORY',

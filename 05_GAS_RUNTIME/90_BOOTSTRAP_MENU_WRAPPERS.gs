@@ -199,9 +199,9 @@ function ensureSeedMasterCode() {
 }
 
 function ensureSeedUserDirectory() {
-  var res = callIfExists_('ensureSeedUserDirectoryImpl') || callIfExists_('seedUserDirectory');
-  if (res == null && !_menuFnExists_('seedUserDirectory')) {
-    SpreadsheetApp.getUi().alert('Chưa tải', 'ensureSeedUserDirectoryImpl / seedUserDirectory chưa được tải.', SpreadsheetApp.getUi().ButtonSet.OK);
+  var res = callIfExists_('seedUserDirectory');
+  if (res == null) {
+    SpreadsheetApp.getUi().alert('Chưa tải', 'seedUserDirectory chưa được tải.', SpreadsheetApp.getUi().ButtonSet.OK);
     return null;
   }
   SpreadsheetApp.getUi().alert('Gieo USER_DIRECTORY', res ? ('Đã thêm: ' + (res.inserted || res.added || 0)) : 'Xong', SpreadsheetApp.getUi().ButtonSet.OK);
@@ -209,7 +209,13 @@ function ensureSeedUserDirectory() {
 }
 
 function buildActiveSlicesSpec() {
-  return callIfExists_('buildActiveSlicesSpec') || null;
+  var r = callIfExists_('buildActiveSlicesSpecImpl');
+  if (r == null) {
+    SpreadsheetApp.getUi().alert('Chưa tải', 'buildActiveSlicesSpecImpl chưa được tải.', SpreadsheetApp.getUi().ButtonSet.OK);
+    return null;
+  }
+  SpreadsheetApp.getUi().alert('Slice Spec', JSON.stringify(r, null, 2), SpreadsheetApp.getUi().ButtonSet.OK);
+  return r;
 }
 
 function buildEnumSpecReport() {
@@ -244,7 +250,15 @@ function seedTaskDemo() {
 }
 
 function testTaskWorkflowRules() { return (callIfExists_('runTaskSystemTests') || callIfExists_('runAllSystemTestsImpl') || callIfExists_('runAllSystemTests')) || null; }
-function testFieldPolicyReadiness() { return callIfExists_('testFieldPolicyReadiness') || callIfExists_('runTaskSystemTests') || null; }
+function testFieldPolicyReadiness() {
+  var r = callIfExists_('testFieldPolicyReadinessImpl');
+  if (r == null) {
+    SpreadsheetApp.getUi().alert('Chưa tải', 'testFieldPolicyReadinessImpl chưa được tải.', SpreadsheetApp.getUi().ButtonSet.OK);
+    return null;
+  }
+  SpreadsheetApp.getUi().alert('Field Policy', r.ok !== false ? 'PASS' : JSON.stringify(r.findings || r), SpreadsheetApp.getUi().ButtonSet.OK);
+  return r;
+}
 function createSampleTaskRows() { return seedTaskDemo(); }
 
 function auditFinanceModule() {
@@ -318,6 +332,16 @@ function repairSchemaSafely() {
   return r;
 }
 
+function repairWholeSystemSafely() {
+  var r = callIfExists_('repairSchemaAndData');
+  if (r == null) {
+    SpreadsheetApp.getUi().alert('Chưa tải', 'repairSchemaAndData chưa được tải.', SpreadsheetApp.getUi().ButtonSet.OK);
+    return null;
+  }
+  SpreadsheetApp.getUi().alert('Sửa toàn hệ thống', r.message || 'Đã chạy.', SpreadsheetApp.getUi().ButtonSet.OK);
+  return r;
+}
+
 function repairEnumSafely() {
   var r = callIfExists_('runSafeRepair', { dryRun: false, createMissingEnums: true });
   if (r == null) {
@@ -339,7 +363,6 @@ function enforceFinalSchemaSafely() {
     SpreadsheetApp.getUi().alert('Chưa tải', 'repairSchemaColumns / ensureAllSchemasImpl chưa được tải.', SpreadsheetApp.getUi().ButtonSet.OK);
     return null;
   }
-  SpreadsheetApp.getUi().alert('Áp dụng Schema cuối', 'Đã chạy.', SpreadsheetApp.getUi().ButtonSet.OK);
   return r;
 }
 
@@ -488,12 +511,7 @@ function menuSeedUserDirectory() {
 }
 
 function menuBuildSliceSpec() {
-  var r = callIfExists_('buildActiveSlicesSpec');
-  if (r == null) {
-    SpreadsheetApp.getUi().alert('Chưa tải', 'buildActiveSlicesSpec chưa được tải.', SpreadsheetApp.getUi().ButtonSet.OK);
-    return;
-  }
-  SpreadsheetApp.getUi().alert('Slice Spec', JSON.stringify(r, null, 2), SpreadsheetApp.getUi().ButtonSet.OK);
+  buildActiveSlicesSpec();
 }
 
 function menuBuildEnumSpecReport() {
@@ -532,12 +550,7 @@ function menuTestTaskWorkflow() {
 }
 
 function menuTestTaskFieldPolicy() {
-  var r = callIfExists_('testFieldPolicyReadiness') || callIfExists_('runTaskSystemTests');
-  if (r == null) {
-    SpreadsheetApp.getUi().alert('Chưa tải', 'testFieldPolicyReadiness chưa được tải.', SpreadsheetApp.getUi().ButtonSet.OK);
-    return;
-  }
-  SpreadsheetApp.getUi().alert('Test Field Policy', JSON.stringify(r, null, 2).slice(0, 500), SpreadsheetApp.getUi().ButtonSet.OK);
+  testFieldPolicyReadiness();
 }
 
 function menuCreateSampleTaskRows() {
@@ -604,22 +617,11 @@ function menuDumpFullSchemaProfile() {
 // ==================== REPAIR ZONE ====================
 
 function menuRepairWholeSystemSafely() {
-  var r = callIfExists_('repairSchemaAndData', {});
-  if (r == null) {
-    SpreadsheetApp.getUi().alert('Chưa tải', 'repairSchemaAndData chưa được tải.', SpreadsheetApp.getUi().ButtonSet.OK);
-    return;
-  }
-  var msg = 'Schema: ' + (r.schemaRepairs && r.schemaRepairs.length ? r.schemaRepairs.join('; ') : 'none') + '\nUser: ' + (r.userRepaired || 0) + '\nTASK_MAIN DON_VI_ID: ' + (r.taskMainDonViFilled || 0);
-  SpreadsheetApp.getUi().alert('Sửa toàn hệ thống', msg, SpreadsheetApp.getUi().ButtonSet.OK);
+  repairWholeSystemSafely();
 }
 
 function menuRepairSchemaSafely() {
-  var r = callIfExists_('repairSchemaColumns') || callIfExists_('repairSchemaAndData', {});
-  if (r == null) {
-    SpreadsheetApp.getUi().alert('Chưa tải', 'repairSchemaColumns chưa được tải.', SpreadsheetApp.getUi().ButtonSet.OK);
-    return;
-  }
-  SpreadsheetApp.getUi().alert('Sửa Schema', r.appended ? r.appended.join(', ') : (r.schemaRepairs ? r.schemaRepairs.join(', ') : 'Xong'), SpreadsheetApp.getUi().ButtonSet.OK);
+  repairSchemaSafely();
 }
 
 function menuRepairEnumSafely() {
@@ -636,9 +638,9 @@ function menuRepairRefSafely() {
 }
 
 function menuEnforceFinalSchemaSafely() {
-  var r = callIfExists_('repairSchemaColumns') || callIfExists_('ensureAllSchemas');
+  var r = callIfExists_('enforceFinalSchemaSafely');
   if (r == null) {
-    SpreadsheetApp.getUi().alert('Chưa tải', 'repairSchemaColumns / ensureAllSchemas chưa được tải.', SpreadsheetApp.getUi().ButtonSet.OK);
+    SpreadsheetApp.getUi().alert('Chưa tải', 'enforceFinalSchemaSafely chưa được tải.', SpreadsheetApp.getUi().ButtonSet.OK);
     return;
   }
   SpreadsheetApp.getUi().alert('Áp dụng Schema cuối', 'Đã chạy.', SpreadsheetApp.getUi().ButtonSet.OK);

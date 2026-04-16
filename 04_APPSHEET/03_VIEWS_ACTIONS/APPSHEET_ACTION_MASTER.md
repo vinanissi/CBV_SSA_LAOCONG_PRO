@@ -68,5 +68,5 @@ Pattern chuẩn cho tất cả TASK workflow actions trong CBV PRO.
 **Tham chiếu:**
 
 - Spec đầy đủ: `APPSHEET_TASK_ACTION_RULES.md` Section 8
-- GAS implementation: `99_APPSHEET_WEBHOOK.gs` → `withTaskFeedback()`
+- GAS routing: `99_APPSHEET_WEBHOOK.gs` — sau `CMD:` strip, tra ACTION_REGISTRY rồi `withPendingFeedback()` + adapter; `withTaskFeedback()` chỉ là thin wrapper → `withPendingFeedback` + adapter TASK (cùng hành vi ⏳ / ✅ / ❌).
 - Bot config: `BOT_TASK_WEBHOOK` → `EVENT_PENDING_ACTION_CHANGED`

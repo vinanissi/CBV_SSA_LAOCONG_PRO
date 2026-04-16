@@ -1,5 +1,5 @@
 {
-  "scriptId": "1fWk2EdGbyYM7HTLFdmKkXh1nIdV7RgFkiD7i8mLpSwPUWiftzdbUZIHW",
+  "scriptId": "1H5Ohup4eAJgZuQrNdpLStLU6FNWGIk-MuvtMXdrbrg1J41T_HtNRjcFr",
   "rootDir": "05_GAS_RUNTIME",
   "fileExtension": "gs",
   "filePushOrder": [
@@ -19,6 +19,8 @@
     "03_SHARED_VALIDATION.gs",
     "03_SHARED_LOGGER.gs",
     "03_SHARED_FILE_HELPER.gs",
+    "03_SHARED_ACTION_REGISTRY.gs",
+    "03_SHARED_PENDING_FEEDBACK.gs",
     "03_USER_MIGRATION_HELPER.gs",
     "02_USER_VALIDATION.gs",
     "01_ENUM_ADMIN_SERVICE.gs",

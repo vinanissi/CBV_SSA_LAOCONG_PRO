@@ -1,5 +1,5 @@
 /**
- * AppSheet → GAS Web App: route JSON tới 20_TASK_SERVICE.
+ * AppSheet → GAS Web App: route JSON tới 20_TASK_SERVICE (và action đã register).
  * Deploy: Web App, POST JSON { action, ... }.
  */
 
@@ -27,172 +27,56 @@ function doGet(e) {
 }
 
 /**
- * Bọc task action với feedback pattern dùng PENDING_ACTION.
- *
- * Guard strategy:
- *   - Kiểm tra STATUS hợp lệ TRƯỚC khi chạy (tham số validStatuses)
- *   - Nếu STATUS không hợp lệ → silent skip (không ghi lỗi, không throw)
- *   - Mục đích: chặn Bot fire lần 2 sau khi STATUS đã thay đổi
- *
- * Flush strategy:
- *   - Chỉ flush 1 lần sau bước ghi "⏳..." để clear CMD: prefix ngay
- *   - GAS tự flush khi execution kết thúc
- *
- * @param {string}   taskId        - ID của task trong TASK_MAIN
- * @param {string}   label         - Tên action hiển thị (vd: "Bắt đầu")
- * @param {Function} fn            - Logic chính, không nhận tham số
- * @param {Array}    validStatuses - Danh sách STATUS hợp lệ để chạy action
- *                                   Nếu [] hoặc null → bỏ qua kiểm tra
- * @returns {Object} cbvResponse
+ * Thin wrapper — PENDING_ACTION / flush / guard qua withPendingFeedback + PENDING_ADAPTER_TASK.
+ * @param {string} taskId
+ * @param {string} label
+ * @param {Function} fn
+ * @param {Array} validStatuses
+ * @returns {*}
  */
 function withTaskFeedback(taskId, label, fn, validStatuses) {
-  var task = taskFindById(taskId);
-  if (!task || !task._rowNumber) {
-    throw new Error('Không tìm thấy task: ' + taskId);
-  }
-  var row = task._rowNumber;
-
-  // GUARD: kiểm tra STATUS hợp lệ
-  // Chặn lần Bot fire thứ 2 khi STATUS đã thay đổi từ lần fire thứ 1
-  if (validStatuses && validStatuses.length > 0) {
-    var currentStatus = String(task.STATUS || '');
-    if (validStatuses.indexOf(currentStatus) === -1) {
-      // Silent skip — không ghi lỗi vào PENDING_ACTION, không throw
-      return cbvResponse(
-        false,
-        'INVALID_STATUS',
-        'Bỏ qua: STATUS ' + currentStatus + ' không hợp lệ cho action này',
-        null,
-        []
-      );
-    }
-  }
-
-  // Ghi "⏳..." + flush ngay để clear CMD: prefix
-  // → Bot không fire lại (PENDING_ACTION không còn bắt đầu bằng "CMD:")
-  taskUpdateMain(row, {
-    PENDING_ACTION: '⏳ Đang xử lý ' + label + '...',
-    UPDATED_AT: cbvNow(),
-    UPDATED_BY: cbvUser()
-  });
-  SpreadsheetApp.flush(); // ← flush duy nhất, bắt buộc
-
-  try {
-    // Chạy logic chính
-    var result = fn();
-
-    // Thành công — không flush, GAS tự flush khi kết thúc
-    var now = Utilities.formatDate(
-      new Date(),
-      Session.getScriptTimeZone(),
-      'HH:mm dd/MM'
-    );
-    taskUpdateMain(row, {
-      PENDING_ACTION: '✅ ' + label + ' lúc ' + now,
-      UPDATED_AT: cbvNow(),
-      UPDATED_BY: cbvUser()
-    });
-    return result;
-
-  } catch (err) {
-    // Lỗi thật (không phải Bot fire lần 2) — ghi lỗi để user biết
-    var errMsg = err && err.message ? err.message : String(err);
-    taskUpdateMain(row, {
-      PENDING_ACTION: '❌ Lỗi: ' + errMsg,
-      UPDATED_AT: cbvNow(),
-      UPDATED_BY: cbvUser()
-    });
-    throw err; // Re-throw để doPost trả {ok: false}
-  }
-}
-
-function _clearPendingAction(taskId) {
-  try {
-    var task = taskFindById(taskId);
-    if (task && task._rowNumber) {
-      taskUpdateMain(task._rowNumber, {
-        PENDING_ACTION: '',
-        UPDATED_AT: cbvNow(),
-        UPDATED_BY: cbvUser()
-      });
-    }
-  } catch (e) {
-    // Non-blocking
-  }
+  return withPendingFeedback(taskId, label, fn, validStatuses, PENDING_ADAPTER_TASK);
 }
 
 /**
- * Router theo body.action → 20_TASK_SERVICE.
- * Strip prefix "CMD:" nếu AppSheet ghi dạng "CMD:taskStart".
- * Các case workflow dùng withTaskFeedback để hiển thị trạng thái cho user.
+ * Router theo body.action. Strip prefix "CMD:" nếu AppSheet ghi "CMD:taskStart".
+ * Action có trong registry → withPendingFeedback + handler.
+ * checklistDone / addLog không dùng feedback pattern.
  * @param {Object} body
  * @returns {Object} cbvResponse
  */
 function _routeWebhookAction(body) {
-  // Strip prefix "CMD:" — AppSheet ghi "CMD:taskStart", GAS xử lý "taskStart"
   var action = String(body.action || '').trim();
   if (action.indexOf('CMD:') === 0) {
     action = action.substring(4);
   }
 
-  var taskId = String(body.taskId || '');
+  var entry = getRegisteredAction(action);
+  if (entry) {
+    var id = String(body[entry.idParam] || '');
+    _webhookRequireParam(id, entry.idParam);
+    return withPendingFeedback(id, entry.label, function() {
+      return entry.handler(id, body);
+    }, entry.validStatuses, entry.adapter);
+  }
+
   var note = String(body.note || '');
-  var checklistId = String(body.checklistId || '');
-  var resultSummary = String(body.resultSummary || '');
 
   switch (action) {
 
-    case 'taskStart':
-      _webhookRequireParam(taskId, 'taskId');
-      return withTaskFeedback(taskId, 'Bắt đầu', function() {
-        return taskStartAction(taskId);
-      }, ['NEW', 'ASSIGNED']);
-
-    case 'taskWait':
-      _webhookRequireParam(taskId, 'taskId');
-      return withTaskFeedback(taskId, 'Tạm chờ', function() {
-        return setTaskStatus(taskId, 'WAITING', note);
-      }, ['IN_PROGRESS']);
-
-    case 'taskResume':
-      _webhookRequireParam(taskId, 'taskId');
-      return withTaskFeedback(taskId, 'Tiếp tục', function() {
-        return setTaskStatus(taskId, 'IN_PROGRESS', note);
-      }, ['WAITING']);
-
-    case 'taskComplete':
-      _webhookRequireParam(taskId, 'taskId');
-      return withTaskFeedback(taskId, 'Hoàn thành', function() {
-        return completeTask(taskId, resultSummary);
-      }, ['IN_PROGRESS', 'WAITING']);
-
-    case 'taskCancel':
-      _webhookRequireParam(taskId, 'taskId');
-      return withTaskFeedback(taskId, 'Huỷ task', function() {
-        return cancelTask(taskId, note);
-      }, ['NEW', 'ASSIGNED', 'IN_PROGRESS', 'WAITING']);
-
-    case 'taskReopen':
-      _webhookRequireParam(taskId, 'taskId');
-      return withTaskFeedback(taskId, 'Mở lại', function() {
-        return taskReopenAction(taskId);
-      }, ['DONE', 'CANCELLED']);
-
-    case 'taskArchive':
-      _webhookRequireParam(taskId, 'taskId');
-      return withTaskFeedback(taskId, 'Lưu trữ', function() {
-        return setTaskStatus(taskId, 'ARCHIVED', note);
-      }, ['DONE', 'CANCELLED']);
-
-    case 'checklistDone':
+    case 'checklistDone': {
+      var checklistId = String(body.checklistId || '');
       _webhookRequireParam(checklistId, 'checklistId');
       return markChecklistDone(checklistId, note);
+    }
 
-    case 'addLog':
+    case 'addLog': {
+      var taskId = String(body.taskId || '');
       _webhookRequireParam(taskId, 'taskId');
       var updateType = String(body.updateType || 'NOTE');
       var content = String(body.content || '');
       return addTaskLogEntry(taskId, updateType, content);
+    }
 
     default:
       return cbvResponse(false, 'UNKNOWN_ACTION',
@@ -219,3 +103,80 @@ function _webhookRequireParam(val, name) {
 function _webhookJsonResponse(data) {
   return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
 }
+
+registerAction({
+  action: 'taskStart',
+  idParam: 'taskId',
+  label: 'Bắt đầu',
+  validStatuses: ['NEW', 'ASSIGNED'],
+  adapter: PENDING_ADAPTER_TASK,
+  handler: function(id, body) {
+    return taskStartAction(id);
+  }
+});
+
+registerAction({
+  action: 'taskWait',
+  idParam: 'taskId',
+  label: 'Tạm chờ',
+  validStatuses: ['IN_PROGRESS'],
+  adapter: PENDING_ADAPTER_TASK,
+  handler: function(id, body) {
+    return setTaskStatus(id, 'WAITING', String(body.note || ''));
+  }
+});
+
+registerAction({
+  action: 'taskResume',
+  idParam: 'taskId',
+  label: 'Tiếp tục',
+  validStatuses: ['WAITING'],
+  adapter: PENDING_ADAPTER_TASK,
+  handler: function(id, body) {
+    return setTaskStatus(id, 'IN_PROGRESS', String(body.note || ''));
+  }
+});
+
+registerAction({
+  action: 'taskComplete',
+  idParam: 'taskId',
+  label: 'Hoàn thành',
+  validStatuses: ['IN_PROGRESS', 'WAITING'],
+  adapter: PENDING_ADAPTER_TASK,
+  handler: function(id, body) {
+    return completeTask(id, String(body.resultSummary || ''));
+  }
+});
+
+registerAction({
+  action: 'taskCancel',
+  idParam: 'taskId',
+  label: 'Huỷ task',
+  validStatuses: ['NEW', 'ASSIGNED', 'IN_PROGRESS', 'WAITING'],
+  adapter: PENDING_ADAPTER_TASK,
+  handler: function(id, body) {
+    return cancelTask(id, String(body.note || ''));
+  }
+});
+
+registerAction({
+  action: 'taskReopen',
+  idParam: 'taskId',
+  label: 'Mở lại',
+  validStatuses: ['DONE', 'CANCELLED'],
+  adapter: PENDING_ADAPTER_TASK,
+  handler: function(id, body) {
+    return taskReopenAction(id);
+  }
+});
+
+registerAction({
+  action: 'taskArchive',
+  idParam: 'taskId',
+  label: 'Lưu trữ',
+  validStatuses: ['DONE', 'CANCELLED'],
+  adapter: PENDING_ADAPTER_TASK,
+  handler: function(id, body) {
+    return setTaskStatus(id, 'ARCHIVED', String(body.note || ''));
+  }
+});

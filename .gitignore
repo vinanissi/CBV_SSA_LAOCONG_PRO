@@ -7,6 +7,9 @@ _handoff/CLAUDE_FINANCE_PACK/tier4_reference_task_center/
 _handoff/CLAUDE_FINANCE_PACK/tier5_gas_runtime/
 _handoff/CLAUDE_FINANCE_PACK/tier6_appsheet/
 
+# GAS runtime: clasp uses .gs only — ignore duplicate .js mirrors if regenerated
+05_GAS_RUNTIME/*.js
+
 # Google Auth Token (Local)
 .clasprc.json
 

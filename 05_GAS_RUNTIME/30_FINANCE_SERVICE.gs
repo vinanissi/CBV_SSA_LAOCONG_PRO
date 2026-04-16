@@ -117,3 +117,59 @@ function setFinanceStatus(id, newStatus, note) {
   logFinance(id, 'STATUS_CHANGED', beforeObj, current, note || '');
   return cbvResponse(true, 'FIN_STATUS_CHANGED', 'Đã đổi trạng thái', current, []);
 }
+
+function confirmTransaction(id, note) {
+  const current = _findById(CBV_CONFIG.SHEETS.FINANCE_TRANSACTION, id);
+  cbvAssert(current, 'Transaction not found');
+  cbvAssert(String(current.STATUS) === 'NEW', 'Chỉ xác nhận khi STATUS = NEW');
+  ensurePositiveNumber(current.AMOUNT, 'AMOUNT');
+  assertValidEnumValue('FIN_CATEGORY', current.CATEGORY, 'CATEGORY');
+  return setFinanceStatus(id, 'CONFIRMED', note);
+}
+
+function cancelTransaction(id, note) {
+  return setFinanceStatus(id, 'CANCELLED', note);
+}
+
+function archiveTransaction(id) {
+  return setFinanceStatus(id, 'ARCHIVED', '');
+}
+
+/**
+ * @param {Object} [filters]
+ * @returns {Object} cbvResponse
+ */
+function getFinanceSummary(filters) {
+  filters = filters || {};
+  var sheet = typeof _sheet === 'function' ? _sheet(CBV_CONFIG.SHEETS.FINANCE_TRANSACTION) : null;
+  if (!sheet) return cbvResponse(false, 'FIN_SUMMARY_ERROR', 'Missing sheet', {}, []);
+  var rows = typeof _rows === 'function' ? _rows(sheet) : [];
+  var byStatus = {};
+  var n = 0;
+  var total = 0;
+  for (var i = 0; i < rows.length; i++) {
+    var r = rows[i];
+    if (r.IS_DELETED === true || String(r.IS_DELETED) === 'true') continue;
+    n++;
+    var st = String(r.STATUS || '');
+    byStatus[st] = (byStatus[st] || 0) + 1;
+    total += Number(r.AMOUNT) || 0;
+  }
+  return cbvResponse(true, 'FIN_SUMMARY', '', { rowCount: n, totalAmount: total, byStatus: byStatus, filters: filters }, []);
+}
+
+registerAction({
+  action: 'finConfirm', idParam: 'finId', label: 'Xác nhận GD',
+  validStatuses: ['NEW'], adapter: PENDING_ADAPTER_FINANCE,
+  handler: function(id, body) { return confirmTransaction(id, String(body.note || '')); }
+});
+registerAction({
+  action: 'finCancel', idParam: 'finId', label: 'Huỷ GD',
+  validStatuses: ['NEW'], adapter: PENDING_ADAPTER_FINANCE,
+  handler: function(id, body) { return cancelTransaction(id, String(body.note || '')); }
+});
+registerAction({
+  action: 'finArchive', idParam: 'finId', label: 'Lưu trữ GD',
+  validStatuses: ['CONFIRMED', 'CANCELLED'], adapter: PENDING_ADAPTER_FINANCE,
+  handler: function(id, body) { return archiveTransaction(id); }
+});

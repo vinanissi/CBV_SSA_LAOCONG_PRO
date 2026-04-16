@@ -107,8 +107,8 @@ function showMissingFunctionReport() {
     'validateDonViHierarchyImpl', 'runAllSystemTestsImpl',     'repairTaskSystemSafelyImpl', 'generateDeploymentReportImpl',
     'runSafeRepair', 'seedEnumDictionary', 'ensureSeedDonVi', 'ensureSeedTaskType',
     'selfAuditTaskSystem', 'selfAuditTaskSystemFull', 'seedGoldenDataset',
-    'repairSchemaColumns', 'repairSchemaAndData', 'runHoSoTests', 'runFinanceTests',
-    'getRequiredSheetNames', 'testSchemaIntegrity', 'testFieldPolicyReadiness',
+    'repairSchemaColumns', 'repairSchemaAndData', 'buildActiveSlicesSpecImpl', 'runHoSoTests', 'runFinanceTests',
+    'getRequiredSheetNames', 'testSchemaIntegrity', 'testFieldPolicyReadinessImpl',
     'checkHoSoCompleteness', 'getExpiringDocs', 'generateHoSoReport'
   ];
   var missing = requiredImpl.filter(function(name) { return !_menuFnExists_(name); });

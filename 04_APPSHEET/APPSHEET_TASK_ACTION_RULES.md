@@ -142,7 +142,7 @@ Tất cả action buttons ẩn (`Show_If` có `NOT(LEFT([PENDING_ACTION], 2) = "
 ↓  
 Bot fire (`LEFT([PENDING_ACTION], 4) = "CMD:"`)  
 ↓  
-GAS `withTaskFeedback(taskId, label, fn, validStatuses)`:  
+GAS (Action Registry + `withPendingFeedback` + adapter TASK): webhook tra registry theo tên action sau khi strip `CMD:`; cùng hành vi feedback cho mọi action đã đăng ký. `withTaskFeedback` trong code chỉ bọc `withPendingFeedback` cho TASK — không đổi hành vi phía AppSheet.  
 → `validStatuses` guard: STATUS có hợp lệ không?  
 → Không hợp lệ: silent skip, return `INVALID_STATUS`  
 → Hợp lệ:  
@@ -177,16 +177,16 @@ Action buttons hiện lại
 - **Condition:** `LEFT([PENDING_ACTION], 4) = "CMD:"`
 - **Process:** `STEP_CALL_GAS` → `POST { action: [PENDING_ACTION], taskId: [ID] }`
 
-### GAS withTaskFeedback()
+### GAS runtime (registry + `withPendingFeedback`)
 
-```js
-// Signature
-withTaskFeedback(taskId, label, fn, validStatuses)
+- Webhook `_routeWebhookAction`: strip `CMD:` → `getRegisteredAction(action)` → nếu có entry thì `withPendingFeedback(id, label, fn, validStatuses, adapter)` (adapter TASK / FINANCE / … tùy module).
+- Task workflow: `withTaskFeedback(...)` trong `99_APPSHEET_WEBHOOK.gs` chỉ chuyển tiếp sang `withPendingFeedback` + `PENDING_ADAPTER_TASK` — cùng guard và cùng chuỗi ⏳ / ✅ / ❌.
 
-// validStatuses: Array STATUS hợp lệ
-// → Guard chặn Bot fire lần 2 khi STATUS đã thay đổi
-// → Silent skip nếu STATUS không trong validStatuses
-// → 1 lần flush() duy nhất sau ghi "⏳..."
+```text
+validStatuses: danh sách STATUS hợp lệ
+→ Guard chặn Bot fire lần 2 khi STATUS đã thay đổi
+→ Silent skip nếu STATUS không trong validStatuses
+→ Một lần flush() sau ghi "⏳..."
 ```
 
 ### Performance settings (AppSheet)

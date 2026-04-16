@@ -20,36 +20,39 @@
 | 14 | 03_SHARED_VALIDATION.gs | 00_CORE_CONFIG, 00_CORE_UTILS, 03_SHARED_REPOSITORY | cbvAssert, _rows, _sheet |
 | 15 | 03_SHARED_LOGGER.gs | 00_CORE_CONFIG, 00_CORE_UTILS, 03_SHARED_REPOSITORY | cbvMakeId, cbvUser, _appendRecord |
 | 16 | 03_SHARED_FILE_HELPER.gs | — | File ops |
-| 17 | 03_USER_MIGRATION_HELPER.gs | 00_CORE_CONFIG, 02_USER_SERVICE, 03_SHARED_REPOSITORY, 03_SHARED_LOGGER | resolveValueToUserDirectoryId |
-| 17 | 02_USER_VALIDATION.gs | 02_USER_SERVICE, 01_ENUM_SERVICE, 03_SHARED_VALIDATION, 03_SHARED_REPOSITORY | validateUserRecordForCreate |
-| 18 | 01_ENUM_ADMIN_SERVICE.gs | 01_ENUM_*, 03_SHARED_*, 00_CORE_UTILS | assertAdminAuthority, logAdminAudit |
-| 19 | 02_MASTER_CODE_ADMIN_SERVICE.gs | 02_MASTER_CODE, 01_ENUM, 03_SHARED_*, 00_CORE_UTILS | assertAdminAuthority, logAdminAudit |
-| 20 | 03_ADMIN_AUDIT_SERVICE.gs | 03_SHARED_LOGGER | logAdminAudit |
-| 21 | 90_BOOTSTRAP_SCHEMA.gs | — | Manifest only; getRequiredSheetNames, getSchemaHeaders |
-| 22 | 90_BOOTSTRAP_USER_SEED.gs | 00_CORE_CONFIG, 03_SHARED_REPOSITORY, 90_BOOTSTRAP_SCHEMA | seedUserDirectory |
-| 23 | 90_BOOTSTRAP_AUDIT_SCHEMA.gs | 90_BOOTSTRAP_SCHEMA | — |
-| 24 | 90_BOOTSTRAP_LIFECYCLE.gs | — | — |
-| 25 | 90_BOOTSTRAP_PROTECTION.gs | — | — |
-| 26 | 10_HOSO_SERVICE.gs | 00_CORE_CONFIG, 00_CORE_UTILS, 01_ENUM_SERVICE, 03_SHARED_* | ensureRequired, assertValidEnumValue, _sheet, _rows |
-| 27 | 20_TASK_REPOSITORY.gs | 00_CORE_CONFIG, 03_SHARED_REPOSITORY | taskFindById, taskAppendMain, etc. |
-| 28 | 20_TASK_VALIDATION.gs | 02_USER_SERVICE, 01_ENUM_SERVICE, 03_SHARED_VALIDATION, 20_TASK_REPOSITORY | assertActiveHtxId, validateTaskTransition |
-| 29 | 20_TASK_SERVICE.gs | 20_TASK_REPOSITORY, 20_TASK_VALIDATION, 02_USER_SERVICE, 01_ENUM_SERVICE | createTask, updateTask, completeTask, etc. |
-| 30 | 20_TASK_MIGRATION_HELPER.gs | 20_TASK_REPOSITORY, 03_USER_MIGRATION_HELPER | runTaskMigration |
-| 31 | 30_FINANCE_SERVICE.gs | 00_CORE_CONFIG, 03_SHARED_*, 01_ENUM_SERVICE, 02_USER_SERVICE | Same pattern |
-| 32 | 40_DISPLAY_MAPPING_SERVICE.gs | 00_CORE_CONFIG | CBV_CONFIG.SHEETS; optionally clearEnumCache |
-| 33 | 90_BOOTSTRAP_INIT.gs | 00_CORE_UTILS, 90_BOOTSTRAP_SCHEMA, 01_ENUM_SEED, 40_DISPLAY | initAll |
-| 34 | 90_BOOTSTRAP_TASK.gs | 90_BOOTSTRAP_SCHEMA, 90_BOOTSTRAP_INIT | taskBootstrapSheets |
-| 35 | 90_BOOTSTRAP_AUDIT.gs | 00_CORE_UTILS, 90_BOOTSTRAP_SCHEMA, 03_SHARED_ROW_READER | ensureHeadersMatchOrReport; readNormalizedRows for _auditGetRows |
-| 36 | 50_APPSHEET_VERIFY.gs | 90_BOOTSTRAP_AUDIT, 90_BOOTSTRAP_SCHEMA, 01_ENUM_SERVICE | verifyAppSheetReadiness |
-| 37 | 99_DEBUG_TEST_HOSO.gs | 10_HOSO_SERVICE | runHoSoTests |
-| 38 | 99_DEBUG_TASK_TEST.gs | 20_TASK_SERVICE | runTaskTests |
-| 39 | 99_DEBUG_TEST_TASK.gs | 99_DEBUG_TASK_TEST | runTaskTests |
-| 40 | 99_DEBUG_TEST_FINANCE.gs | 30_FINANCE_SERVICE | runFinanceTests |
-| 41 | 99_DEBUG_TEST_RUNNER.gs | 99_DEBUG_TEST_* | runAllModuleTests |
-| 42 | 99_DEBUG_SAMPLE_DATA.gs | 10_HOSO_SERVICE, 20_TASK_SERVICE, 30_FINANCE_SERVICE | seedGoldenDataset |
-| 43 | 90_BOOTSTRAP_MENU.gs | initAll, installTriggers, runAllModuleTests, etc. | onOpen |
-| 44 | 90_BOOTSTRAP_TRIGGER.gs | 90_BOOTSTRAP_AUDIT | dailyHealthCheck |
-| 46 | 90_BOOTSTRAP_INSTALL.gs | 00_CORE_UTILS | buildStructuredBootstrapReport |
+| 17 | 03_SHARED_ACTION_REGISTRY.gs | — | `registerAction` / `getRegisteredAction`; global registry |
+| 18 | 03_SHARED_PENDING_FEEDBACK.gs | 03_SHARED_ACTION_REGISTRY, 00_CORE_UTILS, 03_SHARED_REPOSITORY | `withPendingFeedback`, `PENDING_ADAPTER_*` (runtime: task/finance/hoso) |
+| 19 | 03_USER_MIGRATION_HELPER.gs | 00_CORE_CONFIG, 02_USER_SERVICE, 03_SHARED_REPOSITORY, 03_SHARED_LOGGER | resolveValueToUserDirectoryId |
+| 20 | 02_USER_VALIDATION.gs | 02_USER_SERVICE, 01_ENUM_SERVICE, 03_SHARED_VALIDATION, 03_SHARED_REPOSITORY | validateUserRecordForCreate |
+| 21 | 01_ENUM_ADMIN_SERVICE.gs | 01_ENUM_*, 03_SHARED_*, 00_CORE_UTILS | assertAdminAuthority, logAdminAudit |
+| 22 | 02_MASTER_CODE_ADMIN_SERVICE.gs | 02_MASTER_CODE, 01_ENUM, 03_SHARED_*, 00_CORE_UTILS | assertAdminAuthority, logAdminAudit |
+| 23 | 03_ADMIN_AUDIT_SERVICE.gs | 03_SHARED_LOGGER | logAdminAudit |
+| 24 | 90_BOOTSTRAP_SCHEMA.gs | — | Manifest only; getRequiredSheetNames, getSchemaHeaders |
+| 25 | 90_BOOTSTRAP_USER_SEED.gs | 00_CORE_CONFIG, 03_SHARED_REPOSITORY, 90_BOOTSTRAP_SCHEMA | seedUserDirectory |
+| 26 | 90_BOOTSTRAP_AUDIT_SCHEMA.gs | 90_BOOTSTRAP_SCHEMA | — |
+| 27 | 90_BOOTSTRAP_LIFECYCLE.gs | — | — |
+| 28 | 90_BOOTSTRAP_PROTECTION.gs | — | — |
+| 29 | 10_HOSO_SERVICE.gs | 00_CORE_CONFIG, 00_CORE_UTILS, 01_ENUM_SERVICE, 03_SHARED_* | ensureRequired, assertValidEnumValue, _sheet, _rows |
+| 30 | 20_TASK_REPOSITORY.gs | 00_CORE_CONFIG, 03_SHARED_REPOSITORY | taskFindById, taskAppendMain, etc. |
+| 31 | 20_TASK_VALIDATION.gs | 02_USER_SERVICE, 01_ENUM_SERVICE, 03_SHARED_VALIDATION, 20_TASK_REPOSITORY | assertActiveHtxId, validateTaskTransition |
+| 32 | 20_TASK_SERVICE.gs | 20_TASK_REPOSITORY, 20_TASK_VALIDATION, 02_USER_SERVICE, 01_ENUM_SERVICE | createTask, updateTask, completeTask, etc. |
+| 33 | 20_TASK_MIGRATION_HELPER.gs | 20_TASK_REPOSITORY, 03_USER_MIGRATION_HELPER | runTaskMigration |
+| 34 | 30_FINANCE_SERVICE.gs | 00_CORE_CONFIG, 03_SHARED_*, 03_SHARED_ACTION_REGISTRY, 03_SHARED_PENDING_FEEDBACK, 01_ENUM_SERVICE, 02_USER_SERVICE | `registerAction` (finConfirm/finCancel/finArchive); same shared pattern as other modules |
+| 35 | 40_DISPLAY_MAPPING_SERVICE.gs | 00_CORE_CONFIG | CBV_CONFIG.SHEETS; optionally clearEnumCache |
+| 36 | 90_BOOTSTRAP_INIT.gs | 00_CORE_UTILS, 90_BOOTSTRAP_SCHEMA, 01_ENUM_SEED, 40_DISPLAY | initAll |
+| 37 | 90_BOOTSTRAP_TASK.gs | 90_BOOTSTRAP_SCHEMA, 90_BOOTSTRAP_INIT | taskBootstrapSheets |
+| 38 | 90_BOOTSTRAP_AUDIT.gs | 00_CORE_UTILS, 90_BOOTSTRAP_SCHEMA, 03_SHARED_ROW_READER | ensureHeadersMatchOrReport; readNormalizedRows for _auditGetRows |
+| 39 | 50_APPSHEET_VERIFY.gs | 90_BOOTSTRAP_AUDIT, 90_BOOTSTRAP_SCHEMA, 01_ENUM_SERVICE | verifyAppSheetReadiness |
+| 40 | 99_DEBUG_TEST_HOSO.gs | 10_HOSO_SERVICE | runHoSoTests |
+| 41 | 99_DEBUG_TASK_TEST.gs | 20_TASK_SERVICE | runTaskTests |
+| 42 | 99_DEBUG_TEST_TASK.gs | 99_DEBUG_TASK_TEST | runTaskTests |
+| 43 | 99_DEBUG_TEST_FINANCE.gs | 30_FINANCE_SERVICE | runFinanceTests |
+| 44 | 99_DEBUG_TEST_RUNNER.gs | 99_DEBUG_TEST_* | runAllModuleTests |
+| 45 | 99_DEBUG_SAMPLE_DATA.gs | 10_HOSO_SERVICE, 20_TASK_SERVICE, 30_FINANCE_SERVICE | seedGoldenDataset |
+| 46 | 99_APPSHEET_WEBHOOK.gs | 03_SHARED_ACTION_REGISTRY, 03_SHARED_PENDING_FEEDBACK, 20_TASK_SERVICE, 30_FINANCE_SERVICE (handlers via registry), 00_CORE_UTILS | `_routeWebhookAction`, `withTaskFeedback` → `withPendingFeedback` |
+| 47 | 90_BOOTSTRAP_MENU.gs | initAll, installTriggers, runAllModuleTests, etc. | onOpen |
+| 48 | 90_BOOTSTRAP_TRIGGER.gs | 90_BOOTSTRAP_AUDIT | dailyHealthCheck |
+| 49 | 90_BOOTSTRAP_INSTALL.gs | 00_CORE_UTILS | buildStructuredBootstrapReport |
 
 ---
 
@@ -57,7 +60,7 @@
 
 - 10_HOSO_SERVICE, 20_TASK_SERVICE, 30_FINANCE_SERVICE do **not** call each other
 - Admin services (18–20) depend on ENUM, MASTER_CODE, SHARED; not called by modules
-- Modules only depend on CONFIG, UTILS, ENUM, SHARED
+- Modules only depend on CONFIG, UTILS, ENUM, SHARED (plus `03_SHARED_ACTION_REGISTRY` / `03_SHARED_PENDING_FEEDBACK` where they call `registerAction` or rely on webhook dispatch)
 
 ---
 

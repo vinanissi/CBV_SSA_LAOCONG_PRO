@@ -11,6 +11,7 @@
 var WEBHOOK_ACTIONS_ = [
   'taskStart', 'taskWait', 'taskResume', 'taskComplete',
   'taskCancel', 'taskReopen', 'taskArchive',
+  'finConfirm', 'finCancel', 'finArchive',
   'checklistDone', 'addLog', 'deleteAttachment'
 ];
 
@@ -20,7 +21,7 @@ var WEBHOOK_ACTIONS_ = [
  * Lovable → HO_SO actions → _gatewayDoPost_
  */
 function doPost(e) {
-  try {
+    try {
     var raw = (e && e.postData && e.postData.contents) ? e.postData.contents : '';
     if (!String(raw).trim()) {
       return _jsonOut_({ ok: false, message: 'Empty body' });

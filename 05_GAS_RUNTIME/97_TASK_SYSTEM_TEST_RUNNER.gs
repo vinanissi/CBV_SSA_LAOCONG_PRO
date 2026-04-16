@@ -362,7 +362,7 @@ function testTaskWorkflowRules() {
   return { ok: findings.length === 0, category: 'WORKFLOW', findings: findings, stats: {} };
 }
 
-function testFieldPolicyReadiness() {
+function testFieldPolicyReadinessImpl() {
   var findings = [];
   [{ table: 'TASK_MAIN', field: 'STATUS', policy: 'NOT form-editable', severity: 'INFO' },
    { table: 'TASK_MAIN', field: 'DONE_AT', policy: 'NOT form-editable', severity: 'INFO' },
@@ -420,7 +420,7 @@ function buildRegressionSummary(results) {
 
 function runAllSystemTestsImpl() {
   var results = [];
-  var tests = [testSchemaIntegrity, testSeedConsistency, testEnumConsistency, testRefIntegrity, testDonViHierarchy, testTaskWorkflowRules, testFieldPolicyReadiness, testAppSheetReadiness, testMigrationSafety];
+  var tests = [testSchemaIntegrity, testSeedConsistency, testEnumConsistency, testRefIntegrity, testDonViHierarchy, testTaskWorkflowRules, testFieldPolicyReadinessImpl, testAppSheetReadiness, testMigrationSafety];
   tests.forEach(function(fn) {
     try { results.push(fn()); } catch (e) {
       results.push({ ok: false, category: fn.name || 'unknown', findings: [{ code: 'EXCEPTION', severity: 'HIGH', message: e.message || String(e) }], stats: {} });

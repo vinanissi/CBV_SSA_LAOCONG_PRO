@@ -20,9 +20,14 @@ See `CBV_LAOCONG_PRO_REFERENCE.md` for deployment order and GAS/AppSheet mapping
 | ACT_TASK_ARCHIVE | CMD:taskArchive | DONE, CANCELLED | ✅ |
 
 ## FINANCE
-- ACT_FIN_CONFIRM
-- ACT_FIN_CANCEL
-- ACT_FIN_ARCHIVE
+
+| Action | PENDING_ACTION | validStatuses | GAS Route | Confirmation |
+|--------|----------------|---------------|-----------|----------------|
+| ACT_FIN_CONFIRM | CMD:finConfirm | NEW | registerAction → withPendingFeedback | ✅ |
+| ACT_FIN_CANCEL | CMD:finCancel | NEW | registerAction → withPendingFeedback | ✅ |
+| ACT_FIN_ARCHIVE | CMD:finArchive | CONFIRMED, CANCELLED | registerAction → withPendingFeedback | ✅ |
+
+Ghi chú: các Finance actions được đăng ký vào ACTION_REGISTRY trong `30_FINANCE_SERVICE.gs`; `_routeWebhookAction` (`99_APPSHEET_WEBHOOK.gs`) tra `getRegisteredAction` rồi dispatch (`withPendingFeedback` + adapter) mà không cần thêm `switch` cho từng action.
 
 ## Quy tắc
 - Action không sửa raw status nếu không có guard.
@@ -33,7 +38,7 @@ See `CBV_LAOCONG_PRO_REFERENCE.md` for deployment order and GAS/AppSheet mapping
 
 - Actions ghi `PENDING_ACTION` = `"CMD:[actionName]"` — không ghi tên action thuần.
 - Bot condition: `LEFT([PENDING_ACTION], 4) = "CMD:"` — chỉ fire khi có prefix.
-- GAS strip prefix → route đúng case → `withTaskFeedback()` với `validStatuses`.
+- GAS strip prefix → tra ACTION_REGISTRY (`getRegisteredAction`) → `withPendingFeedback()` với `validStatuses` và adapter tương ứng (các action đã `registerAction`: task, finance, …). Riêng `checklistDone` / `addLog`: router `switch`, gọi handler trực tiếp (không bọc feedback ⏳/✅/❌).
 - `validStatuses` guard: silent skip nếu STATUS không hợp lệ — chặn Bot fire lần 2.
 - `FEEDBACK_DISPLAY`: hiển thị trạng thái realtime cho user.
 - Confirmation message: báo user chờ ~20 giây trước khi nhấn OK.
