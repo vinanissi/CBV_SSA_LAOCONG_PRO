@@ -116,6 +116,26 @@ function buildCbvProMenu_() {
       .addItem('Dump full schema profile', 'menuDumpFullSchemaProfile')
   );
 
+  // 8b. Data sync (plan on DATA_SYNC_CONTROL — see 46_DATA_SYNC_PLAN_SHEET.js; form: 45_DATA_SYNC_BUILDER.js)
+  menu.addSubMenu(
+    ui.createMenu('Data sync')
+      .addItem('Ensure builder sheet (template) + open', 'menuDataSyncEnsureBuilderAndOpen')
+      .addItem('Ensure paste labels (form hàng 5–9)', 'menuDataSyncEnsurePasteArea')
+      .addItem('Fill header rows 7/9 from B6·D6 & B8·D8 (open sheets)', 'menuDataSyncFillHeadersFromLinkedSheets')
+      .addItem('Import jobs (two paste columns) → job table', 'menuDataSyncImportFromPaste')
+      .addItem('Auto column maps (match headers)', 'menuDataSyncAutoColumnMaps')
+      .addItem('Dropdown from/to (column map)', 'menuDataSyncMapDropdowns')
+      .addItem('Pipeline: import + maps + dropdowns', 'menuDataSyncPastePipeline')
+      .addItem('Generate plan JSON → CONTROL A2', 'menuDataSyncGeneratePlanToA2')
+      .addSeparator()
+      .addItem('Ensure control sheet + open', 'menuDataSyncEnsureAndOpen')
+      .addItem('Validate plan (A2)', 'menuDataSyncValidatePlanFromSheet')
+      .addItem('Build report (read-only; F2 = resume chunk)', 'menuDataSyncBuildReportFromSheet')
+      .addItem('Clear continuation token (F2)', 'menuDataSyncClearContinuationFromSheet')
+      .addItem('Run apply (writes target…)', 'menuDataSyncRunApplyFromSheet')
+      .addItem('Run apply — one job (prompt job_id)…', 'menuDataSyncRunApplyOneJobFromSheet')
+  );
+
   // 9. Repair zone
   menu.addSubMenu(
     ui.createMenu('Repair zone')

@@ -7,9 +7,14 @@
  * @param {Object} beforeObj - Snapshot before change
  * @param {Object} afterObj - Snapshot after change
  * @param {string} [note] - Optional note
+ * @param {{ actorId?: string }} [logOptions] - Optional; if actorId set, used as ACTOR_ID (e.g. cbvSystemActor() for batch).
  */
-function logAdminAudit(auditType, entityType, entityId, action, beforeObj, afterObj, note) {
-  var actorId = (typeof mapCurrentUserEmailToInternalId === 'function' ? mapCurrentUserEmailToInternalId() : null) || cbvUser();
+function logAdminAudit(auditType, entityType, entityId, action, beforeObj, afterObj, note, logOptions) {
+  var opts = logOptions || {};
+  var actorId = opts.actorId;
+  if (!actorId) {
+    actorId = (typeof mapCurrentUserEmailToInternalId === 'function' ? mapCurrentUserEmailToInternalId() : null) || cbvUser();
+  }
   var eId = String(entityId || '').trim();
   var eType = String(entityType || '').trim();
   if (!eId) {

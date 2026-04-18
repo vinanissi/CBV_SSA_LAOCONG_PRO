@@ -1,6 +1,6 @@
 # DATA SYNC MODULE (GAS) — Thiết kế đầy đủ
 
-**Version:** 1.1  
+**Version:** 1.3  
 **Trạng thái:** Spec chốt trước implementation (source of truth)  
 **Phạm vi:** Đồng bộ dữ liệu giữa spreadsheet/sheet nguồn và đích (ví dụ bản DB đầy đủ ↔ bản FIN / mirror), có map cột, transform, cấu hình thay đổi được.
 
@@ -48,6 +48,35 @@
 - **Plan:** JSON/object có `version`, danh sách `jobs`; có thể mặc định trong code hoặc load từ sheet/Script Properties (policy triển khai).
 - **Engine:** không hardcode tên cột nghiệp vụ; chỉ generic resolve header, key, transform, diff, apply.
 
+### 2.1 Form `DATA_SYNC_BUILDER` — pipeline (sheet form → plan nghiệp vụ)
+
+**Nguyên tắc (form mới):** Hàng **6** và **8** — `source spreadsheet` / `source sheet` / `target spreadsheet` / `target sheet` ở cột **B** và **D**; **B6/B8 giữ URL** (không ghi đè bằng id đã chuẩn hóa). **Một hàng header nguồn** ở **hàng 7**, **một hàng header đích** ở **hàng 9**, dán ngang từ **cột A**. Trước khi build plan, **D6/D8** và **id spreadsheet** (từ URL B6/B8) được **đồng bộ xuống dòng JOB** (B–E); cột B/D trên **JOB** là **spreadsheet id** sau normalize. Bảng **JOB** vẫn giữ đủ mode/key/policy; layout **cũ** (header ở hàng 6 & 8 cột B) được `dataSyncGetBuilderHeaderPasteConfig_` nhận diện.
+
+**COLUMN_MAPS:** Hàng tiêu đề đủ **A–H** — `job_id`, `from`, `to`, `transform`, `enumMapRef`, `src_col#`, `tgt_col#`, `same_name` (chỉ số cột **1-based** trên sheet nguồn/đích; `same_name` = Yes/No). **K–M** (cùng hàng tiêu đề): `job_id`, `cols_src_only`, `cols_tgt_only` — danh sách tên cột **không** nằm trong cặp map (chỉ nguồn / chỉ đích). Plan JSON vẫn chỉ đọc **A–E** cho `columnMap`.
+
+#### Luồng làm việc chính (prod)
+
+Form mới: **A6** = “source spreadsheet …”. **Thứ tự dưới đây là thứ tự phụ thuộc kỹ thuật** (đủ để chạy pipeline); có thể điền **B6/B8 + D6/D8** trước rồi **đồng bộ meta → JOB** ngay — tương đương “có link + tên tab” trước khi map.
+
+| # | Việc làm | Ghi chú / menu GAS (`90_BOOTSTRAP_MENU.js`) |
+|---|----------|-----------------------------------------------|
+| 1 | **B6** = link spreadsheet nguồn; **D6** = tên tab nguồn | **B8** = link spreadsheet đích; **D8** = tên tab đích. B6/B8 giữ URL; id chuẩn hóa nằm trên dòng **JOB** khi sync meta. |
+| 2 | **JOB** — ít nhất một dòng (`job_id`, tên tab nguồn/đích, policy…) | Đồng bộ từ form (meta → dòng JOB đầu khi Generate / các bước builder gọi `dataSyncSyncMetaFormToFirstJobRow_`) hoặc **Import jobs (two paste columns) → job table**. *Cần trước bước auto map nếu đọc **hàng 1** từ sheet thật (theo tên tab trên JOB).* |
+| 3 | **Hàng 7** / **hàng 9** — tên cột *(tuỳ chọn)* | **Dán tay** từ hàng 1 hai sheet, hoặc menu **Fill header rows 7/9 from B6·D6 & B8·D8** — `dataSyncFillHeaderRowsFromFormLinks_` (mở spreadsheet, đọc hàng 1 tab D6/D8). Nếu không dán 7/9 nhưng đã có JOB, **Auto column maps** vẫn có thể đọc **hàng 1** trực tiếp. |
+| 4 | **Auto column maps** → **COLUMN_MAPS** | **Auto column maps (match headers)** (`dataSyncAutoFillColumnMapsFromHeaders_`). F–H + K–M; **keyColumns (G)** = `from` dòng map đầu (trừ key composite có `,`). |
+| 5 | *(Tuỳ chọn)* **Dropdown from/to** | **Dropdown from/to (column map)** — `dataSyncApplyColumnMapDropdowns_`. |
+| 6 | **Generate plan JSON → CONTROL A2** | **Generate plan JSON → CONTROL A2** (`buildPlanObjectFromBuilderSheet_` → `saveDataSyncPlanToSheet`). |
+| 7 | **Kiểm tra** | **Validate plan (A2)** → **Build report (read-only)** (chunk resume **F2**). Không ghi đích. |
+| 8 | **Run apply** | **Run apply (writes target…)** — truyền **plan + continuation (F2)** từ `getDataSyncReportOptsFromSheet_()`; `dryRun: false`. **Run apply — one job (prompt job_id)** — cùng continuation/plan, thêm `jobId` để chỉ chạy một job (`buildDataSyncReport` / `runDataSync` lọc `plan.jobs`). |
+
+Pipeline gộp: **Data sync → Pipeline: import + maps + dropdowns** chạy import → maps → dropdowns khi đã chuẩn bị cột import + meta.
+
+**Import jobs:** chỉ xóa/ghi trong **bảng JOB** (số dòng tối đa cố định trước khối COLUMN_MAPS — `dataSyncGetBuilderJobDataEndRow_`), không xóa vùng map. Sau import, cột **B/D** (spreadsheet id) lấy từ **B6/B8** (form mới) cho mọi dòng job.
+
+**Can thiệp:** sửa tay **COLUMN_MAPS** (transform, enum, …); menu **Dropdown from/to** nếu cần. Dropdown **from/to** cho phép giá trị ngoài list (`allowInvalid`) để chỉnh thủ công.
+
+**Impl (GAS):** `Sheet.getRange(row, column, numRows, numColumns)` — tham số 3–4 là **số hàng / số cột**, không phải “last row / last column”; tránh mẫu `(r,c,r,endCol)` cho một hàng (sẽ lệch số ô). Builder dùng `getRange(r,c,1,width)` cho một dải một hàng.
+
 ---
 
 ## 3. API (contract)
@@ -55,7 +84,7 @@
 ### 3.1 `buildDataSyncReport(opts) → Report`
 
 - **Không** có tham số `dryRun` trong signature — **report luôn read-only**, không ghi spreadsheet, không đổi state ngoài bộ nhớ.
-- **Input (tối thiểu):** `planId` hoặc `plan` inline; optional `planOverride` (deep merge để test).
+- **Input (tối thiểu):** `planId` hoặc `plan` inline; optional `planOverride` (deep merge để test); optional **`continuation`**, **`jobId`** (chỉ phân tích một job), **`maxRowsPerChunk`** — xem impl `49_DATA_SYNC_ENGINE.js`.
 - **Output:**
   - `summary`: `{ insert, update, skip, unchanged, errorRowCount, warnings, ... }` — xem **§3.4** (không dùng cùng tên với counter apply).
   - `rows[]`: per-row `{ key, action, fieldsChanged[], errorCode?, ... }`
@@ -66,6 +95,7 @@
 ### 3.2 `runDataSync(opts) → Result`
 
 - **Chỉ ghi** khi `opts.dryRun === false` (cùng tinh thần `runUserMigration` / `runTaskMigration`).
+- **Input:** giống `buildDataSyncReport`: `plan`, optional **`continuation`** (chunk resume — nên lấy từ **F2** qua `getDataSyncReportOptsFromSheet_()` khi gọi từ menu), optional **`jobId`** — nếu set, engine chỉ xử lý job có `id` khớp (multi-job plan vẫn hợp lệ).
 - `summary` của result nên có **`applySkippedErrorCount`** (hoặc tên tương đương) — xem **§3.4**; không gộp nhầm với `errorRowCount` của report.
 - Gọi sau khi đã có report hoặc nhúng bước report nội bộ — policy team: **fail nếu `canApply === false`** trừ khi flag `forceApplyErrors` (không khuyến nghị v1).
 
@@ -73,6 +103,7 @@
 
 - Schema plan, job id unique, bắt buộc field (kể cả `onDuplicateSourceKey`, `maxErrorRows`).
 - **Sheet/spreadsheet ref:** **chỉ** resolve và kiểm tra tồn tại/quyền truy cập **trong `validateSyncPlan`** (mở spreadsheet, có sheet, header tối thiểu nếu spec yêu cầu). **`buildDataSyncReport` không thay thế** bước này — nếu gọi report mà chưa validate, implementation có thể `throw` hoặc fail fast theo policy; không “defer silent” sang lần đầu report.
+- **`spreadsheetId`:** `cbvNormalizeGoogleSpreadsheetId` trong `00_CORE_UTILS.js` — URL → id; dùng trong engine (`openById`) và builder (form B6/B8, cột JOB B/D + Generate).
 - **Levenshtein “did you mean?”:** nếu `from`/`aliases` không khớp header, distance ≤ 2 và best match unique → **`warnings[]`** `SUGGESTED_HEADER` — **không** auto-map.
 
 ### 3.4 Metrics: report vs apply (hai counter khác phase)
@@ -302,9 +333,15 @@ var DATA_SYNC_FIRST_DATA_ROW = 2;
 |----------------|-----------|
 | `03_USER_MIGRATION_HELPER.js` | `buildMigrationReport` / `runUserMigration`, dryRun |
 | `20_TASK_MIGRATION_HELPER.js` | `columnMap`, `statusMapping`, alias |
-| `00_CORE_CONFIG.js` | `SHEETS`, thêm `SYSTEM_ACTOR_ID` |
+| `00_CORE_CONFIG.js` | `SHEETS`, `SYSTEM_ACTOR_ID` |
+| `45_DATA_SYNC_BUILDER.js` | Form `DATA_SYNC_BUILDER` — xem **§2.1**; `buildPlanObjectFromBuilderSheet_()` → `CONTROL!A2` |
+| `46_DATA_SYNC_PLAN_SHEET.js` | Plan JSON trên sheet `DATA_SYNC_CONTROL` (`A2`), token chunk `F2`, menu |
+| `47_DATA_SYNC_CHUNK.js` | Constants chunk / `nextStartRow` |
+| `48_DATA_SYNC_TRANSFORM.js` | Transforms + Levenshtein + enum resolve |
+| `49_DATA_SYNC_ENGINE.js` | `validateSyncPlan`, `buildDataSyncReport`, `runDataSync` |
+| `DATA_SYNC_MODULE_IMPLEMENTATION_AUDIT.md` | Đối chiếu checklist sau impl |
 | `01_ENUM_SYNC_SERVICE.js` | Enum governance (tinh thần single source) |
 
 ---
 
-*End of design v1.1.*
+*End of design v1.3.*

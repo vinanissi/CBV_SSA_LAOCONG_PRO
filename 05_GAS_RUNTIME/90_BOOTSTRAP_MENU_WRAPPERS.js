@@ -764,3 +764,305 @@ function menuGenerateHoSoReport() {
   ui.alert('📋 HoSo report\n\n' + summary + '\n\nSee details in AppSheet → HS_PRINT_VIEW');
 }
 
+// ==================== Data sync (DATA_SYNC_CONTROL sheet plan JSON) ====================
+
+function menuDataSyncEnsureBuilderAndOpen() {
+  if (typeof ensureDataSyncBuilderSheet !== 'function') {
+    SpreadsheetApp.getUi().alert('Not loaded', 'ensureDataSyncBuilderSheet (45_DATA_SYNC_BUILDER).', SpreadsheetApp.getUi().ButtonSet.OK);
+    return;
+  }
+  try {
+    var sh = ensureDataSyncBuilderSheet();
+    SpreadsheetApp.getActive().setActiveSheet(sh);
+    sh.setActiveRange(sh.getRange('B2'));
+  } catch (e) {
+    SpreadsheetApp.getUi().alert('Data sync builder', String(e.message || e), SpreadsheetApp.getUi().ButtonSet.OK);
+  }
+}
+
+function menuDataSyncEnsurePasteArea() {
+  if (typeof ensureDataSyncBuilderPasteArea !== 'function') {
+    SpreadsheetApp.getUi().alert('Not loaded', 'ensureDataSyncBuilderPasteArea (45_DATA_SYNC_BUILDER).', SpreadsheetApp.getUi().ButtonSet.OK);
+    return;
+  }
+  try {
+    ensureDataSyncBuilderPasteArea();
+    SpreadsheetApp.getUi().alert(
+      'Data sync',
+      'Đã thêm / kiểm tra nhãn form (hàng 5–9: meta B,D; header hàng 7 & 9 từ A).',
+      SpreadsheetApp.getUi().ButtonSet.OK
+    );
+  } catch (e) {
+    SpreadsheetApp.getUi().alert('Data sync', String(e.message || e), SpreadsheetApp.getUi().ButtonSet.OK);
+  }
+}
+
+function menuDataSyncFillHeadersFromLinkedSheets() {
+  var ui = SpreadsheetApp.getUi();
+  if (typeof dataSyncFillHeaderRowsFromFormLinks_ !== 'function') {
+    ui.alert('Not loaded', 'dataSyncFillHeaderRowsFromFormLinks_ (45_DATA_SYNC_BUILDER).', ui.ButtonSet.OK);
+    return;
+  }
+  try {
+    if (typeof ensureDataSyncBuilderPasteArea === 'function') ensureDataSyncBuilderPasteArea();
+    var n = dataSyncFillHeaderRowsFromFormLinks_();
+    ui.alert(
+      'Header từ sheet thật',
+      'OK — hàng 7: ' + n.srcCols + ' cột; hàng 9: ' + n.tgtCols + ' cột (từ hàng 1 của tab D6 / D8).',
+      ui.ButtonSet.OK
+    );
+  } catch (e) {
+    ui.alert('Fill headers', String(e.message || e), ui.ButtonSet.OK);
+  }
+}
+
+function menuDataSyncImportFromPaste() {
+  var ui = SpreadsheetApp.getUi();
+  if (typeof dataSyncImportJobsFromPasteColumns_ !== 'function') {
+    ui.alert('Not loaded', 'dataSyncImportJobsFromPasteColumns_', ui.ButtonSet.OK);
+    return;
+  }
+  try {
+    if (typeof ensureDataSyncBuilderPasteArea === 'function') ensureDataSyncBuilderPasteArea();
+    var n = dataSyncImportJobsFromPasteColumns_();
+    ui.alert('Import jobs', 'OK — ' + n + ' job(s) ghi vào bảng JOB (từ hàng JOB đầu).', ui.ButtonSet.OK);
+  } catch (e) {
+    ui.alert('Import', String(e.message || e), ui.ButtonSet.OK);
+  }
+}
+
+function menuDataSyncAutoColumnMaps() {
+  var ui = SpreadsheetApp.getUi();
+  if (typeof dataSyncAutoFillColumnMapsFromHeaders_ !== 'function') {
+    ui.alert('Not loaded', 'dataSyncAutoFillColumnMapsFromHeaders_', ui.ButtonSet.OK);
+    return;
+  }
+  try {
+    var n = dataSyncAutoFillColumnMapsFromHeaders_();
+    ui.alert('Auto maps', 'OK — ' + n + ' dòng column map (khớp tên cột header). Kiểm tra keyColumns (G).', ui.ButtonSet.OK);
+  } catch (e) {
+    ui.alert('Auto maps', String(e.message || e), ui.ButtonSet.OK);
+  }
+}
+
+function menuDataSyncMapDropdowns() {
+  var ui = SpreadsheetApp.getUi();
+  if (typeof dataSyncApplyColumnMapDropdowns_ !== 'function') {
+    ui.alert('Not loaded', 'dataSyncApplyColumnMapDropdowns_', ui.ButtonSet.OK);
+    return;
+  }
+  try {
+    dataSyncApplyColumnMapDropdowns_();
+    ui.alert('Dropdowns', 'OK — cột from/to (B/C) có list theo header từng job.', ui.ButtonSet.OK);
+  } catch (e) {
+    ui.alert('Dropdowns', String(e.message || e), ui.ButtonSet.OK);
+  }
+}
+
+function menuDataSyncPastePipeline() {
+  var ui = SpreadsheetApp.getUi();
+  if (
+    typeof ensureDataSyncBuilderPasteArea !== 'function' ||
+    typeof dataSyncImportJobsFromPasteColumns_ !== 'function' ||
+    typeof dataSyncAutoFillColumnMapsFromHeaders_ !== 'function' ||
+    typeof dataSyncApplyColumnMapDropdowns_ !== 'function'
+  ) {
+    ui.alert('Not loaded', '45_DATA_SYNC_BUILDER', ui.ButtonSet.OK);
+    return;
+  }
+  try {
+    ensureDataSyncBuilderPasteArea();
+    var a = dataSyncImportJobsFromPasteColumns_();
+    var b = dataSyncAutoFillColumnMapsFromHeaders_();
+    dataSyncApplyColumnMapDropdowns_();
+    ui.alert('Pipeline', 'OK\nJobs: ' + a + '\nMap rows: ' + b + '\n→ Generate plan khi sẵn sàng.', ui.ButtonSet.OK);
+  } catch (e) {
+    ui.alert('Pipeline', String(e.message || e), ui.ButtonSet.OK);
+  }
+}
+
+function menuDataSyncGeneratePlanToA2() {
+  var ui = SpreadsheetApp.getUi();
+  if (typeof buildPlanObjectFromBuilderSheet_ !== 'function') {
+    ui.alert('Not loaded', 'buildPlanObjectFromBuilderSheet_ (45_DATA_SYNC_BUILDER).', ui.ButtonSet.OK);
+    return;
+  }
+  try {
+    var plan = buildPlanObjectFromBuilderSheet_();
+    if (typeof validateSyncPlan === 'function') {
+      var v = validateSyncPlan(plan);
+      if (!v.ok) {
+        ui.alert('Validate (from builder)', 'FAILED:\n' + JSON.stringify(v.issues).substring(0, 1800), ui.ButtonSet.OK);
+        return;
+      }
+    }
+    if (typeof saveDataSyncPlanToSheet === 'function') {
+      saveDataSyncPlanToSheet(plan);
+    } else {
+      ui.alert('Not loaded', 'saveDataSyncPlanToSheet', ui.ButtonSet.OK);
+      return;
+    }
+    ui.alert(
+      'Generate plan',
+      'OK — đã ghi JSON vào DATA_SYNC_CONTROL!A2\nJobs: ' + plan.jobs.length + '\nTiếp: Validate plan (A2) hoặc Build report.',
+      ui.ButtonSet.OK
+    );
+  } catch (e) {
+    ui.alert('Generate plan', String(e.message || e), ui.ButtonSet.OK);
+  }
+}
+
+function menuDataSyncEnsureAndOpen() {
+  if (typeof ensureDataSyncControlSheet !== 'function') {
+    SpreadsheetApp.getUi().alert('Not loaded', 'ensureDataSyncControlSheet not found (load 46_DATA_SYNC_PLAN_SHEET).', SpreadsheetApp.getUi().ButtonSet.OK);
+    return;
+  }
+  try {
+    ensureDataSyncControlSheet();
+    menuDataSyncOpenControlSheet();
+  } catch (e) {
+    SpreadsheetApp.getUi().alert('Data sync', String(e.message || e), SpreadsheetApp.getUi().ButtonSet.OK);
+  }
+}
+
+function menuDataSyncValidatePlanFromSheet() {
+  var ui = SpreadsheetApp.getUi();
+  if (typeof getDataSyncPlanFromSheet !== 'function' || typeof validateSyncPlan !== 'function') {
+    ui.alert('Not loaded', 'Data sync module not found.', ui.ButtonSet.OK);
+    return;
+  }
+  try {
+    var plan = getDataSyncPlanFromSheet();
+    var v = validateSyncPlan(plan);
+    if (typeof dataSyncWriteLastResult_ === 'function') {
+      dataSyncWriteLastResult_('validateSyncPlan', { ok: v.ok, summary: {}, issues: v.issues, warnings: v.warnings });
+    }
+    if (!v.ok) {
+      ui.alert('Validate plan', 'FAILED\n' + JSON.stringify(v.issues).substring(0, 1800), ui.ButtonSet.OK);
+    } else {
+      ui.alert('Validate plan', 'OK. Warnings: ' + (v.warnings ? v.warnings.length : 0), ui.ButtonSet.OK);
+    }
+  } catch (e) {
+    ui.alert('Validate plan', String(e.message || e), ui.ButtonSet.OK);
+  }
+}
+
+function menuDataSyncBuildReportFromSheet() {
+  var ui = SpreadsheetApp.getUi();
+  if (typeof buildDataSyncReport !== 'function' || typeof getDataSyncReportOptsFromSheet_ !== 'function') {
+    ui.alert('Not loaded', 'Data sync engine not found.', ui.ButtonSet.OK);
+    return;
+  }
+  try {
+    var opts = getDataSyncReportOptsFromSheet_();
+    var rep = buildDataSyncReport(opts);
+    if (typeof dataSyncWriteLastResult_ === 'function') {
+      dataSyncWriteLastResult_('buildDataSyncReport', rep);
+    }
+    var msg =
+      'canApply=' +
+      rep.canApply +
+      '\nerrorRowCount=' +
+      (rep.summary ? rep.summary.errorRowCount : '') +
+      '\ncontinuation=' +
+      (rep.continuation ? 'YES — re-run Build or clear F2 when done' : 'null (complete pass)');
+    ui.alert('Build report (read-only)', msg, ui.ButtonSet.OK);
+  } catch (e) {
+    ui.alert('Build report', String(e.message || e), ui.ButtonSet.OK);
+  }
+}
+
+function menuDataSyncClearContinuationFromSheet() {
+  if (typeof dataSyncSetContinuationOnSheet_ !== 'function') {
+    SpreadsheetApp.getUi().alert('Not loaded', 'dataSyncSetContinuationOnSheet_ not found.', SpreadsheetApp.getUi().ButtonSet.OK);
+    return;
+  }
+  dataSyncSetContinuationOnSheet_(null);
+  SpreadsheetApp.getUi().alert('Data sync', 'F2 continuation cleared. Next Build starts from row 1 chunk.', SpreadsheetApp.getUi().ButtonSet.OK);
+}
+
+function menuDataSyncRunApplyFromSheet() {
+  var ui = SpreadsheetApp.getUi();
+  if (typeof runDataSync !== 'function' || typeof getDataSyncReportOptsFromSheet_ !== 'function') {
+    ui.alert('Not loaded', 'Data sync engine / 46_DATA_SYNC_PLAN_SHEET.', ui.ButtonSet.OK);
+    return;
+  }
+  var c = ui.alert(
+    'Apply data sync',
+    'Writes to TARGET sheets in the plan. Uses F2 continuation if present. Run Build report until continuation is null first when using chunks. Continue?',
+    ui.ButtonSet.YES_NO
+  );
+  if (c !== ui.Button.YES) return;
+  try {
+    var opts = getDataSyncReportOptsFromSheet_();
+    var r = runDataSync({
+      plan: opts.plan,
+      continuation: opts.continuation,
+      dryRun: false
+    });
+    if (typeof dataSyncWriteLastResult_ === 'function') {
+      dataSyncWriteLastResult_('runDataSync', r);
+    }
+    ui.alert('Apply', (r.message || '') + '\napplied rows (writes): ' + (r.applied != null ? r.applied : ''), ui.ButtonSet.OK);
+  } catch (e) {
+    ui.alert('Apply', String(e.message || e), ui.ButtonSet.OK);
+  }
+}
+
+function menuDataSyncRunApplyOneJobFromSheet() {
+  var ui = SpreadsheetApp.getUi();
+  if (
+    typeof runDataSync !== 'function' ||
+    typeof getDataSyncReportOptsFromSheet_ !== 'function' ||
+    typeof getDataSyncPlanFromSheet !== 'function'
+  ) {
+    ui.alert('Not loaded', 'Data sync engine / 46_DATA_SYNC_PLAN_SHEET.', ui.ButtonSet.OK);
+    return;
+  }
+  var res = ui.prompt('Apply một job', 'Nhập job_id trong plan (A2), ví dụ JOB_1:', ui.ButtonSet.OK_CANCEL);
+  if (res.getSelectedButton() !== ui.Button.OK) return;
+  var jid = String(res.getResponseText() || '').trim();
+  if (!jid) {
+    ui.alert('Apply', 'job_id trống.', ui.ButtonSet.OK);
+    return;
+  }
+  try {
+    var planProbe = getDataSyncPlanFromSheet();
+    var found = (planProbe.jobs || []).some(function(j) {
+      return String(j.id) === String(jid);
+    });
+    if (!found) {
+      ui.alert('Apply', 'Không có job_id trong plan: ' + jid, ui.ButtonSet.OK);
+      return;
+    }
+  } catch (e) {
+    ui.alert('Apply', String(e.message || e), ui.ButtonSet.OK);
+    return;
+  }
+  var c = ui.alert(
+    'Apply một job',
+    'Chỉ ghi TARGET cho job "' + jid + '". Tiếp tục?',
+    ui.ButtonSet.YES_NO
+  );
+  if (c !== ui.Button.YES) return;
+  try {
+    var opts = getDataSyncReportOptsFromSheet_({ jobId: jid });
+    var r = runDataSync({
+      plan: opts.plan,
+      continuation: opts.continuation,
+      jobId: jid,
+      dryRun: false
+    });
+    if (typeof dataSyncWriteLastResult_ === 'function') {
+      dataSyncWriteLastResult_('runDataSync', r);
+    }
+    ui.alert(
+      'Apply (một job)',
+      (r.message || '') + '\njob: ' + jid + '\napplied rows: ' + (r.applied != null ? r.applied : ''),
+      ui.ButtonSet.OK
+    );
+  } catch (e) {
+    ui.alert('Apply (một job)', String(e.message || e), ui.ButtonSet.OK);
+  }
+}
+

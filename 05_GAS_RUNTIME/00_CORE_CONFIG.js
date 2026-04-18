@@ -1,5 +1,7 @@
 const CBV_CONFIG = {
   SPREADSHEET_ID: SpreadsheetApp.getActive().getId(),
+  /** Sentinel actor for triggers / batch when no interactive user; use cbvSystemActor() — do not hardcode elsewhere. */
+  SYSTEM_ACTOR_ID: 'SYSTEM',
   TIMEZONE: Session.getScriptTimeZone() || 'Asia/Ho_Chi_Minh',
   /** Admin email whitelist. Required for admin panel. Add emails, e.g. ['admin@example.com']. */
   ADMIN_EMAILS: ["vnnissi@gmail.com","admin@htxdientu.com"],  // Must be non-empty for adminCreateEnumRow, adminUpdateEnumRow, etc.
@@ -22,6 +24,10 @@ const CBV_CONFIG = {
     TASK_ATTACHMENT: 'TASK_ATTACHMENT',
     FINANCE_ATTACHMENT: 'FINANCE_ATTACHMENT',
     FINANCE_TRANSACTION: 'FINANCE_TRANSACTION',
-    FINANCE_LOG: 'FINANCE_LOG'
+    FINANCE_LOG: 'FINANCE_LOG',
+    /** Data sync: plan JSON (A2) + dashboard + continuation token (F2) — see 46_DATA_SYNC_PLAN_SHEET.js */
+    DATA_SYNC_CONTROL: 'DATA_SYNC_CONTROL',
+    /** Data sync: form table → build plan JSON — see 45_DATA_SYNC_BUILDER.js */
+    DATA_SYNC_BUILDER: 'DATA_SYNC_BUILDER'
   }
 };

@@ -10,6 +10,17 @@ function cbvUser() {
   }
 }
 
+/**
+ * Actor id for system/trigger contexts (DATA_SYNC, cron). Single source: CBV_CONFIG.SYSTEM_ACTOR_ID.
+ * @returns {string}
+ */
+function cbvSystemActor() {
+  if (typeof CBV_CONFIG !== 'undefined' && CBV_CONFIG.SYSTEM_ACTOR_ID) {
+    return String(CBV_CONFIG.SYSTEM_ACTOR_ID);
+  }
+  return 'SYSTEM';
+}
+
 function cbvResponse(ok, code, message, data, errors) {
   return {
     ok: ok,
@@ -60,6 +71,20 @@ function cbvMakeId(prefix) {
 
 function cbvClone(obj) {
   return JSON.parse(JSON.stringify(obj || {}));
+}
+
+/**
+ * Tách spreadsheet id từ URL Google Sheets hoặc giữ chuỗi id thuần.
+ * @param {string} [raw]
+ * @returns {string}
+ */
+function cbvNormalizeGoogleSpreadsheetId(raw) {
+  if (raw == null) return '';
+  var s = String(raw).trim();
+  if (!s) return '';
+  var m = s.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  if (m && m[1]) return m[1];
+  return s;
 }
 
 /** @returns {Object} Empty bootstrap result structure */
