@@ -326,7 +326,7 @@ For each table, go to **Data → Columns → [Table name]** and configure.
 - AMOUNT → Number
 - UNIT_ID → Text or Ref to MASTER_CODE
 - RELATED_ENTITY_ID → Text or Ref
-- EVIDENCE_URL → Text (legacy)
+- EVIDENCE_URL → **File** (khuyến nghị để có nút tải/chọn file; AppSheet upload lên Drive và lưu URL vào ô) **hoặc** Text nếu chỉ dán link thủ công (legacy)
 - CONFIRMED_AT → Date (hidden; GAS set)
 - CONFIRMED_BY → **Ref** → ACTIVE_USERS (Display: DISPLAY_TEXT); hidden; GAS set
 - CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY → leave default
@@ -337,6 +337,10 @@ For each table, go to **Data → Columns → [Table name]** and configure.
 **Step 4:** Editable? = FALSE: ID, STATUS, CREATED_*, UPDATED_*, CONFIRMED_*
 
 **Step 5:** Editable_If for business fields: `[STATUS] <> "CONFIRMED"` (TRANS_CODE, TRANS_DATE, TRANS_TYPE, CATEGORY, AMOUNT, UNIT_ID, COUNTERPARTY, PAYMENT_METHOD, REFERENCE_NO, RELATED_ENTITY_TYPE, RELATED_ENTITY_ID, DESCRIPTION, EVIDENCE_URL)
+
+**Step 6 — Chứng từ tải file:** Nếu form đang hiển thị **EVIDENCE_URL** kiểu Text (chỉ nhập `http://`):
+- Đổi cột **EVIDENCE_URL** sang type **File** (Data → Columns → FINANCE_TRANSACTION → EVIDENCE_URL). Lưu lại app; trên form sẽ có chọn/tải file thay vì ô text.
+- **Nhiều file hoặc phân loại (hóa đơn/biên lai/…):** giữ **EVIDENCE_URL** tùy chọn hoặc ẩn trên form; dùng bảng con **FINANCE_ATTACHMENT** với **FILE_URL** = File và inline trên **FINANCE_DETAIL** (xem §3.9 và UX checklist Bước 11–12).
 
 ---
 

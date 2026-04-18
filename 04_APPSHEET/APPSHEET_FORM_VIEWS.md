@@ -202,7 +202,7 @@ TASK_ID (auto-linked), ID, FILE_NAME, DRIVE_FILE_ID, CREATED_AT, CREATED_BY
 | 9 | RELATED_ENTITY_TYPE | Yes | When STATUS <> CONFIRMED | Enum |
 | 10 | RELATED_ENTITY_ID | Yes | When STATUS <> CONFIRMED | Ref |
 | 11 | DESCRIPTION | Yes | When STATUS <> CONFIRMED | |
-| 12 | EVIDENCE_URL | Yes | When STATUS <> CONFIRMED | Legacy |
+| 12 | EVIDENCE_URL | Yes | When STATUS <> CONFIRMED | AppSheet column type **File** = tải file (URL lưu trong ô); **Text** = chỉ dán link. Nhiều file → FINANCE_ATTACHMENT |
 | 13 | TRANS_CODE | Yes | When STATUS <> CONFIRMED | GAS may generate |
 | 14 | STATUS | Yes | No | GAS action only |
 

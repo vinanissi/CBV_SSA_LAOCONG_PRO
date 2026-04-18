@@ -4,6 +4,59 @@
  * Dependencies: 20_TASK_REPOSITORY, 20_TASK_VALIDATION, 02_USER_SERVICE, 01_ENUM_SERVICE, 03_SHARED_*
  */
 
+/** STATUS values where DUE_DATE still matters for SLA (align TASK_OPEN / OVERDUE_HINT). */
+var TASK_MAIN_STATUSES_ELIGIBLE_OVERDUE = ['NEW', 'ASSIGNED', 'IN_PROGRESS', 'WAITING'];
+
+/**
+ * @param {*} dueVal - Sheet Date or parseable string
+ * @returns {number|null} start-of-day millis in script timezone, or null
+ */
+function _taskMainDueDateStartMillis(dueVal) {
+  if (dueVal === undefined || dueVal === null || dueVal === '') return null;
+  var d = dueVal instanceof Date ? new Date(dueVal.getTime()) : new Date(dueVal);
+  if (isNaN(d.getTime())) return null;
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
+}
+
+function _taskMainTodayStartMillis() {
+  var t = new Date();
+  t.setHours(0, 0, 0, 0);
+  return t.getTime();
+}
+
+/**
+ * True when task has DUE_DATE before today and STATUS is still open (not DONE/CANCELLED/ARCHIVED).
+ * @param {Object} row - TASK_MAIN row object
+ * @returns {boolean}
+ */
+function taskMainIsOverdue(row) {
+  if (!row) return false;
+  var st = String(row.STATUS || '').trim();
+  if (TASK_MAIN_STATUSES_ELIGIBLE_OVERDUE.indexOf(st) === -1) return false;
+  var dueMs = _taskMainDueDateStartMillis(row.DUE_DATE);
+  if (dueMs === null) return false;
+  return dueMs < _taskMainTodayStartMillis();
+}
+
+/** Vietnamese label for UI / API consumers. */
+function taskMainOverdueDisplay(row) {
+  return taskMainIsOverdue(row) ? 'Quá hạn' : '';
+}
+
+/**
+ * Shallow copy with derived overdue fields (not persisted on sheet).
+ * @param {Object} row
+ * @returns {Object}
+ */
+function taskMainWithOverdueFields(row) {
+  if (!row) return row;
+  var o = Object.assign({}, row);
+  o.IS_OVERDUE = taskMainIsOverdue(o);
+  o.OVERDUE_DISPLAY = taskMainOverdueDisplay(o);
+  return o;
+}
+
 /**
  * Calculates progress from TASK_CHECKLIST (source of truth).
  * @param {string} taskId
@@ -130,7 +183,7 @@ function createTask(data) {
   };
   taskAppendMain(record);
   _addTaskUpdateLog(record.ID, 'NOTE', 'Task created', 'NEW', 'NEW');
-  return cbvResponse(true, 'TASK_CREATED', 'Task đã tạo', record, []);
+  return cbvResponse(true, 'TASK_CREATED', 'Task đã tạo', taskMainWithOverdueFields(record), []);
 }
 
 /**
@@ -151,7 +204,7 @@ function updateTask(id, patch) {
   blocked.forEach(function(k) {
     if (patch[k] !== undefined) delete patch[k];
   });
-  if (Object.keys(patch).length === 0) return cbvResponse(true, 'TASK_NO_CHANGE', 'No editable fields', task, []);
+  if (Object.keys(patch).length === 0) return cbvResponse(true, 'TASK_NO_CHANGE', 'No editable fields', taskMainWithOverdueFields(task), []);
 
   // TODO(phase-FUTURE): if patch touches SHARED_WITH / IS_PRIVATE / PENDING_ACTION, align validation
   // with 45_SHARED_WITH_SERVICE (shareTaskWith, setTaskPrivate) and pending-feedback rules.
@@ -171,7 +224,7 @@ function updateTask(id, patch) {
   taskUpdateMain(task._rowNumber, patch);
   var updated = Object.assign({}, task, patch);
   _addTaskUpdateLog(id, 'NOTE', 'Task updated', '', '');
-  return cbvResponse(true, 'TASK_UPDATED', 'Đã cập nhật', updated, []);
+  return cbvResponse(true, 'TASK_UPDATED', 'Đã cập nhật', taskMainWithOverdueFields(updated), []);
 }
 
 /**
@@ -189,7 +242,7 @@ function assignTask(taskId, ownerId) {
   cbvAssert(['NEW', 'ASSIGNED', 'IN_PROGRESS'].indexOf(String(current.STATUS)) !== -1, 'Cannot assign task in status: ' + current.STATUS);
 
   var sameOwner = String(current.OWNER_ID) === String(ownerId);
-  if (sameOwner && String(current.STATUS) !== 'NEW') return cbvResponse(true, 'TASK_NO_CHANGE', 'Đã giao đúng người', current, []);
+  if (sameOwner && String(current.STATUS) !== 'NEW') return cbvResponse(true, 'TASK_NO_CHANGE', 'Đã giao đúng người', taskMainWithOverdueFields(current), []);
 
   var oldStatus = String(current.STATUS);
   var patch = {
@@ -205,7 +258,7 @@ function assignTask(taskId, ownerId) {
     _addTaskUpdateLog(taskId, 'NOTE', 'Reassigned to ' + ownerId, '', '');
   }
   var updated = Object.assign({}, current, patch);
-  return cbvResponse(true, 'TASK_ASSIGNED', 'Đã giao task', updated, []);
+  return cbvResponse(true, 'TASK_ASSIGNED', 'Đã giao task', taskMainWithOverdueFields(updated), []);
 }
 
 /**
@@ -220,7 +273,7 @@ function setTaskStatus(taskId, newStatus, note) {
   cbvAssert(current, 'Task not found');
   cbvAssert(String(current.STATUS) !== 'ARCHIVED', 'Cannot edit ARCHIVED task');
   var oldStatus = String(current.STATUS);
-  if (oldStatus === newStatus) return cbvResponse(true, 'TASK_NO_CHANGE', 'Trạng thái không đổi', current, []);
+  if (oldStatus === newStatus) return cbvResponse(true, 'TASK_NO_CHANGE', 'Trạng thái không đổi', taskMainWithOverdueFields(current), []);
 
   if (newStatus === 'DONE') ensureTaskCanComplete(taskId);
   cbvAssert(validateTaskTransition(oldStatus, newStatus), 'Invalid transition: ' + oldStatus + ' -> ' + newStatus);
@@ -238,7 +291,7 @@ function setTaskStatus(taskId, newStatus, note) {
   taskUpdateMain(current._rowNumber, patch);
   _addTaskUpdateLog(taskId, 'STATUS_CHANGE', note || '', oldStatus, newStatus);
   var updated = Object.assign({}, current, patch);
-  return cbvResponse(true, 'TASK_STATUS_CHANGED', 'Đã cập nhật trạng thái', updated, []);
+  return cbvResponse(true, 'TASK_STATUS_CHANGED', 'Đã cập nhật trạng thái', taskMainWithOverdueFields(updated), []);
 }
 
 /**
@@ -276,7 +329,7 @@ function taskStartAction(taskId) {
   }
   taskUpdateMain(task._rowNumber, patch);
   _addTaskUpdateLog(taskId, 'STATUS_CHANGE', 'Bắt đầu', String(task.STATUS), 'IN_PROGRESS');
-  return cbvResponse(true, 'TASK_STARTED', 'Đã bắt đầu', Object.assign({}, task, patch), []);
+  return cbvResponse(true, 'TASK_STARTED', 'Đã bắt đầu', taskMainWithOverdueFields(Object.assign({}, task, patch)), []);
 }
 
 /**
@@ -313,7 +366,7 @@ function taskReopenAction(taskId) {
   if (s === 'DONE') patch.DONE_AT = '';
   taskUpdateMain(task._rowNumber, patch);
   _addTaskUpdateLog(taskId, 'STATUS_CHANGE', 'Mở lại', s, 'IN_PROGRESS');
-  return cbvResponse(true, 'TASK_REOPENED', 'Đã mở lại', Object.assign({}, task, patch), []);
+  return cbvResponse(true, 'TASK_REOPENED', 'Đã mở lại', taskMainWithOverdueFields(Object.assign({}, task, patch)), []);
 }
 
 /** Alias for setTaskStatus. */
@@ -493,5 +546,25 @@ function taskSelfTestCreateProDefaults() {
   if (p1.IS_PRIVATE !== true) {
     throw new Error('taskSelfTestCreateProDefaults: IS_PRIVATE override should be true');
   }
+  return true;
+}
+
+/**
+ * Self-test: overdue derivation (no sheet I/O).
+ * @returns {boolean}
+ */
+function taskSelfTestOverdueFields() {
+  var y = new Date();
+  y.setHours(0, 0, 0, 0);
+  y.setDate(y.getDate() - 1);
+  var openOverdue = { STATUS: 'IN_PROGRESS', DUE_DATE: y };
+  if (!taskMainIsOverdue(openOverdue)) throw new Error('taskSelfTestOverdueFields: expected IN_PROGRESS past due');
+  if (taskMainOverdueDisplay(openOverdue) !== 'Quá hạn') throw new Error('taskSelfTestOverdueFields: display');
+  var done = { STATUS: 'DONE', DUE_DATE: y };
+  if (taskMainIsOverdue(done)) throw new Error('taskSelfTestOverdueFields: DONE not overdue');
+  if (taskMainOverdueDisplay(done) !== '') throw new Error('taskSelfTestOverdueFields: DONE display empty');
+  if (taskMainIsOverdue({ STATUS: 'NEW', DUE_DATE: '' })) throw new Error('taskSelfTestOverdueFields: blank due');
+  var w = taskMainWithOverdueFields(openOverdue);
+  if (w.IS_OVERDUE !== true || w.OVERDUE_DISPLAY !== 'Quá hạn') throw new Error('taskSelfTestOverdueFields: withOverdue');
   return true;
 }

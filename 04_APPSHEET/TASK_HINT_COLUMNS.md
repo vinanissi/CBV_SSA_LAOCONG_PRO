@@ -67,7 +67,7 @@ IF(
     [DUE_DATE] < TODAY(),
     IN([STATUS], LIST("NEW", "ASSIGNED", "IN_PROGRESS", "WAITING"))
   ),
-  "⚠️ Quá hạn",
+  "Quá hạn",
   ""
 )
 ```

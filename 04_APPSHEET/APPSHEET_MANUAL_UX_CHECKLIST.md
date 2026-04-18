@@ -162,6 +162,8 @@ Vào **UX → Views → TASK_DETAIL**.
 6. RELATED_ENTITY_TYPE, RELATED_ENTITY_ID
 7. DESCRIPTION, EVIDENCE_URL
 
+**Chứng từ / tải file:** Trong AppSheet, cột **EVIDENCE_URL** phải là type **File** mới có upload; hoặc bỏ khỏi form và chỉ dùng **FINANCE_ATTACHMENT** inline ở FINANCE_DETAIL (nhiều file).
+
 **Icon:** TRANS_TYPE 🧾, CATEGORY 🧾, AMOUNT 💰, TRANS_DATE 📅, PAYMENT_METHOD 💳
 
 **Editable_If:** [STATUS] <> "CONFIRMED" cho tất cả business fields

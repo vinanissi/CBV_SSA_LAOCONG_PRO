@@ -35,6 +35,7 @@
 | STATUS | Yes | |
 | PRIORITY | Yes | |
 | DUE_DATE | Yes | |
+| OVERDUE_HINT | Yes | Virtual column; see `TASK_HINT_COLUMNS.md` — hiển thị **Quá hạn** khi có `DUE_DATE` trước hôm nay và task còn mở |
 
 ---
 
@@ -58,6 +59,7 @@
 | TASK_TYPE | Yes |
 | START_DATE | Yes |
 | DUE_DATE | Yes |
+| OVERDUE_HINT | Yes | Virtual; cảnh báo quá hạn (cùng công thức `TASK_HINT_COLUMNS.md`) |
 | DONE_AT | Yes |
 | PROGRESS_PERCENT | Yes |
 | RESULT_SUMMARY | Yes |

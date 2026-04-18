@@ -12,7 +12,8 @@
 - Nếu nhập sai phải tạo nghiệp vụ điều chỉnh/cancel theo rule, không sửa lịch sử.
 
 ## 3. Chứng từ
-- Khuyến nghị có EVIDENCE_URL.
+- Khuyến nghị có bằng chứng (một URL qua **EVIDENCE_URL** hoặc một/một dòng **FINANCE_ATTACHMENT**).
+- **AppSheet:** để có nút tải file trên cùng form, đặt **EVIDENCE_URL** = type **File** (lưu URL sau upload Drive); nhiều file hoặc loại chứng từ → **FINANCE_ATTACHMENT.FILE_URL** (File).
 - Không nhét file binary vào sheet.
 - Mỗi transaction cần truy ra chứng từ hoặc giải trình.
 

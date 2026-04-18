@@ -21,12 +21,12 @@ Wrapper = public menu entry. Impl = real execution logic.
 | ensureSeedDonVi | ensureSeedDonVi | 95_TASK_SYSTEM_BOOTSTRAP.js | implemented | No Impl suffix |
 | ensureSeedMasterCode | ensureSeedTaskType | 95_TASK_SYSTEM_BOOTSTRAP.js | implemented | Alias |
 | ensureSeedUserDirectory | seedUserDirectory | 90_BOOTSTRAP_USER_SEED.js | implemented | Optional |
-| buildActiveSlicesSpec | buildActiveSlicesSpec | 95_TASK_SYSTEM_BOOTSTRAP.js | implemented | No Impl suffix |
+| buildActiveSlicesSpec | buildActiveSlicesSpecImpl | 95_TASK_SYSTEM_BOOTSTRAP.js | implemented | |
 | buildEnumSpecReport | auditEnumConsistency / enumHealthCheck | 01_ENUM_AUDIT | implemented | |
 | auditTaskModule | selfAuditTaskSystemFull / selfAuditTaskSystem | 95, 96 | implemented | |
 | seedTaskDemo | seedGoldenDataset | 99_DEBUG_SAMPLE_DATA.js | implemented | |
 | testTaskWorkflowRules | runTaskSystemTests / runAllSystemTestsImpl | 97 | implemented | |
-| testFieldPolicyReadiness | testFieldPolicyReadiness / runTaskSystemTests | 97 | implemented | |
+| testFieldPolicyReadiness | testFieldPolicyReadinessImpl | 97_TASK_SYSTEM_TEST_RUNNER.js | implemented | |
 | createSampleTaskRows | seedTaskDemo (wrapper) | - | implemented | Delegates |
 | auditHoSoModule | runHoSoTests | 99_DEBUG_TEST_HOSO.js | implemented | |
 | seedHoSoDemo | seedGoldenDataset | 99_DEBUG_SAMPLE_DATA.js | implemented | |

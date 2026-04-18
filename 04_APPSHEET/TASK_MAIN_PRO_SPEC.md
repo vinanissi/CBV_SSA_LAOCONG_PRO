@@ -191,6 +191,17 @@ OR(
 
 ---
 
+## 10.1 Hiển thị quá hạn (Quá hạn)
+
+Không lưu cột vật lý trên sheet. Hai cách bổ sung:
+
+| Kênh | Cách làm |
+|------|-----------|
+| **AppSheet** | Thêm cột ảo **OVERDUE_HINT** (Text, công thức trong `TASK_HINT_COLUMNS.md`). Điều kiện: `DUE_DATE` trước `TODAY()`, `STATUS` thuộc nhóm đang mở (`NEW`, `ASSIGNED`, `IN_PROGRESS`, `WAITING`), hiển thị chữ **Quá hạn**. |
+| **GAS / API** | Các hàm task service (`createTask`, `updateTask`, `assignTask`, `setTaskStatus`, `taskStartAction`, `taskReopenAction`) gắn thêm vào payload: **`IS_OVERDUE`** (boolean), **`OVERDUE_DISPLAY`** (`"Quá hạn"` hoặc `""`). Logic: `taskMainIsOverdue`, `taskMainWithOverdueFields` trong `05_GAS_RUNTIME/20_TASK_SERVICE.js`. |
+
+---
+
 ## 11. AppSheet UX Spec
 
 ### Form Layout
@@ -203,7 +214,7 @@ OR(
 1. **Actions (top)** — BẮT ĐẦU, HOÀN THÀNH, HỦY buttons (Show_If by STATUS)
 2. **Header** — TITLE, STATUS (badge), PRIORITY
 3. **Meta** — DON_VI_ID, TASK_TYPE_ID, OWNER_ID, REPORTER_ID
-4. **Timeline** — START_DATE, DUE_DATE, DONE_AT
+4. **Timeline** — START_DATE, DUE_DATE, OVERDUE_HINT (virtual), DONE_AT
 5. **Progress** — PROGRESS_PERCENT, checklist summary
 6. **Result** — RESULT_SUMMARY (when DONE)
 7. **Body** — DESCRIPTION (collapsible)
