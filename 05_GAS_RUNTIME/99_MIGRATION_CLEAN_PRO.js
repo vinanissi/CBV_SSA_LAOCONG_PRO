@@ -12,7 +12,6 @@ var LEGACY_COLUMNS_TO_REMOVE = {
   TASK_MAIN: ['RESULT_NOTE', 'HTX_ID', 'TASK_TYPE'],
   TASK_CHECKLIST: ['DESCRIPTION'],
   TASK_UPDATE_LOG: ['CONTENT'],
-  FINANCE_TRANSACTION: ['UNIT_ID'],
   MASTER_CODE: ['EMAIL', 'ROLE_CODE', 'SHORT_NAME', 'PARENT_CODE']
 };
 
@@ -49,10 +48,9 @@ function runCleanMigration(opts) {
  * Migrates data before column removal.
  * - TASK_MAIN: TASK_TYPE (text) → TASK_TYPE_ID via MASTER_CODE lookup
  * - TASK_MAIN: RESULT_NOTE → RESULT_SUMMARY if RESULT_SUMMARY blank
- * - FINANCE_TRANSACTION: UNIT_ID → DON_VI_ID (copy before remove)
  */
 function migrateDataBeforeRemove(ss) {
-  var r = { taskType: 0, resultNote: 0, unitToDonVi: 0 };
+  var r = { taskType: 0, resultNote: 0 };
 
   // 1. TASK_MAIN: TASK_TYPE → TASK_TYPE_ID
   var taskSheet = ss.getSheetByName(CBV_CONFIG.SHEETS.TASK_MAIN || 'TASK_MAIN');
@@ -79,30 +77,6 @@ function migrateDataBeforeRemove(ss) {
             taskSheet.getRange(rowNum, rsIdx + 1).setValue(rnVal);
             r.resultNote++;
           }
-        }
-      });
-    }
-  }
-
-  // 2. FINANCE_TRANSACTION: UNIT_ID → DON_VI_ID
-  var finSheet = ss.getSheetByName(CBV_CONFIG.SHEETS.FINANCE_TRANSACTION || 'FINANCE_TRANSACTION');
-  if (finSheet && finSheet.getLastRow() >= 2) {
-    var fh = finSheet.getRange(1, 1, 1, finSheet.getLastColumn()).getValues()[0];
-    var unitIdx = fh.indexOf('UNIT_ID');
-    var dvIdx = fh.indexOf('DON_VI_ID');
-    if (unitIdx >= 0) {
-      if (dvIdx === -1) {
-        var lastCol = fh.length;
-        finSheet.getRange(1, lastCol + 1).setValue('DON_VI_ID');
-        dvIdx = lastCol;
-        fh = finSheet.getRange(1, 1, 1, finSheet.getLastColumn()).getValues()[0];
-      }
-      var fRows = finSheet.getRange(2, 1, finSheet.getLastRow(), fh.length).getValues();
-      fRows.forEach(function(row, i) {
-        var val = row[unitIdx];
-        if (val != null && String(val).trim()) {
-          finSheet.getRange(i + 2, dvIdx + 1).setValue(val);
-          r.unitToDonVi++;
         }
       });
     }

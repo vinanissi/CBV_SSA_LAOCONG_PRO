@@ -105,6 +105,7 @@ Menu **🚀 CBV PRO** là giao diện admin chính để vận hành hệ thốn
 | Mục | Handler | Mục đích | Khi nào dùng |
 |-----|---------|----------|--------------|
 | 🔎 Audit Tài chính | menuAuditFinance | Audit tài chính | Lỗi tài chính |
+| 📤 Export kỳ → Sheet Drive | menuExportFinancePeriodToDrive | Tạo Google Sheet (lọc `TRANS_DATE` theo kỳ) trong cùng thư mục Drive | Báo cáo / chia sẻ kỳ |
 | 🌱 Gieo Tài chính Demo | menuSeedFinanceDemo | Gieo demo tài chính | Demo |
 | 🧪 Test DON_VI mapping | menuTestFinanceDonViMapping | Test mapping DON_VI | Phát triển |
 

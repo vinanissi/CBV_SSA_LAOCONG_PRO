@@ -1,0 +1,5 @@
+ID	RULE_CODE	PRIORITY	ENABLED	EVENT_TYPE	CONDITION_JSON	ACTIONS_JSON	TARGET_MODULE	NOTE	VERSION	CREATED_AT	UPDATED_AT
+RUL001	FIN_ON_CONFIRM	10	TRUE	FINANCE_STATUS_CHANGED	{"all":[{"field":"payload.newStatus","op":"eq","value":"CONFIRMED"}]}	[{"type":"SEND_ALERT","params":{"message":"FIN_CONFIRMED"}}]	FINANCE	Stub log khi xác nhận GD	1	2026-04-19	2026-04-19
+RUL002	FIN_ON_CANCEL	20	TRUE	FINANCE_STATUS_CHANGED	{"all":[{"field":"payload.newStatus","op":"eq","value":"CANCELLED"}]}	[{"type":"SEND_ALERT","params":{"message":"FIN_CANCELLED"}}]	FINANCE	Stub log khi hủy GD	1	2026-04-19	2026-04-19
+RUL003	FIN_ON_ARCHIVE	30	TRUE	FINANCE_STATUS_CHANGED	{"all":[{"field":"payload.newStatus","op":"eq","value":"ARCHIVED"}]}	[{"type":"SEND_ALERT","params":{"message":"FIN_ARCHIVED"}}]	FINANCE	Stub log khi lưu trữ	1	2026-04-19	2026-04-19
+RUL004	FIN_ON_CREATE	10	TRUE	FINANCE_CREATED	{"all":[]}	[{"type":"SEND_ALERT","params":{"message":"FIN_CREATED"}}]	FINANCE	Mới tạo giao dịch (match all)	1	2026-04-19	2026-04-19

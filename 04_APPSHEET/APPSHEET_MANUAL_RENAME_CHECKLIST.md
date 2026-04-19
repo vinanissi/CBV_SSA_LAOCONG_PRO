@@ -181,7 +181,7 @@ Vào Data → Columns → TASK_MAIN. Với mỗi cột, bấm vào cột → **D
 | STATUS | Trạng thái |
 | CATEGORY | Loại thu/chi |
 | AMOUNT | Số tiền |
-| UNIT_ID | Đơn vị |
+| DON_VI_ID | Đơn vị |
 | COUNTERPARTY | Đối tác |
 | PAYMENT_METHOD | Phương thức thanh toán |
 | REFERENCE_NO | Số chứng từ |

@@ -38,4 +38,4 @@ Note: `IS_PRIVATE=FALSE` (default) → tất cả thấy. `IS_PRIVATE=TRUE` → 
 - OPERATOR: `TRUE`
 - VIEWER: `TRUE`
 
-Ghi chú: nếu sau này có UNIT_ID chuẩn thì thay bằng filter theo đơn vị.
+Ghi chú: lọc theo đơn vị dùng DON_VI_ID (Ref DON_VI), không dùng MASTER_CODE cho đơn vị tổ chức.

@@ -14,7 +14,6 @@ Full clean migration completed. All hybrid and legacy columns removed. System is
 | TASK_MAIN | TASK_TYPE, HTX_ID, RESULT_NOTE |
 | TASK_CHECKLIST | DESCRIPTION |
 | TASK_UPDATE_LOG | CONTENT |
-| FINANCE_TRANSACTION | UNIT_ID (replaced by DON_VI_ID) |
 | MASTER_CODE | EMAIL, ROLE_CODE, SHORT_NAME, PARENT_CODE |
 
 ---
@@ -26,9 +25,6 @@ Full clean migration completed. All hybrid and legacy columns removed. System is
 
 2. **TASK_MAIN.RESULT_NOTE → RESULT_SUMMARY**  
    - Copied RESULT_NOTE to RESULT_SUMMARY where RESULT_SUMMARY was blank.
-
-3. **FINANCE_TRANSACTION.UNIT_ID → DON_VI_ID**  
-   - Copied UNIT_ID to DON_VI_ID before removing UNIT_ID.
 
 ---
 
@@ -96,6 +92,6 @@ Run:
 ## Final State
 
 - **Zero hybrid columns** — All legacy fields removed.
-- **Zero legacy dependencies** — No HTX_ID, TASK_TYPE text, UNIT_ID, etc.
+- **Zero legacy dependencies** — No HTX_ID, TASK_TYPE text, legacy finance unit columns, etc.
 - **Fully ID-based** — DON_VI_ID, TASK_TYPE_ID only.
 - **Ready for AppSheet production** — Schema and GAS code updated.

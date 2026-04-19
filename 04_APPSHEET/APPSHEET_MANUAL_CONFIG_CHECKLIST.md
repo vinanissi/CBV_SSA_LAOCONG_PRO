@@ -45,7 +45,7 @@ Complete before starting configuration.
 ### 1.5 MASTER_CODE (if used)
 
 - [ ] MASTER_CODE sheet exists and is populated (or empty is OK for Phase 1)
-- [ ] UNIT_ID in FINANCE_TRANSACTION may reference MASTER_CODE; configure when MASTER_CODE has data
+- [ ] Organizational units are **DON_VI** only; **FINANCE_TRANSACTION.DON_VI_ID** → Ref **ACTIVE_DON_VI** (not MASTER_CODE)
 
 ### 1.6 Summary Checkbox
 
@@ -154,6 +154,39 @@ Create slices before configuring Ref columns. See APPSHEET_SLICE_MAP.md.
 - [ ] **TASK_DONE** — Source: TASK_MAIN; Filter: `[STATUS] = "DONE"`
 - [ ] **FIN_DRAFT** — Source: FINANCE_TRANSACTION; Filter: `[STATUS] = "NEW"`
 - [ ] **FIN_CONFIRMED** — Source: FINANCE_TRANSACTION; Filter: `[STATUS] = "CONFIRMED"`
+
+---
+
+## PART 2.6 — FINANCE: EXPORT CSV (CHỌN CHU KỲ / ĐƠN VỊ / NGƯỜI)
+
+**Schema:** Sheet **`FIN_EXPORT_FILTER`** (bootstrap GAS / `ensureSchemas`). Chi tiết slice + công thức: `02_MODULES/FINANCE/APPSHEET_UX_SPEC.md`.
+
+### 2.6.1 Data source
+
+- [ ] Thêm table **FIN_EXPORT_FILTER** (cùng spreadsheet) — Key = **ID**; cột: `USER_EMAIL`, `DATE_FROM`, `DATE_TO`, `DON_VI_ID`, `USER_REF_ID`, `NOTE`, `UPDATED_AT`
+- [ ] `DON_VI_ID` → Ref → **ACTIVE_DON_VI** (hoặc `DON_VI`)
+- [ ] `USER_REF_ID` → Ref → **ACTIVE_USERS** — lọc **`FINANCE_TRANSACTION.CREATED_BY`** (người tạo)
+
+### 2.6.2 Slice + list export
+
+- [ ] Tạo slice **FIN_EXPORT_CSV** (source `FINANCE_TRANSACTION`) — copy **Row filter** từ `APPSHEET_UX_SPEC` (mục *Slice FIN_EXPORT_CSV*)
+- [ ] Tạo view Table **FIN_LIST_EXPORT** (hoặc tên tương đương) dùng slice **FIN_EXPORT_CSV**
+
+### 2.6.3 Form chọn tham số (mỗi user một dòng)
+
+- [ ] View **Form** hoặc **Deck**: bảng `FIN_EXPORT_FILTER`; **Security filter** `[USER_EMAIL] = USEREMAIL()`
+- [ ] **Initial value** (hoặc Valid_If): `USER_EMAIL` = `USEREMAIL()` khi thêm dòng
+- [ ] Hướng dẫn user: điền **DATE_FROM**, **DATE_TO**; để trống **DON_VI_ID** = mọi đơn vị; để trống **USER_REF_ID** = mọi người (theo chu kỳ)
+
+### 2.6.4 Action Export CSV
+
+- [ ] **Action**: **Do this** = **App: export this view to a CSV file** ([Help](https://support.google.com/appsheet/answer/11579391?hl=en))
+- [ ] Gắn vào **FIN_LIST_EXPORT** (không gắn vào form filter)
+- [ ] Kiểm tra trên **trình duyệt web** (bắt buộc cho export CSV)
+
+### 2.6.5 Tối thiểu (không dùng FIN_EXPORT_FILTER)
+
+- [ ] Gắn Export CSV lên `FIN_LIST` + slice **FIN_DRAFT** / **FIN_CONFIRMED** — không chọn chu kỳ/đơn vị/người qua form
 
 ---
 
@@ -324,7 +357,7 @@ For each table, go to **Data → Columns → [Table name]** and configure.
 - TRANS_DATE → Date
 - TRANS_TYPE, STATUS, CATEGORY, PAYMENT_METHOD, RELATED_ENTITY_TYPE → Text (enum; Valid_If later)
 - AMOUNT → Number
-- UNIT_ID → Text or Ref to MASTER_CODE
+- DON_VI_ID → **Ref** → ACTIVE_DON_VI (Display: DISPLAY_TEXT)
 - RELATED_ENTITY_ID → Text or Ref
 - EVIDENCE_URL → **File** (khuyến nghị để có nút tải/chọn file; AppSheet upload lên Drive và lưu URL vào ô) **hoặc** Text nếu chỉ dán link thủ công (legacy)
 - CONFIRMED_AT → Date (hidden; GAS set)
@@ -336,7 +369,7 @@ For each table, go to **Data → Columns → [Table name]** and configure.
 
 **Step 4:** Editable? = FALSE: ID, STATUS, CREATED_*, UPDATED_*, CONFIRMED_*
 
-**Step 5:** Editable_If for business fields: `[STATUS] <> "CONFIRMED"` (TRANS_CODE, TRANS_DATE, TRANS_TYPE, CATEGORY, AMOUNT, UNIT_ID, COUNTERPARTY, PAYMENT_METHOD, REFERENCE_NO, RELATED_ENTITY_TYPE, RELATED_ENTITY_ID, DESCRIPTION, EVIDENCE_URL)
+**Step 5:** Editable_If for business fields: `[STATUS] <> "CONFIRMED"` (TRANS_CODE, TRANS_DATE, TRANS_TYPE, CATEGORY, AMOUNT, DON_VI_ID, COUNTERPARTY, PAYMENT_METHOD, REFERENCE_NO, RELATED_ENTITY_TYPE, RELATED_ENTITY_ID, DESCRIPTION, EVIDENCE_URL)
 
 **Step 6 — Chứng từ tải file:** Nếu form đang hiển thị **EVIDENCE_URL** kiểu Text (chỉ nhập `http://`):
 - Đổi cột **EVIDENCE_URL** sang type **File** (Data → Columns → FINANCE_TRANSACTION → EVIDENCE_URL). Lưu lại app; trên form sẽ có chọn/tải file thay vì ô text.
@@ -598,7 +631,7 @@ For each form view, set column order and visibility.
 
 ### 7.7 FINANCE_FORM
 
-- [ ] Order: TRANS_TYPE, TRANS_DATE, CATEGORY, AMOUNT, UNIT_ID, COUNTERPARTY, PAYMENT_METHOD, REFERENCE_NO, RELATED_ENTITY_TYPE, RELATED_ENTITY_ID, DESCRIPTION, EVIDENCE_URL, TRANS_CODE, STATUS
+- [ ] Order: TRANS_TYPE, TRANS_DATE, CATEGORY, AMOUNT, DON_VI_ID, COUNTERPARTY, PAYMENT_METHOD, REFERENCE_NO, RELATED_ENTITY_TYPE, RELATED_ENTITY_ID, DESCRIPTION, EVIDENCE_URL, TRANS_CODE, STATUS
 - [ ] Hide: ID, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY, IS_DELETED, CONFIRMED_AT, CONFIRMED_BY
 - [ ] Editable_If for business fields: `[STATUS] <> "CONFIRMED"`
 - [ ] STATUS: Editable? = FALSE
@@ -747,7 +780,7 @@ For each Related/Inline section under parent Detail, configure visible columns.
 | TASK_CHECKLIST | ID | TITLE | TASK_ID | ON | — | — |
 | TASK_ATTACHMENT | ID | TITLE | TASK_ID | ON | FILE_URL | ATTACHMENT_TYPE |
 | TASK_UPDATE_LOG | ID | ACTION | TASK_ID | OFF | — | — |
-| FINANCE_TRANSACTION | ID | TRANS_CODE | UNIT_ID, RELATED_ENTITY_ID | — | — | TRANS_TYPE, STATUS, CATEGORY, PAYMENT_METHOD, RELATED_ENTITY_TYPE |
+| FINANCE_TRANSACTION | ID | TRANS_CODE | DON_VI_ID, RELATED_ENTITY_ID | — | — | TRANS_TYPE, STATUS, CATEGORY, PAYMENT_METHOD, RELATED_ENTITY_TYPE |
 | FINANCE_ATTACHMENT | ID | TITLE | FINANCE_ID | ON | FILE_URL | ATTACHMENT_TYPE |
 | FINANCE_LOG | ID | ACTION | FIN_ID | OFF | — | — |
 
@@ -789,7 +822,7 @@ See Part 9. Execute all 4 test flows before declaring config complete.
 - **ENUM_DICTIONARY:** Must exist and be populated before Valid_If works. Run initAll() in GAS first.
 - **HO_SO_RELATION:** Dual ref; IsPartOf OFF. User must select FROM_HO_SO_ID and/or TO_HO_SO_ID when adding.
 - **RELATION_TYPE:** No enum; free text. Consider MASTER_CODE later.
-- **UNIT_ID:** Ref to MASTER_CODE; configure when MASTER_CODE has UNIT group data.
+- **DON_VI_ID:** Must Ref **ACTIVE_DON_VI**; values must exist in DON_VI sheet.
 - **AppSheet expression syntax:** If Valid_If fails, check AND() and SELECT() syntax for your AppSheet version.
 
 ### 11.7 Final Statement

@@ -49,7 +49,7 @@ Note: Dùng `ANY()` thay `FIRST()`. Dùng `CONTAINS([SHARED_WITH], …)` cho Lis
 - OPERATOR: `TRUE`
 - VIEWER: `TRUE`
 
-**Note:** If UNIT_ID is standardized later, filter by unit.
+**Note:** Filter by organizational unit using **DON_VI_ID** (DON_VI), not generic master-code “unit” columns.
 
 ---
 

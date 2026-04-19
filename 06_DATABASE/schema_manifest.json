@@ -1,4 +1,4 @@
-﻿{
+{
   "_META": {
     "SOURCE_OF_TRUTH": "05_GAS_RUNTIME/90_BOOTSTRAP_SCHEMA.js",
     "DO_NOT_EDIT_MANUALLY": true,
@@ -41,13 +41,14 @@
       "TASK_ATTACHMENT",
       "FINANCE_ATTACHMENT",
       "FINANCE_TRANSACTION",
-      "FINANCE_LOG"
+      "FIN_EXPORT_FILTER",
+      "FINANCE_LOG",
+      "EVENT_QUEUE",
+      "RULE_DEF"
     ],
     "OPERATIONAL_TABLE_ORDER": [
       "SYSTEM_HEALTH_LOG"
-    ],
-    "_master_code_enum_gaps": [],
-    "_master_code_enum_gaps_note": "no outstanding gaps (VEHICLE_TYPE, DON_VI_TYPE seeded in 02_SEED/seed_master_code.tsv)"
+    ]
   },
   "USER_DIRECTORY": [
     "ID",
@@ -365,6 +366,16 @@
     "IS_PINNED",
     "PENDING_ACTION"
   ],
+  "FIN_EXPORT_FILTER": [
+    "ID",
+    "USER_EMAIL",
+    "DATE_FROM",
+    "DATE_TO",
+    "DON_VI_ID",
+    "USER_REF_ID",
+    "NOTE",
+    "UPDATED_AT"
+  ],
   "FINANCE_LOG": [
     "ID",
     "FIN_ID",
@@ -374,6 +385,34 @@
     "NOTE",
     "ACTOR_ID",
     "CREATED_AT"
+  ],
+  "EVENT_QUEUE": [
+    "ID",
+    "EVENT_TYPE",
+    "SOURCE_MODULE",
+    "REF_ID",
+    "ENTITY_TYPE",
+    "PAYLOAD_JSON",
+    "STATUS",
+    "CORRELATION_ID",
+    "ERROR_MESSAGE",
+    "CREATED_AT",
+    "CREATED_BY",
+    "PROCESSED_AT"
+  ],
+  "RULE_DEF": [
+    "ID",
+    "RULE_CODE",
+    "PRIORITY",
+    "ENABLED",
+    "EVENT_TYPE",
+    "CONDITION_JSON",
+    "ACTIONS_JSON",
+    "TARGET_MODULE",
+    "NOTE",
+    "VERSION",
+    "CREATED_AT",
+    "UPDATED_AT"
   ],
   "_operational_tables": {
     "SYSTEM_HEALTH_LOG": {

@@ -342,7 +342,7 @@ Complete field policy classification for Phase 1 deployment. Use for Show?, Edit
 | AUDIT_FIELD | 40+ | All |
 | WORKFLOW_FIELD | 10 | HO_SO_*, TASK_MAIN, FINANCE_TRANSACTION, MASTER_CODE |
 | ENUM_FIELD | 17 | HO_SO_*, TASK_*, FINANCE_*, MASTER_CODE |
-| MASTER_CODE_FIELD | 0 | (UNIT_ID is REF) |
+| MASTER_CODE_FIELD | 0 | — |
 | REF_FIELD | 15 | HO_SO_*, TASK_*, FINANCE_* |
 | BUSINESS_INPUT | 50+ | All business tables |
 | BUSINESS_OUTPUT | 3 | TASK_MAIN.DONE_AT, TASK_CHECKLIST.DONE_AT, DONE_BY |
@@ -449,7 +449,6 @@ Editable_If: AND([IS_SYSTEM] = FALSE, [ALLOW_EDIT] = TRUE)
 | Item | Note |
 |------|------|
 | RELATION_TYPE | No enum group in ENUM_SEED_SPEC. Phase 1: treat as free text. Add enum or MASTER_CODE if needed. |
-| UNIT_ID | No explicit MASTER_GROUP. Phase 1: free text or ref to HO_SO/MASTER_CODE as configured. |
 | HO_SO_FILE.STATUS | Uses HO_SO_STATUS enum; values ACTIVE, ARCHIVED (subset). |
 | Role infrastructure | No USER_ROLE sheet. Role assignment via AppSheet Accounts. Policy does not assume role-based column visibility. |
 
@@ -459,7 +458,7 @@ Editable_If: AND([IS_SYSTEM] = FALSE, [ALLOW_EDIT] = TRUE)
 
 **FIELD POLICY MAP SAFE**
 
-Ready to apply manually in AppSheet. All fields classified. Enum and workflow locks documented. Admin-only tables and fields marked. RELATION_TYPE and UNIT_ID ambiguities stated. Phase 1 defaults provided.
+Ready to apply manually in AppSheet. All fields classified. Enum and workflow locks documented. Admin-only tables and fields marked. RELATION_TYPE ambiguity stated where applicable. Phase 1 defaults provided.
 
 ---
 

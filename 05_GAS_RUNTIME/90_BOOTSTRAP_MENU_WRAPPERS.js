@@ -91,6 +91,45 @@ function menuUninstallOnEditTrigger() {
   SpreadsheetApp.getUi().alert('onEdit', 'onEditTaskHandler trigger removed.', SpreadsheetApp.getUi().ButtonSet.OK);
 }
 
+function menuCoreEventQueueProcessNow() {
+  if (!_menuFnExists_('processCoreEventQueueBatch_')) {
+    SpreadsheetApp.getUi().alert('Not loaded', 'processCoreEventQueueBatch_ is not loaded.', SpreadsheetApp.getUi().ButtonSet.OK);
+    return;
+  }
+  try {
+    var n = processCoreEventQueueBatch_(50);
+    SpreadsheetApp.getUi().alert('EVENT_QUEUE', 'Processed ' + n + ' event(s) (batch).', SpreadsheetApp.getUi().ButtonSet.OK);
+  } catch (err) {
+    SpreadsheetApp.getUi().alert('Error', String(err.message || err), SpreadsheetApp.getUi().ButtonSet.OK);
+  }
+}
+
+function menuInstallCoreEventQueueTrigger() {
+  if (!_menuFnExists_('installCoreEventQueueTrigger')) {
+    SpreadsheetApp.getUi().alert('Not loaded', 'installCoreEventQueueTrigger is not loaded.', SpreadsheetApp.getUi().ButtonSet.OK);
+    return;
+  }
+  try {
+    installCoreEventQueueTrigger();
+    SpreadsheetApp.getUi().alert('EVENT_QUEUE', 'Installed: coreEventQueueProcessMinutely every 5 minutes.', SpreadsheetApp.getUi().ButtonSet.OK);
+  } catch (err) {
+    SpreadsheetApp.getUi().alert('Error', String(err.message || err), SpreadsheetApp.getUi().ButtonSet.OK);
+  }
+}
+
+function menuUninstallCoreEventQueueTrigger() {
+  if (!_menuFnExists_('uninstallCoreEventQueueTrigger')) {
+    SpreadsheetApp.getUi().alert('Not loaded', 'uninstallCoreEventQueueTrigger is not loaded.', SpreadsheetApp.getUi().ButtonSet.OK);
+    return;
+  }
+  try {
+    uninstallCoreEventQueueTrigger();
+    SpreadsheetApp.getUi().alert('EVENT_QUEUE', 'Trigger removed.', SpreadsheetApp.getUi().ButtonSet.OK);
+  } catch (err) {
+    SpreadsheetApp.getUi().alert('Error', String(err.message || err), SpreadsheetApp.getUi().ButtonSet.OK);
+  }
+}
+
 function selfAuditBootstrap(opts) {
   var o = opts || {};
   var r = callIfExists_('selfAuditBootstrapImpl', o);
@@ -569,6 +608,45 @@ function menuAuditFinance() {
     return;
   }
   SpreadsheetApp.getUi().alert('Finance audit', r.ok !== false ? 'OK' : 'Issues', SpreadsheetApp.getUi().ButtonSet.OK);
+}
+
+function menuExportFinancePeriodToDrive() {
+  var ui = SpreadsheetApp.getUi();
+  var tz = (typeof CBV_CONFIG !== 'undefined' && CBV_CONFIG.TIMEZONE) ? CBV_CONFIG.TIMEZONE : Session.getScriptTimeZone();
+  var r1 = ui.prompt('Export tài chính theo kỳ', 'Từ ngày (yyyy-MM-dd):', ui.ButtonSet.OK_CANCEL);
+  if (r1.getSelectedButton() !== ui.Button.OK) return;
+  var r2 = ui.prompt('Export tài chính theo kỳ', 'Đến ngày (yyyy-MM-dd):', ui.ButtonSet.OK_CANCEL);
+  if (r2.getSelectedButton() !== ui.Button.OK) return;
+  var s1 = String(r1.getResponseText() || '').trim();
+  var s2 = String(r2.getResponseText() || '').trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s1) || !/^\d{4}-\d{2}-\d{2}$/.test(s2)) {
+    ui.alert('Định dạng ngày phải là yyyy-MM-dd (ví dụ 2025-04-01).');
+    return;
+  }
+  var start = Utilities.parseDate(s1 + ' 12:00:00', tz, 'yyyy-MM-dd HH:mm:ss');
+  var end = Utilities.parseDate(s2 + ' 12:00:00', tz, 'yyyy-MM-dd HH:mm:ss');
+  if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+    ui.alert('Không đọc được ngày.');
+    return;
+  }
+  if (s2 < s1) {
+    ui.alert('Đến ngày phải ≥ Từ ngày.');
+    return;
+  }
+  var r = callIfExists_('exportFinancePeriodToDrive', { start: start, end: end });
+  if (r == null) {
+    ui.alert('Not loaded', 'exportFinancePeriodToDrive is not loaded.', ui.ButtonSet.OK);
+    return;
+  }
+  if (!r.ok) {
+    ui.alert('Export thất bại', r.message || JSON.stringify(r), ui.ButtonSet.OK);
+    return;
+  }
+  ui.alert(
+    'Đã tạo file',
+    'Tên: ' + (r.fileName || '') + '\nSố dòng (đã lọc): ' + (r.rowCount != null ? r.rowCount : 0) + '\n\nMở bằng link:\n' + (r.url || ''),
+    ui.ButtonSet.OK
+  );
 }
 
 function menuSeedFinanceDemo() {

@@ -17,7 +17,7 @@ Giao dịch thu/chi; trạng thái workflow (`NEW` → `CONFIRMED` / `CANCELLED`
 | STATUS | enum | required | `FINANCE_STATUS` |
 | CATEGORY | enum | required | `FIN_CATEGORY`; có bản song song `MASTER_CODE` `FINANCE_CATEGORY` trong seed |
 | AMOUNT | number | required | |
-| DON_VI_ID | ref | optional | → `DON_VI.ID` (manifest: `DON_VI_ID`, không dùng `UNIT_ID`) |
+| DON_VI_ID | ref | optional | → `DON_VI.ID` |
 | COUNTERPARTY | text | optional | |
 | PAYMENT_METHOD | enum | optional / default khác `OTHER` theo GAS | `PAYMENT_METHOD` |
 | REFERENCE_NO | text | optional | |
@@ -54,6 +54,23 @@ Giao dịch thu/chi; trạng thái workflow (`NEW` → `CONFIRMED` / `CANCELLED`
 | CATEGORY | `FIN_CATEGORY`; có giá trị trong `02_SEED/seed_master_code.tsv` (`MASTER_GROUP=FINANCE_CATEGORY`) |
 | PAYMENT_METHOD | `PAYMENT_METHOD` (seed + ENUM) |
 | STATUS | `FINANCE_STATUS` |
+
+---
+
+## FIN_EXPORT_FILTER
+
+Bảng cấu hình **một dòng trên mỗi người dùng** (email đăng nhập) để AppSheet lọc danh sách trước khi **Export view → CSV**. Không thay thế `FINANCE_TRANSACTION`; chỉ phục vụ UX export. Schema: `06_DATABASE/schema_manifest.json` / `90_BOOTSTRAP_SCHEMA.js`.
+
+| Column | Type | Notes |
+|--------|------|--------|
+| ID | PK | Nên trùng hoặc gắn với `USER_EMAIL` để dễ tra |
+| USER_EMAIL | text | Khớp `USEREMAIL()` trong AppSheet (slice đọc theo dòng này) |
+| DATE_FROM | date | Đầu chu kỳ (theo ngày) |
+| DATE_TO | date | Cuối chu kỳ (inclusive) |
+| DON_VI_ID | ref | Tuỳ chọn → `DON_VI`; để trống = mọi đơn vị |
+| USER_REF_ID | ref | Tuỳ chọn → `USER_DIRECTORY`; **để trống = không lọc theo người** (mọi `CREATED_BY`); khi có giá trị → slice khớp **`CREATED_BY`** với ID đã chọn |
+| NOTE | text | Ghi chú |
+| UPDATED_AT | datetime | |
 
 ---
 

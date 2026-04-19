@@ -86,6 +86,30 @@ function runFinanceTests() {
     if (!r2.ok || r2.data.STATUS !== 'CANCELLED') throw new Error('Cancel failed');
   });
 
+  run('getFinanceExportHeaders matches getSchemaHeaders', function() {
+    function same(a, b) {
+      return JSON.stringify(a) === JSON.stringify(b);
+    }
+    if (!same(getFinanceExportHeaders('FINANCE_TRANSACTION'), getSchemaHeaders('FINANCE_TRANSACTION'))) {
+      throw new Error('FINANCE_TRANSACTION export headers drift');
+    }
+    if (!same(getFinanceExportHeaders('FINANCE_LOG'), getSchemaHeaders('FINANCE_LOG'))) {
+      throw new Error('FINANCE_LOG export headers drift');
+    }
+    if (!same(getFinanceExportHeaders('FINANCE_ATTACHMENT'), getSchemaHeaders('FINANCE_ATTACHMENT'))) {
+      throw new Error('FINANCE_ATTACHMENT export headers drift');
+    }
+  });
+
+  run('getFinanceExportHeaders rejects unknown sheet', function() {
+    try {
+      getFinanceExportHeaders('INVALID');
+      throw new Error('Should have rejected unknown sheet');
+    } catch (e) {
+      if (String(e.message || e).indexOf('invalid') === -1) throw e;
+    }
+  });
+
   Logger.log('runFinanceTests: ' + JSON.stringify(result, null, 2));
   return result;
 }

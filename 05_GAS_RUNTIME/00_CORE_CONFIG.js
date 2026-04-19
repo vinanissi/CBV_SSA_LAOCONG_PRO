@@ -24,10 +24,15 @@ const CBV_CONFIG = {
     TASK_ATTACHMENT: 'TASK_ATTACHMENT',
     FINANCE_ATTACHMENT: 'FINANCE_ATTACHMENT',
     FINANCE_TRANSACTION: 'FINANCE_TRANSACTION',
+    /** Chu kỳ / đơn vị / người lọc cho export CSV AppSheet — xem FIN_EXPORT_FILTER trong 90_BOOTSTRAP_SCHEMA.js */
+    FIN_EXPORT_FILTER: 'FIN_EXPORT_FILTER',
     FINANCE_LOG: 'FINANCE_LOG',
     /** Data sync: plan JSON (A2) + dashboard + continuation token (F2) — see 46_DATA_SYNC_PLAN_SHEET.js */
     DATA_SYNC_CONTROL: 'DATA_SYNC_CONTROL',
     /** Data sync: form table → build plan JSON — see 45_DATA_SYNC_BUILDER.js */
-    DATA_SYNC_BUILDER: 'DATA_SYNC_BUILDER'
+    DATA_SYNC_BUILDER: 'DATA_SYNC_BUILDER',
+    /** Event-driven core: append-only queue + rule definitions — see 00_OVERVIEW/EVENT_DRIVEN_MIGRATION_PLAN.md */
+    EVENT_QUEUE: 'EVENT_QUEUE',
+    RULE_DEF: 'RULE_DEF'
   }
 };

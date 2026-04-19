@@ -195,7 +195,7 @@ TASK_ID (auto-linked), ID, FILE_NAME, DRIVE_FILE_ID, CREATED_AT, CREATED_BY
 | 2 | TRANS_DATE | Yes | When STATUS <> CONFIRMED | |
 | 3 | CATEGORY | Yes | When STATUS <> CONFIRMED | Enum |
 | 4 | AMOUNT | Yes | When STATUS <> CONFIRMED | |
-| 5 | UNIT_ID | Yes | When STATUS <> CONFIRMED | Ref |
+| 5 | DON_VI_ID | Yes | When STATUS <> CONFIRMED | Ref |
 | 6 | COUNTERPARTY | Yes | When STATUS <> CONFIRMED | |
 | 7 | PAYMENT_METHOD | Yes | When STATUS <> CONFIRMED | Enum |
 | 8 | REFERENCE_NO | Yes | When STATUS <> CONFIRMED | |

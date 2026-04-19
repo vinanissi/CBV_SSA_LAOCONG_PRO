@@ -81,6 +81,6 @@ Cross-doc consistency audit after consolidation.
 ## 8. Unresolved Limitations
 
 - RELATION_TYPE: No enum in schema; free text or future MASTER_CODE.
-- UNIT_ID: Ref to MASTER_CODE when data exists.
+- DON_VI_ID: Ref to DON_VI (ACTIVE_DON_VI) for unit attribution.
 - Role assignment: AppSheet Account list; no USER_ROLE sheet.
 - Webhook permission validation: Documented as deployment requirement if not implemented.

@@ -48,6 +48,20 @@ function createTransaction(data) {
   };
   _appendRecord(CBV_CONFIG.SHEETS.FINANCE_TRANSACTION, record);
   logFinance(record.ID, 'CREATED', {}, record, 'Transaction created');
+  if (typeof cbvTryEmitCoreEvent_ === 'function') {
+    cbvTryEmitCoreEvent_({
+      eventType: typeof CBV_CORE_EVENT_TYPE_FINANCE_CREATED !== 'undefined' ? CBV_CORE_EVENT_TYPE_FINANCE_CREATED : 'FINANCE_CREATED',
+      sourceModule: 'FINANCE',
+      refId: record.ID,
+      entityType: 'FINANCE_TRANSACTION',
+      payload: {
+        STATUS: record.STATUS,
+        TRANS_TYPE: record.TRANS_TYPE,
+        CATEGORY: record.CATEGORY,
+        AMOUNT: record.AMOUNT
+      }
+    });
+  }
   return cbvResponse(true, 'FIN_CREATED', 'Đã tạo giao dịch', record, []);
 }
 
@@ -127,6 +141,19 @@ function setFinanceStatus(id, newStatus, note) {
   current.UPDATED_BY = cbvUser();
   _updateRow(CBV_CONFIG.SHEETS.FINANCE_TRANSACTION, current._rowNumber, current);
   logFinance(id, 'STATUS_CHANGED', beforeObj, current, note || '');
+  if (typeof cbvTryEmitCoreEvent_ === 'function') {
+    cbvTryEmitCoreEvent_({
+      eventType: typeof CBV_CORE_EVENT_TYPE_FINANCE_STATUS_CHANGED !== 'undefined' ? CBV_CORE_EVENT_TYPE_FINANCE_STATUS_CHANGED : 'FINANCE_STATUS_CHANGED',
+      sourceModule: 'FINANCE',
+      refId: id,
+      entityType: 'FINANCE_TRANSACTION',
+      payload: {
+        previousStatus: String(beforeObj.STATUS || ''),
+        newStatus: String(newStatus),
+        note: note || ''
+      }
+    });
+  }
   return cbvResponse(true, 'FIN_STATUS_CHANGED', 'Đã đổi trạng thái', current, []);
 }
 
@@ -145,6 +172,135 @@ function cancelTransaction(id, note) {
 
 function archiveTransaction(id) {
   return setFinanceStatus(id, 'ARCHIVED', '');
+}
+
+/**
+ * Canonical export header order for finance sheets — matches Google Sheet row 1 / CBV_SCHEMA_MANIFEST.
+ * @param {"FINANCE_TRANSACTION"|"FINANCE_LOG"|"FINANCE_ATTACHMENT"} sheetKey
+ * @returns {string[]}
+ */
+function getFinanceExportHeaders(sheetKey) {
+  var allowed = { FINANCE_TRANSACTION: true, FINANCE_LOG: true, FINANCE_ATTACHMENT: true };
+  cbvAssert(allowed[sheetKey], 'getFinanceExportHeaders: invalid sheet ' + sheetKey);
+  return getSchemaHeaders(sheetKey);
+}
+
+function _financeExportTz_() {
+  return (typeof CBV_CONFIG !== 'undefined' && CBV_CONFIG.TIMEZONE) ? CBV_CONFIG.TIMEZONE : (Session.getScriptTimeZone() || 'Asia/Ho_Chi_Minh');
+}
+
+/** @param {*} transDate @param {string} tz */
+function _financeRowDateKey_(transDate, tz) {
+  if (transDate == null || transDate === '') return '';
+  var d = transDate instanceof Date ? transDate : new Date(transDate);
+  if (isNaN(d.getTime())) return '';
+  return Utilities.formatDate(d, tz, 'yyyy-MM-dd');
+}
+
+/**
+ * Giá trị ô an toàn cho Range.setValues — tránh Array/Object làm Sheets hiểu sai kích thước (lỗi "số hàng không khớp").
+ * @param {*} v
+ * @returns {string|number|boolean|Date}
+ */
+function _financeScalarForSheet_(v) {
+  if (v === null || v === undefined) return '';
+  if (v instanceof Date) return v;
+  if (typeof v === 'boolean' || typeof v === 'number') return v;
+  if (typeof v === 'string') return v;
+  if (typeof v === 'object') {
+    if (Array.isArray(v)) return JSON.stringify(v);
+    try {
+      return JSON.stringify(v);
+    } catch (e) {
+      return String(v);
+    }
+  }
+  return String(v);
+}
+
+function _moveNewSpreadsheetToActiveParentFolder_(newSpreadsheetId) {
+  try {
+    var activeId = SpreadsheetApp.getActive().getId();
+    if (String(activeId) === String(newSpreadsheetId)) return;
+    var activeFile = DriveApp.getFileById(activeId);
+    var parents = activeFile.getParents();
+    if (!parents.hasNext()) return;
+    var folder = parents.next();
+    DriveApp.getFileById(newSpreadsheetId).moveTo(folder);
+  } catch (e) {}
+}
+
+/**
+ * Lọc FINANCE_TRANSACTION theo TRANS_DATE (theo ngày, timezone CBV), tạo Google Sheet mới trên Drive (cùng thư mục với spreadsheet đang mở nếu có).
+ * @param {{ start: Date, end: Date }} period Biên [start..end] theo lịch (inclusive), dùng phần ngày sau khi parse từ yyyy-MM-dd.
+ * @returns {{ ok: boolean, message?: string, url?: string, fileId?: string, rowCount?: number, fileName?: string }}
+ */
+function exportFinancePeriodToDrive(period) {
+  try {
+    cbvAssert(period && period.start && period.end, 'exportFinancePeriodToDrive: period.start/end required');
+    var tz = _financeExportTz_();
+    var startKey = Utilities.formatDate(period.start, tz, 'yyyy-MM-dd');
+    var endKey = Utilities.formatDate(period.end, tz, 'yyyy-MM-dd');
+    if (endKey < startKey) {
+      return { ok: false, message: 'Đến ngày phải ≥ Từ ngày' };
+    }
+    if (typeof _invalidateRowsCache === 'function') {
+      _invalidateRowsCache(CBV_CONFIG.SHEETS.FINANCE_TRANSACTION);
+    }
+    var srcSheet = _sheet(CBV_CONFIG.SHEETS.FINANCE_TRANSACTION);
+    var all = _rows(srcSheet);
+    var filtered = [];
+    for (var i = 0; i < all.length; i++) {
+      var r = all[i];
+      if (r.IS_DELETED === true || String(r.IS_DELETED) === 'true') continue;
+      var dk = _financeRowDateKey_(r.TRANS_DATE, tz);
+      if (!dk) continue;
+      if (dk >= startKey && dk <= endKey) filtered.push(r);
+    }
+    filtered.sort(function(a, b) {
+      var ka = _financeRowDateKey_(a.TRANS_DATE, tz);
+      var kb = _financeRowDateKey_(b.TRANS_DATE, tz);
+      if (ka !== kb) return ka < kb ? -1 : 1;
+      return String(a.ID || '').localeCompare(String(b.ID || ''));
+    });
+    var headers = getFinanceExportHeaders('FINANCE_TRANSACTION');
+    var stamp = Utilities.formatDate(new Date(), tz, 'yyyyMMdd_HHmm');
+    var fileName = 'CBV_FINANCE_' + startKey + '_' + endKey + '_' + stamp;
+    var newSs = SpreadsheetApp.create(fileName);
+    var sh = newSs.getSheets()[0];
+    sh.setName('FINANCE_TRANSACTION');
+    var headerRow = headers.map(function(h) {
+      return _financeScalarForSheet_(h);
+    });
+    sh.getRange(1, 1, 1, headerRow.length).setValues([headerRow]);
+    if (filtered.length > 0) {
+      var dataRows = [];
+      for (var ri = 0; ri < filtered.length; ri++) {
+        var row = filtered[ri];
+        var line = [];
+        for (var hi = 0; hi < headers.length; hi++) {
+          line.push(_financeScalarForSheet_(row[headers[hi]]));
+        }
+        dataRows.push(line);
+      }
+      var n = dataRows.length;
+      cbvAssert(n === filtered.length, 'exportFinancePeriodToDrive: row count mismatch');
+      // Sheet.getRange(row, col, numRows, numColumns) — tham số 3 là SỐ HÀNG, không phải chỉ số hàng cuối.
+      sh.getRange(2, 1, n, headers.length).setValues(dataRows);
+    }
+    SpreadsheetApp.flush();
+    var fileId = newSs.getId();
+    _moveNewSpreadsheetToActiveParentFolder_(fileId);
+    return {
+      ok: true,
+      fileId: fileId,
+      url: newSs.getUrl(),
+      fileName: fileName,
+      rowCount: filtered.length
+    };
+  } catch (e) {
+    return { ok: false, message: String(e.message || e) };
+  }
 }
 
 /**

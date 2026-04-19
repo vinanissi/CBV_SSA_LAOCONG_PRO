@@ -242,8 +242,6 @@ Enum dictionary only.
 | UPDATED_BY | Text | No | |
 | IS_DELETED | Yes/No | Yes | Soft delete |
 
-**Removed:** UNIT_ID. Final design uses DON_VI_ID.
-
 ---
 
 ## 5. Reference Summary
@@ -281,7 +279,6 @@ See **09_AUDIT/DEPRECATED_OLD_DESIGN_ITEMS.md** for full list. Key removals:
 
 - TASK_TYPE (use TASK_TYPE_ID)
 - HTX_ID in TASK_MAIN
-- UNIT_ID in FINANCE_TRANSACTION (use DON_VI_ID)
 - DON_VI in MASTER_CODE
 - USER in MASTER_CODE
 - Separate HTX table

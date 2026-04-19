@@ -36,6 +36,11 @@ CONFIG → ENUM → MASTER_CODE → USER → SHARED (repository, validation, log
 | 16 | 03_SHARED_FILE_HELPER.js | SHARED | — |
 | 17 | 03_SHARED_ACTION_REGISTRY.js | SHARED | — |
 | 18 | 03_SHARED_PENDING_FEEDBACK.js | SHARED | 03_SHARED_ACTION_REGISTRY, 00_CORE_UTILS, 03_SHARED_REPOSITORY |
+| 18a | 04_CORE_EVENT_TYPES.js | CORE | 00_CORE_CONFIG (PropertiesService) |
+| 18b | 04_CORE_EVENT_QUEUE.js | CORE | 04_CORE_EVENT_TYPES, 00_CORE_UTILS, 03_SHARED_REPOSITORY |
+| 18c | 04_CORE_RULE_ENGINE.js | CORE | 03_SHARED_REPOSITORY, 00_CORE_CONFIG |
+| 18d | 04_CORE_EVENT_PROCESSOR.js | CORE | 04_CORE_RULE_ENGINE, 03_SHARED_REPOSITORY, 00_CORE_UTILS |
+| 18e | 04_CORE_EVENT_TRIGGERS.js | CORE | 04_CORE_EVENT_PROCESSOR, ScriptApp | `coreEventQueueProcessMinutely`, install/uninstall |
 | 19 | 03_USER_MIGRATION_HELPER.js | USER | 00_CORE_CONFIG, 02_USER_SERVICE, 03_SHARED_REPOSITORY, 03_SHARED_LOGGER |
 | 20 | 02_USER_VALIDATION.js | USER | 02_USER_SERVICE, 01_ENUM_SERVICE, 03_SHARED_VALIDATION, 03_SHARED_REPOSITORY |
 | 21 | 01_ENUM_ADMIN_SERVICE.js | ADMIN | 01_ENUM_*, 03_SHARED_* |
@@ -76,7 +81,7 @@ CONFIG → ENUM → MASTER_CODE → USER → SHARED (repository, validation, log
 
 1. **CONFIG first** — CBV_CONFIG and CBV_ENUM before any service.
 2. **ENUM before MASTER_CODE** — Both before shared infra.
-3. **SHARED before MODULES** — 03_* (repository, validation, logger, file helper, ACTION_REGISTRY, PENDING_FEEDBACK) before 10/20/30. Registry + pending feedback load immediately after file helper so modules can `registerAction` at load time and webhook can dispatch generically.
+3. **SHARED before MODULES** — 03_* (repository, validation, logger, file helper, ACTION_REGISTRY, PENDING_FEEDBACK) before 10/20/30; **04_CORE_*** (event queue, rules, processor) immediately after PENDING_FEEDBACK so modules can call `cbvTryEmitCoreEvent_`. Registry + pending feedback load immediately after file helper so modules can `registerAction` at load time and webhook can dispatch generically.
 4. **SCHEMA before USER_SEED** — 90_BOOTSTRAP_USER_SEED depends on getSchemaHeaders (90_BOOTSTRAP_SCHEMA).
 5. **MODULES before DISPLAY** — 40_DISPLAY uses enum/master-code; modules use shared.
 6. **DISPLAY before BOOTSTRAP_INIT** — initAll calls ensureDisplayTextForEnumRows/MasterCodeRows.

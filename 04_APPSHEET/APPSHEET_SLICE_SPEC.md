@@ -27,7 +27,7 @@ Used by: TASK_MAIN.TASK_TYPE_ID
 ### ACTIVE_MASTER_CODES
 Source: MASTER_CODE
 Condition: `AND([STATUS] = "ACTIVE", [IS_DELETED] = FALSE)`
-Used by: UNIT_ID, future MASTER_GROUP refs
+Used by: polymorphic / future MASTER_GROUP refs (not DON_VI — use DON_VI table + DON_VI_ID on tables)
 
 ## Business Slices
 
@@ -47,7 +47,12 @@ Condition: `[STATUS] = "DONE"`
 ### FIN_DRAFT
 Source: FINANCE_TRANSACTION
 Condition: `[STATUS] = "NEW"`
+Referenced by: **FIN_CONFIRM_QUEUE** (view — pending confirmation; same slice, not a separate slice name).
 
 ### FIN_CONFIRMED
 Source: FINANCE_TRANSACTION
 Condition: `[STATUS] = "CONFIRMED"`
+
+### FIN_EXPORT_CSV
+Source: FINANCE_TRANSACTION
+Condition: Lọc theo `FIN_EXPORT_FILTER` (chu kỳ `DATE_FROM`–`DATE_TO`, tuỳ chọn `DON_VI_ID`, tuỳ chọn `USER_REF_ID` → `CREATED_BY`) — công thức đầy đủ: `02_MODULES/FINANCE/APPSHEET_UX_SPEC.md`.

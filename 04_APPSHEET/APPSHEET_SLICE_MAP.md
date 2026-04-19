@@ -26,9 +26,9 @@ Reusable slices for Ref targets, filters, and UI consistency. Prefer slice reuse
 | Slice name | ACTIVE_MASTER_CODES |
 | Source table | MASTER_CODE |
 | Row filter | `AND([STATUS] = "ACTIVE", [IS_DELETED] = FALSE)` |
-| Purpose | Generic active master codes; UNIT_ID, future MASTER_GROUP refs |
+| Purpose | Generic active master codes; future MASTER_GROUP refs |
 | Columns used | ID, CODE, DISPLAY_TEXT, NAME, MASTER_GROUP |
-| Referenced by | FINANCE_TRANSACTION.UNIT_ID (when MASTER_GROUP=UNIT exists) |
+| Referenced by | — (FINANCE unit = DON_VI_ID → DON_VI, not MASTER_CODE) |
 
 ---
 
@@ -139,6 +139,18 @@ Reusable slices for Ref targets, filters, and UI consistency. Prefer slice reuse
 
 ---
 
+### K. FIN_EXPORT_CSV
+
+| Property | Value |
+|----------|-------|
+| Slice name | FIN_EXPORT_CSV |
+| Source table | FINANCE_TRANSACTION |
+| Row filter | Theo `FIN_EXPORT_FILTER` (user `USEREMAIL()`) — công thức đầy đủ trong `02_MODULES/FINANCE/APPSHEET_UX_SPEC.md` |
+| Purpose | Danh sách lọc theo chu kỳ / đơn vị / người tạo trước khi **Export CSV** |
+| Referenced by | FIN_LIST_EXPORT (hoặc tương đương) |
+
+---
+
 ## SLICE CREATION ORDER
 
 1. ACTIVE_USERS (MASTER_CODE)
@@ -147,6 +159,7 @@ Reusable slices for Ref targets, filters, and UI consistency. Prefer slice reuse
 4. HO_SO_ACTIVE (HO_SO_MASTER)
 5. TASK_OPEN, TASK_DONE, TASK_MY_OPEN, TASK_MY_TASKS (TASK_MAIN)
 6. FIN_DRAFT, FIN_CONFIRMED (FINANCE_TRANSACTION)
+7. FIN_EXPORT_CSV (FINANCE_TRANSACTION) — sau khi có table `FIN_EXPORT_FILTER` + slice phụ thuộc
 
 ---
 

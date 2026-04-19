@@ -32,11 +32,6 @@
 |-------|-------------|
 | CONTENT | ACTION, OLD_STATUS, NEW_STATUS, NOTE |
 
-### FINANCE_TRANSACTION
-| Field | Replacement |
-|-------|-------------|
-| UNIT_ID | DON_VI_ID |
-
 ---
 
 ## Removed Hybrid Logic
@@ -47,7 +42,7 @@
 | USER stored in MASTER_CODE | Removed. USER_DIRECTORY is separate table. |
 | TASK_MAIN accepts both TASK_TYPE and TASK_TYPE_ID | Removed. TASK_TYPE_ID only. |
 | TASK_MAIN accepts both HTX_ID and DON_VI_ID | Removed. DON_VI_ID only. |
-| FINANCE_TRANSACTION uses UNIT_ID (MASTER_CODE) | Removed. DON_VI_ID only. |
+| FINANCE unit via MASTER_CODE | Removed. DON_VI_ID → DON_VI only. |
 | USER_DIRECTORY depends on HTX | Removed. Users are global. |
 | HTX exists as core organization table | Removed. DON_VI with DON_VI_TYPE=HTX. |
 
@@ -60,7 +55,6 @@
 - "USER_DIRECTORY depends on HTX"
 - "Hybrid schema is acceptable"
 - "Legacy architecture is still current"
-- "UNIT_ID is the final finance unit field"
 
 ---
 
@@ -70,7 +64,7 @@ When updating schema, GAS, or AppSheet:
 
 1. Do NOT add TASK_TYPE to TASK_MAIN.
 2. Do NOT add HTX_ID to TASK_MAIN.
-3. Do NOT add UNIT_ID to FINANCE_TRANSACTION.
+3. Do NOT add a second “unit” column on FINANCE_TRANSACTION; use DON_VI_ID only.
 4. Do NOT store DON_VI rows in MASTER_CODE.
 5. Do NOT store USER rows in MASTER_CODE.
 6. Do NOT create a separate HTX table.

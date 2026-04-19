@@ -82,7 +82,7 @@
 
 | Field | Classification | Notes |
 |-------|----------------|-------|
-| UNIT_ID | REF_FIELD, VISIBLE_CONTROLLED | No MASTER_GROUP in schema; treated as REF |
+| DON_VI_ID | REF_FIELD, VISIBLE_CONTROLLED | Ref to DON_VI (ACTIVE_DON_VI) |
 | HTX_ID | REF_FIELD | Ref to HO_SO_MASTER |
 | TASK_GROUP_CODE, CATEGORY_CODE, DOC_GROUP_CODE | Not in schema | Correctly excluded |
 
@@ -100,7 +100,7 @@
 | CATEGORY | [STATUS] <> "CONFIRMED" | ✓ |
 | AMOUNT | [STATUS] <> "CONFIRMED" | ✓ |
 | PAYMENT_METHOD | [STATUS] <> "CONFIRMED" | ✓ |
-| UNIT_ID | [STATUS] <> "CONFIRMED" | ✓ |
+| DON_VI_ID | [STATUS] <> "CONFIRMED" | ✓ |
 | COUNTERPARTY | [STATUS] <> "CONFIRMED" | ✓ |
 | REFERENCE_NO | [STATUS] <> "CONFIRMED" | ✓ |
 | RELATED_ENTITY_TYPE, RELATED_ENTITY_ID | [STATUS] <> "CONFIRMED" | ✓ |

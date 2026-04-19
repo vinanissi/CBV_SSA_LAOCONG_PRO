@@ -7,7 +7,7 @@
 
 ## Table Setup Order
 1. Add data source: Google Sheets (same spreadsheet as GAS)
-2. Add tables in order: HO_SO_MASTER, HO_SO_FILE, HO_SO_RELATION, TASK_MAIN, TASK_CHECKLIST, TASK_UPDATE_LOG, TASK_ATTACHMENT, FINANCE_TRANSACTION, FINANCE_LOG
+2. Add tables in order: HO_SO_MASTER, HO_SO_FILE, HO_SO_RELATION, TASK_MAIN, TASK_CHECKLIST, TASK_UPDATE_LOG, TASK_ATTACHMENT, FINANCE_TRANSACTION, FIN_EXPORT_FILTER (optional — chu kỳ/đơn vị/người cho export CSV), FINANCE_LOG
 3. Set Key = ID for all tables
 4. Set Label per APPSHEET_KEY_LABEL_MAP.md
 5. Configure refs per APPSHEET_REF_MAP.md

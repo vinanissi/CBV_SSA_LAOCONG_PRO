@@ -13,7 +13,7 @@
 | **MASTER_CODE** | Static/semi-static business master data only. Does NOT store DON_VI or USER. |
 | **ENUM_DICTIONARY** | Enum dictionary only. |
 | **TASK_MAIN** | Uses TASK_TYPE_ID (REF to MASTER_CODE), DON_VI_ID (REF to DON_VI). No TASK_TYPE, no HTX_ID. |
-| **FINANCE_TRANSACTION** | Uses DON_VI_ID. No UNIT_ID. |
+| **FINANCE_TRANSACTION** | Uses DON_VI_ID (→ DON_VI) for unit attribution. |
 
 ---
 
@@ -27,8 +27,7 @@
 6. **TASK_MAIN uses HTX_ID** — Removed. DON_VI_ID only.
 7. **MASTER_CODE stores USER** — Removed. USER_DIRECTORY only.
 8. **MASTER_CODE stores DON_VI** — Removed. DON_VI table only.
-9. **UNIT_ID in FINANCE_TRANSACTION** — Removed. DON_VI_ID only.
-10. **Legacy/hybrid as current architecture** — Removed. Final only.
+9. **Legacy/hybrid as current architecture** — Removed. Final only.
 
 ---
 
@@ -41,7 +40,6 @@
 | TASK_MAIN | RESULT_NOTE | RESULT_SUMMARY |
 | TASK_CHECKLIST | DESCRIPTION | — |
 | TASK_UPDATE_LOG | CONTENT | ACTION, OLD_STATUS, NEW_STATUS, NOTE |
-| FINANCE_TRANSACTION | UNIT_ID | DON_VI_ID |
 
 ---
 
@@ -68,3 +66,13 @@
 - 04_APPSHEET/APPSHEET_FIELD_POLICY_MAP.md (updated)
 - 04_APPSHEET/APPSHEET_VIEW_UX_MAP.md (updated)
 - 09_AUDIT/DEPRECATED_OLD_DESIGN_ITEMS.md (created)
+
+---
+
+## 2026-04-19 — Event-driven core (phase 1)
+
+- **Sheets:** `EVENT_QUEUE`, `RULE_DEF` added to `90_BOOTSTRAP_SCHEMA.js` and `CBV_CONFIG.SHEETS`.
+- **GAS:** `04_CORE_EVENT_TYPES.js`, `04_CORE_EVENT_QUEUE.js`, `04_CORE_RULE_ENGINE.js`, `04_CORE_EVENT_PROCESSOR.js` — queue append, rule load/evaluate (safe JSON), processor + batch stub, `executeCoreAction_` stubs.
+- **Emission:** `30_FINANCE_SERVICE.js` calls `cbvTryEmitCoreEvent_` on create + status change (`FINANCE_CREATED`, `FINANCE_STATUS_CHANGED`).
+- **Docs:** `00_OVERVIEW/EVENT_DRIVEN_MIGRATION_PLAN.md` (audit + migration phases). Script property `CBV_CORE_EVENT_MODE`: `off` | `shadow` (default) | `on`.
+- **Menu / trigger:** `04_CORE_EVENT_TRIGGERS.js` — `CBV PRO` → Bootstrap & init → Process EVENT_QUEUE now; Install/Remove EVENT_QUEUE trigger (every 5 min).

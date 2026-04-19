@@ -52,6 +52,10 @@ function buildCbvProMenu_() {
       .addItem('Remove time-based triggers', 'menuRemoveTriggers')
       .addItem('Install onEdit trigger (tasks)', 'menuInstallOnEditTrigger')
       .addItem('Remove onEdit trigger (tasks)', 'menuUninstallOnEditTrigger')
+      .addSeparator()
+      .addItem('Process EVENT_QUEUE now (batch)', 'menuCoreEventQueueProcessNow')
+      .addItem('Install EVENT_QUEUE trigger (every 5 min)', 'menuInstallCoreEventQueueTrigger')
+      .addItem('Remove EVENT_QUEUE trigger', 'menuUninstallCoreEventQueueTrigger')
   );
 
   // 3. Audit & health
@@ -104,6 +108,7 @@ function buildCbvProMenu_() {
   menu.addSubMenu(
     ui.createMenu('Finance')
       .addItem('Audit finance module', 'menuAuditFinance')
+      .addItem('Export kỳ → Sheet trên Drive', 'menuExportFinancePeriodToDrive')
       .addItem('Seed finance demo data', 'menuSeedFinanceDemo')
       .addItem('Test DON_VI mapping', 'menuTestFinanceDonViMapping')
   );

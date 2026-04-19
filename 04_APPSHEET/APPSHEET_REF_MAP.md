@@ -94,8 +94,6 @@
 | CONFIRMED_BY       | ACTIVE_USERS | FULL_NAME     | GAS set  |
 | RELATED_ENTITY_ID  | Polymorphic  | Varies        | By type  |
 
-**Removed:** UNIT_ID (use DON_VI_ID).
-
 ---
 
 ## FINANCE_ATTACHMENT
