@@ -1,0 +1,4 @@
+ID	RULE_CODE	PRIORITY	ENABLED	EVENT_TYPE	CONDITION_JSON	ACTIONS_JSON	TARGET_MODULE	NOTE	VERSION	CREATED_AT	UPDATED_AT
+RUL101	TASK_ON_DONE	10	TRUE	TASK_STATUS_CHANGED	{"all":[{"field":"payload.newStatus","op":"eq","value":"DONE"}]}	[{"type":"SEND_ALERT","params":{"message":"TASK_DONE"}}]	TASK	Task hoàn thành	1	2026-04-19	2026-04-19
+RUL102	TASK_ON_CREATE	20	TRUE	TASK_CREATED	{"all":[]}	[{"type":"SEND_ALERT","params":{"message":"TASK_CREATED"}}]	TASK	Task mới tạo	1	2026-04-19	2026-04-19
+RUL201	HOSO_ON_ACTIVE	10	TRUE	HO_SO_STATUS_CHANGED	{"all":[{"field":"payload.newStatus","op":"eq","value":"ACTIVE"}]}	[{"type":"SEND_ALERT","params":{"message":"HOSO_ACTIVE"}}]	HO_SO	Hồ sơ kích hoạt	1	2026-04-19	2026-04-19

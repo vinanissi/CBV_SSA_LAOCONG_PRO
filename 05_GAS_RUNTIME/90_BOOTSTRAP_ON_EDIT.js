@@ -3,6 +3,12 @@
  * Time-driven trigger — fill TASK_CODE cho tasks mới từ AppSheet.
  * Chạy mỗi 1 phút tự động.
  *
+ * Khi ghi log "Task created" (dòng mới không qua createTask GAS), emit **TASK_CREATED** vào EVENT_QUEUE
+ * để đồng bộ với event-driven core (AppSheet không gọi 20_TASK_SERVICE.createTask).
+ *
+ * Mỗi phút còn gọi **cbvTaskStatusSnapshotSyncFromSheet_** (20_TASK_STATUS_SNAPSHOT.js): phát hiện đổi STATUS
+ * trực tiếp trên sheet/AppSheet → emit **TASK_STATUS_CHANGED** (payload note `sheet_sync`).
+ *
  * Cài trigger: chạy installTaskSyncTrigger() 1 lần trong GAS Editor.
  */
 
@@ -12,6 +18,9 @@
  */
 function taskSyncMinutely() {
   _fillBlankTaskCodes();
+  if (typeof cbvTaskStatusSnapshotSyncFromSheet_ === 'function') {
+    cbvTaskStatusSnapshotSyncFromSheet_();
+  }
 }
 
 /**
@@ -65,6 +74,7 @@ function _fillBlankTaskCodes() {
   var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
   var idIdx = headers.indexOf('ID');
   var codeIdx = headers.indexOf('TASK_CODE');
+  var statusIdx = headers.indexOf('STATUS');
   var updatedAtIdx = headers.indexOf('UPDATED_AT');
   var updatedByIdx = headers.indexOf('UPDATED_BY');
 
@@ -93,6 +103,19 @@ function _fillBlankTaskCodes() {
     try {
       if (!_hasTaskCreatedLog(id)) {
         _addTaskUpdateLog(id, 'NOTE', 'Task created', 'NEW', 'NEW');
+        if (typeof cbvTryEmitCoreEvent_ === 'function') {
+          cbvTryEmitCoreEvent_({
+            eventType: typeof CBV_CORE_EVENT_TYPE_TASK_CREATED !== 'undefined' ? CBV_CORE_EVENT_TYPE_TASK_CREATED : 'TASK_CREATED',
+            sourceModule: 'TASK',
+            refId: id,
+            entityType: 'TASK_MAIN',
+            payload: { source: 'APPSHEET_SHEET_ROW', note: 'TASK_CODE filled by taskSyncMinutely; row was not created via createTask()' }
+          });
+        }
+        if (typeof cbvTaskStatusSnapshotSet_ === 'function') {
+          var stSnap = statusIdx !== -1 ? String(row[statusIdx] || '').trim() : 'NEW';
+          cbvTaskStatusSnapshotSet_(id, stSnap || 'NEW');
+        }
       }
     } catch (e) {
       // Non-blocking

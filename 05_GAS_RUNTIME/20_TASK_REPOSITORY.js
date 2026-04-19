@@ -96,6 +96,22 @@ function taskAppendAttachment(record) {
 }
 
 /**
+ * @param {string} attachmentId
+ * @returns {Object|null}
+ */
+function taskFindAttachmentById(attachmentId) {
+  return typeof _findById === 'function' ? _findById(CBV_CONFIG.SHEETS.TASK_ATTACHMENT, attachmentId) : null;
+}
+
+/**
+ * @param {number} rowNumber
+ * @param {Object} patch
+ */
+function taskUpdateAttachment(rowNumber, patch) {
+  if (typeof _updateRow === 'function') _updateRow(CBV_CONFIG.SHEETS.TASK_ATTACHMENT, rowNumber, patch);
+}
+
+/**
  * Appends update log record.
  * @param {Object} record
  */

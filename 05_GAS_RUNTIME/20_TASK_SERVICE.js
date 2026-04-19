@@ -183,6 +183,16 @@ function createTask(data) {
   };
   taskAppendMain(record);
   _addTaskUpdateLog(record.ID, 'NOTE', 'Task created', 'NEW', 'NEW');
+  if (typeof cbvTryEmitCoreEvent_ === 'function') {
+    cbvTryEmitCoreEvent_({
+      eventType: typeof CBV_CORE_EVENT_TYPE_TASK_CREATED !== 'undefined' ? CBV_CORE_EVENT_TYPE_TASK_CREATED : 'TASK_CREATED',
+      sourceModule: 'TASK',
+      refId: record.ID,
+      entityType: 'TASK_MAIN',
+      payload: { STATUS: record.STATUS, TITLE: record.TITLE, DON_VI_ID: record.DON_VI_ID }
+    });
+  }
+  if (typeof cbvTaskStatusSnapshotSet_ === 'function') cbvTaskStatusSnapshotSet_(record.ID, record.STATUS);
   return cbvResponse(true, 'TASK_CREATED', 'Task đã tạo', taskMainWithOverdueFields(record), []);
 }
 
@@ -257,6 +267,16 @@ function assignTask(taskId, ownerId) {
   } else {
     _addTaskUpdateLog(taskId, 'NOTE', 'Reassigned to ' + ownerId, '', '');
   }
+  if (patch.STATUS && typeof cbvTryEmitCoreEvent_ === 'function') {
+    cbvTryEmitCoreEvent_({
+      eventType: typeof CBV_CORE_EVENT_TYPE_TASK_STATUS_CHANGED !== 'undefined' ? CBV_CORE_EVENT_TYPE_TASK_STATUS_CHANGED : 'TASK_STATUS_CHANGED',
+      sourceModule: 'TASK',
+      refId: taskId,
+      entityType: 'TASK_MAIN',
+      payload: { previousStatus: oldStatus, newStatus: String(patch.STATUS), note: '' }
+    });
+  }
+  if (patch.STATUS && typeof cbvTaskStatusSnapshotSet_ === 'function') cbvTaskStatusSnapshotSet_(taskId, String(patch.STATUS));
   var updated = Object.assign({}, current, patch);
   return cbvResponse(true, 'TASK_ASSIGNED', 'Đã giao task', taskMainWithOverdueFields(updated), []);
 }
@@ -290,6 +310,16 @@ function setTaskStatus(taskId, newStatus, note) {
   }
   taskUpdateMain(current._rowNumber, patch);
   _addTaskUpdateLog(taskId, 'STATUS_CHANGE', note || '', oldStatus, newStatus);
+  if (typeof cbvTryEmitCoreEvent_ === 'function') {
+    cbvTryEmitCoreEvent_({
+      eventType: typeof CBV_CORE_EVENT_TYPE_TASK_STATUS_CHANGED !== 'undefined' ? CBV_CORE_EVENT_TYPE_TASK_STATUS_CHANGED : 'TASK_STATUS_CHANGED',
+      sourceModule: 'TASK',
+      refId: taskId,
+      entityType: 'TASK_MAIN',
+      payload: { previousStatus: oldStatus, newStatus: String(newStatus), note: note || '' }
+    });
+  }
+  if (typeof cbvTaskStatusSnapshotSet_ === 'function') cbvTaskStatusSnapshotSet_(taskId, String(newStatus));
   var updated = Object.assign({}, current, patch);
   return cbvResponse(true, 'TASK_STATUS_CHANGED', 'Đã cập nhật trạng thái', taskMainWithOverdueFields(updated), []);
 }
@@ -329,6 +359,16 @@ function taskStartAction(taskId) {
   }
   taskUpdateMain(task._rowNumber, patch);
   _addTaskUpdateLog(taskId, 'STATUS_CHANGE', 'Bắt đầu', String(task.STATUS), 'IN_PROGRESS');
+  if (typeof cbvTryEmitCoreEvent_ === 'function') {
+    cbvTryEmitCoreEvent_({
+      eventType: typeof CBV_CORE_EVENT_TYPE_TASK_STATUS_CHANGED !== 'undefined' ? CBV_CORE_EVENT_TYPE_TASK_STATUS_CHANGED : 'TASK_STATUS_CHANGED',
+      sourceModule: 'TASK',
+      refId: taskId,
+      entityType: 'TASK_MAIN',
+      payload: { previousStatus: String(task.STATUS), newStatus: 'IN_PROGRESS', note: '' }
+    });
+  }
+  if (typeof cbvTaskStatusSnapshotSet_ === 'function') cbvTaskStatusSnapshotSet_(taskId, 'IN_PROGRESS');
   return cbvResponse(true, 'TASK_STARTED', 'Đã bắt đầu', taskMainWithOverdueFields(Object.assign({}, task, patch)), []);
 }
 
@@ -366,6 +406,16 @@ function taskReopenAction(taskId) {
   if (s === 'DONE') patch.DONE_AT = '';
   taskUpdateMain(task._rowNumber, patch);
   _addTaskUpdateLog(taskId, 'STATUS_CHANGE', 'Mở lại', s, 'IN_PROGRESS');
+  if (typeof cbvTryEmitCoreEvent_ === 'function') {
+    cbvTryEmitCoreEvent_({
+      eventType: typeof CBV_CORE_EVENT_TYPE_TASK_STATUS_CHANGED !== 'undefined' ? CBV_CORE_EVENT_TYPE_TASK_STATUS_CHANGED : 'TASK_STATUS_CHANGED',
+      sourceModule: 'TASK',
+      refId: taskId,
+      entityType: 'TASK_MAIN',
+      payload: { previousStatus: s, newStatus: 'IN_PROGRESS', note: '' }
+    });
+  }
+  if (typeof cbvTaskStatusSnapshotSet_ === 'function') cbvTaskStatusSnapshotSet_(taskId, 'IN_PROGRESS');
   return cbvResponse(true, 'TASK_REOPENED', 'Đã mở lại', taskMainWithOverdueFields(Object.assign({}, task, patch)), []);
 }
 
@@ -441,6 +491,15 @@ function markChecklistDone(checklistId, note) {
   taskUpdateChecklist(current._rowNumber, patch);
   syncTaskProgress(current.TASK_ID);
   _addTaskUpdateLog(current.TASK_ID, 'NOTE', note || current.TITLE, '', '');
+  if (typeof cbvTryEmitCoreEvent_ === 'function') {
+    cbvTryEmitCoreEvent_({
+      eventType: typeof CBV_CORE_EVENT_TYPE_TASK_CHECKLIST_UPDATED !== 'undefined' ? CBV_CORE_EVENT_TYPE_TASK_CHECKLIST_UPDATED : 'TASK_CHECKLIST_UPDATED',
+      sourceModule: 'TASK',
+      refId: current.TASK_ID,
+      entityType: 'TASK_MAIN',
+      payload: { checklistId: checklistId, taskId: current.TASK_ID, note: note || '' }
+    });
+  }
   var updated = Object.assign({}, current, patch);
   return cbvResponse(true, 'TASK_CHECKLIST_DONE', 'Checklist item done', updated, []);
 }
@@ -477,6 +536,35 @@ function addTaskAttachment(data) {
 }
 
 /**
+ * Soft-delete attachment (IS_DELETED = true). Web App action deleteAttachment.
+ * @param {string} taskId
+ * @param {string} attachmentId
+ * @returns {Object} cbvResponse
+ */
+function removeTaskAttachment(taskId, attachmentId) {
+  ensureRequired(taskId, 'TASK_ID');
+  ensureRequired(attachmentId, 'attachmentId');
+  var att = typeof taskFindAttachmentById === 'function' ? taskFindAttachmentById(attachmentId) : null;
+  cbvAssert(att, 'Attachment not found');
+  cbvAssert(String(att.TASK_ID) === String(taskId), 'Attachment does not belong to this task');
+  if (String(att.IS_DELETED) === 'true' || att.IS_DELETED === true) {
+    return cbvResponse(true, 'TASK_NO_CHANGE', 'Attachment already removed', att, []);
+  }
+  ensureTaskEditable(taskId);
+  var patch = {
+    IS_DELETED: true,
+    UPDATED_AT: cbvNow(),
+    UPDATED_BY: cbvUser()
+  };
+  taskUpdateAttachment(att._rowNumber, patch);
+  var label = (att.TITLE && String(att.TITLE).trim()) ? String(att.TITLE).trim()
+    : ((att.FILE_URL && String(att.FILE_URL).trim()) ? String(att.FILE_URL).trim() : attachmentId);
+  _addTaskUpdateLog(taskId, 'NOTE', 'Attachment removed: ' + label, '', '');
+  var updated = Object.assign({}, att, patch);
+  return cbvResponse(true, 'TASK_ATTACHMENT_REMOVED', 'Đã gỡ file đính kèm', updated, []);
+}
+
+/**
  * Add update log entry (NOTE, QUESTION, ANSWER). CONTENT required.
  * @param {Object} data - { taskId, updateType, content }
  * @returns {Object} cbvResponse
@@ -492,6 +580,15 @@ function addTaskUpdateLog(data) {
   cbvAssert(['NOTE', 'QUESTION', 'ANSWER'].indexOf(updateType) !== -1, 'updateType must be NOTE, QUESTION, or ANSWER');
 
   var record = _addTaskUpdateLog(taskId, updateType, content, '', '');
+  if (typeof cbvTryEmitCoreEvent_ === 'function') {
+    cbvTryEmitCoreEvent_({
+      eventType: typeof CBV_CORE_EVENT_TYPE_TASK_LOG_ADDED !== 'undefined' ? CBV_CORE_EVENT_TYPE_TASK_LOG_ADDED : 'TASK_LOG_ADDED',
+      sourceModule: 'TASK',
+      refId: taskId,
+      entityType: 'TASK_MAIN',
+      payload: { updateType: updateType, content: content }
+    });
+  }
   return cbvResponse(true, 'TASK_LOG_ADDED', 'Đã thêm ghi chú', record, []);
 }
 

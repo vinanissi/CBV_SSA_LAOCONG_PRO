@@ -1,8 +1,8 @@
 /**
  * Event-driven core — process EVENT_QUEUE rows against RULE_DEF.
- * Depends: 04_CORE_RULE_ENGINE, 03_SHARED_REPOSITORY, 00_CORE_UTILS, 04_CORE_EVENT_TYPES.
+ * Depends: 04_CORE_RULE_ENGINE, 03_SHARED_REPOSITORY, 00_CORE_UTILS, 04_CORE_EVENT_TYPES, 03_SHARED_LOGGER (`logAdminAudit` — load order: LOGGER before this file).
  *
- * Action handlers start as stubs; extend executeCoreAction_ for CREATE_TASK / UPDATE_STATUS / SEND_ALERT.
+ * Action handlers: SEND_ALERT writes ADMIN_AUDIT_LOG; other types remain stubs until extended.
  */
 
 /**
@@ -67,9 +67,25 @@ function executeCoreAction_(action, context) {
   if (!action || typeof action !== 'object') return;
   var type = String(action.type || '').trim().toUpperCase();
   var params = action.params && typeof action.params === 'object' ? action.params : {};
+  var evt = context && context.event ? context.event : {};
+  var payload = context && context.payload ? context.payload : {};
 
   if (type === 'SEND_ALERT') {
-    Logger.log('[executeCoreAction_] SEND_ALERT ' + JSON.stringify(params) + ' ctx=' + (context && context.event ? context.event.ID : ''));
+    var msg = String(params.message || params.template || 'SEND_ALERT').trim();
+    if (typeof logAdminAudit === 'function') {
+      logAdminAudit(
+        'CORE_RULE',
+        String(evt.EVENT_TYPE || 'UNKNOWN'),
+        String(evt.ID || ''),
+        'SEND_ALERT',
+        { params: params, payload: payload },
+        {},
+        msg,
+        { actorId: typeof cbvSystemActor === 'function' ? cbvSystemActor() : undefined }
+      );
+    } else {
+      Logger.log('[executeCoreAction_] SEND_ALERT ' + JSON.stringify(params) + ' evt=' + (evt.ID || ''));
+    }
     return;
   }
   if (type === 'CREATE_TASK' || type === 'CREATE_FINANCE' || type === 'UPDATE_STATUS') {

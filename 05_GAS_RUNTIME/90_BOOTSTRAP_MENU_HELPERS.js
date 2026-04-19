@@ -12,6 +12,113 @@ var MENU_SHEET_NAMES = {
 };
 
 /**
+ * Nhóm tab để ẩn/hiện hàng loạt (khớp CBV_SCHEMA_MANIFEST + SYSTEM_HEALTH_LOG).
+ * Chỉ thao tác tab có tên trùng; tab khác trong file không đụng tới.
+ */
+var CBV_SHEET_VISIBILITY_GROUPS_ = {
+  core: {
+    label: 'Master & dùng chung',
+    sheets: ['USER_DIRECTORY', 'DON_VI', 'MASTER_CODE']
+  },
+  audit: {
+    label: 'Nhật ký & kiểm tra',
+    sheets: ['ADMIN_AUDIT_LOG']
+  },
+  health: {
+    label: 'SYSTEM_HEALTH_LOG',
+    sheets: []
+  },
+  hoso: {
+    label: 'Hồ sơ (HO_SO)',
+    sheets: ['HO_SO_MASTER', 'HO_SO_FILE', 'HO_SO_RELATION', 'HO_SO_DETAIL_PHUONG_TIEN', 'HO_SO_UPDATE_LOG', 'DOC_REQUIREMENT']
+  },
+  task: {
+    label: 'Công việc (TASK)',
+    sheets: ['TASK_MAIN', 'TASK_CHECKLIST', 'TASK_UPDATE_LOG', 'TASK_ATTACHMENT']
+  },
+  finance: {
+    label: 'Tài chính',
+    sheets: ['FINANCE_TRANSACTION', 'FINANCE_ATTACHMENT', 'FINANCE_LOG', 'FIN_EXPORT_FILTER']
+  },
+  eventRule: {
+    label: 'Sự kiện & quy tắc',
+    sheets: ['EVENT_QUEUE', 'RULE_DEF']
+  }
+};
+
+/** Resolve SYSTEM_HEALTH_LOG sheet name into group `health` */
+function cbvResolveSheetVisibilityGroups_() {
+  var healthName = typeof SYSTEM_HEALTH_LOG_SHEET !== 'undefined' ? SYSTEM_HEALTH_LOG_SHEET : 'SYSTEM_HEALTH_LOG';
+  var copy = {};
+  Object.keys(CBV_SHEET_VISIBILITY_GROUPS_).forEach(function(k) {
+    var g = CBV_SHEET_VISIBILITY_GROUPS_[k];
+    copy[k] = { label: g.label, sheets: g.sheets.slice() };
+  });
+  copy.health.sheets = [healthName];
+  return copy;
+}
+
+/**
+ * Ẩn hoặc hiện một nhóm tab. Khi ẩn, giữ ít nhất một tab còn hiển thị.
+ * @param {string} groupKey - key trong CBV_SHEET_VISIBILITY_GROUPS_
+ * @param {boolean} hidden - true = ẩn
+ * @returns {{ ok: boolean, affected?: number, reason?: string }}
+ */
+function setCbvSheetGroupHidden_(groupKey, hidden) {
+  var groups = cbvResolveSheetVisibilityGroups_();
+  var g = groups[groupKey];
+  if (!g || !g.sheets || !g.sheets.length) {
+    return { ok: false, reason: 'UNKNOWN_GROUP' };
+  }
+  var ss = SpreadsheetApp.getActive();
+  if (hidden) {
+    var visibleCount = 0;
+    ss.getSheets().forEach(function(s) {
+      if (!s.isSheetHidden()) visibleCount++;
+    });
+    var wouldHide = 0;
+    g.sheets.forEach(function(name) {
+      var sh = ss.getSheetByName(name);
+      if (sh && !sh.isSheetHidden()) wouldHide++;
+    });
+    if (visibleCount - wouldHide < 1) {
+      return { ok: false, reason: 'LAST_SHEET' };
+    }
+  }
+  var affected = 0;
+  g.sheets.forEach(function(name) {
+    var sh = ss.getSheetByName(name);
+    if (!sh) return;
+    if (hidden) sh.hideSheet();
+    else sh.showSheet();
+    affected++;
+  });
+  return { ok: true, affected: affected };
+}
+
+/**
+ * Menu helper: ẩn/hiện nhóm + thông báo tiếng Việt.
+ */
+function menuCbvSheetGroupSet_(groupKey, hidden) {
+  var groups = cbvResolveSheetVisibilityGroups_();
+  var g = groups[groupKey];
+  var ui = SpreadsheetApp.getUi();
+  var r = setCbvSheetGroupHidden_(groupKey, hidden);
+  if (!r.ok && r.reason === 'LAST_SHEET') {
+    ui.alert('Ẩn tab', 'Không thể ẩn nhóm này: phải còn ít nhất một tab hiển thị. Hãy hiện một nhóm khác trước.', ui.ButtonSet.OK);
+    return r;
+  }
+  if (!r.ok) {
+    ui.alert('Tab', 'Nhóm không hợp lệ hoặc không có tab tương ứng.', ui.ButtonSet.OK);
+    return r;
+  }
+  var action = hidden ? 'Đã ẩn' : 'Đã hiện';
+  var label = g ? g.label : groupKey;
+  ui.alert('Tab theo nhóm', action + ' — ' + label + ' (' + r.affected + ' tab trong file).', ui.ButtonSet.OK);
+  return r;
+}
+
+/**
  * Call implementation function by name. Returns result or null if missing.
  * Use for safe menu wrappers — never crashes; returns null when fn absent.
  * @param {string} fnName - Global function name

@@ -441,6 +441,23 @@ function menuOpenAuditLog() {
   openSheetByName_(MENU_SHEET_NAMES.ADMIN_AUDIT_LOG);
 }
 
+// ==================== SHEET VISIBILITY BY GROUP ====================
+
+function menuCbvSheetsShowCore() { menuCbvSheetGroupSet_('core', false); }
+function menuCbvSheetsHideCore() { menuCbvSheetGroupSet_('core', true); }
+function menuCbvSheetsShowAudit() { menuCbvSheetGroupSet_('audit', false); }
+function menuCbvSheetsHideAudit() { menuCbvSheetGroupSet_('audit', true); }
+function menuCbvSheetsShowHealth() { menuCbvSheetGroupSet_('health', false); }
+function menuCbvSheetsHideHealth() { menuCbvSheetGroupSet_('health', true); }
+function menuCbvSheetsShowHoso() { menuCbvSheetGroupSet_('hoso', false); }
+function menuCbvSheetsHideHoso() { menuCbvSheetGroupSet_('hoso', true); }
+function menuCbvSheetsShowTask() { menuCbvSheetGroupSet_('task', false); }
+function menuCbvSheetsHideTask() { menuCbvSheetGroupSet_('task', true); }
+function menuCbvSheetsShowFinance() { menuCbvSheetGroupSet_('finance', false); }
+function menuCbvSheetsHideFinance() { menuCbvSheetGroupSet_('finance', true); }
+function menuCbvSheetsShowEventRule() { menuCbvSheetGroupSet_('eventRule', false); }
+function menuCbvSheetsHideEventRule() { menuCbvSheetGroupSet_('eventRule', true); }
+
 // ==================== BOOTSTRAP & INIT ====================
 
 function menuRunFullDeployment() {
@@ -469,6 +486,45 @@ function menuInstallTriggers() {
 
 function menuRemoveTriggers() {
   removeCbvTriggers();
+}
+
+function menuInstallAllCbvTriggers() {
+  if (!_menuFnExists_('installAllCbvTriggersImpl')) {
+    SpreadsheetApp.getUi().alert('Not loaded', 'installAllCbvTriggersImpl is not loaded.', SpreadsheetApp.getUi().ButtonSet.OK);
+    return;
+  }
+  try {
+    var r = installAllCbvTriggersImpl();
+    SpreadsheetApp.getUi().alert('Cài tất cả trigger', r && r.message ? r.message : 'OK', SpreadsheetApp.getUi().ButtonSet.OK);
+  } catch (err) {
+    SpreadsheetApp.getUi().alert('Error', String(err.message || err), SpreadsheetApp.getUi().ButtonSet.OK);
+  }
+}
+
+function menuRemoveAllCbvTriggers() {
+  if (!_menuFnExists_('removeAllCbvTriggersImpl')) {
+    SpreadsheetApp.getUi().alert('Not loaded', 'removeAllCbvTriggersImpl is not loaded.', SpreadsheetApp.getUi().ButtonSet.OK);
+    return;
+  }
+  try {
+    var n = removeAllCbvTriggersImpl();
+    SpreadsheetApp.getUi().alert('Gỡ trigger', 'Đã gỡ ' + n + ' trigger CBV (daily, warm, task sync, EVENT_QUEUE, onEdit cũ).', SpreadsheetApp.getUi().ButtonSet.OK);
+  } catch (err) {
+    SpreadsheetApp.getUi().alert('Error', String(err.message || err), SpreadsheetApp.getUi().ButtonSet.OK);
+  }
+}
+
+function menuReinstallAllCbvTriggers() {
+  if (!_menuFnExists_('reinstallAllCbvTriggersImpl')) {
+    SpreadsheetApp.getUi().alert('Not loaded', 'reinstallAllCbvTriggersImpl is not loaded.', SpreadsheetApp.getUi().ButtonSet.OK);
+    return;
+  }
+  try {
+    var r = reinstallAllCbvTriggersImpl();
+    SpreadsheetApp.getUi().alert('Cài lại trigger', r && r.message ? r.message : 'OK', SpreadsheetApp.getUi().ButtonSet.OK);
+  } catch (err) {
+    SpreadsheetApp.getUi().alert('Error', String(err.message || err), SpreadsheetApp.getUi().ButtonSet.OK);
+  }
 }
 
 // ==================== AUDIT & HEALTH ====================

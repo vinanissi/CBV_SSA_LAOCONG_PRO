@@ -206,3 +206,11 @@ AppSheet đang **ghi cập nhật** một dòng có `ID` = giá trị đó, như
 - Không xóa dòng filter trong Sheet trừ khi chắc chắn; nếu xóa, tạo lại cùng **ID** (email) từ app hoặc Sheet.
 
 **Kiểm tra nhanh:** Mở Google Sheet → tab **`FIN_EXPORT_FILTER`** → tìm cột **ID** có giá trị trùng với key trong thông báo lỗi. Nếu **không có dòng đó** → tạo lại dòng đúng Key hoặc tạo dòng mới với quy ước **ID = email** rồi lưu từ AppSheet.
+
+---
+
+## Phần 10 — Event-driven core (FINANCE, không đổi thao tác user)
+
+Các thao tác xác nhận / hủy / lưu trữ giao dịch vẫn như các phần trên. Phía GAS ghi thêm **`EVENT_QUEUE`** và (khi có rule trong **`RULE_DEF`**) xử lý batch qua menu **CBV PRO → Bootstrap & init → Process EVENT_QUEUE now** hoặc trigger 5 phút. Action **`SEND_ALERT`** ghi **`ADMIN_AUDIT_LOG`** (audit nội bộ, không bắt user AppSheet đổi gì).
+
+Chi tiết kiến trúc, bảng mẫu `RULE_DEF`, danh sách `EVENT_TYPE`: **`00_OVERVIEW/EVENT_DRIVEN_MIGRATION_PLAN.md`**.

@@ -10,6 +10,7 @@
  *
  * Menu structure:
  * 1. Daily operations
+ * 1b. Sheet — ẩn/hiện theo nhóm
  * 2. Bootstrap & init
  * 3. Audit & health
  * 4. Master data
@@ -41,6 +42,17 @@ function buildCbvProMenu_() {
       .addItem('Daily admin guide', 'showDailyAdminGuide')
   );
 
+  menu.addSubMenu(
+    ui.createMenu('Sheet — ẩn/hiện theo nhóm')
+      .addSubMenu(ui.createMenu('Master & dùng chung').addItem('Hiện các tab nhóm này', 'menuCbvSheetsShowCore').addItem('Ẩn các tab nhóm này', 'menuCbvSheetsHideCore'))
+      .addSubMenu(ui.createMenu('ADMIN_AUDIT_LOG').addItem('Hiện', 'menuCbvSheetsShowAudit').addItem('Ẩn', 'menuCbvSheetsHideAudit'))
+      .addSubMenu(ui.createMenu('SYSTEM_HEALTH_LOG').addItem('Hiện', 'menuCbvSheetsShowHealth').addItem('Ẩn', 'menuCbvSheetsHideHealth'))
+      .addSubMenu(ui.createMenu('Hồ sơ (HO_SO)').addItem('Hiện', 'menuCbvSheetsShowHoso').addItem('Ẩn', 'menuCbvSheetsHideHoso'))
+      .addSubMenu(ui.createMenu('Công việc (TASK)').addItem('Hiện', 'menuCbvSheetsShowTask').addItem('Ẩn', 'menuCbvSheetsHideTask'))
+      .addSubMenu(ui.createMenu('Tài chính').addItem('Hiện', 'menuCbvSheetsShowFinance').addItem('Ẩn', 'menuCbvSheetsHideFinance'))
+      .addSubMenu(ui.createMenu('Sự kiện & quy tắc').addItem('Hiện', 'menuCbvSheetsShowEventRule').addItem('Ẩn', 'menuCbvSheetsHideEventRule'))
+  );
+
   // 2. Bootstrap & init
   menu.addSubMenu(
     ui.createMenu('Bootstrap & init')
@@ -50,6 +62,11 @@ function buildCbvProMenu_() {
       .addItem('Protect sensitive sheets', 'menuProtectSensitiveSheets')
       .addItem('Install time-based triggers', 'menuInstallTriggers')
       .addItem('Remove time-based triggers', 'menuRemoveTriggers')
+      .addSeparator()
+      .addItem('Install ALL CBV triggers (bootstrap + task + EVENT_QUEUE)', 'menuInstallAllCbvTriggers')
+      .addItem('Remove ALL CBV triggers', 'menuRemoveAllCbvTriggers')
+      .addItem('Reinstall ALL CBV triggers (remove then install)', 'menuReinstallAllCbvTriggers')
+      .addSeparator()
       .addItem('Install onEdit trigger (tasks)', 'menuInstallOnEditTrigger')
       .addItem('Remove onEdit trigger (tasks)', 'menuUninstallOnEditTrigger')
       .addSeparator()

@@ -182,6 +182,19 @@ registerAction({
 });
 
 registerAction({
+  action: 'deleteAttachment',
+  idParam: 'taskId',
+  label: 'Xóa file đính kèm',
+  validStatuses: [],
+  adapter: PENDING_ADAPTER_TASK,
+  handler: function(id, body) {
+    var aid = String((body && (body.attachmentId != null ? body.attachmentId : body.attachment_id)) || '').trim();
+    _webhookRequireParam(aid, 'attachmentId');
+    return removeTaskAttachment(id, aid);
+  }
+});
+
+registerAction({
   action: 'hosoActivate',
   idParam: 'hoSoId',
   label: 'Kích hoạt hồ sơ',

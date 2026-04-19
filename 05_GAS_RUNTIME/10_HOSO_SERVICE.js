@@ -124,6 +124,16 @@ function createHoSo(data) {
   hosoRepoAppend(CBV_CONFIG.SHEETS.HO_SO_MASTER, record);
   hosoAppendLogEntry(id, 'CREATE', { NOTE: 'HO_SO created', NEW_VALUE: record.HO_SO_CODE });
 
+  if (typeof cbvTryEmitCoreEvent_ === 'function') {
+    cbvTryEmitCoreEvent_({
+      eventType: typeof CBV_CORE_EVENT_TYPE_HO_SO_CREATED !== 'undefined' ? CBV_CORE_EVENT_TYPE_HO_SO_CREATED : 'HO_SO_CREATED',
+      sourceModule: 'HO_SO',
+      refId: id,
+      entityType: 'HO_SO_MASTER',
+      payload: { STATUS: record.STATUS, HO_SO_TYPE_ID: record.HO_SO_TYPE_ID, HO_SO_CODE: record.HO_SO_CODE }
+    });
+  }
+
   return cbvResponse(true, 'HOSO_CREATED', 'Hồ sơ đã tạo', record, []);
 }
 
@@ -225,6 +235,16 @@ function changeHosoStatus(id, newStatus, note) {
     NEW_STATUS: ns,
     NOTE: note || ''
   });
+
+  if (typeof cbvTryEmitCoreEvent_ === 'function') {
+    cbvTryEmitCoreEvent_({
+      eventType: typeof CBV_CORE_EVENT_TYPE_HO_SO_STATUS_CHANGED !== 'undefined' ? CBV_CORE_EVENT_TYPE_HO_SO_STATUS_CHANGED : 'HO_SO_STATUS_CHANGED',
+      sourceModule: 'HO_SO',
+      refId: id,
+      entityType: 'HO_SO_MASTER',
+      payload: { previousStatus: String(current.STATUS || ''), newStatus: ns, note: note || '' }
+    });
+  }
 
   return cbvResponse(true, 'HOSO_STATUS_CHANGED', 'Đã đổi trạng thái', next, []);
 }

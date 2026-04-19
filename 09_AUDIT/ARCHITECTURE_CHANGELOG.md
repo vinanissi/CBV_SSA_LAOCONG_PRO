@@ -76,3 +76,11 @@
 - **Emission:** `30_FINANCE_SERVICE.js` calls `cbvTryEmitCoreEvent_` on create + status change (`FINANCE_CREATED`, `FINANCE_STATUS_CHANGED`).
 - **Docs:** `00_OVERVIEW/EVENT_DRIVEN_MIGRATION_PLAN.md` (audit + migration phases). Script property `CBV_CORE_EVENT_MODE`: `off` | `shadow` (default) | `on`.
 - **Menu / trigger:** `04_CORE_EVENT_TRIGGERS.js` — `CBV PRO` → Bootstrap & init → Process EVENT_QUEUE now; Install/Remove EVENT_QUEUE trigger (every 5 min).
+
+---
+
+## 2026-04-19 — Event-driven core (P2 emit + SEND_ALERT audit)
+
+- **Emit:** `20_TASK_SERVICE.js` (`TASK_*` events), `10_HOSO_SERVICE.js` (`HO_SO_*` events); webhook `checklistDone` / `addLog` covered via task service.
+- **`executeCoreAction_`:** `SEND_ALERT` → `logAdminAudit` → **`ADMIN_AUDIT_LOG`** (`AUDIT_TYPE` `CORE_RULE`, actor `cbvSystemActor()`).
+- **Docs / samples:** `00_OVERVIEW/RULE_DEF_SAMPLE_ROWS_TASK_HOSO.tsv`, `EVENT_DRIVEN_MIGRATION_PLAN.md`, `02_MODULES/FINANCE/APPSHEET_OPERATIONS_GUIDE.md` §10; `DEPENDENCY_MAP.md` updated.
