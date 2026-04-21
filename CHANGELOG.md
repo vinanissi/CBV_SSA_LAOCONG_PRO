@@ -1,5 +1,55 @@
 # CHANGELOG
 
+## 2026-04-21 — HO_SO Phase D (RULE_DEF authoritative + pluggable action registry)
+
+Close the event-driven loop: every HO_SO event emitted in Phase A now has an enabled row in `RULE_DEF`, and the core processor dispatches module logic through a typed allowlist instead of stubs.
+
+### Added — core: pluggable action registry
+- `05_GAS_RUNTIME/04_CORE_ACTION_REGISTRY.js` (new). Exposes `cbvRegisterCoreAction_(name, fn)`, `cbvResolveCoreAction_(name)`, `cbvListCoreActions_()`, and the template resolver `cbvResolveCoreActionParams_(value, context)` for `$payload.*` / `$event.*` substitution.
+- `04_CORE_EVENT_PROCESSOR.js::executeCoreAction_` — new action type `INVOKE_SERVICE`. Resolves `params.handler` via registry, substitutes `params.args` template tokens, invokes in try/catch. Failures log `INVOKE_SERVICE_FAILED` to `ADMIN_AUDIT_LOG` (unknown handlers log to `Logger` without raising). Keeps the core module-agnostic — business logic never re-enters the processor.
+
+### Added — HO_SO action handlers (registered at load time)
+- `10_HOSO_EVENTS.js::hosoActionRecheckCompleteness_(args)` → calls `hosoCheckCompleteness(args.hosoId)`. Used by `HO_SO_FILE_ADDED` / `HO_SO_FILE_REMOVED` rules.
+- `10_HOSO_EVENTS.js::hosoActionLogAudit_(args, ctx)` → writes a structured `ADMIN_AUDIT_LOG` entry tagged with `MODULE=HO_SO`. Used by every HO_SO rule so the queue has a persistent audit record even when the side-effect is a no-op.
+- `10_HOSO_EVENTS.js::hosoRegisterCoreActionHandlers_()` — idempotent registration; auto-invoked by an IIFE at load time so triggered / webhook entry points work without menu bootstrap.
+
+### Added — authoritative RULE_DEF seed (idempotent)
+- `10_HOSO_SEED.js::hosoCoreRuleSpecs_()` — single source-of-truth for 9 canonical HO_SO rules.
+- `10_HOSO_SEED.js::hosoSeedCoreRules_()` — upserts by `RULE_CODE` (unique, `HOSO_`-prefixed). Bumps `VERSION` + `UPDATED_AT` on change; no-op on match.
+
+| RULE_CODE | EVENT_TYPE | PRIORITY | ACTIONS |
+|-----------|------------|---------:|---------|
+| `HOSO_CREATED_AUDIT` | `HO_SO_CREATED` | 10 | `HOSO_LOG_AUDIT` |
+| `HOSO_UPDATED_AUDIT` | `HO_SO_UPDATED` | 10 | `HOSO_LOG_AUDIT` |
+| `HOSO_STATUS_CHANGED_AUDIT` | `HO_SO_STATUS_CHANGED` | 10 | `HOSO_LOG_AUDIT` |
+| `HOSO_CLOSED_AUDIT` | `HO_SO_CLOSED` | 10 | `HOSO_LOG_AUDIT` |
+| `HOSO_DELETED_AUDIT` | `HO_SO_DELETED` | 10 | `HOSO_LOG_AUDIT` |
+| `HOSO_FILE_ADDED_RECHECK` | `HO_SO_FILE_ADDED` | 20 | `HOSO_LOG_AUDIT` + `HOSO_RECHECK_COMPLETENESS` |
+| `HOSO_FILE_REMOVED_RECHECK` | `HO_SO_FILE_REMOVED` | 20 | `HOSO_LOG_AUDIT` + `HOSO_RECHECK_COMPLETENESS` |
+| `HOSO_RELATION_ADDED_AUDIT` | `HO_SO_RELATION_ADDED` | 30 | `HOSO_LOG_AUDIT` |
+| `HOSO_RELATION_REMOVED_AUDIT` | `HO_SO_RELATION_REMOVED` | 30 | `HOSO_LOG_AUDIT` |
+
+- `10_HOSO_BOOTSTRAP.js::hosoFullDeployImpl` — new step `seedHosoCoreRules` runs after `seedHosoMasterData`.
+
+### Added — coverage audit + smoke step
+- `10_HOSO_AUDIT_REPAIR.js::auditHosoRuleDefCoverage_()`. For each of the 9 `HO_SO_*` event constants: asserts ≥1 enabled `RULE_DEF` row. For each `INVOKE_SERVICE` action referenced by any rule: asserts handler is registered in the core registry. Finding codes: `HOSO_EVENT_NO_RULE` (HIGH), `HOSO_RULE_UNKNOWN_HANDLER` (HIGH), `HOSO_RULE_BAD_ACTIONS_JSON` (MEDIUM), `HOSO_RULE_DEF_SHEET_MISSING` (HIGH).
+- `10_HOSO_WRAPPERS.js::hosoAudit()` — aggregates `ruleCoverage` result; `ok=false` if any HIGH.
+- `10_HOSO_TEST.js::runHosoSmokeTestImpl` — adds a `'auditHosoRuleDefCoverage_'` step so smoke runs fail loud on uncovered events.
+
+### Push order
+- `.clasp.json` + `CLASP_PUSH_ORDER.md` — new entry `18c1 04_CORE_ACTION_REGISTRY.js` between `04_CORE_RULE_ENGINE.js` and `04_CORE_EVENT_PROCESSOR.js`.
+
+### Migration notes
+- RULE_DEF rows are idempotent — re-running `hosoSeedCoreRules_()` is safe. Upgrading from a shadow-mode deployment: no action needed; `hosoFullDeploy()` seeds rules automatically on next run.
+- The legacy `SEND_ALERT` action still works; prefer `INVOKE_SERVICE` → `HOSO_LOG_AUDIT` for new rules so the audit record is structured and module-tagged.
+- To add a side-effect to an existing HO_SO event: edit `hosoCoreRuleSpecs_()`, append a new `{ type: 'INVOKE_SERVICE', params: { handler: 'NEW_HANDLER', args: {...} } }` action, register `NEW_HANDLER` via `cbvRegisterCoreAction_` in the owning module's events file, re-run `hosoSeedCoreRules_()`.
+
+### Verification
+- `rg "INVOKE_SERVICE" 05_GAS_RUNTIME/*.js` — must find the processor handler (`04_CORE_EVENT_PROCESSOR.js`), the registry helper (`04_CORE_ACTION_REGISTRY.js`), the rule specs (`10_HOSO_SEED.js`), the audit probe (`10_HOSO_AUDIT_REPAIR.js`), and the events file (`10_HOSO_EVENTS.js`).
+- After `clasp push` + `hosoFullDeploy()`: `hosoAudit().ruleCoverage.ok === true` and `ruleCoverage.coverage.events[E].enabled >= 1` for every `HO_SO_*` event.
+
+---
+
 ## 2026-04-21 — HO_SO Phase C (delete deprecated wrappers + canonical-only gate)
 
 **Breaking for anyone still using the legacy HO_SO names inside this repo.** External contracts (AppSheet webhook actions, Lovable gateway `action` strings such as `createHoSo`/`generateHoSoReport`, sheet schemas) are unchanged.

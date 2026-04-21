@@ -25,7 +25,7 @@ function hosoRunSmokeTest() {
 // Audit
 // ---------------------------------------------------------------------------
 
-/** Canonical: full HO_SO module audit (schema + refs + enums + data quality + HTX integrity + canonical-only gate). */
+/** Canonical: full HO_SO module audit (schema + refs + enums + data quality + HTX integrity + canonical-only gate + rule-def coverage). */
 function hosoAudit() {
   var schema = auditHosoSchema();
   var refs = auditHosoRefs();
@@ -33,7 +33,8 @@ function hosoAudit() {
   var dq = auditHosoDataQuality();
   var htx = typeof auditHosoHtxIntegrity === 'function' ? auditHosoHtxIntegrity() : { ok: true, findings: [] };
   var canonical = typeof auditHosoCanonicalOnly_ === 'function' ? auditHosoCanonicalOnly_() : { ok: true, findings: [] };
-  var high = [schema, refs, enums, dq, htx, canonical].reduce(function(n, x) {
+  var ruleCoverage = typeof auditHosoRuleDefCoverage_ === 'function' ? auditHosoRuleDefCoverage_() : { ok: true, findings: [], coverage: {} };
+  var high = [schema, refs, enums, dq, htx, canonical, ruleCoverage].reduce(function(n, x) {
     return n + (x.findings || []).filter(function(f) { return f.severity === 'HIGH'; }).length;
   }, 0);
   return {
@@ -43,7 +44,8 @@ function hosoAudit() {
     enums: enums,
     dataQuality: dq,
     htx: htx,
-    canonical: canonical
+    canonical: canonical,
+    ruleCoverage: ruleCoverage
   };
 }
 

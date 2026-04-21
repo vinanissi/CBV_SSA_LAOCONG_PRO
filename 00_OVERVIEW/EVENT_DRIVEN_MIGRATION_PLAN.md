@@ -6,6 +6,8 @@
 
 This document records the **repository audit**, the **target architecture** (MODULE → EVENT → CORE → RULE → ACTION), and the **phased rollout**. Implementation artifacts live in `05_GAS_RUNTIME/04_CORE_*.js` and sheets `EVENT_QUEUE`, `RULE_DEF`.
 
+> **2026-04-21 — HO_SO closes the loop (Phase D).** RULE_DEF is now authoritative for HO_SO: 9 canonical rules seeded via `hosoSeedCoreRules_()`, handlers registered through `cbvRegisterCoreAction_` (`04_CORE_ACTION_REGISTRY.js`), and the processor dispatches via `INVOKE_SERVICE` (`04_CORE_EVENT_PROCESSOR.js`). Coverage audit `auditHosoRuleDefCoverage_()` fails the smoke test if any HO_SO event lacks an enabled rule or references an unregistered handler. This satisfies **W2** for HO_SO (non-STUB core action path exists + tested) and **P7** (second non-`SEND_ALERT` side-effect: `HOSO_RECHECK_COMPLETENESS` runs on file add/remove). FINANCE and TASK still follow the pre-Phase-D stub path pending their own rule wiring.
+
 ## Next steps (ưu tiên vận hành & code)
 
 1. **Deploy & triggers** — `clasp push`; menu CBV PRO → **Bootstrap & init** → **Install ALL CBV triggers** (hoặc từng nhóm); đảm bảo `CBV_CORE_EVENT_MODE` ≠ `off` nếu cần ghi `EVENT_QUEUE`.

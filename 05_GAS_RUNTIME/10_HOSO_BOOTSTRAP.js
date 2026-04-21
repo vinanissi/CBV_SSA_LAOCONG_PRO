@@ -74,6 +74,7 @@ function hosoFullDeployImpl(opts) {
   push('ensureHosoSheets', function() { return ensureHosoSheets_(); });
   push('seedEnumDictionary', function() { return ensureHosoEnums_(); });
   push('seedHosoMasterData', function() { return seedHosoMasterData_(); });
+  push('seedHosoCoreRules', function() { return typeof hosoSeedCoreRules_ === 'function' ? hosoSeedCoreRules_() : { ok: false, message: 'hosoSeedCoreRules_ missing' }; });
   if (includeMigration) {
     push('migrateHosoLegacyToPro', function() { return typeof migrateHosoLegacyToPro_ === 'function' ? migrateHosoLegacyToPro_() : { ok: false, message: 'migrateHosoLegacyToPro_ missing' }; });
   } else {

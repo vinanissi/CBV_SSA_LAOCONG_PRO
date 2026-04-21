@@ -130,3 +130,136 @@ function seedHosoDemoData_() {
     SUMMARY: 'Seeded by seedHosoDemoData_'
   });
 }
+
+// ---------------------------------------------------------------------------
+// Phase D (2026-04-21): authoritative RULE_DEF seed for HO_SO.
+// Every emitted HO_SO event MUST have ≥1 enabled rule. A rule whose only
+// action is NOOP still makes RULE_DEF the contract, because:
+//   - auditHosoRuleDefCoverage_ passes,
+//   - downstream owners can add side-effects by editing ACTIONS_JSON,
+//   - the event remains observable in ADMIN_AUDIT_LOG via the queue.
+// Upsert key: RULE_CODE (unique, prefixed HOSO_).
+// ---------------------------------------------------------------------------
+
+/**
+ * Canonical HO_SO rule specs. ACTIONS_JSON is an array; stored as JSON string.
+ * @returns {Array<Object>}
+ */
+function hosoCoreRuleSpecs_() {
+  var EVT = {
+    CREATED: typeof CBV_CORE_EVENT_TYPE_HO_SO_CREATED !== 'undefined' ? CBV_CORE_EVENT_TYPE_HO_SO_CREATED : 'HO_SO_CREATED',
+    UPDATED: typeof CBV_CORE_EVENT_TYPE_HO_SO_UPDATED !== 'undefined' ? CBV_CORE_EVENT_TYPE_HO_SO_UPDATED : 'HO_SO_UPDATED',
+    STATUS_CHANGED: typeof CBV_CORE_EVENT_TYPE_HO_SO_STATUS_CHANGED !== 'undefined' ? CBV_CORE_EVENT_TYPE_HO_SO_STATUS_CHANGED : 'HO_SO_STATUS_CHANGED',
+    CLOSED: typeof CBV_CORE_EVENT_TYPE_HO_SO_CLOSED !== 'undefined' ? CBV_CORE_EVENT_TYPE_HO_SO_CLOSED : 'HO_SO_CLOSED',
+    DELETED: typeof CBV_CORE_EVENT_TYPE_HO_SO_DELETED !== 'undefined' ? CBV_CORE_EVENT_TYPE_HO_SO_DELETED : 'HO_SO_DELETED',
+    FILE_ADDED: typeof CBV_CORE_EVENT_TYPE_HO_SO_FILE_ADDED !== 'undefined' ? CBV_CORE_EVENT_TYPE_HO_SO_FILE_ADDED : 'HO_SO_FILE_ADDED',
+    FILE_REMOVED: typeof CBV_CORE_EVENT_TYPE_HO_SO_FILE_REMOVED !== 'undefined' ? CBV_CORE_EVENT_TYPE_HO_SO_FILE_REMOVED : 'HO_SO_FILE_REMOVED',
+    RELATION_ADDED: typeof CBV_CORE_EVENT_TYPE_HO_SO_RELATION_ADDED !== 'undefined' ? CBV_CORE_EVENT_TYPE_HO_SO_RELATION_ADDED : 'HO_SO_RELATION_ADDED',
+    RELATION_REMOVED: typeof CBV_CORE_EVENT_TYPE_HO_SO_RELATION_REMOVED !== 'undefined' ? CBV_CORE_EVENT_TYPE_HO_SO_RELATION_REMOVED : 'HO_SO_RELATION_REMOVED'
+  };
+
+  var auditAction = function(label) {
+    return {
+      type: 'INVOKE_SERVICE',
+      params: {
+        handler: 'HOSO_LOG_AUDIT',
+        args: { action: label, message: label + ' $event.REF_ID' }
+      }
+    };
+  };
+  var recheckAction = {
+    type: 'INVOKE_SERVICE',
+    params: {
+      handler: 'HOSO_RECHECK_COMPLETENESS',
+      args: { hosoId: '$event.REF_ID' }
+    }
+  };
+
+  return [
+    { code: 'HOSO_CREATED_AUDIT',           priority: 10, eventType: EVT.CREATED,          note: 'Audit every new HO_SO',                                         actions: [auditAction('HO_SO_CREATED')] },
+    { code: 'HOSO_UPDATED_AUDIT',           priority: 10, eventType: EVT.UPDATED,          note: 'Audit every HO_SO field mutation',                              actions: [auditAction('HO_SO_UPDATED')] },
+    { code: 'HOSO_STATUS_CHANGED_AUDIT',    priority: 10, eventType: EVT.STATUS_CHANGED,   note: 'Audit every status transition',                                 actions: [auditAction('HO_SO_STATUS_CHANGED')] },
+    { code: 'HOSO_CLOSED_AUDIT',            priority: 10, eventType: EVT.CLOSED,           note: 'Audit close events (separate from generic status change)',       actions: [auditAction('HO_SO_CLOSED')] },
+    { code: 'HOSO_DELETED_AUDIT',           priority: 10, eventType: EVT.DELETED,          note: 'Audit soft-delete',                                             actions: [auditAction('HO_SO_DELETED')] },
+    { code: 'HOSO_FILE_ADDED_RECHECK',      priority: 20, eventType: EVT.FILE_ADDED,       note: 'Recompute completeness when a file is attached',                actions: [auditAction('HO_SO_FILE_ADDED'), recheckAction] },
+    { code: 'HOSO_FILE_REMOVED_RECHECK',    priority: 20, eventType: EVT.FILE_REMOVED,     note: 'Recompute completeness when a file is detached',                actions: [auditAction('HO_SO_FILE_REMOVED'), recheckAction] },
+    { code: 'HOSO_RELATION_ADDED_AUDIT',    priority: 30, eventType: EVT.RELATION_ADDED,   note: 'Audit new relation edge',                                        actions: [auditAction('HO_SO_RELATION_ADDED')] },
+    { code: 'HOSO_RELATION_REMOVED_AUDIT',  priority: 30, eventType: EVT.RELATION_REMOVED, note: 'Audit relation removal',                                         actions: [auditAction('HO_SO_RELATION_REMOVED')] }
+  ];
+}
+
+/**
+ * Idempotent upsert of canonical HO_SO rules into RULE_DEF.
+ * Upsert key: RULE_CODE. Enabled=true. Bumps UPDATED_AT and VERSION on change.
+ * @returns {{ok:boolean, added:number, updated:number, skipped:number, total:number}}
+ */
+function hosoSeedCoreRules_() {
+  var sheetName = CBV_CONFIG && CBV_CONFIG.SHEETS && CBV_CONFIG.SHEETS.RULE_DEF;
+  if (!sheetName) return { ok: false, message: 'RULE_DEF sheet name missing in CBV_CONFIG' };
+  if (!SpreadsheetApp.getActive().getSheetByName(sheetName)) {
+    return { ok: false, message: 'RULE_DEF sheet missing — run ensureCoreSheetsExist first' };
+  }
+
+  var sheet = typeof _sheet === 'function' ? _sheet(sheetName) : null;
+  var rows = sheet && typeof _rows === 'function' ? _rows(sheet) : [];
+  var byCode = {};
+  rows.forEach(function(r) {
+    if (!r) return;
+    var code = String(r.RULE_CODE || '').trim();
+    if (code) byCode[code] = r;
+  });
+
+  var specs = hosoCoreRuleSpecs_();
+  var now = cbvNow();
+  var user = cbvUser();
+  var added = 0;
+  var updated = 0;
+  var skipped = 0;
+
+  specs.forEach(function(spec) {
+    var actionsJson = JSON.stringify(spec.actions || []);
+    var existing = byCode[spec.code];
+    if (!existing) {
+      var rec = {
+        ID: cbvMakeId('RULE'),
+        RULE_CODE: spec.code,
+        PRIORITY: spec.priority,
+        ENABLED: true,
+        EVENT_TYPE: spec.eventType,
+        CONDITION_JSON: '',
+        ACTIONS_JSON: actionsJson,
+        TARGET_MODULE: 'HO_SO',
+        NOTE: spec.note || '',
+        VERSION: 1,
+        CREATED_AT: now,
+        UPDATED_AT: now
+      };
+      if (typeof _appendRecord === 'function') _appendRecord(sheetName, rec);
+      added++;
+      return;
+    }
+    var needsUpdate =
+      String(existing.EVENT_TYPE || '').trim() !== spec.eventType ||
+      String(existing.ACTIONS_JSON || '').trim() !== actionsJson ||
+      String(existing.TARGET_MODULE || '').trim() !== 'HO_SO' ||
+      Number(existing.PRIORITY || 0) !== Number(spec.priority) ||
+      !(existing.ENABLED === true || String(existing.ENABLED || '').toUpperCase() === 'TRUE');
+    if (!needsUpdate) { skipped++; return; }
+    if (typeof _updateRow === 'function' && existing._rowNumber) {
+      _updateRow(sheetName, existing._rowNumber, {
+        PRIORITY: spec.priority,
+        ENABLED: true,
+        EVENT_TYPE: spec.eventType,
+        ACTIONS_JSON: actionsJson,
+        TARGET_MODULE: 'HO_SO',
+        NOTE: spec.note || existing.NOTE || '',
+        VERSION: Number(existing.VERSION || 0) + 1,
+        UPDATED_AT: now
+      });
+      updated++;
+    }
+  });
+
+  Logger.log('hosoSeedCoreRules_ ok added=' + added + ' updated=' + updated + ' skipped=' + skipped);
+  return { ok: true, added: added, updated: updated, skipped: skipped, total: specs.length };
+}

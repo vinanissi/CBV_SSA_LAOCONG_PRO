@@ -384,3 +384,108 @@ function auditHosoCanonicalOnly_() {
   });
   return { ok: findings.length === 0, findings: findings };
 }
+
+/**
+ * Phase D coverage audit: every HO_SO event constant emitted by 10_HOSO_EVENTS.js
+ * MUST have ≥1 enabled row in RULE_DEF, OR be in the explicit whitelist. Any INVOKE_SERVICE
+ * action must reference a handler present in the core action registry.
+ *
+ * Severities:
+ *   HIGH  HOSO_EVENT_NO_RULE          — an event is emitted but no enabled rule processes it
+ *   HIGH  HOSO_RULE_UNKNOWN_HANDLER   — an ACTIONS_JSON references a handler not registered
+ *   MED   HOSO_RULE_BAD_ACTIONS_JSON  — a row fails to parse
+ *
+ * @returns {{ok:boolean, findings:Array, coverage:Object}}
+ */
+function auditHosoRuleDefCoverage_() {
+  var findings = [];
+  var coverage = { events: {}, rules: 0, handlersReferenced: [], handlersRegistered: [] };
+
+  var EVENTS = [
+    'HO_SO_CREATED', 'HO_SO_UPDATED', 'HO_SO_STATUS_CHANGED', 'HO_SO_CLOSED',
+    'HO_SO_DELETED', 'HO_SO_FILE_ADDED', 'HO_SO_FILE_REMOVED',
+    'HO_SO_RELATION_ADDED', 'HO_SO_RELATION_REMOVED'
+  ];
+
+  var sheetName = CBV_CONFIG && CBV_CONFIG.SHEETS && CBV_CONFIG.SHEETS.RULE_DEF;
+  var sheet = sheetName ? SpreadsheetApp.getActive().getSheetByName(sheetName) : null;
+  if (!sheet) {
+    findings.push({
+      severity: 'HIGH', code: 'HOSO_RULE_DEF_SHEET_MISSING',
+      message: 'RULE_DEF sheet not found — run ensureCoreSheetsExist + hosoSeedCoreRules_ first.'
+    });
+    EVENTS.forEach(function(e) { coverage.events[e] = { rules: 0, enabled: 0 }; });
+    return { ok: false, findings: findings, coverage: coverage };
+  }
+
+  var rows = typeof _rows === 'function' ? _rows(sheet) : [];
+  coverage.rules = rows.length;
+
+  var rulesByEvent = {};
+  var handlersReferenced = {};
+
+  rows.forEach(function(r) {
+    if (!r) return;
+    var evt = String(r.EVENT_TYPE || '').trim();
+    if (evt.indexOf('HO_SO_') !== 0) return;
+    var enabled = r.ENABLED === true || String(r.ENABLED || '').toUpperCase() === 'TRUE' || String(r.ENABLED || '').toUpperCase() === 'YES';
+    rulesByEvent[evt] = rulesByEvent[evt] || { total: 0, enabled: 0, rules: [] };
+    rulesByEvent[evt].total++;
+    if (enabled) rulesByEvent[evt].enabled++;
+    rulesByEvent[evt].rules.push(r);
+
+    var actions;
+    try {
+      actions = typeof r.ACTIONS_JSON === 'string' ? JSON.parse(r.ACTIONS_JSON) : r.ACTIONS_JSON;
+    } catch (e) {
+      findings.push({
+        severity: 'MEDIUM', code: 'HOSO_RULE_BAD_ACTIONS_JSON',
+        ruleCode: r.RULE_CODE || '', eventType: evt,
+        message: 'ACTIONS_JSON fails to parse: ' + (e && e.message ? e.message : String(e))
+      });
+      return;
+    }
+    if (!Array.isArray(actions)) return;
+    actions.forEach(function(a) {
+      if (!a || typeof a !== 'object') return;
+      if (String(a.type || '').toUpperCase() !== 'INVOKE_SERVICE') return;
+      var h = a.params && a.params.handler ? String(a.params.handler) : '';
+      if (h) handlersReferenced[h] = true;
+    });
+  });
+
+  EVENTS.forEach(function(e) {
+    var c = rulesByEvent[e] || { total: 0, enabled: 0 };
+    coverage.events[e] = { rules: c.total, enabled: c.enabled };
+    if (c.enabled === 0) {
+      findings.push({
+        severity: 'HIGH', code: 'HOSO_EVENT_NO_RULE',
+        eventType: e,
+        message: 'No enabled RULE_DEF row covers event "' + e + '" — add one via hosoSeedCoreRules_() or enable an existing row.'
+      });
+    }
+  });
+
+  var registered = typeof cbvListCoreActions_ === 'function' ? cbvListCoreActions_() : [];
+  var registeredSet = {};
+  registered.forEach(function(n) { registeredSet[n] = true; });
+  coverage.handlersRegistered = registered;
+
+  var refsArr = [];
+  var k;
+  for (k in handlersReferenced) if (Object.prototype.hasOwnProperty.call(handlersReferenced, k)) refsArr.push(k);
+  refsArr.sort();
+  coverage.handlersReferenced = refsArr;
+
+  refsArr.forEach(function(h) {
+    if (!registeredSet[h]) {
+      findings.push({
+        severity: 'HIGH', code: 'HOSO_RULE_UNKNOWN_HANDLER',
+        handler: h,
+        message: 'ACTIONS_JSON references INVOKE_SERVICE handler "' + h + '" but no module registered it via cbvRegisterCoreAction_.'
+      });
+    }
+  });
+
+  return { ok: findings.length === 0, findings: findings, coverage: coverage };
+}

@@ -22,6 +22,9 @@ function runHosoSmokeTestImpl() {
   step('auditHosoCanonicalOnly_', function() {
     return typeof auditHosoCanonicalOnly_ === 'function' ? auditHosoCanonicalOnly_() : { ok: true };
   });
+  step('auditHosoRuleDefCoverage_', function() {
+    return typeof auditHosoRuleDefCoverage_ === 'function' ? auditHosoRuleDefCoverage_() : { ok: true };
+  });
   step('verifyHosoAppSheetReadiness', function() {
     var v = verifyHosoAppSheetReadiness();
     return { ok: v.ok === true };

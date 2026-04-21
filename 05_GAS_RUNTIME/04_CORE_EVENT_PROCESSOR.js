@@ -1,8 +1,13 @@
 /**
  * Event-driven core — process EVENT_QUEUE rows against RULE_DEF.
- * Depends: 04_CORE_RULE_ENGINE, 03_SHARED_REPOSITORY, 00_CORE_UTILS, 04_CORE_EVENT_TYPES, 03_SHARED_LOGGER (`logAdminAudit` — load order: LOGGER before this file).
+ * Depends: 04_CORE_RULE_ENGINE, 04_CORE_ACTION_REGISTRY, 03_SHARED_REPOSITORY, 00_CORE_UTILS, 04_CORE_EVENT_TYPES, 03_SHARED_LOGGER.
  *
- * Action handlers: SEND_ALERT → ADMIN_AUDIT_LOG; NOOP explicit skip; CREATE_* / UPDATE_STATUS remain stubs.
+ * Action types:
+ *   SEND_ALERT      → ADMIN_AUDIT_LOG
+ *   INVOKE_SERVICE  → dispatch to a module handler registered via cbvRegisterCoreAction_;
+ *                     params.args are template-resolved (see cbvResolveCoreActionParams_).
+ *   NOOP / NONE     → explicit no-op (useful for "I just want an audit trail")
+ *   CREATE_TASK / CREATE_FINANCE / UPDATE_STATUS → stubs (will be migrated to INVOKE_SERVICE)
  */
 
 /**
@@ -89,6 +94,35 @@ function executeCoreAction_(action, context) {
     return;
   }
   if (type === 'NOOP' || type === 'NONE') {
+    return;
+  }
+  if (type === 'INVOKE_SERVICE') {
+    var handlerName = String(params.handler || '').trim();
+    var fn = typeof cbvResolveCoreAction_ === 'function' ? cbvResolveCoreAction_(handlerName) : null;
+    if (!fn) {
+      Logger.log('[executeCoreAction_] INVOKE_SERVICE unknown handler: ' + handlerName + ' evt=' + (evt.ID || ''));
+      return;
+    }
+    var resolved = typeof cbvResolveCoreActionParams_ === 'function'
+      ? cbvResolveCoreActionParams_(params.args, context)
+      : (params.args || {});
+    try {
+      fn(resolved, context);
+    } catch (e) {
+      Logger.log('[executeCoreAction_] INVOKE_SERVICE ' + handlerName + ' threw: ' + (e && e.message ? e.message : String(e)));
+      if (typeof logAdminAudit === 'function') {
+        logAdminAudit(
+          'CORE_RULE',
+          String(evt.EVENT_TYPE || 'UNKNOWN'),
+          String(evt.ID || ''),
+          'INVOKE_SERVICE_FAILED',
+          { handler: handlerName, args: resolved, error: String(e && e.message ? e.message : e) },
+          {},
+          'INVOKE_SERVICE ' + handlerName + ' failed',
+          { actorId: typeof cbvSystemActor === 'function' ? cbvSystemActor() : undefined }
+        );
+      }
+    }
     return;
   }
   if (type === 'CREATE_TASK' || type === 'CREATE_FINANCE' || type === 'UPDATE_STATUS') {
