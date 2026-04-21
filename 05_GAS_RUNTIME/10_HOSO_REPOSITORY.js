@@ -118,3 +118,90 @@ function hosoRepoFindRelationById(relationId) {
   var rows = hosoRepoRows(CBV_CONFIG.SHEETS.HO_SO_RELATION);
   return rows.find(function(r) { return String(r.ID || '').trim() === String(relationId || '').trim(); }) || null;
 }
+
+/**
+ * Resolve a MASTER_CODE row by ID. Service/gateway code MUST go through this,
+ * never through _findById(MASTER_CODE, ...) directly.
+ * @param {string} id MASTER_CODE.ID
+ * @returns {object|null}
+ */
+function hosoRepoFindMasterCodeById(id) {
+  if (!id) return null;
+  return typeof _findById === 'function' ? _findById(CBV_CONFIG.SHEETS.MASTER_CODE, id) : null;
+}
+
+/**
+ * Index MASTER_CODE.ID → CODE for group HO_SO_TYPE (one read per request).
+ * Per-request memoization via cbv_hosoTypeIdToCode_.
+ * @returns {Object<string,string>}
+ */
+function hosoRepoMasterCodeIndexForHoSoType() {
+  if (typeof cbv_hosoTypeIdToCode_ !== 'undefined' && cbv_hosoTypeIdToCode_) {
+    return cbv_hosoTypeIdToCode_;
+  }
+  var index = Object.create(null);
+  var rows = typeof hosoRepoRows === 'function' ? hosoRepoRows(CBV_CONFIG.SHEETS.MASTER_CODE) : [];
+  rows.forEach(function(r) {
+    if (String(r.GROUP_CODE || '').trim() !== 'HO_SO_TYPE') return;
+    if (String(r.IS_ACTIVE) === 'FALSE' || r.IS_ACTIVE === false) return;
+    var id = String(r.ID || '').trim();
+    if (!id) return;
+    index[id] = String(r.CODE || '').trim();
+  });
+  cbv_hosoTypeIdToCode_ = index;
+  return index;
+}
+var cbv_hosoTypeIdToCode_ = null;
+
+function hosoRepoResetMasterCodeIndex() {
+  cbv_hosoTypeIdToCode_ = null;
+}
+
+/** Named master-table writer (replaces raw _appendRecord call in service). */
+function hosoRepoAppendMaster(record) {
+  return hosoRepoAppend(CBV_CONFIG.SHEETS.HO_SO_MASTER, record);
+}
+
+function hosoRepoUpdateMaster(rowNumber, patch) {
+  return hosoRepoUpdate(CBV_CONFIG.SHEETS.HO_SO_MASTER, rowNumber, patch);
+}
+
+function hosoRepoAppendFile(record) {
+  return hosoRepoAppend(CBV_CONFIG.SHEETS.HO_SO_FILE, record);
+}
+
+function hosoRepoUpdateFile(rowNumber, patch) {
+  return hosoRepoUpdate(CBV_CONFIG.SHEETS.HO_SO_FILE, rowNumber, patch);
+}
+
+function hosoRepoAppendRelation(record) {
+  return hosoRepoAppend(CBV_CONFIG.SHEETS.HO_SO_RELATION, record);
+}
+
+function hosoRepoUpdateRelation(rowNumber, patch) {
+  return hosoRepoUpdate(CBV_CONFIG.SHEETS.HO_SO_RELATION, rowNumber, patch);
+}
+
+function hosoRepoAppendLog(record) {
+  return hosoRepoAppend(CBV_CONFIG.SHEETS.HO_SO_UPDATE_LOG, record);
+}
+
+/** Return all non-deleted HO_SO_MASTER rows where HO_SO_TYPE_ID === id. */
+function hosoRepoListMastersByTypeId(hoSoTypeMasterId) {
+  var tid = String(hoSoTypeMasterId || '').trim();
+  if (!tid) return [];
+  return hosoRepoRows(CBV_CONFIG.SHEETS.HO_SO_MASTER).filter(function(r) {
+    if (String(r.IS_DELETED) === 'TRUE' || r.IS_DELETED === true) return false;
+    return String(r.HO_SO_TYPE_ID || '').trim() === tid;
+  });
+}
+
+/** Return all non-deleted HO_SO_MASTER rows where HTX_ID === id. */
+function hosoRepoListMastersByHtxId(htxId) {
+  var hid = String(htxId || '').trim();
+  if (!hid) return [];
+  return hosoRepoRows(CBV_CONFIG.SHEETS.HO_SO_MASTER).filter(function(r) {
+    if (String(r.IS_DELETED) === 'TRUE' || r.IS_DELETED === true) return false;
+    return String(r.HTX_ID || '').trim() === hid;
+  });
+}

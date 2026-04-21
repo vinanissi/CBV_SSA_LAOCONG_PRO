@@ -3,7 +3,7 @@
  */
 function runAllModuleTests() {
   var results = [];
-  var hoso = runHoSoTests();
+  var hoso = hosoRunTests();
   results.push(hoso);
   var task = runTaskTests();
   results.push(task);

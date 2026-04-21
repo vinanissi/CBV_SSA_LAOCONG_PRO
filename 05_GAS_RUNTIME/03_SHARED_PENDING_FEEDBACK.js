@@ -86,7 +86,7 @@ var PENDING_ADAPTER_FINANCE = {
 /** @type {{ findById: Function, updatePending: Function }} */
 var PENDING_ADAPTER_HOSO = {
   findById: function(id) {
-    return getHosoById(id);
+    return hosoGetById(id);
   },
   updatePending: function(row, patch) {
     _updateRow(CBV_CONFIG.SHEETS.HO_SO_MASTER, row, patch);

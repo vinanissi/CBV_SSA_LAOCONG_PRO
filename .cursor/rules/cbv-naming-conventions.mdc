@@ -1,0 +1,72 @@
+---
+description: CBV naming conventions — module prefix, file pattern, alias deprecation
+alwaysApply: true
+---
+
+# CBV Naming — quy ước bắt buộc cho code mới
+
+Xem đầy đủ: `00_OVERVIEW/NAMING_CONVENTIONS.md`. Dưới đây là tóm tắt để agent áp dụng khi sinh/sửa code.
+
+## Quy tắc áp dụng mỗi khi tạo/đổi tên
+
+- **File GAS**: `NN_MODULE_ROLE.js` — `MODULE` và `ROLE` UPPER_SNAKE (ví dụ `10_HOSO_SERVICE.js`, `98_BOOTSTRAP_SCHEMA_MANAGER.js`). Không lowercase.
+- **Function mới**: bắt đầu bằng module prefix camelCase `hoso* / task* / finance* / donVi* / user* / enum* / cbv* / core*`, động từ sau (`hosoCreate`, `taskSetStatus`).
+- **Không trộn** `HoSo` và `Hoso` trong identifier — dùng **`hoso`** (1 từ) khi là code; dùng `HO_SO` khi là sheet/column.
+- **Acronym ≤3 ký tự giữ UPPER**: `HTX_ID`, `validateHTX`.
+- **Const public**: UPPER_SNAKE có prefix module (`HOSO_*`, `TASK_*`, `CBV_*`). Private: thêm `_` đầu.
+- **Hàm private**: hậu tố `_` (ví dụ `seedHosoDemoData_`, `_api_getHoSoList_`), không bắt đầu bằng `_` nếu public.
+- **Hậu tố chuẩn**: `ensure*`, `assert*/validate*`, `find*ById`, `list*/query*`, `audit*`, `repair*`, `seed*`, `*Impl`.
+- **Response**: hàm public trả `cbvResponse(ok, code, message, data, errors)`, `code` UPPER_SNAKE (`HOSO_CREATED`, `TASK_UPDATED`).
+
+## Alias — chỉ 2 trường hợp còn được phép
+
+1. **Menu binding** (`menuXxxHoSo` → gọi canonical). Không được tự thêm tên mới ngoài canonical.
+2. **AppSheet / webhook / Lovable gateway action strings** (tên đã cam kết với client, ví dụ `action: 'createHoSo'`). Đây là CHUỖI đi qua HTTP payload, KHÔNG phải function name — nên không thuộc phạm vi cấm.
+
+**Deprecation wrapper KHÔNG còn được phép cho HO_SO** (xem Phase C bên dưới). Khi migrate một module khác sau này, đúng là dùng pattern A → B → C: thêm wrapper → migrate caller → xoá wrapper. Không để wrapper sống lâu.
+
+## Canonical map — HO_SO (Phases A + B + C done, 2026-04-21)
+
+**Phase C đã xoá toàn bộ alias.** Chỉ còn đúng các tên canonical bên dưới; gọi tên cũ sẽ ném `ReferenceError`. Gate runtime: `auditHosoCanonicalOnly_()` (chạy trong `hosoAudit()` và `runHosoSmokeTestImpl`) phát hiện nếu ai đó re-declare alias và báo HIGH `HOSO_LEGACY_ALIAS_REDECLARED`.
+
+Service mutations (chỉ còn canonical):
+- `hosoCreate`, `hosoUpdate`, `hosoSetStatus(id,status,note?)`, `hosoSoftDelete(id,note?)`
+- `hosoFileAdd`, `hosoFileRemove(fileId,note?)`
+- `hosoRelationAdd`, `hosoRelationRemove(relationId,note?)`
+
+Service queries (chỉ còn canonical):
+- `hosoGetById`, `hosoListFiles`, `hosoListRelations`, `hosoListLogs`
+- `hosoQueryExpiring(days)`, `hosoQueryExpired()`, `hosoQueryExpiringDocs(daysAhead)`
+- `hosoCheckCompleteness(id)`, `hosoGenerateReport(id)`
+
+Operations (chỉ còn canonical):
+- `hosoRunTests`, `hosoRunSmokeTest`, `hosoAudit`, `hosoSeedDemo`
+- `hosoFullDeploy(opts?)` — default `{includeMigration:false,includeDemoSeed:false,includeSmokeTest:true}`.
+
+Audit helper (chỉ còn canonical):
+- `hosoAuditLoaded_(name)` (thay thế `_hosoLoaded` đã xoá).
+
+Events (emit via `hosoEmit*_` trong `10_HOSO_EVENTS.js`):
+`HO_SO_CREATED`, `HO_SO_UPDATED`, `HO_SO_STATUS_CHANGED`, `HO_SO_CLOSED`, `HO_SO_DELETED`, `HO_SO_FILE_ADDED`, `HO_SO_FILE_REMOVED`, `HO_SO_RELATION_ADDED`, `HO_SO_RELATION_REMOVED`.
+
+Grep gates (MUST return zero matches):
+- Service-layer layering: `rg '_findById|_appendRecord|_rows\(|_sheet\(' 10_HOSO_SERVICE.js` — chỉ được khớp comment nhắc.
+- Canonical-only (Phase C): `rg '\b(createHoSo|createHoso|updateHoso|changeHosoStatus|setHoSoStatus|closeHoso|softDeleteHoso|addHosoFile|attachHoSoFile|removeHosoFile|addHosoRelation|createHoSoRelation|removeHosoRelation|getHosoById|getHosoFiles|getHosoRelations|getHosoLogs|getExpiringHoso|getExpiredHoso|checkHoSoCompleteness|getExpiringDocs|generateHoSoReport|runHoSoTests|runHosoTests|runHosoSmokeTest|hosoRunAudit|hosoRunAuditImpl|auditHoSoModule|auditHoSoModuleImpl|seedHoSoDemo|seedHoSoDemoImpl|hosoRunFullDeploymentMenu|hosoRunFullDeploymentMenuImpl|runHosoFullDeployment|_hosoLoaded)\s*\(' 05_GAS_RUNTIME/ --glob '*.js'` — phải return 0 matches (ngoài chuỗi action string của gateway nằm trong `case '…':` thì không khớp regex vì không có dấu `(` theo sau).
+
+Khi tạo hàm HO_SO mới: chỉ được dùng tên canonical. Không tạo alias mới.
+
+## Schema vs code
+
+- `HO_SO_MASTER`, `HO_SO_TYPE_ID`, `HO_SO_STATUS` — **tên schema**, giữ nguyên `HO_SO`.
+- `HOSO_ENUM_GROUPS`, `hosoCreate`, `hosoValidateHtxIdForHoSoType` — **identifier code**, dùng `HOSO`/`hoso`.
+
+Không đổi tên sheet/column trừ khi có migration docs.
+
+## Checklist nhanh khi sinh code
+
+- [ ] File mới đặt tên `NN_MODULE_ROLE.js`?
+- [ ] Function mới có module prefix camelCase?
+- [ ] Không trộn `HoSo`/`Hoso` trong cùng identifier?
+- [ ] Const có prefix module UPPER_SNAKE?
+- [ ] Nếu tạo alias: có lý do (1/2/3) + JSDoc `@deprecated` nếu là (1) + cập nhật `FUNCTION_WRAPPER_MAP.md`?
+- [ ] Hàm public trả `cbvResponse` với `code` UPPER_SNAKE?

@@ -28,9 +28,16 @@ Wrapper = public menu entry. Impl = real execution logic.
 | testTaskWorkflowRules | runTaskSystemTests / runAllSystemTestsImpl | 97 | implemented | |
 | testFieldPolicyReadiness | testFieldPolicyReadinessImpl | 97_TASK_SYSTEM_TEST_RUNNER.js | implemented | |
 | createSampleTaskRows | seedTaskDemo (wrapper) | - | implemented | Delegates |
-| auditHoSoModule | runHoSoTests | 99_DEBUG_TEST_HOSO.js | implemented | |
-| seedHoSoDemo | seedGoldenDataset | 99_DEBUG_SAMPLE_DATA.js | implemented | |
-| testHoSoRelations | auditHoSoModule | - | implemented | Delegates |
+| hosoRunTests | runHosoTestsImpl | 10_HOSO_WRAPPERS.js → 10_HOSO_TEST.js | canonical | Phase A |
+| hosoRunSmokeTest | runHosoSmokeTestImpl | 10_HOSO_WRAPPERS.js → 10_HOSO_TEST.js | canonical | Phase A |
+| hosoAudit | auditHoso*, auditHosoHtxIntegrity | 10_HOSO_WRAPPERS.js → 10_HOSO_AUDIT_REPAIR.js | canonical | Phase A; includes HTX integrity |
+| hosoSeedDemo | seedHosoDemoData_ | 10_HOSO_WRAPPERS.js → 10_HOSO_SEED.js | canonical | Phase A |
+| hosoFullDeploy | hosoFullDeployImpl | 10_HOSO_WRAPPERS.js → 10_HOSO_BOOTSTRAP.js | canonical | opts.includeMigration default = false |
+| runHoSoTests / runHosoTests | hosoRunTests | 10_HOSO_WRAPPERS.js | deprecated | Remove in Phase C |
+| auditHoSoModule | hosoAudit | 10_HOSO_WRAPPERS.js | deprecated | Remove in Phase C |
+| seedHoSoDemo | hosoSeedDemo | 10_HOSO_WRAPPERS.js | deprecated | Remove in Phase C |
+| runHosoFullDeployment / hosoRunFullDeploymentMenu | hosoFullDeploy({includeMigration:false}) | 10_HOSO_WRAPPERS.js | deprecated | Remove in Phase C |
+| testHoSoRelations | hosoAudit | 10_HOSO_WRAPPERS.js | legacy menu | Keep (menu binding) |
 | auditFinanceModule | runFinanceTests | 99_DEBUG_TEST_FINANCE.js | implemented | |
 | seedFinanceDemo | seedGoldenDataset | 99_DEBUG_SAMPLE_DATA.js | implemented | |
 | testFinanceDonViMapping | auditFinanceModule | - | implemented | Delegates |
@@ -70,3 +77,54 @@ Wrapper = public menu entry. Impl = real execution logic.
 - `runFullDeploymentMenu()` → calls `runFullDeployment()` (wrapper)
 - `menuRunFullDeployment()` → calls `runFullDeployment()` (wrapper)
 - All `menu*` handlers delegate to wrappers; menu can bind to either `menu*` or wrapper names.
+
+## HO_SO Module — Canonical Service API (Phases A + B + C done, 2026-04-21)
+
+All code MUST call the canonical `hoso*` names. Phase C **deleted** every deprecated alias — any call to a legacy name now throws `ReferenceError`. The table below is retained as a lookup for historical diffs and to keep `auditHosoCanonicalOnly_()`'s blocklist in sync.
+
+### HO_SO removed aliases (enforced by `auditHosoCanonicalOnly_()`)
+
+| Canonical (only surface that exists) | Removed legacy aliases (Phase C) |
+|-----------|-----------------------------------------------|
+| `hosoCreate(data)` | `createHoSo`, `createHoso` |
+| `hosoUpdate(id, patch)` | `updateHoso` |
+| `hosoSetStatus(id, newStatus, note?)` | `changeHosoStatus`, `setHoSoStatus`, `closeHoso(id,note)` → `hosoSetStatus(id,'CLOSED',note)` |
+| `hosoSoftDelete(id, note?)` | `softDeleteHoso` |
+| `hosoFileAdd(data)` | `addHosoFile`, `attachHoSoFile` (merged) |
+| `hosoFileRemove(fileId, note?)` | `removeHosoFile` |
+| `hosoRelationAdd(data)` | `addHosoRelation`, `createHoSoRelation` (merged) |
+| `hosoRelationRemove(relationId, note?)` | `removeHosoRelation` |
+| `hosoGetById(id)` | `getHosoById` |
+| `hosoListFiles(hosoId)` | `getHosoFiles` |
+| `hosoListRelations(hosoId)` | `getHosoRelations` |
+| `hosoListLogs(hosoId)` | `getHosoLogs` |
+| `hosoQueryExpiring(days)` | `getExpiringHoso` |
+| `hosoQueryExpired()` | `getExpiredHoso` |
+| `hosoQueryExpiringDocs(daysAhead)` | `getExpiringDocs` |
+| `hosoCheckCompleteness(id)` | `checkHoSoCompleteness` |
+| `hosoGenerateReport(id)` | `generateHoSoReport` |
+
+### Wrapper entry aliases removed in Phase C
+
+| Canonical | Removed wrapper-layer aliases |
+|-----------|-------------------------------|
+| `hosoRunTests(opts?)` | `runHosoTests`, `runHoSoTests` |
+| `hosoRunSmokeTest()` | `runHosoSmokeTest` |
+| `hosoAudit()` | `hosoRunAudit`, `hosoRunAuditImpl`, `auditHoSoModule`, `auditHoSoModuleImpl` |
+| `hosoSeedDemo()` | `seedHoSoDemo`, `seedHoSoDemoImpl` |
+| `hosoFullDeploy({includeMigration:false})` | `hosoRunFullDeploymentMenu`, `hosoRunFullDeploymentMenuImpl`, `runHosoFullDeployment` |
+| `hosoAuditLoaded_(name)` | `_hosoLoaded` |
+
+### Migration plan
+
+- **Phase A (done, 2026-04-21)** — canonical added, legacy kept as wrappers, events wired, gateway cleaned. No caller changes required.
+- **Phase B (done, 2026-04-21)** — all internal call sites migrated to canonical names across `60_HOSO_API_GATEWAY.js` (`_api_createHoSo_`, `_api_updateHoSo_`), `99_APPSHEET_WEBHOOK.js` (3 HO_SO pending handlers), `10_HOSO_SEED.js` (2 seed helpers), `99_DEBUG_TEST_RUNNER.js` (`runAllModuleTests`), `03_SHARED_PENDING_FEEDBACK.js` (`PENDING_ADAPTER_HOSO.findById`). Legacy wrappers remain intact for external callers.
+- **Phase C (done, 2026-04-21)** — deprecated wrappers deleted from `10_HOSO_SERVICE.js`, `10_HOSO_WRAPPERS.js`, `10_HOSO_AUDIT_REPAIR.js`. Residual call sites fixed in `10_HOSO_MENU.js` (3) and `90_BOOTSTRAP_MENU_HELPERS.js` (registry). New runtime gate `auditHosoCanonicalOnly_()` emits HIGH finding `HOSO_LEGACY_ALIAS_REDECLARED` if any removed identifier is re-introduced; wired into both `hosoAudit()` and `runHosoSmokeTestImpl` (smoke step `auditHosoCanonicalOnly_`).
+
+### CI / pre-commit grep gate (copy into repo hook)
+
+```bash
+rg -n "\b(createHoSo|createHoso|updateHoso|changeHosoStatus|setHoSoStatus|closeHoso|softDeleteHoso|addHosoFile|attachHoSoFile|removeHosoFile|addHosoRelation|createHoSoRelation|removeHosoRelation|getHosoById|getHosoFiles|getHosoRelations|getHosoLogs|getExpiringHoso|getExpiredHoso|checkHoSoCompleteness|getExpiringDocs|generateHoSoReport|runHoSoTests|runHosoTests|runHosoSmokeTest|hosoRunAudit|hosoRunAuditImpl|auditHoSoModule|auditHoSoModuleImpl|seedHoSoDemo|seedHoSoDemoImpl|hosoRunFullDeploymentMenu|hosoRunFullDeploymentMenuImpl|runHosoFullDeployment|_hosoLoaded)\s*\(" 05_GAS_RUNTIME/ --glob '*.js'
+```
+
+Exit code MUST be `1` (no matches). Any match blocks the build.

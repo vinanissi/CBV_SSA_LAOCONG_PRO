@@ -2,7 +2,7 @@
  * Event-driven core — process EVENT_QUEUE rows against RULE_DEF.
  * Depends: 04_CORE_RULE_ENGINE, 03_SHARED_REPOSITORY, 00_CORE_UTILS, 04_CORE_EVENT_TYPES, 03_SHARED_LOGGER (`logAdminAudit` — load order: LOGGER before this file).
  *
- * Action handlers: SEND_ALERT writes ADMIN_AUDIT_LOG; other types remain stubs until extended.
+ * Action handlers: SEND_ALERT → ADMIN_AUDIT_LOG; NOOP explicit skip; CREATE_* / UPDATE_STATUS remain stubs.
  */
 
 /**
@@ -86,6 +86,9 @@ function executeCoreAction_(action, context) {
     } else {
       Logger.log('[executeCoreAction_] SEND_ALERT ' + JSON.stringify(params) + ' evt=' + (evt.ID || ''));
     }
+    return;
+  }
+  if (type === 'NOOP' || type === 'NONE') {
     return;
   }
   if (type === 'CREATE_TASK' || type === 'CREATE_FINANCE' || type === 'UPDATE_STATUS') {

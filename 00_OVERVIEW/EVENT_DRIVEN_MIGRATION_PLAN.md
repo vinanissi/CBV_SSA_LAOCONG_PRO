@@ -2,7 +2,18 @@
 
 **Status:** Active. **Tech stack:** Google Apps Script, Google Sheets, AppSheet (unchanged).
 
+**Design narrative (target vs hybrid, REQUEST events, principles):** see [`CBV_EVENT_DRIVEN_ARCHITECTURE.md`](./CBV_EVENT_DRIVEN_ARCHITECTURE.md).
+
 This document records the **repository audit**, the **target architecture** (MODULE → EVENT → CORE → RULE → ACTION), and the **phased rollout**. Implementation artifacts live in `05_GAS_RUNTIME/04_CORE_*.js` and sheets `EVENT_QUEUE`, `RULE_DEF`.
+
+## Next steps (ưu tiên vận hành & code)
+
+1. **Deploy & triggers** — `clasp push`; menu CBV PRO → **Bootstrap & init** → **Install ALL CBV triggers** (hoặc từng nhóm); đảm bảo `CBV_CORE_EVENT_MODE` ≠ `off` nếu cần ghi `EVENT_QUEUE`.
+2. **Kiểm chứng queue** — Một luồng thật: webhook / thao tác → **EVENT_QUEUE** → **Process EVENT_QUEUE now** → `RULE_DEF` / `ADMIN_AUDIT_LOG`. Gửi kèm `correlationId` hoặc `requestId` trên POST để điền **CORRELATION_ID**.
+3. **Test TASK** — Chạy `runTaskTests()` trong GAS (`99_DEBUG_TASK_TEST.js`, cần **DON_VI** ACTIVE + user). Đối chiếu kết quả `ok` / `details`.
+4. **P6 tối thiểu** — Rà dòng `RULE_DEF` `ENABLED=TRUE` trên sheet production.
+5. **REQUEST events** — Thiết kế payload + thứ tự (xem [`CBV_EVENT_DRIVEN_ARCHITECTURE.md`](./CBV_EVENT_DRIVEN_ARCHITECTURE.md)); chưa bật `UPDATE_STATUS` trong `executeCoreAction_` cho đến khi có idempotency + test.
+6. **W1 / P9** — Sau pilot: quy ước một nguồn transition hoặc overlay; retry / quan sát `FAILED`.
 
 ---
 
@@ -13,6 +24,7 @@ This document records the **repository audit**, the **target architecture** (MOD
 | **Current pattern** | Webhook `doPost` → `_routeWebhookAction` → `registerAction` handlers (`03_SHARED_ACTION_REGISTRY.js`) + small `switch` for `checklistDone` / `addLog`. Business rules live in module services as **hard-coded transition maps** and validators. |
 | **Goal** | Centralize **decisions** in a core engine; modules keep **UI + persistence adapters**; rules become **data** (Sheet JSON rows) where possible. |
 | **First deliverable** | `EVENT_QUEUE` + `RULE_DEF` in schema; `createCoreEvent` / `processCoreEvent` in GAS; optional **shadow** emission from FINANCE status changes. |
+| **Maturity (thực tế)** | **Pilot / repo đang xây:** luồng module + emit + xử lý queue **chạy được**; core **không** điều phối mutation — `executeCoreAction_` chỉ **`SEND_ALERT`** đầy đủ; transition vẫn trong validator. Chi tiết §10.6. |
 
 ---
 
@@ -28,7 +40,10 @@ This document records the **repository audit**, the **target architecture** (MOD
 | `20_TASK_VALIDATION.js` | `TASK_VALID_TRANSITIONS`, `ensureTaskCanComplete`, etc. |
 | `30_FINANCE_SERVICE.js` | `FIN_ALLOWED_TRANSITIONS`, `confirmTransaction` / `setFinanceStatus`. |
 | `10_HOSO_VALIDATION.js` + `10_HOSO_CONSTANTS.js` | `HOSO_STATUS_TRANSITIONS`, `hosoValidateStatusTransition`. |
-| `90_BOOTSTRAP_ON_EDIT.js` | Time trigger: `TASK_CODE` fill + “Task created” log — **parallel automation** outside webhook flow. |
+| `90_BOOTSTRAP_ON_EDIT.js` | Time trigger ~1 phút: `_fillBlankTaskCodes` + `cbvTaskStatusSnapshotSyncFromSheet_` (`20_TASK_STATUS_SNAPSHOT.js`) — đồng bộ **TASK_STATUS_CHANGED** khi đổi STATUS trên sheet/AppSheet ngoài GAS (`payload.note`: `sheet_sync`). |
+| `20_TASK_STATUS_SNAPSHOT.js` | Snapshot STATUS trong Properties; tránh emit trùng khi GAS vừa đổi trạng thái (`cbvTaskStatusSnapshotSet_` từ `20_TASK_SERVICE.js`). |
+| `90_BOOTSTRAP_TRIGGERS_ALL.js` | Menu: cài / gỡ / cài lại **tất cả** trigger CBV (bootstrap + task sync + EVENT_QUEUE). |
+| `99_APPSHEET_WEBHOOK.js` | Gồm `deleteAttachment` → `removeTaskAttachment` (`20_TASK_SERVICE.js`) — soft-delete `TASK_ATTACHMENT`. |
 
 ### 2.2 AppSheet
 
@@ -105,13 +120,10 @@ This document records the **repository audit**, the **target architecture** (MOD
 | `04_CORE_EVENT_TYPES.js` | Canonical `CBV_CORE_EVENT_TYPE_*` constants + `cbvCoreEventMode_()`. |
 | `04_CORE_EVENT_QUEUE.js` | `createCoreEvent`, `cbvTryEmitCoreEvent_` (never throws). |
 | `04_CORE_RULE_ENGINE.js` | Load rules, `evaluateCoreCondition_` (safe JSON DSL). |
-| `04_CORE_EVENT_PROCESSOR.js` | `processCoreEvent`, `processCoreEventQueueBatch_`; `executeCoreAction_` — **`SEND_ALERT`** → `logAdminAudit` (`ADMIN_AUDIT_LOG`); other action types still stubs. |
+| `04_CORE_EVENT_PROCESSOR.js` | `processCoreEvent`, `processCoreEventQueueBatch_`; `executeCoreAction_` — **`SEND_ALERT`** → `logAdminAudit` (`ADMIN_AUDIT_LOG`); **`NOOP`** / **`NONE`** no-op; `CREATE_*` / `UPDATE_STATUS` still stubs. |
+| `04_CORE_EVENT_QUEUE.js` | `createCoreEvent`, `cbvTryEmitCoreEvent_`; request-scoped **`CORRELATION_ID`** từ `correlationId` / `requestId` / `traceId` (webhook/gateway). |
 
-**Mode (Script Property `CBV_CORE_EVENT_MODE`):**
-
-- `off` — no events appended.
-- `shadow` (default) — append `EVENT_QUEUE` rows; processor runs rules; **`SEND_ALERT`** writes **`ADMIN_AUDIT_LOG`** (actor `cbvSystemActor()`).
-- `on` — same as shadow for current handlers; reserved for stricter rule validation later.
+**Mode (Script Property `CBV_CORE_EVENT_MODE`)** — trong `04_CORE_EVENT_QUEUE.js` chỉ có nhánh **`off`** là **không** ghi `EVENT_QUEUE`; `shadow` và `on` **đều append** bản ghi (hành vi persist giống nhau cho đến nay). **`SEND_ALERT`** qua `processCoreEvent` vẫn ghi **`ADMIN_AUDIT_LOG`** (actor `cbvSystemActor()`). Tên `shadow` gợi ý “thử nghiệm” nhưng **không** tắt ghi queue trong code hiện tại.
 
 ---
 
@@ -127,6 +139,8 @@ This document records the **repository audit**, the **target architecture** (MOD
 | `TASK_LOG_ADDED` | After `addTaskUpdateLog` / `addLog` webhook. |
 | `HO_SO_CREATED` | After `createHoSo` (`10_HOSO_SERVICE.js`). |
 | `HO_SO_STATUS_CHANGED` | After `changeHosoStatus`. |
+
+**Ghi chú §5 — lỗ hổng / tùy chọn:** `updateDraftTransaction` (FINANCE), cập nhật field `updateHoso` (không đổi STATUS), `addTaskAttachment` / `removeTaskAttachment` **chưa** emit vào core catalog (có thể bổ sung W3). Attachment remove đã có qua service + webhook.
 
 ---
 
@@ -145,14 +159,18 @@ This document records the **repository audit**, the **target architecture** (MOD
 **Actions:**
 
 - **`SEND_ALERT`** — implemented: appends **`ADMIN_AUDIT_LOG`** via `logAdminAudit` (`AUDIT_TYPE`: `CORE_RULE`, `ACTOR_ID`: `cbvSystemActor()`).
+- **`NOOP`** / **`NONE`** — implemented: no side effect (dùng để test rule hoặc placeholder).
 - **`CREATE_TASK` / `CREATE_FINANCE` / `UPDATE_STATUS`** — still stubs (Logger) until wired.
 
 ```json
 [
   { "type": "SEND_ALERT", "params": { "message": "FIN_CONFIRMED" } },
+  { "type": "NOOP", "params": {} },
   { "type": "UPDATE_STATUS", "params": { "entity": "TASK", "to": "IN_PROGRESS" } }
 ]
 ```
+
+**Correlation (W4 — request scope):** JSON POST tới Web App có thể gửi **`correlationId`** hoặc **`requestId`** hoặc **`traceId`** (top-level). `createCoreEvent` (`04_CORE_EVENT_QUEUE.js`) ghi vào **`EVENT_QUEUE.CORRELATION_ID`** nếu `cbvTryEmitCoreEvent_` không truyền `correlationId` trực tiếp. Được set trong `_webhookDoPost_` (`99_APPSHEET_WEBHOOK.js`) và `_gatewayDoPost_` (`60_HOSO_API_GATEWAY.js`).
 
 ---
 
@@ -241,6 +259,37 @@ Mục tiêu: từ **module-driven + queue phụ** → **chuỗi rõ ràng**: *in
 | **Tháng 3–4** | W3 + W4 + P9. |
 | **Song song** | W6; cập nhật `02_MODULES/*/APPSHEET_*.md` khớp payload. |
 
+### 10.6 Trạng thái thực tế (đánh giá ngắn)
+
+| Khía cạnh | Trạng thái |
+|-----------|------------|
+| **Luồng chính** | Webhook + `registerAction` + service ghi sheet; **emit** từ TASK / FINANCE / HO_SO và sync TASK (sheet) — **ổn cho pilot**. |
+| **Core / RULE_DEF** | `processCoreEvent` + `evaluateCoreCondition_` hoạt động; **side-effect nghiệp vụ** trong `executeCoreAction_` ngoài **`SEND_ALERT`** vẫn **stub** — **chưa** coi là “core điều phối”. |
+| **Transition** | Vẫn **một lớp trong module** (`TASK_VALID_TRANSITIONS`, `FIN_ALLOWED_TRANSITIONS`, `HOSO_STATUS_TRANSITIONS`); RULE_DEF có thể **lặp** điều kiện cho alert — cần quy ước (W1). |
+| **Vận hành** | Cần trigger (task 1 phút + EVENT_QUEUE 5 phút hoặc **Install ALL CBV triggers**); `CBV_CORE_EVENT_MODE` ≠ `off` nếu muốn có queue. |
+
+### 10.7 Kế hoạch tiếp theo (ưu tiên đề xuất)
+
+1. **Vận hành & kiểm chứng** — Bật đủ trigger; một vòng thật: webhook → `EVENT_QUEUE` → `DONE` / `ADMIN_AUDIT_LOG`; runbook ngắn khi `FAILED` / queue đầy.  
+2. **P7 thu nhỏ** — Mở rộng `executeCoreAction_` theo hướng **an toàn** (ưu tiên **`SEND_ALERT`** / không đổi trạng thái nghiệp vụ) **trước** khi bật `UPDATE_STATUS`/`CREATE_*` thật. **Đã có:** type **`NOOP`** (không side effect).  
+3. **P6 có phạm vi** — Audit các dòng `RULE_DEF` `ENABLED=TRUE` khớp payload; tránh rule thử nghiệm trên production.  
+4. **W3 / W4** — W3: bổ sung event tùy nhu cầu. **W4 (correlation):** **Đã có** — body `correlationId` / `requestId` / `traceId` → cột `EVENT_QUEUE.CORRELATION_ID` khi emit trong cùng request (webhook / gateway).  
+5. **Sau pilot ổn định** — **W1** (một nguồn transition hoặc quy ước overlay) rồi **P9** (retry / `FAILED` / quan sát).
+
+**Repo đang xây:** ưu tiên **vertical slice theo module** (TASK → FINANCE → HO_SO) ổn + emit + vài rule **`SEND_ALERT`** trước khi refactor transition toàn hệ.
+
+### 10.8 Sprint ngắn (3–5 ngày) — thứ tự tùy chọn
+
+Có thể gom thành một spike nếu **mỗi mục là MVP** (không thay thế lộ trình 3–6 tháng đầy đủ):
+
+`P7 → W3 → W4 → P6 → W5 → W6` → **dừng, test thực tế** → `W1 → P9`
+
+**Điều kiện an toàn:**
+
+- **P7 trước P6** chỉ chấp nhận được nếu P7 **không** mở side-effect nguy hiểm hoặc đã rà rule liên quan; nếu không, làm **P6 tối thiểu** (vài rule) trước P7 “đụng dữ liệu”.  
+- **W3** trong sprint ngắn = **ít event**, không phải toàn bộ §5.  
+- **W1** / **P9** để **sau** vòng test thực tế — đúng vì thay domain nặng và hardening.
+
 ---
 
 ## 11. RULE_DEF — dòng mẫu (copy / paste)
@@ -271,3 +320,7 @@ Mục tiêu: từ **module-driven + queue phụ** → **chuỗi rõ ràng**: *in
 | 2026-04-19 | `RULE_DEF_SAMPLE_ROWS.tsv` + §11 hướng dẫn dán. |
 | 2026-04-19 | TASK/HO_SO emit; `SEND_ALERT` → `ADMIN_AUDIT_LOG`; `RULE_DEF_SAMPLE_ROWS_TASK_HOSO.tsv`. |
 | 2026-04-19 | §10 Master refactor roadmap (W1–W6, P6–P9, DoD, lộ trình); đánh số lại §11 RULE_DEF mẫu, §12 Changelog. |
+| 2026-04-19 | Cập nhật: maturity exec summary; §2.1 snapshot/triggers/deleteAttachment; §5 gaps + `TASK_STATUS` sheet_sync; làm rõ `CBV_CORE_EVENT_MODE` (`off` vs shadow/on); §10.6–10.8 trạng thái thực tế, kế hoạch tiếp theo, sprint ngắn. |
+| 2026-04-19 | Code: `CORRELATION_ID` từ request (`correlationId` / `requestId` / `traceId`) trong `04_CORE_EVENT_QUEUE.js` + `_webhookDoPost_` + `_gatewayDoPost_`; `NOOP`/`NONE` trong `executeCoreAction_`. §6 + §10.7 cập nhật. |
+| 2026-04-19 | Thêm `CBV_EVENT_DRIVEN_ARCHITECTURE.md` (thiết kế tổng quan, REQUEST events, hybrid vs target); link từ đầu file này. |
+| 2026-04-19 | Mục **Next steps** (đầu file); `99_DEBUG_TASK_TEST.js` chuyển HTX_ID → **DON_VI_ID**; `CBV_EVENT_DRIVEN_ARCHITECTURE` thêm Next steps tóm tắt. |

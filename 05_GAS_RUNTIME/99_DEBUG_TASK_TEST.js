@@ -1,21 +1,24 @@
 /**
- * CBV Task Test - runTaskTests() for new task model.
- * Requires: HTX, active user. Uses SAMPLE_ prefix.
- * Run order: 1) get or create HTX, 2) get active user, 3) create task, 4) workflow tests.
+ * CBV Task Test - runTaskTests() for PRO task model (DON_VI_ID, TASK_TYPE optional).
+ * Requires: at least one active DON_VI row, active user. Uses SAMPLE_ prefix on TASK_CODE.
+ * Run in Apps Script editor (bound spreadsheet). Order: prerequisites → createTask → checklist → status workflow.
  */
 
 /**
- * Gets first active HTX or null.
+ * First active DON_VI (STATUS=ACTIVE, not deleted) or null.
+ * @returns {string|null}
  */
-function _taskTestGetHtxId() {
-  var sheet = typeof _sheet === 'function' ? _sheet(CBV_CONFIG.SHEETS.HO_SO_MASTER) : null;
+function _taskTestGetDonViId() {
+  var sheetName = (typeof CBV_CONFIG !== 'undefined' && CBV_CONFIG.SHEETS && CBV_CONFIG.SHEETS.DON_VI)
+    ? CBV_CONFIG.SHEETS.DON_VI : 'DON_VI';
+  var sheet = typeof _sheet === 'function' ? _sheet(sheetName) : null;
   if (!sheet) return null;
   var rows = typeof _rows === 'function' ? _rows(sheet) : [];
-  var htx = rows.find(function(r) {
-    return String(r.HO_SO_TYPE || '').trim() === 'HTX' &&
+  var row = rows.find(function(r) {
+    return String(r.STATUS || '').trim() === 'ACTIVE' &&
       String(r.IS_DELETED) !== 'true' && r.IS_DELETED !== true;
   });
-  return htx ? htx.ID : null;
+  return row ? row.ID : null;
 }
 
 /**
@@ -30,13 +33,13 @@ function _taskTestGetOwnerId() {
 }
 
 /**
- * Run task tests. Requires at least one HTX and one active user.
+ * Run task tests. Requires at least one DON_VI and one active user.
  * @returns {Object} { ok, module, total, passed, failed, details }
  */
 function runTaskTests() {
   var result = { ok: true, module: 'TASK_CENTER', total: 0, passed: 0, failed: 0, details: [] };
   var sampleTaskId = null;
-  var htxId = _taskTestGetHtxId();
+  var donViId = _taskTestGetDonViId();
   var ownerId = _taskTestGetOwnerId();
 
   function run(name, fn) {
@@ -52,16 +55,16 @@ function runTaskTests() {
     }
   }
 
-  run('prerequisites: HTX and user exist', function() {
-    if (!htxId) throw new Error('No active HTX. Create one in HO_SO_MASTER (HO_SO_TYPE=HTX) first.');
+  run('prerequisites: DON_VI and user exist', function() {
+    if (!donViId) throw new Error('No active DON_VI. Seed or create a row in DON_VI (STATUS=ACTIVE).');
     if (!ownerId) throw new Error('No active user. Ensure USER_DIRECTORY has ACTIVE user or sign in.');
   });
 
-  run('create task with HTX_ID', function() {
+  run('create task with DON_VI_ID', function() {
     var r = createTask({
       TITLE: 'SAMPLE Task test',
       OWNER_ID: ownerId,
-      HTX_ID: htxId,
+      DON_VI_ID: donViId,
       PRIORITY: 'HIGH',
       TASK_CODE: 'SAMPLE_TK001'
     });
@@ -104,7 +107,7 @@ function runTaskTests() {
     var r2 = createTask({
       TITLE: 'SAMPLE Task 2',
       OWNER_ID: ownerId,
-      HTX_ID: htxId,
+      DON_VI_ID: donViId,
       PRIORITY: 'LOW',
       TASK_CODE: 'SAMPLE_TK002'
     });
@@ -126,19 +129,19 @@ function runTaskTests() {
 
   run('required fields enforced', function() {
     try {
-      createTask({ TITLE: '', OWNER_ID: ownerId, HTX_ID: htxId, PRIORITY: 'HIGH' });
+      createTask({ TITLE: '', OWNER_ID: ownerId, DON_VI_ID: donViId, PRIORITY: 'HIGH' });
       throw new Error('Should have rejected empty TITLE');
     } catch (e) {
       if (e.message.indexOf('required') === -1 && e.message.indexOf('TITLE') === -1) throw e;
     }
   });
 
-  run('HTX_ID required', function() {
+  run('DON_VI_ID required', function() {
     try {
       createTask({ TITLE: 'X', OWNER_ID: ownerId, PRIORITY: 'HIGH' });
-      throw new Error('Should have rejected missing HTX_ID');
+      throw new Error('Should have rejected missing DON_VI_ID');
     } catch (e) {
-      if (e.message.indexOf('HTX') === -1 && e.message.indexOf('required') === -1) throw e;
+      if (e.message.indexOf('DON_VI_ID') === -1 && e.message.indexOf('required') === -1) throw e;
     }
   });
 

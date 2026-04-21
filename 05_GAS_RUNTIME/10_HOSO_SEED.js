@@ -4,6 +4,7 @@
  */
 
 var HOSO_TYPE_MASTER_ROWS = [
+  { CODE: 'HTX', NAME: 'Hợp tác xã', DISPLAY_TEXT: 'Hợp tác xã', SORT_ORDER: 0 },
   { CODE: 'HOP_DONG', NAME: 'Hợp đồng', DISPLAY_TEXT: 'Hợp đồng', SORT_ORDER: 1 },
   { CODE: 'GIAY_TO_CA_NHAN', NAME: 'Giấy tờ cá nhân', DISPLAY_TEXT: 'Giấy tờ cá nhân', SORT_ORDER: 2 },
   { CODE: 'HO_SO_XA_VIEN', NAME: 'Hồ sơ xã viên', DISPLAY_TEXT: 'Hồ sơ xã viên', SORT_ORDER: 3 },
@@ -58,21 +59,71 @@ function seedHosoMasterData_() {
 }
 
 /**
- * Optional demo row — skipped if any row titled DEMO_HOSO_PRO exists
+ * Resolve HO_SO_TYPE MASTER_CODE ID by CODE. Returns '' if not found.
+ */
+function hosoFindTypeMasterIdByCode_(code) {
+  var target = String(code || '').trim();
+  if (!target) return '';
+  var rows = typeof hosoRepoRows === 'function' ? hosoRepoRows(CBV_CONFIG.SHEETS.MASTER_CODE) : [];
+  for (var i = 0; i < rows.length; i++) {
+    var r = rows[i];
+    if (String(r.MASTER_GROUP || '').trim() !== HOSO_MASTER_GROUP_TYPE) continue;
+    if (String(r.STATUS || '').trim() !== 'ACTIVE') continue;
+    if (String(r.CODE || '').trim() === target) return String(r.ID || '').trim();
+  }
+  return '';
+}
+
+/**
+ * Ensure an HTX root HO_SO_MASTER row exists (TITLE=DEMO_HTX_PRO). Returns its ID.
+ */
+function ensureHosoDemoHtxRoot_() {
+  var mrows = typeof hosoRepoRows === 'function' ? hosoRepoRows(CBV_CONFIG.SHEETS.HO_SO_MASTER) : [];
+  var existing = mrows.find(function(r) { return String(r.TITLE || '') === 'DEMO_HTX_PRO'; });
+  if (existing) return String(existing.ID || '').trim();
+
+  var htxTypeId = hosoFindTypeMasterIdByCode_('HTX');
+  if (!htxTypeId) throw new Error('MASTER_CODE HO_SO_TYPE.HTX not seeded; run seedHosoMasterData_ first');
+
+  var res = hosoCreate({
+    HO_SO_TYPE_ID: htxTypeId,
+    TITLE: 'DEMO_HTX_PRO',
+    DISPLAY_NAME: 'HTX Demo (gốc)',
+    STATUS: 'ACTIVE',
+    SUMMARY: 'Root HTX seeded by ensureHosoDemoHtxRoot_'
+  });
+  if (!res || res.ok === false) throw new Error('Failed to seed HTX root: ' + JSON.stringify(res));
+  return String((res.data && res.data.ID) || res.ID || '').trim();
+}
+
+/**
+ * Optional demo row — skipped if any row titled DEMO_HOSO_PRO exists.
+ * Seeds an HTX root (TITLE=DEMO_HTX_PRO) first and creates a child HOP_DONG
+ * referencing that HTX via HTX_ID so validation (hosoValidateHtxIdForHoSoType) passes.
  */
 function seedHosoDemoData_() {
   var mrows = typeof hosoRepoRows === 'function' ? hosoRepoRows(CBV_CONFIG.SHEETS.HO_SO_MASTER) : [];
   if (mrows.some(function(r) { return String(r.TITLE || '') === 'DEMO_HOSO_PRO'; })) {
     return { ok: true, skipped: true, message: 'Demo already present' };
   }
-  var types = typeof hosoRepoRows === 'function' ? hosoRepoRows(CBV_CONFIG.SHEETS.MASTER_CODE).filter(function(r) {
-    return String(r.MASTER_GROUP || '') === HOSO_MASTER_GROUP_TYPE && String(r.STATUS || '') === 'ACTIVE';
-  }) : [];
-  var typeId = types.length ? types[0].ID : '';
-  if (!typeId) return { ok: false, message: 'No HO_SO_TYPE in MASTER_CODE; run seedHosoMasterData_ first' };
 
-  return createHoso({
-    HO_SO_TYPE_ID: typeId,
+  var htxRootId = ensureHosoDemoHtxRoot_();
+  if (!htxRootId) return { ok: false, message: 'Could not ensure HTX root for demo' };
+
+  var childTypeId = hosoFindTypeMasterIdByCode_('HOP_DONG');
+  if (!childTypeId) {
+    var types = typeof hosoRepoRows === 'function' ? hosoRepoRows(CBV_CONFIG.SHEETS.MASTER_CODE).filter(function(r) {
+      return String(r.MASTER_GROUP || '') === HOSO_MASTER_GROUP_TYPE
+        && String(r.STATUS || '') === 'ACTIVE'
+        && String(r.CODE || '') !== 'HTX';
+    }) : [];
+    childTypeId = types.length ? String(types[0].ID || '').trim() : '';
+  }
+  if (!childTypeId) return { ok: false, message: 'No non-HTX HO_SO_TYPE in MASTER_CODE; run seedHosoMasterData_ first' };
+
+  return hosoCreate({
+    HO_SO_TYPE_ID: childTypeId,
+    HTX_ID: htxRootId,
     TITLE: 'DEMO_HOSO_PRO',
     DISPLAY_NAME: 'Demo hồ sơ PRO',
     STATUS: 'NEW',

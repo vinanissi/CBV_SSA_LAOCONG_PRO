@@ -9,7 +9,7 @@ function menuAuditHoSo() {
 }
 
 function menuAuditHoSoImpl() {
-  var r = runHosoTestsImpl();
+  var r = hosoRunTests();
   var ui = SpreadsheetApp.getUi();
   if (!ui) return r;
   var msg = (r.ok !== false ? 'OK' : 'Issues found') + '\nPassed: ' + r.passed + ' / ' + r.total;
@@ -25,7 +25,7 @@ function menuSeedHoSoDemo() {
 }
 
 function menuSeedHoSoDemoImpl() {
-  var r = seedHoSoDemoImpl();
+  var r = hosoSeedDemo();
   var ui = SpreadsheetApp.getUi();
   if (ui) ui.alert('Seed HO_SO demo', (r && r.message) ? r.message : JSON.stringify(r), ui.ButtonSet.OK);
   return r;
@@ -44,7 +44,7 @@ function menuHosoFullDeploy() {
 }
 
 function menuHosoFullDeployImpl() {
-  var r = hosoRunFullDeploymentMenuImpl();
+  var r = hosoFullDeploy({ includeMigration: false });
   var ui = SpreadsheetApp.getUi();
   if (ui) ui.alert('Deploy HO_SO', r.ok ? 'Finished (see Execution log)' : 'A step failed — see Execution log', ui.ButtonSet.OK);
   return r;

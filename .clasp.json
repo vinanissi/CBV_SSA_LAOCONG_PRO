@@ -42,6 +42,7 @@
     "10_HOSO_UTILS.js",
     "10_HOSO_REPOSITORY.js",
     "10_HOSO_VALIDATION.js",
+    "10_HOSO_EVENTS.js",
     "10_HOSO_SERVICE.js",
     "10_HOSO_SEED.js",
     "10_HOSO_AUDIT_REPAIR.js",

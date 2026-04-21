@@ -9,7 +9,15 @@ function _webhookDoPost_(e) {
     if (!String(raw).trim()) throw new Error('Empty body');
     var body = JSON.parse(raw);
     if (!body || typeof body !== 'object') throw new Error('Body must be a JSON object');
-    return _webhookJsonResponse(_routeWebhookAction(body));
+    var trace = body.correlationId != null ? body.correlationId : (body.requestId != null ? body.requestId : body.traceId);
+    if (typeof cbvSetRequestCorrelationId_ === 'function') {
+      cbvSetRequestCorrelationId_(trace);
+    }
+    try {
+      return _webhookJsonResponse(_routeWebhookAction(body));
+    } finally {
+      if (typeof cbvClearRequestCorrelationId_ === 'function') cbvClearRequestCorrelationId_();
+    }
   } catch (err) {
     var msg = String(err && err.message ? err.message : err);
     return _webhookJsonResponse({ ok: false, code: 'WEBHOOK_ERROR', message: msg });
@@ -201,7 +209,7 @@ registerAction({
   validStatuses: [],
   adapter: PENDING_ADAPTER_HOSO,
   handler: function(id, body) {
-    return changeHosoStatus(id, 'ACTIVE', String(body.note || ''));
+    return hosoSetStatus(id, 'ACTIVE', String(body.note || ''));
   }
 });
 
@@ -212,7 +220,7 @@ registerAction({
   validStatuses: [],
   adapter: PENDING_ADAPTER_HOSO,
   handler: function(id, body) {
-    return changeHosoStatus(id, 'CLOSED', String(body.note || ''));
+    return hosoSetStatus(id, 'CLOSED', String(body.note || ''));
   }
 });
 
@@ -223,6 +231,6 @@ registerAction({
   validStatuses: [],
   adapter: PENDING_ADAPTER_HOSO,
   handler: function(id, body) {
-    return changeHosoStatus(id, 'ARCHIVED', String(body.note || ''));
+    return hosoSetStatus(id, 'ARCHIVED', String(body.note || ''));
   }
 });

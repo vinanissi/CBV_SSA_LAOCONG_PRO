@@ -41,8 +41,25 @@ function ensureHosoEnums_() {
   return typeof seedEnumDictionary === 'function' ? seedEnumDictionary() : { ok: false };
 }
 
-function runHosoFullDeployment() {
-  var report = { ok: true, steps: [] };
+/**
+ * hosoFullDeployImpl — canonical full HO_SO deployment.
+ *
+ * Default behavior (Phase A): SAFE path, no destructive/automatic migration.
+ *   { includeMigration: false, includeDemoSeed: false, includeSmokeTest: true }
+ *
+ * Callers that need legacy-migration run it explicitly:
+ *   hosoFullDeploy({ includeMigration: true })
+ *
+ * @param {{includeMigration?:boolean, includeDemoSeed?:boolean, includeSmokeTest?:boolean}} [opts]
+ * @returns {{ok:boolean, steps:Array}}
+ */
+function hosoFullDeployImpl(opts) {
+  opts = opts || {};
+  var includeMigration = opts.includeMigration === true;
+  var includeDemoSeed = opts.includeDemoSeed === true;
+  var includeSmokeTest = opts.includeSmokeTest !== false;
+
+  var report = { ok: true, opts: { includeMigration: includeMigration, includeDemoSeed: includeDemoSeed, includeSmokeTest: includeSmokeTest }, steps: [] };
   function push(name, fn) {
     try {
       var r = fn();
@@ -57,10 +74,20 @@ function runHosoFullDeployment() {
   push('ensureHosoSheets', function() { return ensureHosoSheets_(); });
   push('seedEnumDictionary', function() { return ensureHosoEnums_(); });
   push('seedHosoMasterData', function() { return seedHosoMasterData_(); });
-  push('migrateHosoLegacyToPro', function() { return typeof migrateHosoLegacyToPro_ === 'function' ? migrateHosoLegacyToPro_() : { ok: false, message: 'migrateHosoLegacyToPro_ missing' }; });
-  push('seedHosoDemoData', function() { return seedHosoDemoData_(); });
+  if (includeMigration) {
+    push('migrateHosoLegacyToPro', function() { return typeof migrateHosoLegacyToPro_ === 'function' ? migrateHosoLegacyToPro_() : { ok: false, message: 'migrateHosoLegacyToPro_ missing' }; });
+  } else {
+    report.steps.push({ name: 'migrateHosoLegacyToPro', ok: true, skipped: true, reason: 'opts.includeMigration=false (default)' });
+  }
+  if (includeDemoSeed) {
+    push('seedHosoDemoData', function() { return typeof seedHosoDemoData_ === 'function' ? seedHosoDemoData_() : { ok: false, message: 'seedHosoDemoData_ missing' }; });
+  } else {
+    report.steps.push({ name: 'seedHosoDemoData', ok: true, skipped: true, reason: 'opts.includeDemoSeed=false (default)' });
+  }
   push('auditHosoSchema', function() { return auditHosoSchema(); });
-  push('runHosoSmokeTest', function() { return runHosoSmokeTest(); });
-  Logger.log('runHosoFullDeployment: ' + JSON.stringify(report));
+  if (includeSmokeTest) {
+    push('hosoRunSmokeTest', function() { return typeof hosoRunSmokeTest === 'function' ? hosoRunSmokeTest() : (typeof runHosoSmokeTestImpl === 'function' ? runHosoSmokeTestImpl() : { ok: true }); });
+  }
+  Logger.log('hosoFullDeploy: ' + JSON.stringify(report));
   return report;
 }

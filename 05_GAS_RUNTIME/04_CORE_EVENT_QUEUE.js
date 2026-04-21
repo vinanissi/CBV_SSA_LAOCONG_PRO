@@ -4,6 +4,24 @@
  */
 
 /**
+ * Request-scoped trace id (GAS runs one request at a time per instance).
+ * Set by `_webhookDoPost_` / `_gatewayDoPost_` from body.correlationId | requestId | traceId.
+ * @type {string}
+ */
+var CBV_REQUEST_CORRELATION_ID_ = '';
+
+/**
+ * @param {string} [id]
+ */
+function cbvSetRequestCorrelationId_(id) {
+  CBV_REQUEST_CORRELATION_ID_ = id == null ? '' : String(id).trim();
+}
+
+function cbvClearRequestCorrelationId_() {
+  CBV_REQUEST_CORRELATION_ID_ = '';
+}
+
+/**
  * @param {{ eventType: string, sourceModule: string, refId: string, entityType?: string, payload?: Object, correlationId?: string }} spec
  * @returns {Object|null} persisted row shape (no _rowNumber until re-read) or null if skipped/off
  */
@@ -13,6 +31,9 @@ function createCoreEvent(spec) {
   var sheetName = CBV_CONFIG.SHEETS.EVENT_QUEUE;
   if (!sheetName) return null;
 
+  var cid = String(spec.correlationId || '').trim();
+  if (!cid) cid = String(CBV_REQUEST_CORRELATION_ID_ || '').trim();
+
   var rec = {
     ID: cbvMakeId('EVT'),
     EVENT_TYPE: String(spec.eventType || ''),
@@ -21,7 +42,7 @@ function createCoreEvent(spec) {
     ENTITY_TYPE: String(spec.entityType || ''),
     PAYLOAD_JSON: JSON.stringify(spec.payload != null ? spec.payload : {}),
     STATUS: 'PENDING',
-    CORRELATION_ID: String(spec.correlationId || ''),
+    CORRELATION_ID: cid,
     ERROR_MESSAGE: '',
     CREATED_AT: cbvNow(),
     CREATED_BY: cbvUser(),
@@ -34,6 +55,7 @@ function createCoreEvent(spec) {
 /**
  * Safe for hot paths (webhook): never throws; logs on failure.
  * @param {{ eventType: string, sourceModule: string, refId: string, entityType?: string, payload?: Object, correlationId?: string }} spec
+ *          correlationId optional; if omitted, uses request-scoped id from webhook/gateway (see cbvSetRequestCorrelationId_).
  * @returns {Object|null}
  */
 function cbvTryEmitCoreEvent_(spec) {

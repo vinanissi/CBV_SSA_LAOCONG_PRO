@@ -56,6 +56,26 @@ function _hosoNotDeletedMaster_(r) {
   return r && r.IS_DELETED !== true && String(r.IS_DELETED).toLowerCase() !== 'true';
 }
 
+/**
+ * Resolve a HO_SO_MASTER row's type code (e.g. "HTX", "XE", "TAI_XE") from its
+ * HO_SO_TYPE_ID foreign key. Uses per-request memoization from
+ * hosoRepoMasterCodeIndexForHoSoType() so 300 rows = 1 MASTER_CODE read.
+ * Falls back to legacy HO_SO_TYPE column only if HO_SO_TYPE_ID is blank
+ * (handles legacy rows until migration completes).
+ * @param {Object} row
+ * @returns {string}
+ */
+function _hosoResolveTypeCode_(row) {
+  if (!row) return '';
+  var tid = String(row.HO_SO_TYPE_ID || '').trim();
+  if (tid) {
+    var idx = typeof hosoRepoMasterCodeIndexForHoSoType === 'function' ? hosoRepoMasterCodeIndexForHoSoType() : {};
+    var code = idx && idx[tid] ? idx[tid] : '';
+    if (code) return code;
+  }
+  return String(row.HO_SO_TYPE || '').trim();
+}
+
 function _hosoStripRowNumber_(obj) {
   if (!obj || typeof obj !== 'object') return obj;
   var o = {};
@@ -96,12 +116,7 @@ function _api_getHoSoList_(payload) {
     }
     if (payload.ho_so_type != null && String(payload.ho_so_type).trim() !== '') {
       var ht = String(payload.ho_so_type).trim();
-      rows = rows.filter(function(r) {
-        var tid = String(r.HO_SO_TYPE_ID || '').trim();
-        if (!tid) return false;
-        var mc = typeof _findById === 'function' ? _findById(CBV_CONFIG.SHEETS.MASTER_CODE, tid) : null;
-        return mc && String(mc.CODE || '').trim() === ht;
-      });
+      rows = rows.filter(function(r) { return _hosoResolveTypeCode_(r) === ht; });
     }
     if (payload.htx_id != null && String(payload.htx_id).trim() !== '') {
       var hx = String(payload.htx_id).trim();
@@ -156,7 +171,7 @@ function _api_createHoSo_(payload) {
       data.TITLE = data.NAME;
       data.DISPLAY_NAME = data.NAME;
     }
-    return createHoSo(data);
+    return hosoCreate(data);
   } catch (e) {
     return { ok: false, message: e.message || String(e) };
   }
@@ -172,7 +187,7 @@ function _api_updateHoSo_(payload) {
       var k = forbidden[i];
       if (patch[k] !== undefined) throw new Error('Cannot patch field: ' + k);
     }
-    var res = updateHoso(payload.id, patch);
+    var res = hosoUpdate(payload.id, patch);
     return _hosoSanitizeCbvData_(res);
   } catch (e) {
     return { ok: false, message: e.message || String(e) };
@@ -187,19 +202,9 @@ function _api_changeHoSoStatus_(payload) {
     if (!row || !_hosoNotDeletedMaster_(row)) {
       return { ok: false, message: 'HO_SO not found' };
     }
-    var currentStatus = String(row.STATUS || '');
-    var newStatus = String(payload.newStatus).trim();
-    if (currentStatus !== newStatus) {
-      var allowed = HOSO_STATUS_TRANSITIONS[currentStatus];
-      if (!allowed) allowed = [];
-      if (allowed.indexOf(newStatus) === -1) {
-        return {
-          ok: false,
-          message: 'Invalid transition: ' + currentStatus + ' -> ' + newStatus + '. Allowed: [' + allowed.join(', ') + ']'
-        };
-      }
-    }
-    var res = changeHosoStatus(payload.id, newStatus, payload.note || '');
+    // Transition validation lives in hosoSetStatus → hosoValidateStatusTransition
+    // (SINGLE SOURCE OF TRUTH). Do not duplicate the check here.
+    var res = hosoSetStatus(payload.id, String(payload.newStatus).trim(), payload.note || '');
     return _hosoSanitizeCbvData_(res);
   } catch (e) {
     return { ok: false, message: e.message || String(e) };
@@ -252,10 +257,19 @@ function _api_addHoSoFile_(payload) {
     cbvAssert(payload.FILE_NAME, 'FILE_NAME required');
     cbvAssert(payload.FILE_URL, 'FILE_URL required');
     var url = String(payload.FILE_URL).trim();
-    if (!url.toLowerCase().startsWith('http')) {
+    if (!/^https?:/i.test(url)) {
       return { ok: false, message: 'FILE_URL must be a valid http(s) URL' };
     }
-    return addHosoFile(payload);
+    return hosoFileAdd(payload);
+  } catch (e) {
+    return { ok: false, message: e.message || String(e) };
+  }
+}
+
+function _api_removeHoSoFile_(payload) {
+  try {
+    cbvAssert(payload && payload.fileId, 'fileId required');
+    return _hosoSanitizeCbvData_(hosoFileRemove(payload.fileId, payload.note || ''));
   } catch (e) {
     return { ok: false, message: e.message || String(e) };
   }
@@ -292,11 +306,63 @@ function _api_getHoSoRelations_(payload) {
 function _api_addHoSoRelation_(payload) {
   try {
     payload = payload || {};
-    cbvAssert(payload.HO_SO_ID, 'HO_SO_ID required');
-    cbvAssert(payload.RELATED_TABLE, 'RELATED_TABLE required');
-    cbvAssert(payload.RELATED_RECORD_ID, 'RELATED_RECORD_ID required');
+    // Accept either HO_SO_ID (legacy Lovable contract) or FROM_HO_SO_ID (canonical).
+    var from = payload.FROM_HO_SO_ID || payload.HO_SO_ID;
+    cbvAssert(from, 'HO_SO_ID (or FROM_HO_SO_ID) required');
     cbvAssert(payload.RELATION_TYPE, 'RELATION_TYPE required');
-    return addHosoRelation(payload);
+    if (!payload.TO_HO_SO_ID) {
+      cbvAssert(payload.RELATED_TABLE, 'RELATED_TABLE required (or provide TO_HO_SO_ID)');
+      cbvAssert(payload.RELATED_RECORD_ID, 'RELATED_RECORD_ID required (or provide TO_HO_SO_ID)');
+    }
+    var data = Object.assign({}, payload, { FROM_HO_SO_ID: from });
+    delete data.HO_SO_ID;
+    return hosoRelationAdd(data);
+  } catch (e) {
+    return { ok: false, message: e.message || String(e) };
+  }
+}
+
+function _api_removeHoSoRelation_(payload) {
+  try {
+    cbvAssert(payload && payload.relationId, 'relationId required');
+    return _hosoSanitizeCbvData_(hosoRelationRemove(payload.relationId, payload.note || ''));
+  } catch (e) {
+    return { ok: false, message: e.message || String(e) };
+  }
+}
+
+function _api_softDeleteHoSo_(payload) {
+  try {
+    cbvAssert(payload && payload.id, 'id required');
+    return _hosoSanitizeCbvData_(hosoSoftDelete(payload.id, payload.note || ''));
+  } catch (e) {
+    return { ok: false, message: e.message || String(e) };
+  }
+}
+
+function _api_getHoSoCompleteness_(payload) {
+  try {
+    cbvAssert(payload && payload.id, 'id required');
+    return hosoCheckCompleteness(payload.id);
+  } catch (e) {
+    return { ok: false, message: e.message || String(e) };
+  }
+}
+
+function _api_getHoSoExpiringDocs_(payload) {
+  try {
+    payload = payload || {};
+    var d = payload.daysAhead != null ? Number(payload.daysAhead) : 60;
+    return hosoQueryExpiringDocs(d);
+  } catch (e) {
+    return { ok: false, message: e.message || String(e) };
+  }
+}
+
+function _api_generateHoSoReport_(payload) {
+  try {
+    cbvAssert(payload && payload.id, 'id required');
+    return hosoGenerateReport(payload.id);
   } catch (e) {
     return { ok: false, message: e.message || String(e) };
   }
@@ -389,7 +455,7 @@ function _api_getActiveHtxList_(payload) {
   try {
     var rows = hosoRepoRows(CBV_CONFIG.SHEETS.HO_SO_MASTER).filter(function(r) {
       if (!_hosoNotDeletedMaster_(r)) return false;
-      if (String(r.HO_SO_TYPE || '') !== 'HTX') return false;
+      if (_hosoResolveTypeCode_(r) !== 'HTX') return false;
       var st = String(r.STATUS || '');
       if (st === 'ARCHIVED' || st === 'CLOSED') return false;
       return true;
@@ -429,7 +495,7 @@ function _api_getHoSoListForSearch_(payload) {
         id: r.ID,
         label: r.NAME,
         code: r.HO_SO_CODE || r.CODE,
-        type: r.HO_SO_TYPE
+        type: _hosoResolveTypeCode_(r)
       };
     });
     return { ok: true, data: results };
@@ -446,7 +512,7 @@ function _api_getDashboard_() {
     var byType = {};
     var byStatus = {};
     active.forEach(function(r) {
-      var t = r.HO_SO_TYPE || 'KHAC';
+      var t = _hosoResolveTypeCode_(r) || 'KHAC';
       byType[t] = (byType[t] || 0) + 1;
       var s = r.STATUS || 'UNKNOWN';
       byStatus[s] = (byStatus[s] || 0) + 1;
@@ -499,15 +565,25 @@ function _gatewayDoPost_(e) {
       body = {};
     }
 
+    var trace = body.correlationId != null ? body.correlationId : (body.requestId != null ? body.requestId : body.traceId);
+    if (typeof cbvSetRequestCorrelationId_ === 'function') {
+      cbvSetRequestCorrelationId_(trace);
+    }
+
     if (!_hosoGatewayAuth_(body, e && e.headers ? e.headers : {})) {
+      if (typeof cbvClearRequestCorrelationId_ === 'function') cbvClearRequestCorrelationId_();
       return _jsonOut_({ ok: false, message: 'Unauthorized' });
     }
 
     var action = String(body.action || '').trim();
     var payload = body.payload || {};
 
-    if (!action) return _jsonOut_({ ok: false, message: 'action required' });
+    if (!action) {
+      if (typeof cbvClearRequestCorrelationId_ === 'function') cbvClearRequestCorrelationId_();
+      return _jsonOut_({ ok: false, message: 'action required' });
+    }
 
+    try {
     switch (action) {
       case 'getHoSoList':
         return _jsonOut_(_api_getHoSoList_(payload));
@@ -525,10 +601,22 @@ function _gatewayDoPost_(e) {
         return _jsonOut_(_api_getHoSoFiles_(payload));
       case 'addHoSoFile':
         return _jsonOut_(_api_addHoSoFile_(payload));
+      case 'removeHoSoFile':
+        return _jsonOut_(_api_removeHoSoFile_(payload));
       case 'getHoSoRelations':
         return _jsonOut_(_api_getHoSoRelations_(payload));
       case 'addHoSoRelation':
         return _jsonOut_(_api_addHoSoRelation_(payload));
+      case 'removeHoSoRelation':
+        return _jsonOut_(_api_removeHoSoRelation_(payload));
+      case 'softDeleteHoSo':
+        return _jsonOut_(_api_softDeleteHoSo_(payload));
+      case 'getHoSoCompleteness':
+        return _jsonOut_(_api_getHoSoCompleteness_(payload));
+      case 'getHoSoExpiringDocs':
+        return _jsonOut_(_api_getHoSoExpiringDocs_(payload));
+      case 'generateHoSoReport':
+        return _jsonOut_(_api_generateHoSoReport_(payload));
       case 'getEnumOptions':
         return _jsonOut_(_api_getEnumOptions_(payload));
       case 'getMasterCodeOptions':
@@ -560,8 +648,12 @@ function _gatewayDoPost_(e) {
       default:
         return _jsonOut_({ ok: false, message: 'Unknown action: ' + action });
     }
+    } finally {
+      if (typeof cbvClearRequestCorrelationId_ === 'function') cbvClearRequestCorrelationId_();
+    }
   } catch (err) {
     Logger.log('[HOSO_GATEWAY] doPost error: ' + (err.message || err));
+    if (typeof cbvClearRequestCorrelationId_ === 'function') cbvClearRequestCorrelationId_();
     return _jsonOut_({ ok: false, message: err.message || 'Internal error' });
   }
 }

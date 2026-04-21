@@ -2,11 +2,19 @@
  * HO_SO Audit & Repair — uses loadSheetDataSafe where applicable.
  */
 
-function _hosoLoaded(name) {
+/**
+ * Load a HO_SO-adjacent sheet via loadSheetDataSafe. Renamed from _hosoLoaded
+ * to match hoso* naming convention (see NAMING_CONVENTIONS.md §1/§2).
+ * @param {string} name CBV_CONFIG.SHEETS key or raw sheet name.
+ * @returns {{headers:string[], rows:object[], rowCount:number}|null}
+ */
+function hosoAuditLoaded_(name) {
   var sh = SpreadsheetApp.getActive().getSheetByName(CBV_CONFIG.SHEETS[name] || name);
   if (!sh) return null;
   return typeof loadSheetDataSafe === 'function' ? loadSheetDataSafe(sh, name) : null;
 }
+
+// Phase C (2026-04-21): deprecated alias _hosoLoaded removed; use hosoAuditLoaded_.
 
 function auditHosoSchema() {
   var findings = [];
@@ -43,9 +51,9 @@ function auditHosoRefs() {
   specs.forEach(function(sp) {
     var childName = CBV_CONFIG.SHEETS[sp.child] || sp.child;
     var parentName = CBV_CONFIG.SHEETS[sp.parent] || sp.parent;
-    var loaded = _hosoLoaded(sp.child);
+    var loaded = hosoAuditLoaded_(sp.child);
     if (!loaded || loaded.rowCount === 0) return;
-    var parentLoaded = _hosoLoaded(sp.parent);
+    var parentLoaded = hosoAuditLoaded_(sp.parent);
     var ids = {};
     if (parentLoaded && parentLoaded.rows.length) {
       parentLoaded.rows.forEach(function(r) { ids[String(r.ID || '').trim()] = true; });
@@ -71,7 +79,7 @@ function auditHosoEnums() {
     { table: 'HO_SO_UPDATE_LOG', col: 'ACTION_TYPE', group: 'HO_SO_ACTION_TYPE' }
   ];
   checks.forEach(function(c) {
-    var loaded = _hosoLoaded(c.table);
+    var loaded = hosoAuditLoaded_(c.table);
     if (!loaded || loaded.rowCount === 0) return;
     loaded.rows.forEach(function(r) {
       var v = String(r[c.col] || '').trim();
@@ -88,7 +96,7 @@ function auditHosoEnums() {
 
 function auditHosoDataQuality() {
   var findings = [];
-  var loaded = _hosoLoaded('HO_SO_MASTER');
+  var loaded = hosoAuditLoaded_('HO_SO_MASTER');
   var masterIds = {};
   if (loaded && loaded.rowCount > 0) {
     var codes = {};
@@ -111,7 +119,7 @@ function auditHosoDataQuality() {
   }
 
   (function() {
-    var ch = _hosoLoaded('HO_SO_FILE');
+    var ch = hosoAuditLoaded_('HO_SO_FILE');
     if (ch && ch.rowCount) {
       ch.rows.forEach(function(r) {
         var hid = String(r.HO_SO_ID || '').trim();
@@ -122,7 +130,7 @@ function auditHosoDataQuality() {
         if (!masterIds[hid]) findings.push({ severity: 'MEDIUM', code: 'ORPHAN_CHILD', table: 'HO_SO_FILE', row: r._rowNumber, message: 'HO_SO_ID not in HO_SO_MASTER: ' + hid });
       });
     }
-    ch = _hosoLoaded('HO_SO_RELATION');
+    ch = hosoAuditLoaded_('HO_SO_RELATION');
     if (ch && ch.rowCount) {
       ch.rows.forEach(function(r) {
         var f = String(r.FROM_HO_SO_ID || '').trim();
@@ -135,7 +143,7 @@ function auditHosoDataQuality() {
         if (t && !masterIds[t]) findings.push({ severity: 'MEDIUM', code: 'ORPHAN_CHILD', table: 'HO_SO_RELATION', row: r._rowNumber, message: 'TO_HO_SO_ID not in HO_SO_MASTER: ' + t });
       });
     }
-    ch = _hosoLoaded('HO_SO_UPDATE_LOG');
+    ch = hosoAuditLoaded_('HO_SO_UPDATE_LOG');
     if (ch && ch.rowCount) {
       ch.rows.forEach(function(r) {
         var hid = String(r.HO_SO_ID || '').trim();
@@ -153,7 +161,7 @@ function auditHosoDataQuality() {
 
 function repairHosoMissingStatus() {
   var n = 0;
-  var loaded = _hosoLoaded('HO_SO_MASTER');
+  var loaded = hosoAuditLoaded_('HO_SO_MASTER');
   if (!loaded || loaded.rowCount === 0) return { repaired: n };
   var sh = SpreadsheetApp.getActive().getSheetByName(CBV_CONFIG.SHEETS.HO_SO_MASTER);
   var idx = loaded.headers.indexOf('STATUS');
@@ -169,7 +177,7 @@ function repairHosoMissingStatus() {
 function repairHosoInvalidRefs() {
   var n = 0;
   var stamp = { UPDATED_AT: cbvNow(), UPDATED_BY: cbvUser() };
-  var loaded = _hosoLoaded('HO_SO_MASTER');
+  var loaded = hosoAuditLoaded_('HO_SO_MASTER');
   if (!loaded || !loaded.rowCount) return { repaired: n, message: 'No rows' };
   loaded.rows.forEach(function(r) {
     var patch = {};
@@ -196,7 +204,7 @@ function repairHosoInvalidRefs() {
 function repairHosoInvalidEnums() {
   var n = 0;
   var stamp = { UPDATED_AT: cbvNow(), UPDATED_BY: cbvUser() };
-  var loaded = _hosoLoaded('HO_SO_MASTER');
+  var loaded = hosoAuditLoaded_('HO_SO_MASTER');
   if (!loaded || !loaded.rowCount) return { repaired: n, message: 'No rows' };
   loaded.rows.forEach(function(r) {
     if (String(r.STATUS || '').trim() !== 'INACTIVE') return;
@@ -213,7 +221,7 @@ function repairHosoInvalidEnums() {
 function repairHosoDuplicateCodes_() {
   var n = 0;
   var stamp = { UPDATED_AT: cbvNow(), UPDATED_BY: cbvUser() };
-  var loaded = _hosoLoaded('HO_SO_MASTER');
+  var loaded = hosoAuditLoaded_('HO_SO_MASTER');
   if (!loaded || !loaded.rowCount) return { repaired: n };
   var byCode = {};
   loaded.rows.forEach(function(r) {
@@ -243,7 +251,8 @@ function verifyHosoAppSheetReadiness() {
   var b = auditHosoRefs();
   var c = auditHosoEnums();
   var d = auditHosoDataQuality();
-  var high = [a, b, c, d].reduce(function(s, x) {
+  var e = auditHosoHtxIntegrity();
+  var high = [a, b, c, d, e].reduce(function(s, x) {
     return s + (x.findings || []).filter(function(f) { return f.severity === 'HIGH'; }).length;
   }, 0);
   return {
@@ -251,6 +260,127 @@ function verifyHosoAppSheetReadiness() {
     schema: a,
     refs: b,
     enums: c,
-    dataQuality: d
+    dataQuality: d,
+    htx: e
   };
+}
+
+/**
+ * HTX integrity probes — single source of truth for the "HO_SO_TYPE=HTX → ROOT, other → MUST have HTX_ID"
+ * business invariant.
+ *
+ * Findings:
+ *   - HIGH  HTX_SELF_REF        : row with type=HTX but HTX_ID is non-empty (should be blank / root)
+ *   - HIGH  HTX_MISSING         : non-HTX row with blank HTX_ID
+ *   - HIGH  HTX_ORPHAN          : HTX_ID does not reference an existing HO_SO_MASTER row
+ *   - HIGH  HTX_WRONG_TYPE      : HTX_ID references a row whose TYPE is not HTX
+ *   - HIGH  HTX_DELETED         : HTX_ID references a soft-deleted HO_SO_MASTER row
+ * @returns {{ok:boolean, findings:Array}}
+ */
+function auditHosoHtxIntegrity() {
+  var findings = [];
+  var loaded = hosoAuditLoaded_('HO_SO_MASTER');
+  if (!loaded || loaded.rowCount === 0) return { ok: true, findings: findings };
+
+  var typeCodeById = typeof hosoRepoMasterCodeIndexForHoSoType === 'function' ? hosoRepoMasterCodeIndexForHoSoType() : {};
+
+  var byId = {};
+  loaded.rows.forEach(function(r) {
+    var id = String(r.ID || '').trim();
+    if (id) byId[id] = r;
+  });
+
+  loaded.rows.forEach(function(r) {
+    var id = String(r.ID || '').trim();
+    if (!id) return;
+    var typeId = String(r.HO_SO_TYPE_ID || '').trim();
+    var typeCode = typeId ? (typeCodeById[typeId] || '') : '';
+    var htxId = String(r.HTX_ID || '').trim();
+    var isRowDeleted = r.IS_DELETED === true || String(r.IS_DELETED).toLowerCase() === 'true';
+    if (isRowDeleted) return;
+
+    if (typeCode === 'HTX') {
+      if (htxId) {
+        findings.push({
+          severity: 'HIGH', code: 'HTX_SELF_REF', table: 'HO_SO_MASTER', row: r._rowNumber,
+          message: 'HTX row has HTX_ID=' + htxId + ' (must be blank)'
+        });
+      }
+      return;
+    }
+
+    if (!htxId) {
+      findings.push({
+        severity: 'HIGH', code: 'HTX_MISSING', table: 'HO_SO_MASTER', row: r._rowNumber,
+        message: 'Non-HTX row (type=' + (typeCode || typeId || '?') + ') has no HTX_ID'
+      });
+      return;
+    }
+
+    var parent = byId[htxId];
+    if (!parent) {
+      findings.push({
+        severity: 'HIGH', code: 'HTX_ORPHAN', table: 'HO_SO_MASTER', row: r._rowNumber,
+        message: 'HTX_ID=' + htxId + ' not in HO_SO_MASTER'
+      });
+      return;
+    }
+    var parentTypeCode = typeCodeById[String(parent.HO_SO_TYPE_ID || '').trim()] || '';
+    if (parentTypeCode !== 'HTX') {
+      findings.push({
+        severity: 'HIGH', code: 'HTX_WRONG_TYPE', table: 'HO_SO_MASTER', row: r._rowNumber,
+        message: 'HTX_ID=' + htxId + ' references row of type ' + (parentTypeCode || '?') + ' (expected HTX)'
+      });
+      return;
+    }
+    var parentDeleted = parent.IS_DELETED === true || String(parent.IS_DELETED).toLowerCase() === 'true';
+    if (parentDeleted) {
+      findings.push({
+        severity: 'HIGH', code: 'HTX_DELETED', table: 'HO_SO_MASTER', row: r._rowNumber,
+        message: 'HTX_ID=' + htxId + ' references soft-deleted HTX'
+      });
+    }
+  });
+
+  return { ok: findings.length === 0, findings: findings };
+}
+
+/**
+ * Phase C gate: assert no deprecated HO_SO legacy name is redeclared in the
+ * global scope. If any legacy identifier resolves to a function, that means
+ * a developer has accidentally re-introduced an alias (or pulled back an old
+ * file). Emits HIGH findings so hosoAudit / hosoRunSmokeTest fail loud.
+ *
+ * Keep this list in sync with FUNCTION_WRAPPER_MAP.md → "HO_SO removed aliases".
+ *
+ * @returns {{ok:boolean, findings:Array<{severity:string,code:string,name:string,message:string}>}}
+ */
+function auditHosoCanonicalOnly_() {
+  var REMOVED = [
+    'createHoSo', 'createHoso', 'updateHoso', 'changeHosoStatus', 'setHoSoStatus',
+    'closeHoso', 'softDeleteHoso', 'addHosoFile', 'attachHoSoFile', 'removeHosoFile',
+    'addHosoRelation', 'createHoSoRelation', 'removeHosoRelation',
+    'getHosoById', 'getHosoFiles', 'getHosoRelations', 'getHosoLogs',
+    'getExpiringHoso', 'getExpiredHoso', 'checkHoSoCompleteness',
+    'getExpiringDocs', 'generateHoSoReport',
+    'runHosoTests', 'runHoSoTests', 'runHosoSmokeTest',
+    'hosoRunAudit', 'hosoRunAuditImpl', 'auditHoSoModule', 'auditHoSoModuleImpl',
+    'seedHoSoDemo', 'seedHoSoDemoImpl',
+    'hosoRunFullDeploymentMenu', 'hosoRunFullDeploymentMenuImpl', 'runHosoFullDeployment',
+    '_hosoLoaded'
+  ];
+  var findings = [];
+  REMOVED.forEach(function(name) {
+    var fn;
+    try { fn = eval(name); } catch (e) { fn = undefined; }
+    if (typeof fn === 'function') {
+      findings.push({
+        severity: 'HIGH',
+        code: 'HOSO_LEGACY_ALIAS_REDECLARED',
+        name: name,
+        message: 'Deprecated HO_SO alias "' + name + '" is declared again — Phase C requires canonical hoso* only. Remove the redeclaration and call the canonical name instead.'
+      });
+    }
+  });
+  return { ok: findings.length === 0, findings: findings };
 }
