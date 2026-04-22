@@ -1,6 +1,8 @@
 # SHEET DICTIONARY - HO_SO
 
 ## HO_SO_MASTER
+- HO_SO_TYPE_ID: ref → MASTER_CODE.ID (MASTER_GROUP=HO_SO_TYPE, STATUS=ACTIVE) — required
+- TAGS_TEXT: text tags tìm kiếm, phân cách dấu phẩy (thay thế TAGS)
 - HO_SO_TYPE: enum {HTX, XA_VIEN, XE, TAI_XE} (legacy; đồng bộ với loại MASTER)
 - STATUS: enum {NEW, ACTIVE, INACTIVE, ARCHIVED}
 - HTX_ID: ref → HO_SO_MASTER.ID (bản ghi có `HO_SO_TYPE` = HTX). Để **trống** nếu chính bản ghi này là loại HTX; bắt buộc có giá trị cho các loại khác (thuộc một HTX).

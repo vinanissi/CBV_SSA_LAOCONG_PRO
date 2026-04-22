@@ -26,26 +26,39 @@ Reusable slices for Ref targets, filters, and UI consistency. Prefer slice reuse
 | Slice name | ACTIVE_MASTER_CODES |
 | Source table | MASTER_CODE |
 | Row filter | `AND([STATUS] = "ACTIVE", [IS_DELETED] = FALSE)` |
-| Purpose | Generic active master codes; future MASTER_GROUP refs |
+| Purpose | Generic active master codes; UNIT_ID, future MASTER_GROUP refs |
 | Columns used | ID, CODE, DISPLAY_TEXT, NAME, MASTER_GROUP |
-| Referenced by | — (FINANCE unit = DON_VI_ID → DON_VI, not MASTER_CODE) |
+| Referenced by | FINANCE_TRANSACTION.UNIT_ID (when MASTER_GROUP=UNIT exists) |
 
 ---
 
-### C. ACTIVE_HTX
+### C. ACTIVE_HO_SO_TYPE
+
+| Property | Value |
+|----------|-------|
+| Slice name | ACTIVE_HO_SO_TYPE |
+| Source table | MASTER_CODE |
+| Row filter | `AND([MASTER_GROUP] = "HO_SO_TYPE", [STATUS] = "ACTIVE", [IS_DELETED] = FALSE)` |
+| Purpose | Dropdown cho HO_SO_TYPE_ID trong HO_SO form |
+| Columns used | ID, CODE, DISPLAY_TEXT, NAME, MASTER_GROUP |
+| Referenced by | HO_SO_MASTER.HO_SO_TYPE_ID |
+
+---
+
+### D. ACTIVE_HTX
 
 | Property | Value |
 |----------|-------|
 | Slice name | ACTIVE_HTX |
 | Source table | HO_SO_MASTER |
-| Row filter | `AND([HO_SO_TYPE_ID].[CODE] = "HTX", [IS_DELETED] = FALSE)` |
+| Row filter | `AND([HO_SO_TYPE] = "HTX", [IS_DELETED] = FALSE)` |
 | Purpose | HTX dropdown for HO_SO_MASTER.HTX_ID |
 | Columns used | ID, NAME, CODE |
 | Referenced by | HO_SO_MASTER.HTX_ID |
 
 ---
 
-### D. HO_SO_ACTIVE
+### E. HO_SO_ACTIVE
 
 | Property | Value |
 |----------|-------|
@@ -58,7 +71,7 @@ Reusable slices for Ref targets, filters, and UI consistency. Prefer slice reuse
 
 ---
 
-### E. TASK_OPEN
+### F. TASK_OPEN
 
 | Property | Value |
 |----------|-------|
@@ -71,7 +84,7 @@ Reusable slices for Ref targets, filters, and UI consistency. Prefer slice reuse
 
 ---
 
-### F. TASK_DONE
+### G. TASK_DONE
 
 | Property | Value |
 |----------|-------|
@@ -84,7 +97,7 @@ Reusable slices for Ref targets, filters, and UI consistency. Prefer slice reuse
 
 ---
 
-### G. TASK_MY_OPEN (Security/Filter)
+### H. TASK_MY_OPEN (Security/Filter)
 
 | Property | Value |
 |----------|-------|
@@ -101,7 +114,7 @@ Reusable slices for Ref targets, filters, and UI consistency. Prefer slice reuse
 
 ---
 
-### H. TASK_MY_TASKS
+### I. TASK_MY_TASKS
 
 | Property | Value |
 |----------|-------|
@@ -113,7 +126,7 @@ Reusable slices for Ref targets, filters, and UI consistency. Prefer slice reuse
 
 ---
 
-### I. FIN_DRAFT
+### J. FIN_DRAFT
 
 | Property | Value |
 |----------|-------|
@@ -126,7 +139,7 @@ Reusable slices for Ref targets, filters, and UI consistency. Prefer slice reuse
 
 ---
 
-### J. FIN_CONFIRMED
+### K. FIN_CONFIRMED
 
 | Property | Value |
 |----------|-------|
@@ -139,27 +152,15 @@ Reusable slices for Ref targets, filters, and UI consistency. Prefer slice reuse
 
 ---
 
-### K. FIN_EXPORT_CSV
-
-| Property | Value |
-|----------|-------|
-| Slice name | FIN_EXPORT_CSV |
-| Source table | FINANCE_TRANSACTION |
-| Row filter | Theo `FIN_EXPORT_FILTER` (user `USEREMAIL()`) — công thức đầy đủ trong `02_MODULES/FINANCE/APPSHEET_UX_SPEC.md` |
-| Purpose | Danh sách lọc theo chu kỳ / đơn vị / người tạo trước khi **Export CSV** |
-| Referenced by | FIN_LIST_EXPORT (hoặc tương đương) |
-
----
-
 ## SLICE CREATION ORDER
 
-1. ACTIVE_USERS (MASTER_CODE)
+1. ACTIVE_USERS (USER_DIRECTORY)
 2. ACTIVE_MASTER_CODES (MASTER_CODE)
-3. ACTIVE_HTX (HO_SO_MASTER)
-4. HO_SO_ACTIVE (HO_SO_MASTER)
-5. TASK_OPEN, TASK_DONE, TASK_MY_OPEN, TASK_MY_TASKS (TASK_MAIN)
-6. FIN_DRAFT, FIN_CONFIRMED (FINANCE_TRANSACTION)
-7. FIN_EXPORT_CSV (FINANCE_TRANSACTION) — sau khi có table `FIN_EXPORT_FILTER` + slice phụ thuộc
+3. ACTIVE_HO_SO_TYPE (MASTER_CODE)
+4. ACTIVE_HTX (HO_SO_MASTER)
+5. HO_SO_ACTIVE (HO_SO_MASTER)
+6. TASK_OPEN, TASK_DONE, TASK_MY_OPEN, TASK_MY_TASKS (TASK_MAIN)
+7. FIN_DRAFT, FIN_CONFIRMED (FINANCE_TRANSACTION)
 
 ---
 

@@ -59,6 +59,10 @@ function migrateHosoLegacyToPro_() {
       UPDATED_BY: typeof cbvUser === 'function' ? cbvUser() : 'system'
     };
 
+    if (r['TAGS'] && !String(r['TAGS_TEXT'] || '').trim()) {
+      patch['TAGS_TEXT'] = r['TAGS'];
+    }
+
     var nextTypeId = typeId;
     if (!nextTypeId) {
       nextTypeId = hosoMigrationResolveTypeId_(legacyType);

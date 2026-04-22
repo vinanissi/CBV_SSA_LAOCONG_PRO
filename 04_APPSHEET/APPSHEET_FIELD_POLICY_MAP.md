@@ -14,7 +14,7 @@ Complete field policy classification for Phase 1 deployment. Use for Show?, Edit
 
 | # | Table | Source |
 |---|-------|--------|
-| 1 | ENUM_DICTIONARY | 01_ENUM_SEED.js, ENUM_DICTIONARY_SCHEMA.md |
+| 1 | ENUM_DICTIONARY | 01_ENUM_SEED.gs, ENUM_DICTIONARY_SCHEMA.md |
 | 2 | MASTER_CODE | schema_manifest.json |
 | 3 | ADMIN_AUDIT_LOG | schema_manifest.json |
 | 4 | HO_SO_MASTER | schema_manifest.json |
@@ -45,7 +45,7 @@ Complete field policy classification for Phase 1 deployment. Use for Show?, Edit
 
 | Table | Field | ENUM_GROUP | Policy |
 |-------|-------|------------|--------|
-| HO_SO_MASTER | HO_SO_TYPE_ID | — | Ref MASTER_CODE (group HO_SO_TYPE); VISIBLE_CONTROLLED |
+| HO_SO_MASTER | HO_SO_TYPE | HO_SO_TYPE | VISIBLE_CONTROLLED |
 | HO_SO_MASTER | STATUS | HO_SO_STATUS | VISIBLE_CONTROLLED (GAS action only) |
 | HO_SO_FILE | FILE_GROUP | FILE_GROUP | VISIBLE_CONTROLLED |
 | HO_SO_FILE | STATUS | HO_SO_STATUS | VISIBLE_CONTROLLED |
@@ -74,7 +74,8 @@ Complete field policy classification for Phase 1 deployment. Use for Show?, Edit
 | TASK_MAIN | TASK_TYPE_ID | TASK_TYPE | REF to ACTIVE_TASK_TYPE slice |
 | TASK_MAIN | DON_VI_ID | — | REF to ACTIVE_DON_VI |
 | FINANCE_TRANSACTION | DON_VI_ID | — | REF to ACTIVE_DON_VI (unit attribution) |
-| HO_SO_MASTER | HTX_ID | — | REF ACTIVE_HTX (`HO_SO_TYPE_ID` → CODE HTX) |
+| HO_SO_MASTER | HO_SO_TYPE_ID | HO_SO_TYPE | REF to ACTIVE_HO_SO_TYPE slice |
+| HO_SO_MASTER | HTX_ID | — | REF to HO_SO_MASTER where HO_SO_TYPE=HTX |
 
 **Note:** TASK_GROUP_CODE, CATEGORY_CODE, DOC_GROUP_CODE are NOT in schema. Do not add to policy map.
 
@@ -155,7 +156,8 @@ Complete field policy classification for Phase 1 deployment. Use for Show?, Edit
 | COLUMN_NAME | FIELD_ROLE | POLICY_TYPE | SHOW_DEFAULT | EDITABLE_DEFAULT | SHOW_IF | EDITABLE_IF | DATA_SOURCE | RISK_NOTE | APPSHEET_NOTE |
 |-------------|------------|-------------|--------------|------------------|---------|-------------|-------------|------------|----------------|
 | ID | SYSTEM_KEY | HIDDEN_READONLY | OFF | OFF | — | FALSE | SYSTEM | | |
-| HO_SO_TYPE_ID | REF_FIELD | VISIBLE_CONTROLLED | ON | ON | — | TRUE | REF | Valid_If MASTER_CODE HO_SO_TYPE | |
+| HO_SO_TYPE | ENUM_FIELD | VISIBLE_CONTROLLED | ON | ON | — | TRUE | ENUM | Valid_If ENUM_DICTIONARY | |
+| HO_SO_TYPE_ID | REF_FIELD | VISIBLE_CONTROLLED | ON | ON | — | TRUE | REF | Ref MASTER_CODE group HO_SO_TYPE | Required PRO |
 | CODE | BUSINESS_INPUT | VISIBLE_EDITABLE | ON | ON | — | TRUE | BUSINESS | GAS validates duplicate | |
 | NAME | BUSINESS_INPUT | VISIBLE_EDITABLE | ON | ON | — | TRUE | BUSINESS | | |
 | STATUS | WORKFLOW_FIELD | VISIBLE_CONTROLLED | ON | OFF | — | FALSE | ENUM | GAS action only | |
@@ -168,8 +170,7 @@ Complete field policy classification for Phase 1 deployment. Use for Show?, Edit
 | START_DATE | BUSINESS_INPUT | VISIBLE_EDITABLE | ON | ON | — | TRUE | BUSINESS | | |
 | END_DATE | BUSINESS_INPUT | VISIBLE_EDITABLE | ON | ON | — | TRUE | BUSINESS | | |
 | NOTE | BUSINESS_INPUT | VISIBLE_EDITABLE | ON | ON | — | TRUE | BUSINESS | | |
-| TAGS_TEXT | BUSINESS_INPUT | VISIBLE_EDITABLE | ON | ON | — | TRUE | BUSINESS | | |
-| PENDING_ACTION | WORKFLOW_FIELD | VISIBLE_READONLY | ON | OFF | — | FALSE | WEBHOOK | CMD: + bot | |
+| TAGS_TEXT | BUSINESS_INPUT | VISIBLE_EDITABLE | ON | ON | — | TRUE | BUSINESS | Tags tìm kiếm | |
 | CREATED_AT | AUDIT_FIELD | HIDDEN_READONLY | OFF | OFF | — | FALSE | AUDIT | | |
 | CREATED_BY | AUDIT_FIELD | HIDDEN_READONLY | OFF | OFF | — | FALSE | AUDIT | | |
 | UPDATED_AT | AUDIT_FIELD | HIDDEN_READONLY | OFF | OFF | — | FALSE | AUDIT | | |
@@ -342,7 +343,7 @@ Complete field policy classification for Phase 1 deployment. Use for Show?, Edit
 | AUDIT_FIELD | 40+ | All |
 | WORKFLOW_FIELD | 10 | HO_SO_*, TASK_MAIN, FINANCE_TRANSACTION, MASTER_CODE |
 | ENUM_FIELD | 17 | HO_SO_*, TASK_*, FINANCE_*, MASTER_CODE |
-| MASTER_CODE_FIELD | 0 | — |
+| MASTER_CODE_FIELD | 0 | (UNIT_ID is REF) |
 | REF_FIELD | 15 | HO_SO_*, TASK_*, FINANCE_* |
 | BUSINESS_INPUT | 50+ | All business tables |
 | BUSINESS_OUTPUT | 3 | TASK_MAIN.DONE_AT, TASK_CHECKLIST.DONE_AT, DONE_BY |
@@ -420,8 +421,8 @@ Editable_If: AND([IS_SYSTEM] = FALSE, [ALLOW_EDIT] = TRUE)
 ## PART 5 — Safe Defaults by Table
 
 ### HO_SO_MASTER
-- **List:** NAME, CODE, HO_SO_TYPE_ID, STATUS, PHONE
-- **Form:** NAME, CODE, HO_SO_TYPE_ID, HTX_ID, OWNER_ID, PHONE, EMAIL, ADDRESS, NOTE, TAGS_TEXT (STATUS readonly; PENDING_ACTION cho bot)
+- **List:** NAME, CODE, HO_SO_TYPE, HO_SO_TYPE_ID, STATUS, PHONE
+- **Form:** HO_SO_TYPE_ID, NAME, CODE, HO_SO_TYPE (legacy mirror), HTX_ID, OWNER_ID, PHONE, EMAIL, ADDRESS, NOTE, TAGS_TEXT (STATUS readonly)
 - **Hide:** ID, CREATED_*, UPDATED_*, IS_DELETED
 
 ### TASK_MAIN
@@ -449,6 +450,7 @@ Editable_If: AND([IS_SYSTEM] = FALSE, [ALLOW_EDIT] = TRUE)
 | Item | Note |
 |------|------|
 | RELATION_TYPE | No enum group in ENUM_SEED_SPEC. Phase 1: treat as free text. Add enum or MASTER_CODE if needed. |
+| UNIT_ID | No explicit MASTER_GROUP. Phase 1: free text or ref to HO_SO/MASTER_CODE as configured. |
 | HO_SO_FILE.STATUS | Uses HO_SO_STATUS enum; values ACTIVE, ARCHIVED (subset). |
 | Role infrastructure | No USER_ROLE sheet. Role assignment via AppSheet Accounts. Policy does not assume role-based column visibility. |
 
@@ -458,7 +460,7 @@ Editable_If: AND([IS_SYSTEM] = FALSE, [ALLOW_EDIT] = TRUE)
 
 **FIELD POLICY MAP SAFE**
 
-Ready to apply manually in AppSheet. All fields classified. Enum and workflow locks documented. Admin-only tables and fields marked. RELATION_TYPE ambiguity stated where applicable. Phase 1 defaults provided.
+Ready to apply manually in AppSheet. All fields classified. Enum and workflow locks documented. Admin-only tables and fields marked. RELATION_TYPE and UNIT_ID ambiguities stated. Phase 1 defaults provided.
 
 ---
 

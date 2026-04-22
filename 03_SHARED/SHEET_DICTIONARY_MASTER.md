@@ -26,8 +26,6 @@
 - CODE: text unique per MASTER_GROUP
 - NAME: text full canonical name
 - DISPLAY_TEXT: text optional UI override
-- SHORT_NAME: text abbreviated label
-- PARENT_CODE: text parent for hierarchy
 - STATUS: enum ACTIVE | INACTIVE | ARCHIVED
 - SORT_ORDER: number
 - IS_SYSTEM: yes/no
@@ -42,6 +40,7 @@
 ## HO_SO_MASTER
 - ID: key
 - HO_SO_TYPE: enum HO_SO_TYPE
+- HO_SO_TYPE_ID: ref → MASTER_CODE (MASTER_GROUP=HO_SO_TYPE) — required, PRO
 - CODE: text unique trong nhóm
 - NAME: text
 - STATUS: enum HO_SO_STATUS
@@ -54,7 +53,7 @@
 - START_DATE: date
 - END_DATE: date
 - NOTE: long text
-- TAGS: text
+- TAGS_TEXT: text (tags tìm kiếm, phân cách dấu phẩy)
 - CREATED_AT: datetime
 - CREATED_BY: text
 - UPDATED_AT: datetime

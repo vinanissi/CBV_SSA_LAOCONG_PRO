@@ -45,7 +45,7 @@ Complete before starting configuration.
 ### 1.5 MASTER_CODE (if used)
 
 - [ ] MASTER_CODE sheet exists and is populated (or empty is OK for Phase 1)
-- [ ] Organizational units are **DON_VI** only; **FINANCE_TRANSACTION.DON_VI_ID** → Ref **ACTIVE_DON_VI** (not MASTER_CODE)
+- [ ] UNIT_ID in FINANCE_TRANSACTION may reference MASTER_CODE; configure when MASTER_CODE has data
 
 ### 1.6 Summary Checkbox
 
@@ -67,6 +67,9 @@ For each table, confirm in AppSheet: **Data → Tables**.
 - [ ] Key column: **ID**
 - [ ] Label column: **NAME**
 - [ ] Add table if missing: Data → Add new table → Select HO_SO_MASTER sheet
+- [ ] Column **HO_SO_TYPE_ID**: Type = Ref → MASTER_CODE, Slice = **ACTIVE_HO_SO_TYPE**
+- [ ] Column **TAGS_TEXT**: Type = Text (không phải TAGS nữa — xác nhận tên cột đúng trong sheet)
+- [ ] Column **HO_SO_TYPE**: Type = Enum, Valid_If = HO_SO_TYPE group (legacy, giữ readonly nếu auto-sync)
 
 ### 2.2 HO_SO_FILE
 
@@ -148,45 +151,13 @@ Create slices before configuring Ref columns. See APPSHEET_SLICE_MAP.md.
 
 - [ ] **ACTIVE_USERS** — Source: MASTER_CODE; Filter: `AND([MASTER_GROUP] = "USER", [STATUS] = "ACTIVE", [IS_DELETED] = FALSE)`
 - [ ] **ACTIVE_MASTER_CODES** — Source: MASTER_CODE; Filter: `AND([STATUS] = "ACTIVE", [IS_DELETED] = FALSE)`
-- [ ] **ACTIVE_HTX** — Source: HO_SO_MASTER; Filter: `AND([HO_SO_TYPE_ID].[CODE] = "HTX", [IS_DELETED] = FALSE)` (cột `HO_SO_TYPE_ID` là Ref → `MASTER_CODE`)
+- [ ] **ACTIVE_HO_SO_TYPE** — Source: MASTER_CODE; Filter: `AND([MASTER_GROUP] = "HO_SO_TYPE", [STATUS] = "ACTIVE", [IS_DELETED] = FALSE)`
+- [ ] **ACTIVE_HTX** — Source: HO_SO_MASTER; Filter: `AND([HO_SO_TYPE] = "HTX", [IS_DELETED] = FALSE)`
 - [ ] **HO_SO_ACTIVE** — Source: HO_SO_MASTER; Filter: `[IS_DELETED] = FALSE`
 - [ ] **TASK_OPEN** — Source: TASK_MAIN; Filter: `IN([STATUS], LIST("NEW", "ASSIGNED", "IN_PROGRESS", "WAITING"))`
 - [ ] **TASK_DONE** — Source: TASK_MAIN; Filter: `[STATUS] = "DONE"`
 - [ ] **FIN_DRAFT** — Source: FINANCE_TRANSACTION; Filter: `[STATUS] = "NEW"`
 - [ ] **FIN_CONFIRMED** — Source: FINANCE_TRANSACTION; Filter: `[STATUS] = "CONFIRMED"`
-
----
-
-## PART 2.6 — FINANCE: EXPORT CSV (CHỌN CHU KỲ / ĐƠN VỊ / NGƯỜI)
-
-**Schema:** Sheet **`FIN_EXPORT_FILTER`** (bootstrap GAS / `ensureSchemas`). Chi tiết slice + công thức: `02_MODULES/FINANCE/APPSHEET_UX_SPEC.md`.
-
-### 2.6.1 Data source
-
-- [ ] Thêm table **FIN_EXPORT_FILTER** (cùng spreadsheet) — Key = **ID**; cột: `USER_EMAIL`, `DATE_FROM`, `DATE_TO`, `DON_VI_ID`, `USER_REF_ID`, `NOTE`, `UPDATED_AT`
-- [ ] `DON_VI_ID` → Ref → **ACTIVE_DON_VI** (hoặc `DON_VI`)
-- [ ] `USER_REF_ID` → Ref → **ACTIVE_USERS** — lọc **`FINANCE_TRANSACTION.CREATED_BY`** (người tạo)
-
-### 2.6.2 Slice + list export
-
-- [ ] Tạo slice **FIN_EXPORT_CSV** (source `FINANCE_TRANSACTION`) — copy **Row filter** từ `APPSHEET_UX_SPEC` (mục *Slice FIN_EXPORT_CSV*)
-- [ ] Tạo view Table **FIN_LIST_EXPORT** (hoặc tên tương đương) dùng slice **FIN_EXPORT_CSV**
-
-### 2.6.3 Form chọn tham số (mỗi user một dòng)
-
-- [ ] View **Form** hoặc **Deck**: bảng `FIN_EXPORT_FILTER`; **Security filter** `[USER_EMAIL] = USEREMAIL()`
-- [ ] **Initial value** (hoặc Valid_If): `USER_EMAIL` = `USEREMAIL()` khi thêm dòng
-- [ ] Hướng dẫn user: điền **DATE_FROM**, **DATE_TO**; để trống **DON_VI_ID** = mọi đơn vị; để trống **USER_REF_ID** = mọi người (theo chu kỳ)
-
-### 2.6.4 Action Export CSV
-
-- [ ] **Action**: **Do this** = **App: export this view to a CSV file** ([Help](https://support.google.com/appsheet/answer/11579391?hl=en))
-- [ ] Gắn vào **FIN_LIST_EXPORT** (không gắn vào form filter)
-- [ ] Kiểm tra trên **trình duyệt web** (bắt buộc cho export CSV)
-
-### 2.6.5 Tối thiểu (không dùng FIN_EXPORT_FILTER)
-
-- [ ] Gắn Export CSV lên `FIN_LIST` + slice **FIN_DRAFT** / **FIN_CONFIRMED** — không chọn chu kỳ/đơn vị/người qua form
 
 ---
 
@@ -200,7 +171,7 @@ For each table, go to **Data → Columns → [Table name]** and configure.
 
 **Step 2:** Set column types (leave as Text unless noted):
 - ID → Text (Key)
-- HO_SO_TYPE_ID → Ref → `MASTER_CODE` (slice loại HO_SO_TYPE); không cột `HO_SO_TYPE` text
+- HO_SO_TYPE → Text (enum; Valid_If later)
 - CODE → Text
 - NAME → Text
 - STATUS → Text (readonly)
@@ -208,7 +179,7 @@ For each table, go to **Data → Columns → [Table name]** and configure.
 - OWNER_ID → **Ref** → ACTIVE_USERS slice (Display: DISPLAY_TEXT); Allow other values: **No**
 - PHONE, EMAIL, ID_NO, ADDRESS → Text
 - START_DATE, END_DATE → Date
-- NOTE, TAGS → Text
+- NOTE, TAGS_TEXT → Text
 - CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY → leave default
 - IS_DELETED → Yes/No
 
@@ -357,9 +328,9 @@ For each table, go to **Data → Columns → [Table name]** and configure.
 - TRANS_DATE → Date
 - TRANS_TYPE, STATUS, CATEGORY, PAYMENT_METHOD, RELATED_ENTITY_TYPE → Text (enum; Valid_If later)
 - AMOUNT → Number
-- DON_VI_ID → **Ref** → ACTIVE_DON_VI (Display: DISPLAY_TEXT)
+- UNIT_ID → Text or Ref to MASTER_CODE
 - RELATED_ENTITY_ID → Text or Ref
-- EVIDENCE_URL → **File** (khuyến nghị để có nút tải/chọn file; AppSheet upload lên Drive và lưu URL vào ô) **hoặc** Text nếu chỉ dán link thủ công (legacy)
+- EVIDENCE_URL → Text (legacy)
 - CONFIRMED_AT → Date (hidden; GAS set)
 - CONFIRMED_BY → **Ref** → ACTIVE_USERS (Display: DISPLAY_TEXT); hidden; GAS set
 - CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY → leave default
@@ -369,11 +340,7 @@ For each table, go to **Data → Columns → [Table name]** and configure.
 
 **Step 4:** Editable? = FALSE: ID, STATUS, CREATED_*, UPDATED_*, CONFIRMED_*
 
-**Step 5:** Editable_If for business fields: `[STATUS] <> "CONFIRMED"` (TRANS_CODE, TRANS_DATE, TRANS_TYPE, CATEGORY, AMOUNT, DON_VI_ID, COUNTERPARTY, PAYMENT_METHOD, REFERENCE_NO, RELATED_ENTITY_TYPE, RELATED_ENTITY_ID, DESCRIPTION, EVIDENCE_URL)
-
-**Step 6 — Chứng từ tải file:** Nếu form đang hiển thị **EVIDENCE_URL** kiểu Text (chỉ nhập `http://`):
-- Đổi cột **EVIDENCE_URL** sang type **File** (Data → Columns → FINANCE_TRANSACTION → EVIDENCE_URL). Lưu lại app; trên form sẽ có chọn/tải file thay vì ô text.
-- **Nhiều file hoặc phân loại (hóa đơn/biên lai/…):** giữ **EVIDENCE_URL** tùy chọn hoặc ẩn trên form; dùng bảng con **FINANCE_ATTACHMENT** với **FILE_URL** = File và inline trên **FINANCE_DETAIL** (xem §3.9 và UX checklist Bước 11–12).
+**Step 5:** Editable_If for business fields: `[STATUS] <> "CONFIRMED"` (TRANS_CODE, TRANS_DATE, TRANS_TYPE, CATEGORY, AMOUNT, UNIT_ID, COUNTERPARTY, PAYMENT_METHOD, REFERENCE_NO, RELATED_ENTITY_TYPE, RELATED_ENTITY_ID, DESCRIPTION, EVIDENCE_URL)
 
 ---
 
@@ -422,12 +389,12 @@ For each enum-controlled field, go to **Data → Columns → [Table] → [Column
 
 **AppSheet Valid_If:** Paste the exact formula. Do NOT enable "Allow other values" in List/Choice.
 
-### 4.1 HO_SO_MASTER.HO_SO_TYPE_ID
+### 4.1 HO_SO_MASTER.HO_SO_TYPE
 
-- Table: HO_SO_MASTER | Column: HO_SO_TYPE_ID (Ref → MASTER_CODE)
+- Table: HO_SO_MASTER | Column: HO_SO_TYPE
 - Valid_If:
 ```
-IN([HO_SO_TYPE_ID], SELECT(MASTER_CODE[ID], AND([MASTER_GROUP] = "HO_SO_TYPE", [STATUS] = "ACTIVE", [IS_DELETED] = FALSE)))
+IN([HO_SO_TYPE], SELECT(ENUM_DICTIONARY[ENUM_VALUE], AND(ENUM_DICTIONARY[ENUM_GROUP] = "HO_SO_TYPE", ENUM_DICTIONARY[IS_ACTIVE] = TRUE)))
 ```
 
 ### 4.2 HO_SO_MASTER.STATUS
@@ -597,7 +564,7 @@ For each form view, set column order and visibility.
 ### 7.1 HO_SO_FORM
 
 - [ ] Open UX → HO_SO_FORM → Form columns
-- [ ] Order: HO_SO_TYPE_ID, CODE, NAME, HTX_ID, OWNER_ID, PHONE, EMAIL, ID_NO, ADDRESS, START_DATE, END_DATE, NOTE, TAGS_TEXT, STATUS, PENDING_ACTION
+- [ ] Order: HO_SO_TYPE_ID, HO_SO_TYPE, CODE, NAME, HTX_ID, OWNER_ID, PHONE, EMAIL, ID_NO, ADDRESS, START_DATE, END_DATE, NOTE, TAGS_TEXT, STATUS
 - [ ] Hide: ID, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY, IS_DELETED
 - [ ] STATUS: Editable? = FALSE
 
@@ -631,7 +598,7 @@ For each form view, set column order and visibility.
 
 ### 7.7 FINANCE_FORM
 
-- [ ] Order: TRANS_TYPE, TRANS_DATE, CATEGORY, AMOUNT, DON_VI_ID, COUNTERPARTY, PAYMENT_METHOD, REFERENCE_NO, RELATED_ENTITY_TYPE, RELATED_ENTITY_ID, DESCRIPTION, EVIDENCE_URL, TRANS_CODE, STATUS
+- [ ] Order: TRANS_TYPE, TRANS_DATE, CATEGORY, AMOUNT, UNIT_ID, COUNTERPARTY, PAYMENT_METHOD, REFERENCE_NO, RELATED_ENTITY_TYPE, RELATED_ENTITY_ID, DESCRIPTION, EVIDENCE_URL, TRANS_CODE, STATUS
 - [ ] Hide: ID, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY, IS_DELETED, CONFIRMED_AT, CONFIRMED_BY
 - [ ] Editable_If for business fields: `[STATUS] <> "CONFIRMED"`
 - [ ] STATUS: Editable? = FALSE
@@ -773,14 +740,14 @@ For each Related/Inline section under parent Detail, configure visible columns.
 
 | Table | Key | Label | Ref Columns | IsPartOf | File Column | Valid_If Fields |
 |-------|-----|-------|-------------|----------|-------------|----------------|
-| HO_SO_MASTER | ID | NAME | HTX_ID | — | — | HO_SO_TYPE_ID, STATUS |
+| HO_SO_MASTER | ID | NAME | HTX_ID | — | — | HO_SO_TYPE, STATUS |
 | HO_SO_FILE | ID | FILE_NAME | HO_SO_ID | ON | FILE_URL | FILE_GROUP |
 | HO_SO_RELATION | ID | RELATION_TYPE | FROM, TO | OFF | — | STATUS |
 | TASK_MAIN | ID | TITLE | RELATED_ENTITY_ID | — | — | TASK_TYPE, STATUS, PRIORITY, RELATED_ENTITY_TYPE |
 | TASK_CHECKLIST | ID | TITLE | TASK_ID | ON | — | — |
 | TASK_ATTACHMENT | ID | TITLE | TASK_ID | ON | FILE_URL | ATTACHMENT_TYPE |
 | TASK_UPDATE_LOG | ID | ACTION | TASK_ID | OFF | — | — |
-| FINANCE_TRANSACTION | ID | TRANS_CODE | DON_VI_ID, RELATED_ENTITY_ID | — | — | TRANS_TYPE, STATUS, CATEGORY, PAYMENT_METHOD, RELATED_ENTITY_TYPE |
+| FINANCE_TRANSACTION | ID | TRANS_CODE | UNIT_ID, RELATED_ENTITY_ID | — | — | TRANS_TYPE, STATUS, CATEGORY, PAYMENT_METHOD, RELATED_ENTITY_TYPE |
 | FINANCE_ATTACHMENT | ID | TITLE | FINANCE_ID | ON | FILE_URL | ATTACHMENT_TYPE |
 | FINANCE_LOG | ID | ACTION | FIN_ID | OFF | — | — |
 
@@ -822,7 +789,7 @@ See Part 9. Execute all 4 test flows before declaring config complete.
 - **ENUM_DICTIONARY:** Must exist and be populated before Valid_If works. Run initAll() in GAS first.
 - **HO_SO_RELATION:** Dual ref; IsPartOf OFF. User must select FROM_HO_SO_ID and/or TO_HO_SO_ID when adding.
 - **RELATION_TYPE:** No enum; free text. Consider MASTER_CODE later.
-- **DON_VI_ID:** Must Ref **ACTIVE_DON_VI**; values must exist in DON_VI sheet.
+- **UNIT_ID:** Ref to MASTER_CODE; configure when MASTER_CODE has UNIT group data.
 - **AppSheet expression syntax:** If Valid_If fails, check AND() and SELECT() syntax for your AppSheet version.
 
 ### 11.7 Final Statement

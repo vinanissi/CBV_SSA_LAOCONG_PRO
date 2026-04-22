@@ -121,7 +121,7 @@ Vào Data → Columns → TASK_MAIN. Với mỗi cột, bấm vào cột → **D
 | START_DATE | Ngày bắt đầu |
 | END_DATE | Ngày kết thúc |
 | NOTE | Ghi chú |
-| TAGS | Nhãn |
+| TAGS_TEXT | Nhãn |
 | CREATED_AT | Thời điểm tạo |
 | CREATED_BY | Người tạo |
 | UPDATED_AT | Thời điểm cập nhật |

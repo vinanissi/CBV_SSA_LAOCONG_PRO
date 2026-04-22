@@ -10,6 +10,10 @@ _handoff/CLAUDE_FINANCE_PACK/tier6_appsheet/
 # Google Auth Token (Local)
 .clasprc.json
 
+# Local / machine-specific project & deploy config
+.clasp.json
+.idp-environments.json
+.project.json
 # Local secrets & env backups (never commit)
 WEBHOOK_URL.txt
 .idp-environments.json

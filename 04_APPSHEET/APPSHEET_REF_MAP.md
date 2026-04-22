@@ -22,8 +22,11 @@
 
 ## HO_SO_MASTER
 
+**Slice `ACTIVE_HO_SO_TYPE`:** Source = `MASTER_CODE`; Filter = `AND([MASTER_GROUP]="HO_SO_TYPE", [STATUS]="ACTIVE", [IS_DELETED]=FALSE)` — dropdown cho `HO_SO_TYPE_ID`.
+
 | Column   | Ref Target   | Display | Notes                    |
 |----------|--------------|---------|--------------------------|
+| HO_SO_TYPE_ID | MASTER_CODE (slice ACTIVE_HO_SO_TYPE) | DISPLAY_TEXT | Required PRO |
 | HTX_ID   | ACTIVE_HTX   | NAME    | Slice of HO_SO_MASTER (HO_SO_TYPE=HTX) |
 | OWNER_ID | ACTIVE_USERS | FULL_NAME | USER_DIRECTORY; store ID |
 
