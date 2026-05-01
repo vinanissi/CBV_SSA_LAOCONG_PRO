@@ -282,6 +282,14 @@ For each table, go to **Data → Columns → [Table name]** and configure.
 
 ### 3.6 TASK_ATTACHMENT
 
+> ⚠️ **KNOWN BUG — BẮT BUỘC verify sau mỗi lần deploy:**
+> Triệu chứng: upload file xong nhưng KHÔNG hiện trong "DANH SÁCH CÁC FILE TẢI LÊN" của TASK_DETAIL, và cột `TASK_ID` trong sheet `TASK_ATTACHMENT` bị **RỖNG**.
+> Nguyên nhân: 1 trong 4 — (a) TASK_ID vẫn Type=Text chưa đổi sang Ref; (b) Ref nhưng **IsPartOf=OFF**; (c) user mở form standalone TASK_ATTACHMENT_FORM (ngoài parent context); (d) inline view filter sai.
+> Cách audit/dọn dữ liệu rác (GAS):
+> - Audit: `auditAttachmentBlankParent()` → xem mục `byTable.TASK_ATTACHMENT.blank[]`.
+> - Dọn (dry-run trước): `repairAttachmentBlankParent({ dryRun: true })` → review → chạy lại với `{ dryRun: false }` để soft-delete.
+> Định nghĩa trong `05_GAS_RUNTIME/96_TASK_SYSTEM_AUDIT_REPAIR.js`.
+
 **Step 1:** Open Data → Columns → TASK_ATTACHMENT
 
 **Step 2:** Set column types:
@@ -294,11 +302,15 @@ For each table, go to **Data → Columns → [Table name]** and configure.
 - NOTE → Text
 - CREATED_AT, CREATED_BY → leave default
 
-**Step 3:** Set TASK_ID → **IsPartOf** = **TRUE**
+**Step 3:** Set TASK_ID → **IsPartOf** = **TRUE** ← phải tick, nếu không TASK_ID sẽ rỗng khi add inline
 
 **Step 4:** Hide: ID, TASK_ID (when inline), FILE_NAME, DRIVE_FILE_ID, CREATED_AT, CREATED_BY
 
 **Step 5:** Editable? = FALSE: ID, TASK_ID, DRIVE_FILE_ID, CREATED_AT, CREATED_BY
+
+**Step 6:** Set **Require** = TRUE + **Valid_If** = `ISNOTBLANK([TASK_ID])` cho TASK_ID (chặn hard-guard nếu IsPartOf sụp)
+
+**Step 7:** TASK_ATTACHMENT_FORM → **Position = ref** (ẩn khỏi main nav) để user không mở form ngoài parent context
 
 ---
 

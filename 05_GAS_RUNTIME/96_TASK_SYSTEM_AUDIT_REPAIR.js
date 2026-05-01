@@ -286,3 +286,154 @@ function repairTaskSystemSafelyFull(options) {
 
   return { appended: appended, dryRun: dryRun };
 }
+
+/* -----------------------------------------------------------------------
+ * Attachment parent-ref audit (TASK_ATTACHMENT, HO_SO_FILE, FINANCE_ATTACHMENT)
+ *
+ * Lý do: AppSheet mặc định chỉ auto-fill parent ref khi IsPartOf=ON và
+ * user vào form qua inline "Add" của parent detail. Nếu cấu hình sai
+ * (IsPartOf=OFF, parent ref là Text thay vì Ref, hoặc form mở ngoài context
+ * parent), cột TASK_ID/HO_SO_ID/FINANCE_ID sẽ bị trống → file upload không
+ * hiện trong inline view của parent.
+ *
+ * GAS không sửa được root cause (phải sửa trong AppSheet Editor), nhưng có
+ * thể phát hiện và dọn các dòng rác (parent ref rỗng / parent không tồn tại).
+ * ----------------------------------------------------------------------- */
+
+/** Child tables có parent ref bắt buộc. */
+var _ATTACHMENT_PARENT_REF_MAP = [
+  { child: 'TASK_ATTACHMENT',    parent: 'TASK_MAIN',            refCol: 'TASK_ID'    },
+  { child: 'HO_SO_FILE',         parent: 'HO_SO_MASTER',         refCol: 'HO_SO_ID'   },
+  { child: 'FINANCE_ATTACHMENT', parent: 'FINANCE_TRANSACTION',  refCol: 'FINANCE_ID' }
+];
+
+/**
+ * Audit 3 bảng attachment: đếm số dòng có parent ref RỖNG (AppSheet config sai)
+ * và số dòng ORPHAN (parent ref trỏ tới ID không tồn tại).
+ *
+ * @returns {{ ok: boolean, findings: Object[], byTable: Object, summary: string }}
+ */
+function auditAttachmentBlankParent() {
+  var findings = [];
+  var byTable = {};
+
+  _ATTACHMENT_PARENT_REF_MAP.forEach(function(entry) {
+    var info = { blank: [], orphan: [], total: 0 };
+    byTable[entry.child] = info;
+
+    var childSheet = _auditSheet((CBV_CONFIG && CBV_CONFIG.SHEETS && CBV_CONFIG.SHEETS[entry.child]) || entry.child);
+    if (!childSheet) {
+      findings.push({ code: 'SHEET_MISSING', table: entry.child, severity: 'HIGH', message: entry.child + ' sheet missing' });
+      return;
+    }
+
+    var parentIds = {};
+    var parentSheet = _auditSheet((CBV_CONFIG && CBV_CONFIG.SHEETS && CBV_CONFIG.SHEETS[entry.parent]) || entry.parent);
+    if (parentSheet) {
+      var parentRows = typeof _rows === 'function' ? _rows(parentSheet) : [];
+      parentRows.forEach(function(r) {
+        var pid = String(r.ID || '').trim();
+        if (pid) parentIds[pid] = true;
+      });
+    }
+
+    var rows = typeof _rows === 'function' ? _rows(childSheet) : [];
+    rows.forEach(function(r) {
+      var isDeleted = r.IS_DELETED === true || String(r.IS_DELETED).toLowerCase() === 'true';
+      if (isDeleted) return;
+      info.total++;
+      var ref = String(r[entry.refCol] || '').trim();
+      if (!ref) {
+        info.blank.push({ ID: String(r.ID || ''), _rowNumber: r._rowNumber, FILE_URL: r.FILE_URL || '', TITLE: r.TITLE || r.FILE_NAME || '' });
+      } else if (!parentIds[ref]) {
+        info.orphan.push({ ID: String(r.ID || ''), _rowNumber: r._rowNumber, refValue: ref, FILE_URL: r.FILE_URL || '' });
+      }
+    });
+
+    if (info.blank.length > 0) {
+      findings.push({
+        code: 'ATTACHMENT_BLANK_PARENT_REF',
+        table: entry.child,
+        column: entry.refCol,
+        severity: 'HIGH',
+        count: info.blank.length,
+        message: info.blank.length + ' row(s) có ' + entry.refCol + ' RỖNG — AppSheet IsPartOf config sai hoặc form mở ngoài parent context'
+      });
+    }
+    if (info.orphan.length > 0) {
+      findings.push({
+        code: 'ATTACHMENT_ORPHAN_PARENT_REF',
+        table: entry.child,
+        column: entry.refCol,
+        severity: 'MEDIUM',
+        count: info.orphan.length,
+        message: info.orphan.length + ' row(s) có ' + entry.refCol + ' trỏ tới ' + entry.parent + '.ID không tồn tại'
+      });
+    }
+  });
+
+  var ok = findings.length === 0;
+  var summary = ok
+    ? 'OK: no blank/orphan parent refs across TASK_ATTACHMENT, HO_SO_FILE, FINANCE_ATTACHMENT'
+    : findings.length + ' finding(s) across attachment tables';
+  return { ok: ok, findings: findings, byTable: byTable, summary: summary };
+}
+
+/**
+ * Soft-delete các dòng attachment có parent ref RỖNG (IS_DELETED=true + log).
+ * KHÔNG auto-fix orphan (trỏ sai ID) vì cần context nghiệp vụ. Chỉ báo cáo.
+ *
+ * @param {Object} [options]
+ * @param {boolean} [options.dryRun=true]  - true: chỉ báo cáo, không ghi. Mặc định dryRun để an toàn.
+ * @param {string[]} [options.tables]      - chỉ xử lý các bảng trong list (mặc định: tất cả)
+ * @param {string} [options.note]          - ghi chú đính kèm (mặc định: 'Auto-repair: blank parent ref')
+ * @returns {{ dryRun: boolean, softDeleted: Object, skipped: Object, auditBefore: Object }}
+ */
+function repairAttachmentBlankParent(options) {
+  var opts = options || {};
+  var dryRun = opts.dryRun !== false;
+  var tablesFilter = Array.isArray(opts.tables) && opts.tables.length > 0 ? opts.tables : null;
+  var note = String(opts.note || 'Auto-repair: blank parent ref');
+
+  var auditBefore = auditAttachmentBlankParent();
+  var softDeleted = {};
+  var skipped = {};
+
+  _ATTACHMENT_PARENT_REF_MAP.forEach(function(entry) {
+    if (tablesFilter && tablesFilter.indexOf(entry.child) === -1) {
+      skipped[entry.child] = 'not in tables filter';
+      return;
+    }
+    var info = auditBefore.byTable[entry.child];
+    if (!info || info.blank.length === 0) {
+      softDeleted[entry.child] = { count: 0, ids: [] };
+      return;
+    }
+
+    var sheetName = (CBV_CONFIG && CBV_CONFIG.SHEETS && CBV_CONFIG.SHEETS[entry.child]) || entry.child;
+    var ids = [];
+    info.blank.forEach(function(row) {
+      ids.push(row.ID);
+      if (dryRun) return;
+      var patch = {
+        IS_DELETED: true,
+        NOTE: (row.NOTE ? row.NOTE + ' | ' : '') + note + ' | ' + entry.refCol + ' blank',
+        UPDATED_AT: typeof cbvNow === 'function' ? cbvNow() : new Date(),
+        UPDATED_BY: typeof cbvUser === 'function' ? cbvUser() : 'SYSTEM'
+      };
+      if (typeof _updateRow === 'function' && row._rowNumber) {
+        _updateRow(sheetName, row._rowNumber, patch);
+      }
+    });
+
+    softDeleted[entry.child] = { count: ids.length, ids: ids };
+  });
+
+  return {
+    dryRun: dryRun,
+    softDeleted: softDeleted,
+    skipped: skipped,
+    auditBefore: { findings: auditBefore.findings, summary: auditBefore.summary }
+  };
+}
+
