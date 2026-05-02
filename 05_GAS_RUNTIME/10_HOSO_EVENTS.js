@@ -1,12 +1,41 @@
 /**
  * HO_SO Events — thin emit helpers (one per canonical event).
  * Never throws; delegates to cbvTryEmitCoreEvent_.
- * Dependencies: 04_CORE_EVENT_TYPES, 04_CORE_EVENT_QUEUE.
+ * Dependencies: 04_CORE_EVENT_TYPES, 04_CORE_EVENT_QUEUE, 05_MAIN_EVENT_CLIENT (mainEventTryForward_).
  *
  * Design: keep this file as the ONLY place where HO_SO event constants are
  * referenced by service code. When the rule engine becomes authoritative
  * (EVENT_DRIVEN_MIGRATION_PLAN §10.2 W2/P7), refactor lives in this one file.
  */
+
+/** MAIN Event Bridge — chuẩn hóa payload; không throw. */
+function _hosoMainEventForward_(eventType, hoSoId, partial) {
+  try {
+    if (typeof mainEventTryForward_ !== 'function') return;
+    partial = partial || {};
+    var row = typeof hosoRepoFindMasterById === 'function' ? hosoRepoFindMasterById(hoSoId) : null;
+    var title = partial.entity_title || (row ? String(row.TITLE || row.DISPLAY_NAME || row.HO_SO_CODE || row.NAME || hoSoId) : String(hoSoId));
+    var st = partial.status != null ? String(partial.status) : (row ? String(row.STATUS || '') : '');
+    mainEventTryForward_({
+      eventType: String(eventType || ''),
+      sourceModule: 'HO_SO',
+      refId: String(hoSoId || ''),
+      entityType: 'HO_SO_MASTER',
+      payload: {
+        entity_title: title,
+        status: st,
+        old_status: partial.old_status != null ? String(partial.old_status) : '',
+        new_status: partial.new_status != null ? String(partial.new_status) : '',
+        severity: partial.severity || (eventType === 'HO_SO_BLOCKED' ? 'warning' : 'info'),
+        is_blocked: eventType === 'HO_SO_BLOCKED' || partial.is_blocked === true,
+        message: partial.message != null ? String(partial.message) : '',
+        metadata: partial.metadata && typeof partial.metadata === 'object' ? partial.metadata : {}
+      }
+    });
+  } catch (e) {
+    Logger.log('[_hosoMainEventForward_] ' + (e && e.message ? e.message : e));
+  }
+}
 
 function hosoEmit_(eventType, refId, payload) {
   if (typeof cbvTryEmitCoreEvent_ !== 'function') return null;
@@ -21,7 +50,7 @@ function hosoEmit_(eventType, refId, payload) {
 
 function hosoEmitCreated_(record) {
   if (!record) return null;
-  return hosoEmit_(
+  var r = hosoEmit_(
     typeof CBV_CORE_EVENT_TYPE_HO_SO_CREATED !== 'undefined' ? CBV_CORE_EVENT_TYPE_HO_SO_CREATED : 'HO_SO_CREATED',
     record.ID,
     {
@@ -32,6 +61,19 @@ function hosoEmitCreated_(record) {
       DON_VI_ID: record.DON_VI_ID || ''
     }
   );
+  _hosoMainEventForward_('HO_SO_CREATED', record.ID, {
+    entity_title: record.TITLE || record.DISPLAY_NAME || record.HO_SO_CODE || record.NAME,
+    status: String(record.STATUS || ''),
+    new_status: String(record.STATUS || ''),
+    message: 'HO_SO created',
+    metadata: {
+      HO_SO_TYPE_ID: record.HO_SO_TYPE_ID,
+      HO_SO_CODE: record.HO_SO_CODE,
+      HTX_ID: record.HTX_ID || '',
+      DON_VI_ID: record.DON_VI_ID || ''
+    }
+  });
+  return r;
 }
 
 function hosoEmitUpdated_(id, before, after, changedFields) {
@@ -47,7 +89,7 @@ function hosoEmitUpdated_(id, before, after, changedFields) {
 }
 
 function hosoEmitStatusChanged_(id, previousStatus, newStatus, note) {
-  return hosoEmit_(
+  var r = hosoEmit_(
     typeof CBV_CORE_EVENT_TYPE_HO_SO_STATUS_CHANGED !== 'undefined' ? CBV_CORE_EVENT_TYPE_HO_SO_STATUS_CHANGED : 'HO_SO_STATUS_CHANGED',
     id,
     {
@@ -56,6 +98,33 @@ function hosoEmitStatusChanged_(id, previousStatus, newStatus, note) {
       note: note || ''
     }
   );
+  var ns = String(newStatus || '');
+  var ps = String(previousStatus || '');
+  _hosoMainEventForward_('HO_SO_STATUS_CHANGED', id, {
+    old_status: ps,
+    new_status: ns,
+    message: String(note || ''),
+    metadata: { previousStatus: ps, newStatus: ns }
+  });
+  if (ns === 'INACTIVE') {
+    _hosoMainEventForward_('HO_SO_BLOCKED', id, {
+      old_status: ps,
+      new_status: ns,
+      severity: 'warning',
+      is_blocked: true,
+      message: String(note || 'HO_SO inactive / blocked'),
+      metadata: { reason: 'INACTIVE' }
+    });
+  }
+  if (ns === 'CLOSED') {
+    _hosoMainEventForward_('HO_SO_DONE', id, {
+      old_status: ps,
+      new_status: 'CLOSED',
+      message: String(note || 'HO_SO closed (done)'),
+      metadata: { reason: 'CLOSED' }
+    });
+  }
+  return r;
 }
 
 function hosoEmitClosed_(id, previousStatus, note) {

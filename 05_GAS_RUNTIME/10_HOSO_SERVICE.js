@@ -529,13 +529,29 @@ function hosoQueryExpiring(days) {
   var today = typeof hosoStartOfDay === 'function' ? hosoStartOfDay(cbvNow()) : cbvNow();
   var until = new Date(today.getTime() + d * 86400000);
   var rows = hosoFilterActiveRows(hosoRepoRows(CBV_CONFIG.SHEETS.HO_SO_MASTER));
-  return rows.filter(function(r) {
+  var out = rows.filter(function(r) {
     var end = hosoParseDate(r.END_DATE);
     if (!end) return false;
     var e = hosoStartOfDay(end);
     var st = String(r.STATUS || '');
     return e >= today && e <= until && st !== 'CLOSED' && st !== 'ARCHIVED';
   });
+  try {
+    if (typeof _hosoMainEventForward_ === 'function') {
+      out.forEach(function(r) {
+        _hosoMainEventForward_('HO_SO_EXPIRED_SOON', r.ID, {
+          entity_title: r.TITLE || r.DISPLAY_NAME || r.HO_SO_CODE,
+          status: String(r.STATUS || ''),
+          message: 'HO_SO END_DATE within expiring window',
+          severity: 'warning',
+          metadata: { windowDays: d, END_DATE: r.END_DATE, kind: 'master_end_date' }
+        });
+      });
+    }
+  } catch (e) {
+    Logger.log('[hosoQueryExpiring] main event ' + (e && e.message ? e.message : e));
+  }
+  return out;
 }
 
 function hosoQueryExpired() {
@@ -554,7 +570,23 @@ function hosoQueryExpired() {
       if (m && !hosoIsRowDeleted(m)) expiredIds[m.ID] = m;
     }
   });
-  return Object.keys(expiredIds).map(function(k) { return expiredIds[k]; });
+  var out = Object.keys(expiredIds).map(function(k) { return expiredIds[k]; });
+  try {
+    if (typeof _hosoMainEventForward_ === 'function') {
+      out.forEach(function(r) {
+        _hosoMainEventForward_('HO_SO_OVERDUE', r.ID, {
+          entity_title: r.TITLE || r.DISPLAY_NAME || r.HO_SO_CODE,
+          status: String(r.STATUS || ''),
+          message: 'HO_SO overdue (END_DATE or expired document)',
+          severity: 'warning',
+          metadata: { END_DATE: r.END_DATE, kind: 'master_or_file_expired' }
+        });
+      });
+    }
+  } catch (e) {
+    Logger.log('[hosoQueryExpired] main event ' + (e && e.message ? e.message : e));
+  }
+  return out;
 }
 
 /**
@@ -596,6 +628,19 @@ function hosoCheckCompleteness(hoSoId) {
     return { DOC_TYPE: r.DOC_TYPE, DESCRIPTION: r.DESCRIPTION || '' };
   });
 
+  if (missing.length > 0 && typeof _hosoMainEventForward_ === 'function') {
+    _hosoMainEventForward_('HO_SO_MISSING_DOC', hoSoId, {
+      message: 'Required documents missing',
+      severity: 'warning',
+      metadata: {
+        missing: missing,
+        have: Object.keys(hasDocs).length,
+        total: reqRows.length,
+        HO_SO_TYPE_CODE: typeCode
+      }
+    });
+  }
+
   return cbvResponse(missing.length === 0, 'COMPLETENESS_CHECK', '', {
     missing: missing,
     have: Object.keys(hasDocs).length,
@@ -618,6 +663,28 @@ function hosoQueryExpiringDocs(daysAhead) {
     var exp = new Date(f.EXPIRY_DATE);
     return !isNaN(exp.getTime()) && exp <= cutoff;
   });
+
+  try {
+    if (typeof _hosoMainEventForward_ === 'function') {
+      rows.forEach(function(f) {
+        var hid = String(f.HO_SO_ID || '');
+        if (!hid) return;
+        _hosoMainEventForward_('HO_SO_EXPIRED_SOON', hid, {
+          message: 'Attached document expiring soon',
+          severity: 'warning',
+          metadata: {
+            kind: 'file_expiry',
+            fileId: f.ID,
+            EXPIRY_DATE: f.EXPIRY_DATE,
+            DOC_TYPE: f.DOC_TYPE,
+            daysAhead: daysAhead
+          }
+        });
+      });
+    }
+  } catch (e) {
+    Logger.log('[hosoQueryExpiringDocs] main event ' + (e && e.message ? e.message : e));
+  }
 
   return cbvResponse(true, 'EXPIRING_DOCS', '', { rows: rows, count: rows.length, daysAhead: daysAhead }, []);
 }

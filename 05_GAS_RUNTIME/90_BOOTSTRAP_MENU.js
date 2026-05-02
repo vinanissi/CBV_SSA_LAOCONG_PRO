@@ -179,6 +179,18 @@ function buildCbvProMenu_() {
   );
 
   menu.addToUi();
+
+  try {
+    ui.createMenu('MAIN Event Bridge')
+      .addItem('Setup Main Event URL', 'menuMainEventBridgeSetupUrl')
+      .addItem('Test Send TASK Event', 'menuMainEventBridgeTestTask')
+      .addItem('Test Send FINANCE Event', 'menuMainEventBridgeTestFinance')
+      .addItem('Test Send HO_SO Event', 'menuMainEventBridgeTestHoSo')
+      .addItem('Check Config', 'menuMainEventBridgeCheckConfig')
+      .addToUi();
+  } catch (e) {
+    Logger.log('[buildCbvProMenu_] MAIN Event Bridge: ' + (e && e.message ? e.message : e));
+  }
 }
 
 /**

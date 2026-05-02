@@ -4,6 +4,21 @@ const FIN_ALLOWED_TRANSITIONS = {
   CANCELLED: ['ARCHIVED']
 };
 
+function _financeMainEventForward_(eventType, finId, payload) {
+  try {
+    if (typeof mainEventTryForward_ !== 'function') return;
+    mainEventTryForward_({
+      eventType: String(eventType || ''),
+      sourceModule: 'FINANCE',
+      refId: String(finId || ''),
+      entityType: 'FINANCE_TRANSACTION',
+      payload: payload && typeof payload === 'object' ? payload : {}
+    });
+  } catch (e) {
+    Logger.log('[_financeMainEventForward_] ' + (e && e.message ? e.message : e));
+  }
+}
+
 function createTransaction(data) {
   ensureRequired(data.TRANS_TYPE, 'TRANS_TYPE');
   ensureRequired(data.CATEGORY, 'CATEGORY');
@@ -62,6 +77,18 @@ function createTransaction(data) {
       }
     });
   }
+  _financeMainEventForward_('FINANCE_TX_CREATED', record.ID, {
+    entity_title: String(record.TRANS_CODE || record.ID),
+    status: String(record.STATUS || 'NEW'),
+    new_status: 'NEW',
+    message: 'Finance transaction created',
+    metadata: {
+      TRANS_TYPE: record.TRANS_TYPE,
+      CATEGORY: record.CATEGORY,
+      AMOUNT: record.AMOUNT,
+      DON_VI_ID: record.DON_VI_ID || ''
+    }
+  });
   return cbvResponse(true, 'FIN_CREATED', 'Đã tạo giao dịch', record, []);
 }
 
@@ -101,6 +128,13 @@ function updateDraftTransaction(id, patch) {
   current.UPDATED_BY = cbvUser();
   _updateRow(CBV_CONFIG.SHEETS.FINANCE_TRANSACTION, current._rowNumber, current);
   logFinance(id, 'UPDATED', beforeObj, current, 'Draft updated');
+  _financeMainEventForward_('FINANCE_NEED_REVIEW', id, {
+    entity_title: String(current.TRANS_CODE || id),
+    status: String(current.STATUS || 'NEW'),
+    message: 'Draft updated — needs review',
+    severity: 'warning',
+    metadata: { reason: 'DRAFT_UPDATED', AMOUNT: current.AMOUNT, CATEGORY: current.CATEGORY }
+  });
   return cbvResponse(true, 'FIN_UPDATED', 'Đã cập nhật draft', current, []);
 }
 
@@ -154,6 +188,28 @@ function setFinanceStatus(id, newStatus, note) {
       }
     });
   }
+  if (String(newStatus) === 'CONFIRMED') {
+    _financeMainEventForward_('FINANCE_TX_APPROVED', id, {
+      entity_title: String(current.TRANS_CODE || id),
+      status: 'CONFIRMED',
+      old_status: String(beforeObj.STATUS || ''),
+      new_status: 'CONFIRMED',
+      message: String(note || 'Transaction approved'),
+      metadata: { AMOUNT: current.AMOUNT, CATEGORY: current.CATEGORY, TRANS_TYPE: current.TRANS_TYPE }
+    });
+  }
+  if (String(newStatus) === 'CANCELLED') {
+    _financeMainEventForward_('FINANCE_BLOCKED', id, {
+      entity_title: String(current.TRANS_CODE || id),
+      status: 'CANCELLED',
+      old_status: String(beforeObj.STATUS || ''),
+      new_status: 'CANCELLED',
+      severity: 'warning',
+      is_blocked: true,
+      message: String(note || 'Transaction cancelled'),
+      metadata: { reason: 'CANCELLED' }
+    });
+  }
   return cbvResponse(true, 'FIN_STATUS_CHANGED', 'Đã đổi trạng thái', current, []);
 }
 
@@ -167,7 +223,28 @@ function confirmTransaction(id, note) {
 }
 
 function cancelTransaction(id, note) {
-  return setFinanceStatus(id, 'CANCELLED', note);
+  var cur = _findById(CBV_CONFIG.SHEETS.FINANCE_TRANSACTION, id);
+  var r = setFinanceStatus(id, 'CANCELLED', note);
+  try {
+    if (r && r.ok && cur && typeof _financeMainEventForward_ === 'function') {
+      _financeMainEventForward_('FINANCE_TX_REJECTED', id, {
+        entity_title: String(cur.TRANS_CODE || id),
+        status: 'CANCELLED',
+        old_status: String(cur.STATUS || ''),
+        new_status: 'CANCELLED',
+        severity: 'warning',
+        message: String(note || 'Transaction rejected'),
+        metadata: {
+          TRANS_TYPE: cur.TRANS_TYPE,
+          AMOUNT: cur.AMOUNT,
+          CATEGORY: cur.CATEGORY
+        }
+      });
+    }
+  } catch (e) {
+    Logger.log('[cancelTransaction] main event ' + (e && e.message ? e.message : e));
+  }
+  return r;
 }
 
 function archiveTransaction(id) {

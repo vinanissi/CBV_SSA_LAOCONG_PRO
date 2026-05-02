@@ -1,9 +1,10 @@
 /**
  * CBV Unified Web App Router
  * Single doPost that routes to AppSheet webhook handler or HO_SO API gateway.
- * Dependencies: 99_APPSHEET_WEBHOOK.gs (_webhookDoPost_), 60_HOSO_API_GATEWAY.gs (_gatewayDoPost_, _jsonOut_)
+ * Dependencies: 99_APPSHEET_WEBHOOK.gs (_webhookDoPost_), 60_HOSO_API_GATEWAY.gs (_gatewayDoPost_, _jsonOut_),
+ *   62_MAIN_EVENT_INGEST.gs (mainEventIngestFromBody_)
  *
- * Load order: must be AFTER both 99_APPSHEET_WEBHOOK.gs and 60_HOSO_API_GATEWAY.gs.
+ * Load order: must be AFTER 99_APPSHEET_WEBHOOK, 60_HOSO_API_GATEWAY, and 62_MAIN_EVENT_INGEST.
  * doGet remains on 99_APPSHEET_WEBHOOK.gs (ping) — not overridden here.
  */
 
@@ -36,6 +37,10 @@ function doPost(e) {
     }
 
     var action = String(body.action || '').trim();
+
+    if (action === 'mainEventIngest') {
+      return mainEventIngestFromBody_(body);
+    }
 
     var isWebhook = action.indexOf('CMD:') === 0 || WEBHOOK_ACTIONS_.indexOf(action) !== -1;
 

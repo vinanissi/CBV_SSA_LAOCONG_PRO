@@ -128,6 +128,34 @@ function _taskProFieldsFromCreatePayload(data) {
   return { SHARED_WITH: sw, IS_PRIVATE: priv, PENDING_ACTION: pend };
 }
 
+/** MAIN Event Bridge — không throw, không chặn nghiệp vụ. */
+function _taskMainEventForward_(eventType, taskId, ctx) {
+  try {
+    if (typeof mainEventTryForward_ !== 'function') return;
+    ctx = ctx || {};
+    var sev = ctx.severity;
+    if (!sev) sev = eventType === 'TASK_BLOCKED' ? 'warning' : 'info';
+    mainEventTryForward_({
+      eventType: String(eventType || ''),
+      sourceModule: 'TASK',
+      refId: String(taskId || ''),
+      entityType: 'TASK_MAIN',
+      payload: {
+        entity_title: ctx.title != null ? String(ctx.title) : '',
+        status: ctx.status != null ? String(ctx.status) : '',
+        old_status: ctx.old_status != null ? String(ctx.old_status) : '',
+        new_status: ctx.new_status != null ? String(ctx.new_status) : '',
+        severity: String(sev),
+        is_blocked: eventType === 'TASK_BLOCKED' || ctx.is_blocked === true,
+        message: ctx.message != null ? String(ctx.message) : '',
+        metadata: ctx.metadata && typeof ctx.metadata === 'object' ? ctx.metadata : {}
+      }
+    });
+  } catch (e) {
+    Logger.log('[_taskMainEventForward_] ' + (e && e.message ? e.message : e));
+  }
+}
+
 /**
  * Create task. DON_VI_ID, OWNER_ID, TITLE, PRIORITY required.
  * @param {Object} data
@@ -192,6 +220,13 @@ function createTask(data) {
       payload: { STATUS: record.STATUS, TITLE: record.TITLE, DON_VI_ID: record.DON_VI_ID }
     });
   }
+  _taskMainEventForward_('TASK_CREATED', record.ID, {
+    title: record.TITLE,
+    status: record.STATUS,
+    new_status: record.STATUS,
+    message: 'Task created',
+    metadata: { DON_VI_ID: record.DON_VI_ID, TASK_CODE: record.TASK_CODE || '' }
+  });
   if (typeof cbvTaskStatusSnapshotSet_ === 'function') cbvTaskStatusSnapshotSet_(record.ID, record.STATUS);
   return cbvResponse(true, 'TASK_CREATED', 'Task đã tạo', taskMainWithOverdueFields(record), []);
 }
@@ -267,6 +302,15 @@ function assignTask(taskId, ownerId) {
   } else {
     _addTaskUpdateLog(taskId, 'NOTE', 'Reassigned to ' + ownerId, '', '');
   }
+  var updated = Object.assign({}, current, patch);
+  _taskMainEventForward_('TASK_ASSIGNED', taskId, {
+    title: updated.TITLE || current.TITLE,
+    status: String(updated.STATUS || current.STATUS),
+    old_status: oldStatus,
+    new_status: String(updated.STATUS || current.STATUS),
+    message: oldStatus === 'NEW' ? 'Task assigned' : 'Task reassigned',
+    metadata: { OWNER_ID: String(ownerId), previous_owner: String(current.OWNER_ID) }
+  });
   if (patch.STATUS && typeof cbvTryEmitCoreEvent_ === 'function') {
     cbvTryEmitCoreEvent_({
       eventType: typeof CBV_CORE_EVENT_TYPE_TASK_STATUS_CHANGED !== 'undefined' ? CBV_CORE_EVENT_TYPE_TASK_STATUS_CHANGED : 'TASK_STATUS_CHANGED',
@@ -276,8 +320,16 @@ function assignTask(taskId, ownerId) {
       payload: { previousStatus: oldStatus, newStatus: String(patch.STATUS), note: '' }
     });
   }
+  if (patch.STATUS) {
+    _taskMainEventForward_('TASK_STATUS_CHANGED', taskId, {
+      title: updated.TITLE || current.TITLE,
+      status: String(patch.STATUS),
+      old_status: oldStatus,
+      new_status: String(patch.STATUS),
+      message: ''
+    });
+  }
   if (patch.STATUS && typeof cbvTaskStatusSnapshotSet_ === 'function') cbvTaskStatusSnapshotSet_(taskId, String(patch.STATUS));
-  var updated = Object.assign({}, current, patch);
   return cbvResponse(true, 'TASK_ASSIGNED', 'Đã giao task', taskMainWithOverdueFields(updated), []);
 }
 
@@ -319,8 +371,35 @@ function setTaskStatus(taskId, newStatus, note) {
       payload: { previousStatus: oldStatus, newStatus: String(newStatus), note: note || '' }
     });
   }
-  if (typeof cbvTaskStatusSnapshotSet_ === 'function') cbvTaskStatusSnapshotSet_(taskId, String(newStatus));
   var updated = Object.assign({}, current, patch);
+  _taskMainEventForward_('TASK_STATUS_CHANGED', taskId, {
+    title: updated.TITLE,
+    status: String(newStatus),
+    old_status: oldStatus,
+    new_status: String(newStatus),
+    message: note || ''
+  });
+  if (String(newStatus) === 'WAITING') {
+    _taskMainEventForward_('TASK_BLOCKED', taskId, {
+      title: updated.TITLE,
+      status: 'WAITING',
+      old_status: oldStatus,
+      new_status: 'WAITING',
+      severity: 'warning',
+      is_blocked: true,
+      message: note || 'Task waiting (taskWait)'
+    });
+  }
+  if (String(newStatus) === 'DONE') {
+    _taskMainEventForward_('TASK_DONE', taskId, {
+      title: updated.TITLE,
+      status: 'DONE',
+      old_status: oldStatus,
+      new_status: 'DONE',
+      message: note || 'Task done'
+    });
+  }
+  if (typeof cbvTaskStatusSnapshotSet_ === 'function') cbvTaskStatusSnapshotSet_(taskId, String(newStatus));
   return cbvResponse(true, 'TASK_STATUS_CHANGED', 'Đã cập nhật trạng thái', taskMainWithOverdueFields(updated), []);
 }
 

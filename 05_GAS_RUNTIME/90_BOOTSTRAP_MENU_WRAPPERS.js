@@ -1200,3 +1200,86 @@ function menuDataSyncRunApplyOneJobFromSheet() {
   }
 }
 
+// ----- MAIN Event Bridge (05_MAIN_EVENT_CLIENT.js) -----
+
+function menuMainEventBridgeSetupUrl() {
+  try {
+    var ui = SpreadsheetApp.getUi();
+    var r1 = ui.prompt('MAIN Web App URL', 'Dán URL Web App POST của MAIN Command Center:', ui.ButtonSet.OK_CANCEL);
+    if (r1.getSelectedButton() !== ui.Button.OK) return;
+    var url = String(r1.getResponseText() || '').trim();
+    var r2 = ui.prompt('Source module', 'TASK, FINANCE, hoặc HO_SO:', ui.ButtonSet.OK_CANCEL);
+    if (r2.getSelectedButton() !== ui.Button.OK) return;
+    var mod = String(r2.getResponseText() || '').trim();
+    if (typeof MainEventClient_setup_ === 'function') MainEventClient_setup_(url, mod);
+    ui.alert('MAIN Event Bridge', 'Đã lưu MAIN_EVENT_* (ScriptProperties).', ui.ButtonSet.OK);
+  } catch (e) {
+    SpreadsheetApp.getUi().alert('MAIN Event Bridge', String(e.message || e), SpreadsheetApp.getUi().ButtonSet.OK);
+  }
+}
+
+function menuMainEventBridgeTestTask() {
+  try {
+    if (typeof MainEventClient_emitTaskEvent_ === 'function') {
+      MainEventClient_emitTaskEvent_('TASK_CREATED', 'MENU_TEST_' + Utilities.getUuid().replace(/-/g, '').substring(0, 12), {
+        entity_title: 'Menu test — TASK',
+        status: 'NEW',
+        new_status: 'NEW',
+        message: 'menuMainEventBridgeTestTask',
+        metadata: { from: 'MAIN Event Bridge menu' }
+      });
+    }
+    SpreadsheetApp.getUi().alert('MAIN Event Bridge', 'Đã gửi test TASK (khi MAIN_EVENT_ENABLED bật).', SpreadsheetApp.getUi().ButtonSet.OK);
+  } catch (e) {
+    SpreadsheetApp.getUi().alert('MAIN Event Bridge', String(e.message || e), SpreadsheetApp.getUi().ButtonSet.OK);
+  }
+}
+
+function menuMainEventBridgeTestFinance() {
+  try {
+    if (typeof MainEventClient_emitFinanceEvent_ === 'function') {
+      MainEventClient_emitFinanceEvent_('FINANCE_TX_CREATED', 'MENU_TEST_' + Utilities.getUuid().replace(/-/g, '').substring(0, 12), {
+        entity_title: 'MENU-TEST-FIN',
+        status: 'NEW',
+        new_status: 'NEW',
+        message: 'menuMainEventBridgeTestFinance',
+        metadata: { from: 'MAIN Event Bridge menu' }
+      });
+    }
+    SpreadsheetApp.getUi().alert('MAIN Event Bridge', 'Đã gửi test FINANCE (khi MAIN_EVENT_ENABLED bật).', SpreadsheetApp.getUi().ButtonSet.OK);
+  } catch (e) {
+    SpreadsheetApp.getUi().alert('MAIN Event Bridge', String(e.message || e), SpreadsheetApp.getUi().ButtonSet.OK);
+  }
+}
+
+function menuMainEventBridgeTestHoSo() {
+  try {
+    if (typeof MainEventClient_emitHoSoEvent_ === 'function') {
+      MainEventClient_emitHoSoEvent_('HO_SO_CREATED', 'MENU_TEST_' + Utilities.getUuid().replace(/-/g, '').substring(0, 12), {
+        entity_title: 'Menu test — HO_SO',
+        status: 'NEW',
+        new_status: 'NEW',
+        message: 'menuMainEventBridgeTestHoSo',
+        metadata: { from: 'MAIN Event Bridge menu' }
+      });
+    }
+    SpreadsheetApp.getUi().alert('MAIN Event Bridge', 'Đã gửi test HO_SO (khi MAIN_EVENT_ENABLED bật).', SpreadsheetApp.getUi().ButtonSet.OK);
+  } catch (e) {
+    SpreadsheetApp.getUi().alert('MAIN Event Bridge', String(e.message || e), SpreadsheetApp.getUi().ButtonSet.OK);
+  }
+}
+
+function menuMainEventBridgeCheckConfig() {
+  try {
+    var p = PropertiesService.getScriptProperties();
+    var msg = [
+      'MAIN_EVENT_ENABLED: ' + (p.getProperty('MAIN_EVENT_ENABLED') || '(empty)'),
+      'MAIN_EVENT_WEBHOOK_URL: ' + (p.getProperty('MAIN_EVENT_WEBHOOK_URL') || '(empty)'),
+      'MAIN_EVENT_SOURCE_MODULE: ' + (p.getProperty('MAIN_EVENT_SOURCE_MODULE') || '(empty)')
+    ].join('\n');
+    SpreadsheetApp.getUi().alert('MAIN Event Bridge — Config', msg, SpreadsheetApp.getUi().ButtonSet.OK);
+  } catch (e) {
+    SpreadsheetApp.getUi().alert('MAIN Event Bridge', String(e.message || e), SpreadsheetApp.getUi().ButtonSet.OK);
+  }
+}
+
