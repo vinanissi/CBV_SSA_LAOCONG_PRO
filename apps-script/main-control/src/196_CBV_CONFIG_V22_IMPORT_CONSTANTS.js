@@ -1,0 +1,37 @@
+/**
+ * CONFIG V2_2 — import từ spreadsheet V1 (legacy) vào CONFIG DB hiện có.
+ * Không tạo sheet mới, không đổi header, không import log/runtime/nghiệp vụ thô.
+ * Dependencies: none (object literal)
+ */
+var CBV_CONFIG_V22_IMPORT = CBV_CONFIG_V22_IMPORT || {};
+
+/** Chỉ được ghi vào các sheet này (tên vật lý). */
+CBV_CONFIG_V22_IMPORT.TARGET_SHEETS_ALLOWED = [
+  'CONFIG_ENV',
+  'CONFIG_MODULE',
+  'CONFIG_SHEET_REGISTRY',
+  'CONFIG_ENUM',
+  'CONFIG_RULE',
+  'CONFIG_FEATURE_FLAG',
+  'CONFIG_PERMISSION',
+  'CONFIG_TEMPLATE',
+  'CONFIG_IMPORT_MAPPING',
+  'CONFIG_ACCESS_LOG',
+  'CONFIG_CHANGE_LOG'
+];
+
+/** Sheet nguồn V1 → bỏ qua (không đọc dữ liệu nghiệp vụ/log). */
+CBV_CONFIG_V22_IMPORT.SKIP_SOURCE_SHEETS = {
+  SYSTEM_LOG: 'SKIPPED_RUNTIME_OR_BUSINESS_DATA',
+  EVENT_QUEUE: 'SKIPPED_RUNTIME_OR_BUSINESS_DATA',
+  HO_SO_FILE: 'SKIPPED_RUNTIME_OR_BUSINESS_DATA',
+  HO_SO_RELATION: 'SKIPPED_RUNTIME_OR_BUSINESS_DATA',
+  HO_SO_DETAIL_PHUONG_TIEN: 'SKIPPED_RUNTIME_OR_BUSINESS_DATA',
+  HO_SO_UPDATE_LOG: 'SKIPPED_RUNTIME_OR_BUSINESS_DATA'
+};
+
+/** Module code cho permission khi sheet đích không có cột EMAIL (schema RULE_KEY + CONFIG_JSON). */
+CBV_CONFIG_V22_IMPORT.PERMISSION_MODULE_CODE = 'GLOBAL';
+
+/** Prefix mapping cho FIN_EXPORT_FILTER. */
+CBV_CONFIG_V22_IMPORT.FIN_EXPORT_MAPPING_PREFIX = 'FIN_EXPORT_FILTER';

@@ -1,0 +1,20 @@
+{
+  "scriptId": "PASTE_TASK_SCRIPT_ID_HERE",
+  "rootDir": "src",
+  "fileExtension": "js",
+  "filePushOrder": [
+    "20_TASK_REPOSITORY.js",
+    "20_TASK_VALIDATION.js",
+    "20_TASK_STATUS_SNAPSHOT.js",
+    "20_TASK_SERVICE.js",
+    "20_TASK_MIGRATION_HELPER.js",
+    "90_BOOTSTRAP_TASK.js",
+    "95_TASK_SYSTEM_BOOTSTRAP.js",
+    "96_TASK_SYSTEM_AUDIT_REPAIR.js",
+    "97_TASK_SYSTEM_TEST_ASSERTIONS.js",
+    "97_TASK_SYSTEM_TEST_MOCK.js",
+    "97_TASK_SYSTEM_TEST_RUNNER.js",
+    "99_DEBUG_TASK_TEST.js",
+    "99_DEBUG_TEST_TASK.js"
+  ]
+}

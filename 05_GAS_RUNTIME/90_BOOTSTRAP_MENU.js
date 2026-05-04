@@ -198,4 +198,24 @@ function buildCbvProMenu_() {
  */
 function onOpen() {
   buildCbvProMenu_();
+  try {
+    CBV_CoreV2_menuBootstrap();
+  } catch (e) {
+    Logger.log('[onOpen] CBV Core V2 menu: ' + (e && e.message ? e.message : e));
+  }
+  try {
+    buildHoSoV2Menu_();
+  } catch (e) {
+    Logger.log('[onOpen] HO_SO V2 menu: ' + (e && e.message ? e.message : e));
+  }
+  try {
+    buildCbvLevel6Menu_();
+  } catch (e) {
+    Logger.log('[onOpen] CBV Level 6 menu: ' + (e && e.message ? e.message : e));
+  }
+  try {
+    buildHosoV22SetupMenu_();
+  } catch (e) {
+    Logger.log('[onOpen] HOSO V2.2 Setup menu: ' + (e && e.message ? e.message : e));
+  }
 }

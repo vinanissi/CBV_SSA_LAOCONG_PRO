@@ -1,0 +1,9 @@
+{
+  "scriptId": "PASTE_FINANCE_SCRIPT_ID_HERE",
+  "rootDir": "src",
+  "fileExtension": "js",
+  "filePushOrder": [
+    "30_FINANCE_SERVICE.js",
+    "99_DEBUG_TEST_FINANCE.js"
+  ]
+}

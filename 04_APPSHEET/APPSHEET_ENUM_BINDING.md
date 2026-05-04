@@ -56,6 +56,7 @@ IN(
 
 ### HO_SO_MASTER.STATUS
 - **Enum group:** HO_SO_STATUS
+- **Source (production):** `HO_SO_ENUM` table — seed/sync via GAS `HOSO_EnumV2_syncAll()`. Stored value = `ENUM_VALUE`; label = `ENUM_LABEL` (tiếng Việt). Prefer dynamic `SELECT` below thay cho hardcode `SWITCH` / Enum tĩnh.
 - **Non-editable:** Yes (change via GAS action only)
 - **Valid_If (if editable):**
 ```
@@ -64,6 +65,77 @@ IN(
   SELECT(ENUM_DICTIONARY[ENUM_VALUE], AND(ENUM_DICTIONARY[ENUM_GROUP] = "HO_SO_STATUS", ENUM_DICTIONARY[IS_ACTIVE] = TRUE))
 )
 ```
+
+#### HO_SO_ENUM — dynamic Valid_If (STATUS + role + sort)
+
+```
+ORDERBY(
+  SELECT(
+    HO_SO_ENUM[ENUM_VALUE],
+    AND(
+      [ENUM_GROUP] = "HO_SO_STATUS",
+      [IS_ACTIVE] = TRUE,
+      OR(
+        ISBLANK([ROLE_ALLOW]),
+        IN(
+          LOOKUP(USEREMAIL(), "USER_DIRECTORY", "EMAIL", "ROLE"),
+          SPLIT([ROLE_ALLOW], ",")
+        )
+      ),
+      NOT(
+        IN(
+          LOOKUP(USEREMAIL(), "USER_DIRECTORY", "EMAIL", "ROLE"),
+          SPLIT([ROLE_DENY], ",")
+        )
+      )
+    )
+  ),
+  [SORT_ORDER],
+  TRUE
+)
+```
+
+#### HO_SO_ENUM — label hiển thị (virtual / Display name column)
+
+```
+ANY(
+  SELECT(
+    HO_SO_ENUM[ENUM_LABEL],
+    AND(
+      [ENUM_GROUP] = "HO_SO_STATUS",
+      [ENUM_VALUE] = [_THISROW].[STATUS]
+    )
+  )
+)
+```
+
+#### HO_SO_ENUM — next status allowed (workflow transition)
+
+```
+SELECT(
+  HO_SO_ENUM[ENUM_VALUE],
+  AND(
+    [ENUM_GROUP] = "HO_SO_STATUS",
+    IN(
+      [ENUM_VALUE],
+      SPLIT(
+        ANY(
+          SELECT(
+            HO_SO_ENUM[NEXT_ALLOWED_VALUES],
+            AND(
+              [ENUM_GROUP] = "HO_SO_STATUS",
+              [ENUM_VALUE] = [_THISROW].[STATUS]
+            )
+          )
+        ),
+        ","
+      )
+    )
+  )
+)
+```
+
+*(Cảnh báo AppSheet: nếu `NEXT_ALLOWED_VALUES` hoặc `ROLE_DENY` trống, kiểm tra hành vi `SPLIT` / `IN` trên môi trường thật; có thể bọc `IFS` khi cần.)*
 
 ### FINANCE_TRANSACTION.TRANS_TYPE
 - **Enum group:** FINANCE_TYPE

@@ -1,0 +1,23 @@
+{
+  "scriptId": "PASTE_CORE_RUNTIME_LIB_SCRIPT_ID_HERE",
+  "rootDir": "src",
+  "filePushOrder": [
+    "00_CORE_UTILS.js",
+    "00_CBV_CORE_V2_CONSTANTS.js",
+    "01_CBV_CORE_V2_UTILS.js",
+    "02_CBV_CORE_V2_SHEETS.js",
+    "03_CBV_CORE_DB_RESOLVER.js",
+    "10_CBV_CORE_V2_BOOTSTRAP.js",
+    "20_CBV_CORE_V2_COMMAND_ROUTER.js",
+    "21_CBV_CORE_V2_COMMAND_LOG.js",
+    "22_CBV_CORE_V2_IDEMPOTENCY.js",
+    "30_CBV_CORE_V2_EVENT_BUS.js",
+    "31_CBV_CORE_V2_EVENT_WORKER.js",
+    "40_CBV_CORE_V2_AUDIT.js",
+    "50_CBV_CORE_V2_PERMISSION.js",
+    "60_CBV_CORE_V2_HEALTH.js",
+    "70_CBV_CORE_V2_REGISTRY.js",
+    "80_CBV_CORE_V2_ERROR.js",
+    "99_CBV_CORE_RUNTIME_API.js"
+  ]
+}
