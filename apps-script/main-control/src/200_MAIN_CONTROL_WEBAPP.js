@@ -454,7 +454,27 @@ function MC_WebApp_doGet_(e) {
   }
   if (action === 'getconnectionpackage') {
     var mod = String(params.module || params.moduleCode || 'HO_SO_V2').trim();
+    // Prefer new control-plane issuer if available; keep legacy fallback.
+    try {
+      if (typeof MC_issueConnectionPackage === 'function') {
+        return MC_issueConnectionPackage(mod, { envCode: String(params.envCode || '').trim() || 'PROD' });
+      }
+    } catch (ePkg) {
+      /* ignore */
+    }
     return MC_getConnectionPackage_(mod);
+  }
+  if (action === 'control_plane_health') {
+    if (typeof MC_healthControlPlane === 'function') {
+      return MC_healthControlPlane();
+    }
+    return MC_stdResponse_(true, 'CONTROL_PLANE_HEALTH_SKIPPED', 'MC_healthControlPlane not available', {}, null);
+  }
+  if (action === 'control_plane_schema_report') {
+    if (typeof MC_Schema_report === 'function') {
+      return MC_Schema_report();
+    }
+    return MC_stdResponse_(true, 'CONTROL_PLANE_SCHEMA_REPORT_SKIPPED', 'MC_Schema_report not available', {}, null);
   }
   return MC_stdResponse_(false, 'UNKNOWN_ACTION', 'Unknown GET action', { action: params.action || '' }, { code: 'UNKNOWN_ACTION', message: String(params.action || ''), stack: '' });
 }
@@ -486,13 +506,42 @@ function MC_WebApp_doPost_(e) {
 
   if (action === 'GET_CONNECTION_PACKAGE') {
     var mod = String(body.moduleCode || body.module || 'HO_SO_V2').trim();
+    // Prefer new control-plane issuer if available; keep legacy fallback.
+    try {
+      if (typeof MC_issueConnectionPackage === 'function') {
+        return MC_issueConnectionPackage(mod, body.options || {});
+      }
+    } catch (ePkg2) {
+      /* ignore */
+    }
     return MC_getConnectionPackage_(mod);
   }
   if (action === 'INGEST_EVENT') {
     return MC_ingestEvent_(body);
   }
   if (action === 'HEALTH_CHECK') {
-    return MC_stdResponse_(true, 'MAIN_CONTROL_WEBAPP_HEALTH_OK', 'OK', MC_healthPayload_(), null);
+    var base = MC_healthPayload_();
+    // Add control plane health snapshot if available (non-blocking).
+    try {
+      if (typeof MC_healthControlPlane === 'function') {
+        base.controlPlaneHealth = MC_healthControlPlane();
+      }
+    } catch (eHealth) {
+      base.controlPlaneHealth = MC_stdResponse_(true, 'CONTROL_PLANE_HEALTH_WARN', 'MC_healthControlPlane failed (non-blocking)', {}, null);
+    }
+    return MC_stdResponse_(true, 'MAIN_CONTROL_WEBAPP_HEALTH_OK', 'OK', base, null);
+  }
+  if (action === 'CONTROL_PLANE_HEALTH') {
+    if (typeof MC_healthControlPlane === 'function') return MC_healthControlPlane();
+    return MC_stdResponse_(true, 'CONTROL_PLANE_HEALTH_SKIPPED', 'MC_healthControlPlane not available', {}, null);
+  }
+  if (action === 'CONTROL_PLANE_SCHEMA_REPORT') {
+    if (typeof MC_Schema_report === 'function') return MC_Schema_report();
+    return MC_stdResponse_(true, 'CONTROL_PLANE_SCHEMA_REPORT_SKIPPED', 'MC_Schema_report not available', {}, null);
+  }
+  if (action === 'CONTROL_PLANE_BOOTSTRAP') {
+    if (typeof MC_bootstrapControlPlane === 'function') return MC_bootstrapControlPlane();
+    return MC_stdResponse_(false, 'CONTROL_PLANE_BOOTSTRAP_MISSING', 'MC_bootstrapControlPlane not available', {}, { code: 'CONTROL_PLANE_BOOTSTRAP_MISSING', message: 'Function missing', stack: '' });
   }
   if (action === 'REGISTER_MODULE') {
     var mReg = String(body.moduleCode || body.module || '').trim().toUpperCase();

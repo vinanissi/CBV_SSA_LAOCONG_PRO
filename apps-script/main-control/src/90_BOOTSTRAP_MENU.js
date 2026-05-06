@@ -50,4 +50,12 @@ function onOpen(e) {
   } catch (err) {
     Logger.log('buildMainControlWebAppMenu_ error: ' + err);
   }
+
+  try {
+    if (typeof buildMainControlObsMenu_ === 'function') {
+      buildMainControlObsMenu_();
+    }
+  } catch (err) {
+    Logger.log('buildMainControlObsMenu_ error: ' + err);
+  }
 }
