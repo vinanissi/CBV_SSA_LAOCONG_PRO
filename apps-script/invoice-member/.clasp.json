@@ -1,0 +1,17 @@
+{
+  "scriptId": "1vysHvXwMf-arBkhymra1sQphX2H6A9SJB8pvBye1jQsm2xN8M-X4-RKc",
+  "rootDir": "src",
+  "fileExtension": "js",
+  "filePushOrder": [
+    "100_INVOICE_MEMBER_SCHEMA.js",
+    "120_INVOICE_MEMBER_CONFIG_CLIENT.js",
+    "110_INVOICE_MEMBER_BOOTSTRAP.js",
+    "210_INVOICE_MEMBER_VALIDATOR.js",
+    "220_INVOICE_MEMBER_TASK_BRIDGE.js",
+    "200_INVOICE_MEMBER_SERVICE.js",
+    "230_INVOICE_MEMBER_EVENT_CLIENT.js",
+    "240_INVOICE_MEMBER_FILE_SERVICE.js",
+    "900_INVOICE_MEMBER_TEST.js",
+    "910_INVOICE_MEMBER_MENU_PROD.js"
+  ]
+}
