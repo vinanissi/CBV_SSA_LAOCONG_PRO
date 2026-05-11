@@ -1,0 +1,28 @@
+{
+  "ok": true,
+  "phase": "T0_TASK_BINDING_BRAIN_BOOTSTRAP",
+  "status": "GO_WITH_WARNINGS",
+  "checkedAt": "2026-05-11T18:58:24+07:00",
+  "branch": "phase/t0-task-binding-brain-bootstrap",
+  "reportsGenerated": [
+    "GIT_ENV_AUDIT.md",
+    "WORKSPACE_AUDIT.md",
+    "TEST_CONSOLE_PRECHECK.md",
+    "TASK_T0_DEPLOYMENT_CHECKLIST.md",
+    "BRAIN_BOOTSTRAP_REPORT.md",
+    "AI_HANDOFF_T0_BOOTSTRAP.md",
+    "PHASE_T0_BOOTSTRAP_SUMMARY.json"
+  ],
+  "brainBootstrapped": true,
+  "runtimeModified": false,
+  "productionTouched": false,
+  "nextPhase": "T0_TASK_BINDING",
+  "warnings": [
+    "Git remote origin contained an embedded GitHub PAT (ghp_ prefix) at audit time — rotate token and set-url to credential-free HTTPS or SSH.",
+    "TASK_OBS files exist under apps-script/task but not under 05_GAS_RUNTIME — mirror/vendoring policy must be explicit before monolith-only deploys.",
+    "07_TEST and mirrored GAS task test runners TASK_MAIN required columns omit REPORTER_ID, SHARED_WITH, IS_PRIVATE vs 90_BOOTSTRAP_SCHEMA TASK_MAIN.",
+    "Triplicate task system test runner copies (07_TEST, 05_GAS_RUNTIME, apps-script/task) — drift risk on future edits.",
+    "Phase branch has no upstream yet; push policy not executed in this charter."
+  ],
+  "errors": []
+}
