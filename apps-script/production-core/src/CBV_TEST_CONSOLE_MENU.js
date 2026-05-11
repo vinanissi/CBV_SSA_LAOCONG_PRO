@@ -45,6 +45,16 @@ function buildCbvTestConsoleMenu_() {
       .addSeparator()
       .addItem('Verification runtime self-test', 'CBV_TestConsole_menuVerificationSelfTest');
 
+    var subWorkflow = ui.createMenu('Operational Workflow (Phase E)');
+    subWorkflow
+      .addItem('Run Workflow Runtime Self-Test', 'CBV_OperationalWorkflow_menuRuntimeSelfTest')
+      .addItem('Show Workflow Timeline', 'CBV_OperationalWorkflow_menuShowTimeline')
+      .addItem('Show Incident Dashboard', 'CBV_OperationalWorkflow_menuShowIncidentDashboard')
+      .addItem('Show Approval Queue', 'CBV_OperationalWorkflow_menuShowApprovalQueue')
+      .addItem('Show Workflow Viewer', 'CBV_OperationalWorkflow_menuShowWorkflowViewer')
+      .addSeparator()
+      .addItem('Run Transition Validation', 'CBV_OperationalWorkflow_menuRunTransitionValidation');
+
     var subUtil = ui.createMenu('Utilities');
     subUtil
       .addItem('Open report sheet (Core DB)', 'CBV_TestConsole_menuOpenReportSheet')
@@ -54,6 +64,7 @@ function buildCbvTestConsoleMenu_() {
       .addSubMenu(subPipe)
       .addSubMenu(subOnly)
       .addSubMenu(subVerify)
+      .addSubMenu(subWorkflow)
       .addSubMenu(subUtil)
       .addToUi();
   } catch (e) {

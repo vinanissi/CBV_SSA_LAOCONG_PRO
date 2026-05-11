@@ -14,7 +14,6 @@ function buildCbvLevel6Menu_() {
     .addItem('Seed Retry Policies', 'CBV_L6_menuSeedRetryPolicies')
     .addItem('Seed Event Consumers', 'CBV_L6_menuSeedEventConsumers')
     .addItem('Run Governance Check', 'CBV_L6_menuRunGovernanceCheck')
-    .addItem('Run Hardening Self Test', 'CBV_L6_menuHardeningSelfTest')
     .addToUi();
 }
 

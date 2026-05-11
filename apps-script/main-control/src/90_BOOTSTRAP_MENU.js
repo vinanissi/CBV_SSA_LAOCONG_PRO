@@ -58,4 +58,12 @@ function onOpen(e) {
   } catch (err) {
     Logger.log('buildMainControlObsMenu_ error: ' + err);
   }
+
+  try {
+    if (typeof buildCbvTestConsoleMenu_ === 'function') {
+      buildCbvTestConsoleMenu_();
+    }
+  } catch (err) {
+    Logger.log('buildCbvTestConsoleMenu_ error: ' + err);
+  }
 }

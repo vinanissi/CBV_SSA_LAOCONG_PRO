@@ -10,7 +10,6 @@ function buildCbvCoreV2Menu_() {
     .addItem('Health Check', 'CBV_CoreV2_menuHealthCheck')
     .addItem('Run Event Worker', 'CBV_CoreV2_menuRunEventWorker')
     .addSeparator()
-    .addItem('Self Test', 'CBV_CoreV2_menuSelfTest')
     .addItem('Test HO_SO_CREATE', 'CBV_CoreV2_menuTestHoSoCreate')
     .addToUi();
 }

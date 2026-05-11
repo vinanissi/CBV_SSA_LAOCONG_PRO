@@ -74,3 +74,11 @@ updated: 2026-05-11
 - **Alternatives considered:** Committing full RUN report with spreadsheet id for “traceability” (rejected — violates secret/id policy).
 - **Consequences:** Operators use `024_OPERATOR_EXECUTION_PACKAGE.md` + `024_SANITIZED_RUNTIME_GIT_FLOW.md`; AI/session tools never paste ids into repo files.
 - **Links:** `00_SYSTEM_BRAIN/000_REPORTS/024_PHASE_B_LIVE_STAGING_OPERATOR_RUN_REPORT.md`, `00_SYSTEM_BRAIN/000_REPORTS/024_RUNTIME_EVIDENCE_FLOW.md`
+
+## 2026-05-11 — Phase E Operational Workflow Runtime (code + sheets contract)
+
+- **Context:** Evolve Verification Pipeline (Phase D) into an operational workflow layer: explicit states, guarded transitions, append-only timeline/incident/approval sheets, HTML workflow viewer, Test Console menu surface; no auto-deploy, no auto-approve.
+- **Decision:** Ship `334`–`340` + `339` HTML under `apps-script/main-control/src/` with mirrored copies under `apps-script/production-core/src/`; `READY_FOR_DEPLOY` → `DEPLOYED` requires `ScriptProperties.CBV_OPERATIONAL_DEPLOY_UNLOCK=I_UNDERSTAND` only for **non–validate-only** transitions; `validateOnly` may confirm graph legality without unlock; verification pipeline calls `CBV_OperationalIncident_hookFromVerificationReport_` when incident conditions match.
+- **Alternatives considered:** Auto-approve or silent deploy hooks (rejected); requiring unlock even for `validateOnly` (rejected — blocks honest transition validation UX).
+- **Consequences:** Operators must run GAS self-tests in a bound spreadsheet; production readiness remains **not** asserted until live workflow verification passes; Git push/tag may still fail without remote credentials (recorded in phase report, not hidden).
+- **Links:** `00_SYSTEM_BRAIN/000_REPORTS/028_PHASE_E_OPERATIONAL_WORKFLOW_RUNTIME_REPORT_20260511_221125.md`, `00_SYSTEM_BRAIN/000_PROMPTS/028_PHASE_E_OPERATIONAL_WORKFLOW_RUNTIME_PROMPT_20260511_221125.md`

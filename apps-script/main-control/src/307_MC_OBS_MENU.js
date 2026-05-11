@@ -60,14 +60,6 @@ function buildMainControlObsMenu_() {
       .addItem('🧪 Run Health Check', 'MC_Obs_menuRunHealthCheck')
       .addItem('📂 Open OBS Dashboard', 'MC_Obs_menuOpenObsDashboard');
 
-    var subTests = ui.createMenu('🧪 Self-Test');
-    subTests
-      .addItem('🧪 Run Self Test', 'MC_Obs_menuRunSelfTest')
-      .addItem('🧪 Run Smoke Test', 'MC_Obs_menuRunSmokeTest')
-      .addItem('🧪 Run Schema Test', 'MC_Obs_menuRunSchemaTest')
-      .addItem('🧪 Generate Sample Data', 'MC_Obs_menuGenerateSampleData')
-      .addItem('📂 Open Latest Test Results', 'MC_Obs_menuOpenLatestTestResults');
-
     var subFindings = ui.createMenu('📌 Findings');
     subFindings
       .addItem('📂 Open Findings', 'MC_Obs_menuOpenFindings');
@@ -79,6 +71,7 @@ function buildMainControlObsMenu_() {
 
     var subLogs = ui.createMenu('📂 Open Logs');
     subLogs
+      .addItem('📂 Open Latest Test Results', 'MC_Obs_menuOpenLatestTestResults')
       .addItem('📂 Open Runtime Metrics', 'MC_Obs_menuOpenRuntimeMetrics')
       .addItem('📂 Open Event Trace', 'MC_Obs_menuOpenEventTrace')
       .addItem('📂 Open Audit Logs', 'MC_Obs_menuOpenAuditLogs');
@@ -98,7 +91,6 @@ function buildMainControlObsMenu_() {
     m
       .addSubMenu(subBootstrap)
       .addSubMenu(subHealth)
-      .addSubMenu(subTests)
       .addSubMenu(subFindings)
       .addSubMenu(subExport)
       .addSubMenu(subLogs)
@@ -553,7 +545,7 @@ function MC_Obs_showOperatorGuide() {
   try {
     ui.alert(
       'MAIN_CONTROL OBS — Guide',
-      '1) 🚀 Bootstrap OBS\n2) 🧪 Run Health Check\n3) 🧪 Run Self Test\n4) Nếu có lỗi → 📌 Open Findings\n5) 📤 Generate AI Diagnostic Export\n6) Copy EXPORT_JSON / EXPORT_MARKDOWN gửi ChatGPT',
+      '1) 🚀 Bootstrap OBS\n2) 🧪 Run Health Check\n3) 🧪 CBV Test Console — chạy self/smoke/schema + export report\n4) Nếu có lỗi → 📌 Open Findings\n5) 📤 Generate AI Diagnostic Export\n6) Copy EXPORT_JSON / EXPORT_MARKDOWN gửi ChatGPT',
       ui.ButtonSet.OK
     );
   } catch (e) {
@@ -897,7 +889,7 @@ function MC_Obs_ensureOperatorGuideSheet_() {
     var rows = [
       { STEP_NO: 1, TITLE: 'Bootstrap OBS', CONTENT: 'Vào menu 🛡️ MAIN_CONTROL OBS → 🚀 Bootstrap → 🚀 Bootstrap OBS.', UPDATED_AT: nowIso, NOTE: '' },
       { STEP_NO: 2, TITLE: 'Run Health Check', CONTENT: 'Chạy 🧪 Health Check. Nếu báo lỗi: mở Findings.', UPDATED_AT: nowIso, NOTE: '' },
-      { STEP_NO: 3, TITLE: 'Run Self Test', CONTENT: 'Chạy 🧪 Self Test để ghi MC_OBS_TEST_RUN/RESULT + Findings nếu có.', UPDATED_AT: nowIso, NOTE: '' },
+      { STEP_NO: 3, TITLE: 'Run Test Console', CONTENT: 'Chạy 🧪 CBV Test Console (MAIN_CONTROL OBS suites) để ghi MC_OBS_TEST_RUN/RESULT + Findings nếu có.', UPDATED_AT: nowIso, NOTE: '' },
       { STEP_NO: 4, TITLE: 'Open Findings', CONTENT: 'Nếu thấy WARN/ERROR/BLOCKER: mở 📌 Findings để xem chi tiết và ACTION_REQUIRED.', UPDATED_AT: nowIso, NOTE: '' },
       { STEP_NO: 5, TITLE: 'Generate AI Export', CONTENT: 'Tạo 📤 AI Diagnostic Export → mở MC_OBS_AI_EXPORT → copy EXPORT_JSON / EXPORT_MARKDOWN gửi ChatGPT.', UPDATED_AT: nowIso, NOTE: '' },
       { STEP_NO: 6, TITLE: 'Severity meaning', CONTENT: 'INFO: thông tin\nWARN: cần chú ý\nERROR: lỗi nhưng có thể vẫn chạy\nBLOCKER: cần xử lý ngay trước khi vận hành', UPDATED_AT: nowIso, NOTE: '' }

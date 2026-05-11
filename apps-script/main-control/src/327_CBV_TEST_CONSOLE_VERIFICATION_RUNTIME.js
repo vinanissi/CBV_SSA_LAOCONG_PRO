@@ -206,6 +206,9 @@ function CBV_TestConsole_runFullVerificationPipeline_(suiteCode) {
     repBlock.governance = CBV_TestConsole_runGovernanceRules_({ report: repBlock, suite: suite, boundary: boundary });
     repBlock.risk = CBV_TestConsole_calculateRiskScore_(repBlock);
     repBlock.decisionGate = CBV_TestConsole_buildDecisionGate_(repBlock);
+    if (typeof CBV_OperationalIncident_hookFromVerificationReport_ === 'function') {
+      CBV_OperationalIncident_hookFromVerificationReport_(repBlock);
+    }
     CBV_TestConsole_cacheLastVerificationBundle_(repBlock);
     return { report: repBlock, aiHandoff: CBV_TestConsole_buildAiHandoffPromptPhaseD_(repBlock), blocked: true, boundary: boundary };
   }
@@ -221,6 +224,10 @@ function CBV_TestConsole_runFullVerificationPipeline_(suiteCode) {
   report.risk = CBV_TestConsole_calculateRiskScore_(report);
   report.verification.riskScore = report.risk.riskScore;
   report.decisionGate = CBV_TestConsole_buildDecisionGate_(report);
+
+  if (typeof CBV_OperationalIncident_hookFromVerificationReport_ === 'function') {
+    CBV_OperationalIncident_hookFromVerificationReport_(report);
+  }
 
   CBV_TestConsole_appendReportSheet_(report);
   CBV_TestConsole_exportReportToDrive_(report);

@@ -14,12 +14,6 @@ function buildMainControlDashboardMenu_() {
     .addItem('Health Check Toàn hệ', 'CBV_CoreV2_menuHealthCheck')
     .addItem('Run Event Worker', 'CBV_CoreV2_menuRunEventWorker')
     .addSeparator()
-    .addItem('Self Test Core', 'CBV_CoreV2_selfTest')
-    .addItem('Self Test Level 6', 'CBV_L6_hardeningSelfTest')
-    .addSeparator()
-    .addItem('Test Config Resolver', 'CBV_HOSO_setup_testConfigResolver')
-    .addItem('Test HOSO Create', 'CBV_HOSO_setup_menuTestHosoCreate')
-    .addSeparator()
     .addItem('Rebuild Menus', 'onOpen')
     .addToUi();
 }
