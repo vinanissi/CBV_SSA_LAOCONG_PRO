@@ -1,0 +1,83 @@
+{
+  "ok": true,
+  "checkedAt": "2026-05-11T18:27:15+07:00",
+  "repoPath": "D:\\Workspace\\projects\\CBV_SSA_LAOCONG_PRO",
+  "outputDir": "D:\\Workspace\\projects\\CBV_SSA_LAOCONG_PRO\\00_SYSTEM_BRAIN\\REPO_FULL_SUMMARY_REPORT\\RUN_20260511_182715",
+  "summary": "Repo CBV_SSA_LAOCONG_PRO là gói Sheets+GAS+AppSheet đa module (HO_SO PRO, TASK PRO baseline, FINANCE pilot, MAIN_CONTROL+MC_OBS). Kiến trúc clasp tách đang bổ sung; TASK clasp chưa bind đầy đủ. Test/OBS tốt ở MAIN_CONTROL nhưng chưa đạt checklist Test Console + report contract thống nhất. Kết luận vận hành: GO_WITH_WARNINGS.",
+  "scannedFileCount": 760,
+  "modulesDetected": [
+    "META",
+    "SYSTEM_BRAIN",
+    "HO_SO",
+    "TASK",
+    "FINANCE",
+    "MAIN_CONTROL",
+    "CONFIG",
+    "CORE_RUNTIME_LIB",
+    "GAS_MONOLITH",
+    "APPSHEET_SPECS",
+    "DATABASE",
+    "AUTOMATION",
+    "AUDIT_DOCS",
+    "TEST_SUITE",
+    "TOOLS_REPO_AUDIT",
+    "INVOICE_EXTERNAL_ONLY"
+  ],
+  "productionFiles": [
+    "05_GAS_RUNTIME/90_BOOTSTRAP_INIT.js",
+    "05_GAS_RUNTIME/90_BOOTSTRAP_MENU.js",
+    "05_GAS_RUNTIME/10_HOSO_SERVICE.js",
+    "05_GAS_RUNTIME/45_SHARED_WITH_SERVICE.js",
+    "05_GAS_RUNTIME/61_UNIFIED_ROUTER.js",
+    "apps-script/main-control/src/10_CBV_CORE_V2_BOOTSTRAP.js",
+    "apps-script/main-control/src/300_MC_OBS_SCHEMA.js",
+    "apps-script/main-control/src/302_MC_OBS_WRITER.js",
+    "apps-script/main-control/src/304_MC_OBS_TEST_RUNNER.js",
+    "apps-script/main-control/src/305_MC_OBS_AI_EXPORT.js",
+    "apps-script/main-control/src/307_MC_OBS_MENU.js",
+    "apps-script/hoso/src/100_HO_SO_V2_COMMAND_HANDLER.js",
+    "apps-script/hoso/src/111_HO_SO_V2_DB.js",
+    "apps-script/task/src/20_TASK_SERVICE.js",
+    "apps-script/task/src/20_TASK_REPOSITORY.js",
+    "apps-script/core-runtime-lib/src/301_CBV_OBS_CORE_WRITER.js"
+  ],
+  "testFiles": [
+    "07_TEST/CBV_TEST_RUNNER.js",
+    "05_GAS_RUNTIME/97_TASK_SYSTEM_TEST_RUNNER.js",
+    "apps-script/main-control/src/304_MC_OBS_TEST_RUNNER.js",
+    "apps-script/main-control/src/90_CBV_CORE_V2_TESTS.js",
+    "apps-script/main-control/src/139_CBV_LEVEL6_HARDENING_TESTS.js",
+    "apps-script/task/src/99_DEBUG_TASK_TEST.js",
+    "05_GAS_RUNTIME/99_DEBUG_TEST_FINANCE.js"
+  ],
+  "reportFiles": [
+    "apps-script/main-control/src/302_MC_OBS_WRITER.js",
+    "apps-script/main-control/src/305_MC_OBS_AI_EXPORT.js",
+    "tools/repo-audit/repo-audit-report-template.md",
+    "07_TEST/task_system_regression_report_template.md"
+  ],
+  "documentationFiles": [
+    "00_SYSTEM_BRAIN/SYSTEM_MAP.md",
+    "docs/MODULE_BOUNDARY.md",
+    "docs/TASK_MODULE_CURRENT_STATE_AND_ROADMAP.md",
+    "docs/MAIN_CONTROL_CURRENT_STATE_AND_UPGRADE_PLAN.md",
+    "OPERATOR_DEPLOY_AND_RUN_ORDER.md",
+    "07_TEST/README.md",
+    "09_AUDIT/TASK_GAS_RUNTIME_AUDIT.md"
+  ],
+  "risks": [
+    "Menu CBV PRO monolith trộn vận hành và test/repair — nguy cơ thao tác nhầm trên production spreadsheet.",
+    "Drift giữa 05_GAS_RUNTIME và apps-script/* nếu không có single-writer discipline.",
+    "TASK clasp chưa bind: nguy cơ push thử trên đúng spreadsheet production.",
+    "Runner 07_TEST/CBV_TEST_RUNNER.js có TASK_MAIN required cols chưa khớp manifest PRO (SHARED_WITH, IS_PRIVATE)."
+  ],
+  "warnings": [
+    "Chưa có menu top-level \"🧪 CBV Test Console\" theo chuẩn phân tích; test nằm trong OBS / Level6 / monolith.",
+    "Contract báo cáo GO/GO_WITH_WARNINGS/FAIL + envelopeOk + contractVersion chưa áp dụng đồng bộ mọi runner.",
+    "INVOICE_MEMBER không có mã trong repo — mọi thiết kế authority là giả định.",
+    "Báo cáo PHASE_REPORT workspace ghi nhận rủi ro PAT trên remote URL (ngoài repo nhưng ảnh hưởng dev)."
+  ],
+  "errors": [],
+  "recommendedNextPhase": "T0 — TASK deployment binding + TASK_OBS baseline xanh (theo docs/TASK_MODULE_CURRENT_STATE_AND_ROADMAP.md)",
+  "nextStep": "Chạy prompt trong CURSOR_NEXT_ACTION_PROMPT.md; operator cung cấp scriptId/spreadsheet staging trước khi push."
+}
