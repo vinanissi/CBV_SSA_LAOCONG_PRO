@@ -3,7 +3,7 @@
 - **checkedAt (archived):** 2026-05-11T21:56:48 (local naming)
 - **phase:** PHASE_D_VERIFICATION_PIPELINE_RUNTIME
 - **status:** GO_WITH_WARNINGS (GAS execution not performed in CI workspace)
-- **local commit:** `7575325` (branch `phase/t0-task-binding-brain-bootstrap`)
+- **local commits:** `7575325` (Phase D implementation), `d6d9c5b` (report push-note); tag `phase-d-verification-pipeline-runtime` at **HEAD** (`d6d9c5b`)
 - **local tag:** `phase-d-verification-pipeline-runtime` (not pushed — see WARNINGS)
 - **git push:** failed (HTTPS credential / no TTY for prompt in this environment)
 
