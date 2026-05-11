@@ -1,0 +1,20 @@
+{
+  "ok": true,
+  "status": "GO_WITH_WARNINGS",
+  "traceId": "RUN_<replace>",
+  "checkedAt": "<ISO-8601>",
+  "contractVersion": "0.1.0",
+  "envelopeOk": true,
+  "checks": [
+    {
+      "id": "EXAMPLE_CHECK",
+      "severity": "INFO",
+      "ok": true,
+      "message": "Replace with real checks from runner or health summary.",
+      "data": {}
+    }
+  ],
+  "warnings": [],
+  "errors": [],
+  "nextStep": "Run TASK_OBS health on staging after CBV_TASK_DB_ID is set."
+}
