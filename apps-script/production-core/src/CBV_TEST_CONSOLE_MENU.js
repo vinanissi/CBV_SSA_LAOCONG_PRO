@@ -33,12 +33,29 @@ function buildCbvTestConsoleMenu_() {
       subOnly.addItem(lab, 'CBV_TestConsole_menuSuiteSlot_' + i);
     }
 
+    var subVerify = ui.createMenu('Verification (Phase D)');
+    subVerify
+      .addItem('Run Verification Pipeline', 'CBV_TestConsole_menuRunVerificationPipeline')
+      .addItem('Run Governance Verification', 'CBV_TestConsole_menuRunGovernanceVerification')
+      .addItem('Run Runtime Boundary Check', 'CBV_TestConsole_menuRunRuntimeBoundaryCheck')
+      .addSeparator()
+      .addItem('Show Operational Viewer', 'CBV_TestConsole_menuShowOperationalViewer')
+      .addItem('Show Risk Assessment', 'CBV_TestConsole_menuShowRiskAssessment')
+      .addItem('Show Decision Gate', 'CBV_TestConsole_menuShowDecisionGate')
+      .addSeparator()
+      .addItem('Verification runtime self-test', 'CBV_TestConsole_menuVerificationSelfTest');
+
     var subUtil = ui.createMenu('Utilities');
     subUtil
       .addItem('Open report sheet (Core DB)', 'CBV_TestConsole_menuOpenReportSheet')
       .addItem('Generate OBS sample data (TEST_*)', 'MC_Obs_menuGenerateSampleData');
 
-    ui.createMenu('🧪 CBV Test Console').addSubMenu(subPipe).addSubMenu(subOnly).addSubMenu(subUtil).addToUi();
+    ui.createMenu('🧪 CBV Test Console')
+      .addSubMenu(subPipe)
+      .addSubMenu(subOnly)
+      .addSubMenu(subVerify)
+      .addSubMenu(subUtil)
+      .addToUi();
   } catch (e) {
     Logger.log('buildCbvTestConsoleMenu_ error: ' + e);
   }
@@ -80,6 +97,16 @@ function CBV_TestConsole_menuSuiteOnly_(suite, label) {
     CBV_TestConsole_menuAlertResult_(String(label || suite || 'Suite'), rep);
   } catch (e) {
     ui.alert('Test Console — ' + String(label || suite || ''), String(e && e.message ? e.message : e), ui.ButtonSet.OK);
+  }
+}
+
+function CBV_TestConsole_menuVerificationSelfTest() {
+  var ui = SpreadsheetApp.getUi();
+  try {
+    var r = CBV_TestConsole_verificationRuntimeSelfTest_();
+    ui.alert('Verification self-test', JSON.stringify(r, null, 2), ui.ButtonSet.OK);
+  } catch (e) {
+    ui.alert('Verification self-test', String(e && e.message ? e.message : e), ui.ButtonSet.OK);
   }
 }
 

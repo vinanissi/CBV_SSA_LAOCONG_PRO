@@ -6,16 +6,16 @@
  * @param {string} suiteCode
  * @returns {Object} ctx for CBV_TestConsole_buildReportEnvelope_
  */
-function CBV_TestConsole_runTestSuite_(suiteCode) {
+function CBV_TestConsole_runTestSuite_(suiteCode, traceIdOverride) {
   var suite = String(suiteCode || '').trim().toUpperCase();
   if (typeof CBV_TestConsole_registerDefaultSuites_ === 'function' && typeof CBV_TestConsole_getSuite_ === 'function' && typeof CBV_TestConsole_runRegisteredSuite_ === 'function') {
     CBV_TestConsole_registerDefaultSuites_();
     var reg = CBV_TestConsole_getSuite_(suite);
     if (reg && reg.enabled) {
-      return CBV_TestConsole_runRegisteredSuite_(suite);
+      return CBV_TestConsole_runRegisteredSuite_(suite, traceIdOverride);
     }
   }
-  var traceId = CBV_TestConsole_newTraceId_();
+  var traceId = traceIdOverride ? String(traceIdOverride) : CBV_TestConsole_newTraceId_();
   var checkedAt = CBV_TestConsole_isoNow_();
   var runBy = CBV_TestConsole_runBy_();
   var checks = [];

@@ -328,12 +328,13 @@ function CBV_TestConsole_normalizeRunnerOutput_(suiteCode, raw, addCheck, errors
 
 /**
  * @param {string} suiteCode
+ * @param {string} [traceIdOverride]
  * @returns {Object} ctx for CBV_TestConsole_buildReportEnvelope_
  */
-function CBV_TestConsole_runRegisteredSuite_(suiteCode) {
+function CBV_TestConsole_runRegisteredSuite_(suiteCode, traceIdOverride) {
   CBV_TestConsole_registerDefaultSuites_();
   var code = String(suiteCode || '').trim().toUpperCase();
-  var traceId = CBV_TestConsole_newTraceId_();
+  var traceId = traceIdOverride ? String(traceIdOverride) : CBV_TestConsole_newTraceId_();
   var checkedAt = CBV_TestConsole_isoNow_();
   var runBy = CBV_TestConsole_runBy_();
   var checks = [];

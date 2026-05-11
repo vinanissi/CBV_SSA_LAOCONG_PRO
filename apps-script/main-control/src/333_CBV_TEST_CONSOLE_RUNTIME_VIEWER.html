@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top" />
+    <style>
+      body { font-family: Segoe UI, Arial, sans-serif; margin: 12px; font-size: 13px; color: #1a1a1a; }
+      h1 { font-size: 16px; margin: 0 0 8px 0; }
+      h2 { font-size: 14px; margin: 16px 0 6px 0; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
+      .meta { color: #444; margin-bottom: 8px; }
+      .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+      .SAFE { background: #e6f4ea; color: #137333; }
+      .REVIEW { background: #fef7e0; color: #b06000; }
+      .HIGH_RISK { background: #fce8e6; color: #c5221f; }
+      .BLOCKED { background: #3c4043; color: #fff; }
+      table { border-collapse: collapse; width: 100%; margin-top: 6px; }
+      th, td { border: 1px solid #ddd; padding: 4px 6px; text-align: left; vertical-align: top; }
+      th { background: #f8f9fa; }
+      .ok { color: #137333; }
+      .bad { color: #c5221f; }
+      pre { white-space: pre-wrap; word-break: break-word; background: #f8f9fa; padding: 8px; border-radius: 4px; max-height: 220px; overflow: auto; font-size: 11px; }
+      .muted { color: #666; font-size: 12px; }
+    </style>
+  </head>
+  <body>
+    <h1>CBV Operational Viewer</h1>
+    <div class="muted">Phase D — verification bundle (cached / live)</div>
+    <div id="root"></div>
+    <textarea id="raw" style="display: none"><?= bundleJson ?></textarea>
+    <script>
+      function esc(s) {
+        return String(s == null ? '' : s)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+      }
+      function rowChecks(checks) {
+        if (!checks || !checks.length) return '<p class="muted">(no checks)</p>';
+        var h = '<table><thead><tr><th>OK</th><th>Code</th><th>Severity</th><th>Message</th></tr></thead><tbody>';
+        for (var i = 0; i < checks.length; i++) {
+          var c = checks[i] || {};
+          var ok = !!c.ok;
+          h +=
+            '<tr><td class="' +
+            (ok ? 'ok' : 'bad') +
+            '">' +
+            (ok ? 'YES' : 'NO') +
+            '</td><td>' +
+            esc(c.code) +
+            '</td><td>' +
+            esc(c.severity) +
+            '</td><td>' +
+            esc(c.message) +
+            '</td></tr>';
+        }
+        h += '</tbody></table>';
+        return h;
+      }
+      function riskBadge(risk) {
+        if (!risk) return '<span class="badge REVIEW">UNKNOWN</span>';
+        var lvl = String(risk.riskLevel || 'REVIEW');
+        var cls = lvl === 'SAFE' ? 'SAFE' : lvl === 'HIGH_RISK' ? 'HIGH_RISK' : lvl === 'BLOCKED' ? 'BLOCKED' : 'REVIEW';
+        return (
+          '<span class="badge ' +
+          cls +
+          '">Risk ' +
+          esc(risk.riskScore) +
+          ' — ' +
+          esc(lvl) +
+          '</span>'
+        );
+      }
+      try {
+        var txt = document.getElementById('raw').value;
+        var B = JSON.parse(txt);
+        var v = B.verification || {};
+        var g = B.governance || {};
+        var risk = B.risk || {};
+        var dg = B.decisionGate || {};
+        var govViol = (g.violations && g.violations.length ? g.violations.join(', ') : '(none)') || '(none)';
+        var vw = (v.verificationWarnings && v.verificationWarnings.join('\n')) || '(none)';
+        var ve = (v.verificationErrors && v.verificationErrors.join('\n')) || '(none)';
+        var html = '';
+        html += '<div class="meta"><strong>Suite:</strong> ' + esc(B.testSuite) + ' &nbsp; <strong>Trace:</strong> ' + esc(B.traceId) + '</div>';
+        html += '<div class="meta"><strong>Status:</strong> ' + esc(B.status) + ' &nbsp; <strong>Severity:</strong> ' + esc(B.severity) + '</div>';
+        html += '<div class="meta">' + riskBadge(risk) + '</div>';
+        html += '<h2>Summary</h2><p>' + esc(B.summary) + '</p>';
+        html += '<h2>Decision gate</h2><pre>' + esc(JSON.stringify(dg, null, 2)) + '</pre>';
+        html += '<h2>Governance</h2><p><strong>ok:</strong> ' + esc(g.ok) + '</p><p><strong>violations:</strong> ' + esc(govViol) + '</p>';
+        html += '<h2>Verification</h2><p><strong>ok:</strong> ' + esc(v.ok) + ' &nbsp; <strong>runtimeSafe:</strong> ' + esc(v.runtimeSafe) + '</p>';
+        html += '<p><strong>Warnings</strong></p><pre>' + esc(vw) + '</pre><p><strong>Errors</strong></p><pre>' + esc(ve) + '</pre>';
+        html += '<h2>Checks</h2>' + rowChecks(B.checks || []);
+        html += '<h2>Next step</h2><p>' + esc(B.nextStep) + '</p>';
+        html += '<h2>AI handoff</h2><p class="muted">Use Test Console menu → AI Handoff after pipeline, or copy JSON below.</p><pre>' + esc(JSON.stringify({ verification: v, governance: g, risk: risk, decisionGate: dg }, null, 2)) + '</pre>';
+        document.getElementById('root').innerHTML = html;
+      } catch (e) {
+        document.getElementById('root').innerHTML = '<p class="bad">Parse error: ' + esc(e && e.message ? e.message : e) + '</p>';
+      }
+    </script>
+  </body>
+</html>
