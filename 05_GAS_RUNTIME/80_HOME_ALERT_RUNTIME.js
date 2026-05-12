@@ -61,6 +61,12 @@ function HomeAlert_bootstrap() {
   } catch (eW) {}
 
   try {
+    if (typeof HomeAlertSlaPolicy_ensureSheet_ === 'function') HomeAlertSlaPolicy_ensureSheet_();
+    if (typeof HomeAlertSlaMetrics_ensureSheet_ === 'function') HomeAlertSlaMetrics_ensureSheet_();
+    if (typeof HomeAlertSlaPolicy_seedDefaults === 'function') HomeAlertSlaPolicy_seedDefaults();
+  } catch (eP) {}
+
+  try {
     if (typeof logAdminAudit === 'function') {
       logAdminAudit('HOME_ALERT_BOOTSTRAP', 'HOME_ALERT', 'HOME_ALERT', 'UPDATE', {}, { traceId: traceId }, 'HomeAlert_bootstrap ok');
     }
@@ -1274,6 +1280,11 @@ function HomeAlert_enrichSlaEscalationRuntime_(alert) {
     return patch;
   }
 
+  var reg = (typeof HomeAlert_getSlaPolicy_ === 'function') ? HomeAlert_getSlaPolicy_(a) : null;
+  if (typeof HomeAlertSlaPolicy_applyAnchorsToAlert_ === 'function') {
+    HomeAlertSlaPolicy_applyAnchorsToAlert_(a, reg);
+  }
+
   var policy = String(a.SLA_POLICY || '').trim();
   var targetMin = HomeAlert_parseMinutes_(a.SLA_TARGET_MINUTES);
   var dueAt = null;
@@ -1307,15 +1318,31 @@ function HomeAlert_enrichSlaEscalationRuntime_(alert) {
     patch.SLA_ELAPSED_MINUTES = Math.max(0, Math.round((now.getTime() - anchorForElapsed.getTime()) / 60000));
     var untilDueMs = dueAt.getTime() - now.getTime();
     var win = windowMin > 0 ? windowMin : 60;
-    var soonMinutes = Math.max(5, Math.floor(win * 0.2));
-    var soonMs = soonMinutes * 60000;
-    var breach2Ms = 3 * 3600000;
+    var cfgSoon = reg ? HomeAlert_parseMinutes_(reg.DUE_SOON_MINUTES) : 0;
+    var b1 = reg ? HomeAlert_parseMinutes_(reg.BREACH_LEVEL_1_MINUTES) : 0;
+    var b2 = reg ? HomeAlert_parseMinutes_(reg.BREACH_LEVEL_2_MINUTES) : 0;
+    var soonMs;
+    var breach1Ms;
+    var breach2Ms;
+    if (reg) {
+      soonMs = cfgSoon > 0 ? cfgSoon * 60000 : Math.max(60000, Math.floor(win * 0.2 * 60000));
+      breach1Ms = b1 > 0 ? b1 * 60000 : 60000;
+      breach2Ms = b2 > 0 ? b2 * 60000 : 3 * 3600000;
+    } else {
+      var soonMinutes = Math.max(5, Math.floor(win * 0.2));
+      soonMs = soonMinutes * 60000;
+      breach1Ms = 60000;
+      breach2Ms = 3 * 3600000;
+    }
     if (untilDueMs < -breach2Ms) {
       patch.SLA_STATUS = HOME_ALERT_SLA_STATUS.BREACHED;
       patch.SLA_BREACH_LEVEL = 2;
-    } else if (untilDueMs < 0) {
+    } else if (untilDueMs < -breach1Ms) {
       patch.SLA_STATUS = HOME_ALERT_SLA_STATUS.OVERDUE;
       patch.SLA_BREACH_LEVEL = 1;
+    } else if (untilDueMs < 0) {
+      patch.SLA_STATUS = HOME_ALERT_SLA_STATUS.OVERDUE;
+      patch.SLA_BREACH_LEVEL = 0;
     } else if (untilDueMs <= soonMs) {
       patch.SLA_STATUS = HOME_ALERT_SLA_STATUS.DUE_SOON;
       patch.SLA_BREACH_LEVEL = 0;
@@ -1324,6 +1351,14 @@ function HomeAlert_enrichSlaEscalationRuntime_(alert) {
       patch.SLA_BREACH_LEVEL = 0;
     }
     patch.SLA_NEXT_REVIEW_AT = new Date(Math.min(dueAt.getTime(), now.getTime() + 15 * 60000));
+  }
+
+  if (reg) {
+    var escM = HomeAlert_parseMinutes_(reg.ESCALATE_AFTER_MINUTES);
+    var tgt = String(reg.ESCALATE_TO_USER || reg.ESCALATE_TO_TEAM || '').trim();
+    if (escM > 0 && tgt && !String(a.ESCALATION_NEXT_ACTION || '').trim()) {
+      patch.ESCALATION_NEXT_ACTION = 'Policy: sau ' + escM + ' phút xem xét escalate tới ' + tgt + '.';
+    }
   }
 
   if (st === HOME_ALERT_STATUS.ESCALATED) {

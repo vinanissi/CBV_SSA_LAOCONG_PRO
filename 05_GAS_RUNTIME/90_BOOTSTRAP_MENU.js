@@ -147,6 +147,7 @@ function buildCbvTestConsoleMenu_() {
   if (!ui) return;
   ui.createMenu('🧪 CBV Test Console')
     .addItem('HOME_ALERT Phase 82 — SLA & Escalation', 'menuCbvTestConsoleHomeAlertSla82')
+    .addItem('HOME_ALERT Phase 83 — SLA Policy Registry', 'menuCbvTestConsoleHomeAlertSla83')
     .addToUi();
 }
 

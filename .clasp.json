@@ -1,5 +1,5 @@
 {
-  "scriptId": "1H5Ohup4eAJgZuQrNdpLStLU6FNWGIk-MuvtMXdrbrg1J41T_HtNRjcFr",
+  "scriptId": "1R_whzPpwK5QkVpGjB133meS_yfzoz95V-G8yTLWFiWBMVdl8VltYhUKE",
   "rootDir": "05_GAS_RUNTIME",
   "fileExtension": "js",
   "filePushOrder": [
@@ -68,6 +68,8 @@
     "90_BOOTSTRAP_TASK.js",
     "90_BOOTSTRAP_AUDIT.js",
     "90_BOOTSTRAP_REPAIR.js",
+    "80_HOME_ALERT_RUNTIME.js",
+    "81_HOME_ALERT_SLA_POLICY_RUNTIME.js",
     "50_APPSHEET_VERIFY.js",
     "99_DEBUG_TEST_HOSO.js",
     "99_DEBUG_TASK_TEST.js",

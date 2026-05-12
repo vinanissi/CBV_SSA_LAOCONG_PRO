@@ -772,3 +772,11 @@ function menuCbvTestConsoleHomeAlertSla82() {
   });
 }
 
+/** CBV Test Console — HOME_ALERT Phase 83 SLA policy registry QA. */
+function menuCbvTestConsoleHomeAlertSla83() {
+  runSafeMenuStep_('HomeAlertSlaPolicy_TestConsole_run', 'HOME_ALERT SLA Policy Registry test', function (r) {
+    if (!r) return 'No result';
+    return (r.status || '') + '\n' + (r.summary || '') + '\nEnvelope OK: ' + (r.envelopeOk ? 'yes' : 'no');
+  });
+}
+
