@@ -113,6 +113,17 @@ function TASK_FE_todayStartMillis_() {
 }
 
 /**
+ * @param {*} v
+ * @returns {number|null} epoch millis
+ */
+function TASK_FE_toEpochMillis_(v) {
+  if (v === undefined || v === null || v === '') return null;
+  var d = v instanceof Date ? new Date(v.getTime()) : new Date(v);
+  if (isNaN(d.getTime())) return null;
+  return d.getTime();
+}
+
+/**
  * @param {Object} row
  * @returns {boolean}
  */
@@ -138,8 +149,8 @@ function TASK_FE_mapStatusToLabel_(row) {
   if (st === 'NEW' || st === 'ASSIGNED') return 'Việc mới';
   if (st === 'IN_PROGRESS') {
     if (!TASK_FE_isOverdueRow_(row)) {
-      var started = TASK_FE_dueStartMillis_(row.START_DATE);
-      if (started !== null && Date.now() - started > 14 * 86400000) return 'Bị kẹt';
+      var startedMs = TASK_FE_toEpochMillis_(row.START_DATE);
+      if (startedMs !== null && Date.now() - startedMs > 14 * 86400000) return 'Bị kẹt';
     }
     return 'Đang xử lý';
   }
