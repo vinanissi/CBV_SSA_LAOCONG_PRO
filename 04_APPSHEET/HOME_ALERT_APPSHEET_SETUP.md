@@ -2,6 +2,17 @@
 
 Mục tiêu: AppSheet **chỉ hiển thị + bấm thao tác**, dữ liệu thật nằm ở Google Sheet `HOME_ALERT`, logic tạo alert nằm ở GAS (`HomeAlert_refresh()`).
 
+## 0) Chuẩn hiển thị chính thức — Official display standard (Phase 80F)
+
+**Tài liệu chuẩn:** `04_APPSHEET/HOME_ALERT_DISPLAY_COLUMN_STANDARD.md`
+
+- **Operator (chuẩn cuối):** Deck/List chỉ bind `OPERATOR_*` + metadata operator (`ATTENTION_LABEL`, … theo file chuẩn). **Group by** = `ATTENTION_LABEL`. **Sort by** = `DESKTOP_SORT` **DESC** — cột sort **chỉ** dùng để sort, **không** Show trên operator UI.
+- **Legacy (80C–80D):** `DISPLAY_*`, `CARD_*`, `UX_*`, `DESKTOP_*` **giữ** trên sheet (append-only, backward compatible) nhưng **không** dùng làm Primary/Secondary/Summary cho operator sau khi adopt 80F — chỉ **Admin Debug** (và tương thích cấu hình cũ nếu cần).
+- **Không** dùng `CARD_SORT` / `SORT_KEY` trong operator view (chỉ backend nếu có policy đặc biệt; chuẩn sort operator = `DESKTOP_SORT`).
+- GAS: `HomeAlert_getOfficialOperatorDisplayConfig_()`, `HomeAlert_validateOperatorDisplayPolicy_()`, test `HomeAlertDisplayStandard_TestConsole_run()`.
+
+Các mục **§3–§4.1** là baseline lịch sử 80C; **§8–§9** là 80D/80E. Triển khai **mới** bám **§0 + file chuẩn**.
+
 ## 1) Bảng cần add
 
 - `HOME_ALERT`
@@ -14,7 +25,10 @@ Tạo slice `HOME_ALERT_ACTIVE`:
 
 - **Row filter condition**: `[IS_ACTIVE] = TRUE`
 
-## 3) Views đề xuất
+## 3) Views đề xuất (baseline lịch sử 80C)
+
+> **Triển khai mới:** dùng **§0** + `HOME_ALERT_DISPLAY_COLUMN_STANDARD.md` (Deck operator = `OPERATOR_*`, Group = `ATTENTION_LABEL`).  
+> Mục dưới giữ cấu hình **legacy 80C** (DISPLAY/CARD) để tham chiếu backward compatibility / migration.
 
 - **HOME_ALERT_Dashboard** (type: Dashboard)
   - Primary: `ALERT_List` (slice: `HOME_ALERT_ACTIVE`)
@@ -274,8 +288,8 @@ Các cột trên **chỉ** dùng trong **Sort by** của view (backend sort), kh
 - **Primary header:** `OPERATOR_PRIMARY_TEXT`
 - **Secondary header:** `OPERATOR_SECONDARY_TEXT`
 - **Summary column:** `OPERATOR_META_TEXT`
-- **Group by:** `DESKTOP_GROUP` **hoặc** `ATTENTION_LABEL`
-- **Sort by:** `DESKTOP_SORT` **DESC** *(cột vẫn tồn tại trên sheet; không hiển thị trong UI)*
+- **Group by (chuẩn 80F):** `ATTENTION_LABEL` *(không dùng `DESKTOP_GROUP` / `CARD_GROUP` trên operator Deck sau khi adopt 80F)*
+- **Sort by:** `DESKTOP_SORT` **DESC** *(cột vẫn tồn tại trên sheet; **không** Show — chỉ Sort by)*
 - **Icon (tuỳ chọn):** `ATTENTION_ICON` hoặc `DISPLAY_ICON`
 
 ### 9.3 `ALERT_Detail` — **operator view**
@@ -286,6 +300,7 @@ Các cột trên **chỉ** dùng trong **Sort by** của view (backend sort), kh
 - `OPERATOR_SECONDARY_TEXT`
 - `OPERATOR_META_TEXT`
 - `OPERATOR_NEXT_ACTION`
+- `ATTENTION_LABEL`
 - `ATTENTION_REASON`
 - `ACTION_FOCUS`
 - `ACTION_HINT`
@@ -307,3 +322,12 @@ Các cột trên **chỉ** dùng trong **Sort by** của view (backend sort), kh
 - Không Virtual Column, không Bot, không formula phức tạp cho attention.
 - Không hiển thị sort key string cho operator (chỉ sort backend).
 - Raw/debug chỉ trong Admin Debug view (`HOME_ALERT_DESKTOP_WORKSPACE.md`).
+
+## 10) Display column consolidation (Phase 80F)
+
+Chuẩn hoá sau 80C/80D/80E: **một bộ cột operator** + **legacy** tách bạch.
+
+- **Chuẩn đọc:** `HOME_ALERT_DISPLAY_COLUMN_STANDARD.md` (§A–E).
+- **Operator:** chỉ cột canonical trong file chuẩn; **Admin Debug** được xem raw + legacy + enrichment (`DISPLAY_*`, `CARD_*`, `UX_*`, `DESKTOP_*`, `ATTENTION_*`, `ACTION_*`, `OWNER_*`, `OPERATOR_*`, sort/trace/payload).
+- **Không** thêm nhóm cột hiển thị mới trong phase 80F (chỉ tài liệu + helper GAS + test console).
+- Test: `HomeAlertDisplayStandard_TestConsole_run()`.

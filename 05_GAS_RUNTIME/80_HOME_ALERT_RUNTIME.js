@@ -2137,3 +2137,275 @@ function HomeAlertAttention_formatReportText_(r) {
   lines.push('driveOnlineOutputTarget=https://drive.google.com/drive/folders/' + driveFolderId);
   return lines.join('\n');
 }
+
+// =============================================================================
+// PHASE 80F — HOME_ALERT DISPLAY COLUMN CONSOLIDATION
+// =============================================================================
+// Chuẩn operator: OPERATOR_* + ATTENTION_LABEL / detail metadata (see
+// 04_APPSHEET/HOME_ALERT_DISPLAY_COLUMN_STANDARD.md). Legacy DISPLAY_*/CARD_*/UX_*/DESKTOP_*
+// remain on sheet for Admin Debug + backward compatibility only.
+// No new display column groups in this phase — helpers + test console only.
+// =============================================================================
+
+/**
+ * Official AppSheet operator Deck binding (canonical Phase 80F).
+ * Sort column DESKTOP_SORT is backend-only: use as Sort by DESC, never as visible label.
+ *
+ * @returns {{
+ *   primary: string,
+ *   secondary: string,
+ *   summary: string,
+ *   nextAction: string,
+ *   groupBy: string,
+ *   sortBy: string,
+ *   sortOrder: string,
+ *   hiddenOperatorFields: string[]
+ * }}
+ */
+function HomeAlert_getOfficialOperatorDisplayConfig_() {
+  return {
+    primary: 'OPERATOR_PRIMARY_TEXT',
+    secondary: 'OPERATOR_SECONDARY_TEXT',
+    summary: 'OPERATOR_META_TEXT',
+    nextAction: 'OPERATOR_NEXT_ACTION',
+    groupBy: 'ATTENTION_LABEL',
+    sortBy: 'DESKTOP_SORT',
+    sortOrder: 'DESC',
+    hiddenOperatorFields: [
+      'CARD_SORT',
+      'DESKTOP_SORT',
+      'SORT_KEY',
+      'SOURCE_HASH',
+      'TRACE_ID',
+      'ACTION_PAYLOAD_JSON',
+      'ALERT_FINGERPRINT',
+      'ALERT_GROUP_KEY'
+    ]
+  };
+}
+
+/**
+ * Validate sheet schema against official operator display policy (read-only).
+ *
+ * @returns {{ ok: boolean, errors: string[], warnings: string[], officialConfig: object }}
+ */
+function HomeAlert_validateOperatorDisplayPolicy_() {
+  var cfg = HomeAlert_getOfficialOperatorDisplayConfig_();
+  var sheetName = HomeAlert_getSheetName_();
+  var headers = _headers(_sheet(sheetName));
+  var errors = [];
+  var warnings = [];
+
+  var requiredForOperator = [
+    cfg.primary, cfg.secondary, cfg.summary, cfg.nextAction, cfg.groupBy, cfg.sortBy,
+    'ATTENTION_REASON', 'ACTION_FOCUS', 'ACTION_HINT', 'OWNER_LABEL',
+    'STATUS', 'DUE_AT', 'NOTE'
+  ];
+  requiredForOperator.forEach(function(c) {
+    if (headers.indexOf(c) === -1) errors.push('Missing column required for 80F operator policy: ' + c);
+  });
+
+  cfg.hiddenOperatorFields.forEach(function(h) {
+    if (headers.indexOf(h) === -1) {
+      if (h === 'ALERT_FINGERPRINT' || h === 'ALERT_GROUP_KEY') {
+        warnings.push('Optional column not present on sheet: ' + h);
+      } else {
+        warnings.push('Expected backend column missing (pre-bootstrap sheet?): ' + h);
+      }
+    }
+  });
+
+  var legacySamples = ['DISPLAY_TITLE', 'CARD_GROUP', 'UX_VISIBLE', 'DESKTOP_TITLE'];
+  legacySamples.forEach(function(l) {
+    if (headers.indexOf(l) === -1) warnings.push('Legacy column missing (backward compat / admin debug): ' + l);
+  });
+
+  warnings.push('Policy: do not bind DISPLAY_*, CARD_*, UX_*, DESKTOP_* to operator Deck headers after 80F; Admin Debug only.');
+
+  return { ok: errors.length === 0, errors: errors, warnings: warnings, officialConfig: cfg };
+}
+
+function HomeAlertDisplayStandard_checkHiddenList_(cfg) {
+  var requiredHidden = ['CARD_SORT', 'DESKTOP_SORT', 'SORT_KEY', 'SOURCE_HASH', 'TRACE_ID', 'ACTION_PAYLOAD_JSON'];
+  var missing = requiredHidden.filter(function(h) { return (cfg.hiddenOperatorFields || []).indexOf(h) === -1; });
+  return { ok: missing.length === 0, missing: missing };
+}
+
+function HomeAlertDisplayStandard_checkManifestSubset_(headers) {
+  var warnings = [];
+  if (typeof CBV_SCHEMA_MANIFEST === 'undefined' || !CBV_SCHEMA_MANIFEST.HOME_ALERT) return { ok: true, warnings: warnings };
+  var m = CBV_SCHEMA_MANIFEST.HOME_ALERT;
+  headers.forEach(function(h) {
+    if (h && m.indexOf(h) === -1) warnings.push('Sheet header not in CBV_SCHEMA_MANIFEST.HOME_ALERT: ' + h);
+  });
+  return { ok: true, warnings: warnings };
+}
+
+// ===== HOME_ALERT Display Standard Test Console (Phase 80F) =====
+
+var __HOME_ALERT_DISPLAY_STANDARD_TEST_CONSOLE_LAST_REPORT = null;
+
+function HomeAlertDisplayStandard_TestConsole_run() {
+  var traceId = HomeAlert_newTraceId_();
+  var checks = [];
+  var warnings = [];
+  var errors = [];
+
+  var cfg = HomeAlert_getOfficialOperatorDisplayConfig_();
+
+  try {
+    var hid = HomeAlertDisplayStandard_checkHiddenList_(cfg);
+    checks.push({ name: 'hiddenOperatorFieldsList', ok: hid.ok, details: hid });
+    if (!hid.ok) errors.push('hiddenOperatorFields missing entries: ' + JSON.stringify(hid.missing || []));
+  } catch (e0) {
+    checks.push({ name: 'hiddenOperatorFieldsList', ok: false, details: { error: e0.message || String(e0) } });
+    errors.push('hidden list check exception: ' + (e0.message || String(e0)));
+  }
+
+  try {
+    var pol = HomeAlert_validateOperatorDisplayPolicy_();
+    checks.push({ name: 'operatorDisplayPolicy', ok: pol.ok, details: { errors: pol.errors, warningsCount: (pol.warnings || []).length } });
+    errors = errors.concat(pol.errors || []);
+    warnings = warnings.concat(pol.warnings || []);
+  } catch (e1) {
+    checks.push({ name: 'operatorDisplayPolicy', ok: false, details: { error: e1.message || String(e1) } });
+    errors.push('Policy validate exception: ' + (e1.message || String(e1)));
+  }
+
+  try {
+    var headers = _headers(_sheet(HomeAlert_getSheetName_()));
+    var man = HomeAlertDisplayStandard_checkManifestSubset_(headers);
+    checks.push({ name: 'manifestSubset', ok: true, details: man });
+    warnings = warnings.concat(man.warnings || []);
+  } catch (e1b) {
+    checks.push({ name: 'manifestSubset', ok: false, details: { error: e1b.message || String(e1b) } });
+    warnings.push('Manifest subset check exception: ' + (e1b.message || String(e1b)));
+  }
+
+  try {
+    var sm = HomeAlert_validateStateMachine_();
+    checks.push({ name: 'stateMachine', ok: sm.ok, details: sm });
+    if (!sm.ok) errors.push('State machine invalid: ' + JSON.stringify(sm.errors || []));
+  } catch (e2) {
+    checks.push({ name: 'stateMachine', ok: false, details: { error: e2.message || String(e2) } });
+    errors.push('State machine exception: ' + (e2.message || String(e2)));
+  }
+
+  var refreshResult = null;
+  try {
+    refreshResult = HomeAlert_refresh({ autoClearMissing: false, autoExpire: false });
+    checks.push({ name: 'refresh', ok: refreshResult.ok, details: refreshResult.stats });
+    if (!refreshResult.ok) warnings.push('Refresh had errors: ' + JSON.stringify(refreshResult.stats.errors || []));
+  } catch (e3) {
+    checks.push({ name: 'refresh', ok: false, details: { error: e3.message || String(e3) } });
+    errors.push('Refresh exception: ' + (e3.message || String(e3)));
+  }
+
+  try {
+    var att = HomeAlertAttention_validateOutput_();
+    checks.push({ name: 'attentionOutputRegression', ok: att.ok, details: att });
+    if (!att.ok) errors = errors.concat(att.errors || []);
+    warnings = warnings.concat(att.warnings || []);
+  } catch (e4) {
+    checks.push({ name: 'attentionOutputRegression', ok: false, details: { error: e4.message || String(e4) } });
+    errors.push('Attention validate exception: ' + (e4.message || String(e4)));
+  }
+
+  try {
+    var dup = HomeAlertDesktop_checkNoDuplicateAlertId_();
+    checks.push({ name: 'noDuplicateAlertId', ok: dup.ok, details: dup });
+    if (!dup.ok) errors.push('Duplicate ALERT_ID count=' + (dup.duplicates || 0));
+  } catch (e5) {
+    checks.push({ name: 'noDuplicateAlertId', ok: false, details: { error: e5.message || String(e5) } });
+    errors.push('Duplicate check exception: ' + (e5.message || String(e5)));
+  }
+
+  var manifestCount = (typeof CBV_SCHEMA_MANIFEST !== 'undefined' && CBV_SCHEMA_MANIFEST.HOME_ALERT) ? CBV_SCHEMA_MANIFEST.HOME_ALERT.length : 0;
+
+  var status = errors.length > 0 ? 'FAIL' : (warnings.length > 0 ? 'GO_WITH_WARNINGS' : 'GO');
+  var severity = errors.length > 0 ? 'CRITICAL' : (warnings.length > 0 ? 'WARNING' : 'OK');
+
+  var driveFolderId = HomeAlert_getSystemBrainDriveFolderId_();
+
+  var report = {
+    ok: status !== 'FAIL',
+    phase: 'PHASE_80F_HOME_ALERT_DISPLAY_COLUMN_CONSOLIDATION',
+    status: status,
+    severity: severity,
+    checkedAt: cbvNow(),
+    runBy: HomeAlert_actorId_(),
+    traceId: traceId,
+    testSuite: 'HOME_ALERT_DISPLAY_STANDARD_RUNTIME',
+    summary: 'HOME_ALERT display column consolidation (80F): ' + status + ' (' + severity + ')',
+    checks: checks,
+    warnings: warnings,
+    errors: errors,
+    nextStep: status === 'GO'
+      ? 'Bind operator views per HOME_ALERT_DISPLAY_COLUMN_STANDARD.md; legacy columns Admin Debug only.'
+      : 'Fix errors then rerun HomeAlertDisplayStandard_TestConsole_run().',
+    reportText: '',
+    reportJson: {
+      officialOperatorDisplayConfig: cfg,
+      refresh: refreshResult,
+      manifestHomeAlertColumnCount: manifestCount,
+      driveFolderId: driveFolderId,
+      driveFolderUrl: 'https://drive.google.com/drive/folders/' + driveFolderId,
+      driveFolderConfigKey: 'CBV_SYSTEM_BRAIN_DRIVE_FOLDER_ID',
+      driveAutoUpload: false
+    },
+    contractVersion: 'CBV_TEST_CONSOLE_V1',
+    envelopeOk: true
+  };
+
+  report.reportText = HomeAlertDisplayStandard_formatReportText_(report);
+  __HOME_ALERT_DISPLAY_STANDARD_TEST_CONSOLE_LAST_REPORT = report;
+  Logger.log(report.reportText);
+  return report;
+}
+
+function HomeAlertDisplayStandard_TestConsole_showReport() {
+  var r = __HOME_ALERT_DISPLAY_STANDARD_TEST_CONSOLE_LAST_REPORT;
+  if (!r) return { ok: false, message: 'No report. Run HomeAlertDisplayStandard_TestConsole_run() first.' };
+  Logger.log(r.reportText || JSON.stringify(r, null, 2));
+  return r;
+}
+
+function HomeAlertDisplayStandard_TestConsole_copyAiHandoff() {
+  var r = __HOME_ALERT_DISPLAY_STANDARD_TEST_CONSOLE_LAST_REPORT;
+  if (!r) return 'No report. Run HomeAlertDisplayStandard_TestConsole_run() first.';
+  var driveFolderId = (r.reportJson && r.reportJson.driveFolderId) || HomeAlert_getSystemBrainDriveFolderId_();
+  var text = [
+    'PHASE: ' + r.phase,
+    'STATUS: ' + r.status,
+    'SEVERITY: ' + r.severity,
+    'TRACE: ' + r.traceId,
+    'CHECKED_AT: ' + r.checkedAt,
+    'SUMMARY: ' + r.summary,
+    'WARNINGS: ' + JSON.stringify(r.warnings || []),
+    'ERRORS: ' + JSON.stringify(r.errors || []),
+    'NEXT_STEP: ' + r.nextStep,
+    'DISPLAY_STANDARD: HOME_ALERT_DISPLAY_COLUMN_STANDARD.md',
+    'DRIVE_ONLINE_OUTPUT_TARGET: https://drive.google.com/drive/folders/' + driveFolderId
+  ].join('\n');
+  Logger.log(text);
+  return text;
+}
+
+function HomeAlertDisplayStandard_formatReportText_(r) {
+  var driveFolderId = (r.reportJson && r.reportJson.driveFolderId) || HomeAlert_getSystemBrainDriveFolderId_();
+  var lines = [];
+  lines.push('=== HOME_ALERT DISPLAY STANDARD TEST CONSOLE (80F) ===');
+  lines.push('phase=' + r.phase);
+  lines.push('status=' + r.status + ' severity=' + r.severity);
+  lines.push('checkedAt=' + r.checkedAt + ' runBy=' + r.runBy);
+  lines.push('traceId=' + r.traceId);
+  lines.push('summary=' + r.summary);
+  lines.push('checks=' + (r.checks ? r.checks.length : 0));
+  (r.checks || []).forEach(function(c) { lines.push('- ' + c.name + ': ' + (c.ok ? 'OK' : 'FAIL')); });
+  if ((r.warnings || []).length) lines.push('warnings=' + JSON.stringify(r.warnings, null, 2));
+  if ((r.errors || []).length) lines.push('errors=' + JSON.stringify(r.errors, null, 2));
+  lines.push('nextStep=' + r.nextStep);
+  lines.push('officialConfig=' + JSON.stringify((r.reportJson && r.reportJson.officialOperatorDisplayConfig) || {}));
+  lines.push('driveOnlineOutputTarget=https://drive.google.com/drive/folders/' + driveFolderId);
+  return lines.join('\n');
+}
