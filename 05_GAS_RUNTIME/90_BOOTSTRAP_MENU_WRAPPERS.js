@@ -780,3 +780,11 @@ function menuCbvTestConsoleHomeAlertSla83() {
   });
 }
 
+/** CBV Test Console — HOME_ALERT Phase 84 safe automation runtime QA. */
+function menuCbvTestConsoleHomeAlertSafeAutomation84() {
+  runSafeMenuStep_('HomeAlertSafeAutomation_TestConsole_run', 'HOME_ALERT Safe Automation Runtime test', function (r) {
+    if (!r) return 'No result';
+    return (r.status || '') + '\n' + (r.summary || '') + '\nEnvelope OK: ' + (r.envelopeOk ? 'yes' : 'no');
+  });
+}
+

@@ -67,6 +67,12 @@ function HomeAlert_bootstrap() {
   } catch (eP) {}
 
   try {
+    if (typeof HomeAlertSafeAutomation_ensureSheets_ === 'function') HomeAlertSafeAutomation_ensureSheets_();
+    if (typeof HomeAlertSafeAutomation_seedDefaults === 'function') HomeAlertSafeAutomation_seedDefaults();
+    if (typeof HomeAlertDailyOperationalSnapshot_ensureSheet_ === 'function') HomeAlertDailyOperationalSnapshot_ensureSheet_();
+  } catch (e84) {}
+
+  try {
     if (typeof logAdminAudit === 'function') {
       logAdminAudit('HOME_ALERT_BOOTSTRAP', 'HOME_ALERT', 'HOME_ALERT', 'UPDATE', {}, { traceId: traceId }, 'HomeAlert_bootstrap ok');
     }
