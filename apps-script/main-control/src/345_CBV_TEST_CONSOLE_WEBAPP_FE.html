@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top" />
+    <style>
+      body { margin: 0; font-family: Segoe UI, Arial, sans-serif; color: #202124; background: #f8f9fa; }
+      header { background: #174ea6; color: #fff; padding: 14px 18px; }
+      h1 { margin: 0; font-size: 20px; }
+      h2 { margin: 0 0 10px 0; font-size: 17px; }
+      h3 { margin: 14px 0 8px 0; font-size: 14px; }
+      button, select { font: inherit; }
+      button { border: 0; border-radius: 4px; padding: 8px 12px; background: #1a73e8; color: #fff; cursor: pointer; }
+      button.secondary { background: #5f6368; }
+      button.warn { background: #b06000; }
+      button:disabled { background: #b7b7b7; cursor: not-allowed; }
+      select { min-width: 280px; padding: 7px; }
+      nav { display: flex; gap: 8px; padding: 10px 18px; background: #fff; border-bottom: 1px solid #dadce0; }
+      nav button { background: #e8f0fe; color: #174ea6; }
+      nav button.active { background: #174ea6; color: #fff; }
+      main { padding: 18px; }
+      .screen { display: none; }
+      .screen.active { display: block; }
+      .card { background: #fff; border: 1px solid #dadce0; border-radius: 8px; padding: 14px; margin-bottom: 14px; box-shadow: 0 1px 2px rgba(60,64,67,.08); }
+      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+      .muted { color: #5f6368; font-size: 12px; }
+      .status { padding: 8px 10px; border-radius: 4px; background: #eef3fe; margin: 8px 0; white-space: pre-wrap; }
+      .ok { color: #137333; font-weight: 600; }
+      .bad { color: #c5221f; font-weight: 600; }
+      .warnText { color: #b06000; font-weight: 600; }
+      table { border-collapse: collapse; width: 100%; background: #fff; }
+      th, td { border: 1px solid #dadce0; padding: 6px 8px; text-align: left; vertical-align: top; }
+      th { background: #f1f3f4; }
+      pre { background: #f1f3f4; border-radius: 6px; padding: 10px; max-height: 260px; overflow: auto; white-space: pre-wrap; word-break: break-word; }
+      .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 10px 0; }
+      .pill { display: inline-block; border-radius: 999px; padding: 2px 8px; background: #e8f0fe; color: #174ea6; font-size: 12px; }
+      a { color: #174ea6; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>CBV Test Console WebApp</h1>
+      <div class="muted" style="color:#d2e3fc">Manual-first runtime console. No auto-run and no continuous polling.</div>
+    </header>
+    <nav>
+      <button id="tab-dashboard" class="active" onclick="showScreen('dashboard')">Dashboard</button>
+      <button id="tab-guidance" onclick="showScreen('guidance')">Guidance</button>
+      <button id="tab-console" onclick="showScreen('console')">Test Console</button>
+      <button id="tab-library" onclick="showScreen('library')">Report Library</button>
+    </nav>
+    <main>
+      <section id="screen-dashboard" class="screen active">
+        <div class="card">
+          <h2>Dashboard</h2>
+          <p class="muted">Click refresh to load the latest runtime snapshot. This page never runs tests automatically.</p>
+          <div class="actions">
+            <button onclick="loadDashboard()">Refresh Dashboard</button>
+            <button class="secondary" onclick="bootstrapRuntime()">Bootstrap Runtime</button>
+            <button class="secondary" onclick="runHealth()">Health Check</button>
+            <button class="secondary" onclick="runSelfTest(false)">WebApp Self-Test</button>
+          </div>
+          <div id="dashboard-status" class="status">Ready. No runtime call has been made yet.</div>
+        </div>
+        <div id="dashboard-content" class="grid"></div>
+      </section>
+
+      <section id="screen-guidance" class="screen">
+        <div class="card">
+          <h2>Runtime Session & Guidance</h2>
+          <p class="muted">Start a guided session, acquire a runtime lock, inspect timeline, and create recovery plans. Nothing runs automatically.</p>
+          <div class="actions">
+            <button onclick="startGuidedSession()">Start Session</button>
+            <button class="secondary" onclick="loadGuidance()">Refresh Guidance</button>
+            <button class="secondary" onclick="acquireRuntimeLock()">Acquire Lock</button>
+            <button class="secondary" onclick="releaseRuntimeLock()">Release Lock</button>
+            <button class="secondary" onclick="createRecoveryPlan()">Create Recovery Plan</button>
+            <button class="secondary" onclick="closeGuidedSession()">Close Session</button>
+            <button class="secondary" onclick="guidedRuntimeSelfTest()">Guided Self-Test</button>
+          </div>
+          <div id="guidance-status" class="status">No guidance loaded yet.</div>
+        </div>
+        <div id="guidance-content" class="grid"></div>
+        <div id="timeline-content" class="card"></div>
+      </section>
+
+      <section id="screen-console" class="screen">
+        <div class="card">
+          <h2>Test Console</h2>
+          <p class="muted">Select a suite and click Run once. Runs append a report row and create a Drive Markdown report.</p>
+          <div class="actions">
+            <button class="secondary" onclick="loadSuites()">Load Suites</button>
+            <select id="suite-select"></select>
+            <button class="warn" id="run-button" onclick="runSelectedSuite()">Run Selected Suite</button>
+          </div>
+          <div class="status warnText">Operator confirmation: this action may append a new report row and create a new Drive file. It will not delete or overwrite old reports.</div>
+          <div id="console-status" class="status">No suite run yet.</div>
+        </div>
+        <div id="run-result" class="card" style="display:none"></div>
+      </section>
+
+      <section id="screen-library" class="screen">
+        <div class="card">
+          <h2>Report Library</h2>
+          <p class="muted">Read-only view of recent append-only report rows.</p>
+          <div class="actions">
+            <button onclick="loadReports()">Refresh Reports</button>
+            <select id="report-limit">
+              <option value="10">10 reports</option>
+              <option value="20" selected>20 reports</option>
+              <option value="50">50 reports</option>
+            </select>
+          </div>
+          <div id="library-status" class="status">No reports loaded yet.</div>
+        </div>
+        <div id="report-list" class="card"></div>
+      </section>
+    </main>
+
+    <textarea id="copy-buffer" style="position:absolute;left:-9999px;top:-9999px"></textarea>
+    <script>
+      var BOOTSTRAP = <?!= bootstrapJson ?>;
+      var LAST_REPORT = null;
+      var LAST_HANDOFF = '';
+
+      function esc(s) {
+        return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      }
+      function setStatus(id, text, ok) {
+        var el = document.getElementById(id);
+        el.className = 'status ' + (ok === true ? 'ok' : ok === false ? 'bad' : '');
+        el.textContent = text;
+      }
+      function callApi(name, args, statusId, done) {
+        setStatus(statusId, 'Running ' + name + '...', null);
+        var runner = google.script.run
+          .withSuccessHandler(function (res) {
+            if (!res || res.ok === false) {
+              setStatus(statusId, (res && res.message ? res.message : 'API returned not ok') + '\n' + JSON.stringify(res || {}, null, 2), false);
+            } else {
+              setStatus(statusId, res.message || 'OK', true);
+            }
+            done(res || {});
+          })
+          .withFailureHandler(function (err) {
+            setStatus(statusId, String(err && err.message ? err.message : err), false);
+          });
+        if (args === undefined) runner[name]();
+        else runner[name](args);
+      }
+      function showScreen(name) {
+        ['dashboard', 'guidance', 'console', 'library'].forEach(function (s) {
+          document.getElementById('screen-' + s).className = 'screen' + (s === name ? ' active' : '');
+          document.getElementById('tab-' + s).className = s === name ? 'active' : '';
+        });
+      }
+      function renderObj(title, obj) {
+        return '<div class="card"><h3>' + esc(title) + '</h3><pre>' + esc(JSON.stringify(obj || {}, null, 2)) + '</pre></div>';
+      }
+      function loadDashboard() {
+        callApi('cbvTestConsoleWebAppGetDashboard', undefined, 'dashboard-status', function (res) {
+          var d = (res && res.data) || {};
+          var html = '';
+          html += renderObj('Health', d.health);
+          html += renderObj('Report Folder', d.reportFolder);
+          html += renderObj('Latest Report', d.latestReport || {});
+          html += renderObj('Active Session', d.activeSession || {});
+          html += renderObj('Guidance', d.guidance || {});
+          html += renderObj('Runtime Lock', d.runtimeLock || {});
+          html += '<div class="card"><h3>Summary</h3><p><span class="pill">Suites: ' + esc(d.suiteCount) + '</span> <span class="pill">Reports: ' + esc(d.reportCount) + '</span></p><p class="muted">WebApp URL: ' + esc(d.webAppUrl) + '</p></div>';
+          document.getElementById('dashboard-content').innerHTML = html;
+        });
+      }
+      function bootstrapRuntime() {
+        callApi('cbvTestConsoleWebAppBootstrap', undefined, 'dashboard-status', function (res) {
+          document.getElementById('dashboard-content').innerHTML = renderObj('Bootstrap Result', res);
+        });
+      }
+      function runHealth() {
+        callApi('cbvTestConsoleWebAppHealthCheck', undefined, 'dashboard-status', function (res) {
+          document.getElementById('dashboard-content').innerHTML = renderObj('Health Check', res);
+        });
+      }
+      function runSelfTest(runSafeSuite) {
+        callApi('cbvTestConsoleWebAppSelfTest', { runSafeSuite: !!runSafeSuite }, 'dashboard-status', function (res) {
+          document.getElementById('dashboard-content').innerHTML = renderObj('Self-Test', res);
+        });
+      }
+      function renderGuidance(res) {
+        var d = (res && res.data) || {};
+        document.getElementById('guidance-content').innerHTML = renderObj('Session', d.session || {}) + renderObj('Guidance', d.guidance || {}) + renderObj('Lock / Recovery', d.lock || d.recoveryPlan || {});
+        loadTimeline();
+      }
+      function startGuidedSession() {
+        callApi('cbvTestConsoleWebAppStartSession', {}, 'guidance-status', renderGuidance);
+      }
+      function loadGuidance() {
+        callApi('cbvTestConsoleWebAppGetGuidance', undefined, 'guidance-status', renderGuidance);
+      }
+      function acquireRuntimeLock() {
+        callApi('cbvTestConsoleWebAppAcquireLock', { reason: 'Operator guided runtime session', ttlMinutes: 30 }, 'guidance-status', function (res) {
+          renderGuidance({ data: { session: res.data && res.data.session, guidance: {}, lock: res.data && res.data.lock } });
+          loadGuidance();
+        });
+      }
+      function releaseRuntimeLock() {
+        callApi('cbvTestConsoleWebAppReleaseLock', { reason: 'Released from WebApp guidance screen' }, 'guidance-status', function () {
+          loadGuidance();
+        });
+      }
+      function createRecoveryPlan() {
+        callApi('cbvTestConsoleWebAppCreateRecoveryPlan', {}, 'guidance-status', function (res) {
+          renderGuidance({ data: { session: res.data && res.data.session, recoveryPlan: res.data && res.data.recoveryPlan } });
+        });
+      }
+      function closeGuidedSession() {
+        callApi('cbvTestConsoleWebAppCloseSession', { reason: 'Closed from WebApp guidance screen' }, 'guidance-status', function (res) {
+          renderGuidance({ data: { session: res.data && res.data.session, guidance: {} } });
+        });
+      }
+      function guidedRuntimeSelfTest() {
+        callApi('cbvTestConsoleWebAppGuidedRuntimeSelfTest', { writeSyntheticSession: false }, 'guidance-status', function (res) {
+          document.getElementById('guidance-content').innerHTML = renderObj('Guided Self-Test', res);
+          loadTimeline();
+        });
+      }
+      function loadTimeline() {
+        callApi('cbvTestConsoleWebAppListTimeline', { limit: 20 }, 'guidance-status', function (res) {
+          var list = (res && res.data && res.data.timeline) || [];
+          var rows = list.map(function (t) {
+            return '<tr><td>' + esc(t.createdAt) + '</td><td>' + esc(t.eventType) + '</td><td>' + esc(t.fromState) + '</td><td>' + esc(t.toState) + '</td><td>' + esc(t.message) + '</td></tr>';
+          }).join('');
+          document.getElementById('timeline-content').innerHTML = '<h3>Runtime Timeline</h3><table><thead><tr><th>Created At</th><th>Event</th><th>From</th><th>To</th><th>Message</th></tr></thead><tbody>' + rows + '</tbody></table>';
+        });
+      }
+      function loadSuites() {
+        callApi('cbvTestConsoleWebAppListSuites', undefined, 'console-status', function (res) {
+          var list = (res && res.data && res.data.suites) || [];
+          var html = '';
+          list.forEach(function (s) {
+            if (s.enabled) html += '<option value="' + esc(s.suiteCode) + '">' + esc('[' + s.domain + '] ' + s.label + (s.destructive ? ' (BLOCKED)' : '')) + '</option>';
+          });
+          document.getElementById('suite-select').innerHTML = html;
+        });
+      }
+      function runSelectedSuite() {
+        var suite = document.getElementById('suite-select').value;
+        if (!suite) {
+          setStatus('console-status', 'Load suites and select one suite first.', false);
+          return;
+        }
+        document.getElementById('run-button').disabled = true;
+        callApi('cbvTestConsoleWebAppRunSuite', { suiteCode: suite }, 'console-status', function (res) {
+          document.getElementById('run-button').disabled = false;
+          var d = (res && res.data) || {};
+          LAST_REPORT = d.report || null;
+          LAST_HANDOFF = d.aiHandoff || '';
+          renderRunResult(LAST_REPORT, LAST_HANDOFF);
+        });
+      }
+      function renderRunResult(report, handoff) {
+        var el = document.getElementById('run-result');
+        if (!report) {
+          el.style.display = 'block';
+          el.innerHTML = '<h3>No report returned</h3>';
+          return;
+        }
+        var link = report.driveFileUrl ? '<a href="' + esc(report.driveFileUrl) + '" target="_blank" rel="noopener">Open Drive Report</a>' : '<span class="bad">No Drive URL returned</span>';
+        var checks = report.checks || [];
+        var rows = checks.map(function (c) {
+          return '<tr><td>' + esc(c.ok ? 'YES' : 'NO') + '</td><td>' + esc(c.severity) + '</td><td>' + esc(c.code) + '</td><td>' + esc(c.message) + '</td></tr>';
+        }).join('');
+        el.style.display = 'block';
+        el.innerHTML =
+          '<h2>Run Result</h2>' +
+          '<p><span class="pill">' + esc(report.status) + '</span> <span class="pill">' + esc(report.severity) + '</span> <span class="pill">' + esc(report.traceId) + '</span></p>' +
+          '<p>' + esc(report.summary) + '</p><p>' + link + ' &nbsp; ' + esc(report.exportFileName || '') + '</p>' +
+          '<div class="actions"><button onclick="copyText(LAST_HANDOFF)">Copy AI Handoff Prompt</button><button class="secondary" onclick="copyText(JSON.stringify(LAST_REPORT,null,2))">Copy Report JSON</button></div>' +
+          '<h3>Checks</h3><table><thead><tr><th>OK</th><th>Severity</th><th>Code</th><th>Message</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+          '<h3>Warnings</h3><pre>' + esc((report.warnings || []).join('\n') || '(none)') + '</pre><h3>Errors</h3><pre>' + esc((report.errors || []).join('\n') || '(none)') + '</pre>';
+      }
+      function loadReports() {
+        var limit = Number(document.getElementById('report-limit').value || 20);
+        callApi('cbvTestConsoleWebAppListReports', { limit: limit }, 'library-status', function (res) {
+          var list = (res && res.data && res.data.reports) || [];
+          var rows = list.map(function (r, idx) {
+            var link = r.driveFileUrl ? '<a href="' + esc(r.driveFileUrl) + '" target="_blank" rel="noopener">Drive</a>' : '';
+            return '<tr><td>' + esc(r.checkedAt) + '</td><td>' + esc(r.status) + '</td><td>' + esc(r.severity) + '</td><td>' + esc(r.testSuite) + '</td><td>' + esc(r.traceId) + '</td><td>' + link + '</td><td><button class="secondary" onclick="copyReportAt(' + idx + ')">Copy JSON</button></td></tr>';
+          }).join('');
+          window.__REPORTS = list;
+          document.getElementById('report-list').innerHTML = '<table><thead><tr><th>Checked At</th><th>Status</th><th>Severity</th><th>Suite</th><th>Trace</th><th>Drive</th><th>Copy</th></tr></thead><tbody>' + rows + '</tbody></table>';
+        });
+      }
+      function copyReportAt(idx) {
+        var r = (window.__REPORTS || [])[idx];
+        copyText(JSON.stringify(r || {}, null, 2));
+      }
+      function copyText(text) {
+        var value = String(text || '');
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(value).then(function () { alert('Copied.'); }, function () { fallbackCopy(value); });
+        } else {
+          fallbackCopy(value);
+        }
+      }
+      function fallbackCopy(value) {
+        var b = document.getElementById('copy-buffer');
+        b.value = value;
+        b.select();
+        document.execCommand('copy');
+        alert('Copied.');
+      }
+      document.getElementById('dashboard-status').textContent = 'Loaded shell at ' + (BOOTSTRAP.servedAt || '') + '. Click Refresh Dashboard to fetch runtime data.';
+    </script>
+  </body>
+</html>

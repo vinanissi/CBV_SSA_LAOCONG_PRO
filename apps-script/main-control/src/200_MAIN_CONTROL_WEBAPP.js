@@ -574,6 +574,9 @@ function MC_webAppServe_(obj) {
 
 function doGet(e) {
   try {
+    if (typeof CBV_TestConsole_shouldServeWebApp_ === 'function' && CBV_TestConsole_shouldServeWebApp_(e || {})) {
+      return CBV_TestConsole_serveWebApp_(e || {});
+    }
     return MC_webAppServe_(MC_WebApp_doGet_(e || {}));
   } catch (err) {
     return MC_webAppServe_(

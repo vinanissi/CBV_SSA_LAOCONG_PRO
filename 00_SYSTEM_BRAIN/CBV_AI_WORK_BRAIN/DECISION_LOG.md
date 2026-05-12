@@ -82,3 +82,27 @@ updated: 2026-05-11
 - **Alternatives considered:** Auto-approve or silent deploy hooks (rejected); requiring unlock even for `validateOnly` (rejected — blocks honest transition validation UX).
 - **Consequences:** Operators must run GAS self-tests in a bound spreadsheet; production readiness remains **not** asserted until live workflow verification passes; Git push/tag may still fail without remote credentials (recorded in phase report, not hidden).
 - **Links:** `00_SYSTEM_BRAIN/000_REPORTS/028_PHASE_E_OPERATIONAL_WORKFLOW_RUNTIME_REPORT_20260511_221125.md`, `00_SYSTEM_BRAIN/000_PROMPTS/028_PHASE_E_OPERATIONAL_WORKFLOW_RUNTIME_PROMPT_20260511_221125.md`
+
+## 2026-05-11 — Phase F WebApp FE Runtime prompt boundary
+
+- **Context:** Next phase must refactor CBV Test Console Runtime so Google Apps Script WebApp becomes the primary operator Frontend, while Sheet menu remains only a launcher/bootstrap/health surface.
+- **Decision:** Archive a dedicated Phase F execution prompt before implementation. The prompt requires add-only/idempotent WebApp FE files, `google.script.run` server APIs, Dashboard/Test Console/Report Library screens, explicit manual suite runs only, append-only `CBV_TEST_CONSOLE_REPORT` writes, Drive Markdown export with `000`-`999` prefix allocation, Copy AI Handoff Prompt, and self-test/runtime verification.
+- **Alternatives considered:** Direct implementation without prompt/report trace (rejected: violates memory-first workflow); replacing existing `doGet(e)` wholesale (rejected: must preserve Main Control JSON WebApp actions).
+- **Consequences:** Implementation remains a separate Phase F step; production readiness is not asserted until live Apps Script WebApp verification proves FE, Sheet append, Drive export, and AI handoff behavior.
+- **Links:** `00_SYSTEM_BRAIN/000_PROMPTS/029_PHASE_F_WEBAPP_FE_RUNTIME_PROMPT_20260511_223100.md`, `00_SYSTEM_BRAIN/000_REPORTS/029_PHASE_F_WEBAPP_FE_RUNTIME_PROMPT_REPORT_20260511_223100.md`
+
+## 2026-05-11 — Phase F WebApp FE Runtime implementation
+
+- **Context:** Execute Phase F prompt so the CBV Test Console operator surface moves from Sheet menu suite actions to an independent Google Apps Script WebApp FE.
+- **Decision:** Add WebApp route/API/model/self-test/HTML files under `apps-script/main-control/src/`, wire existing `doGet(e)` with a guarded Test Console UI branch, reduce the Sheet menu to WebApp launcher/bootstrap/health/self-test/report sheet, and mirror the WebApp runtime files/menu in `apps-script/production-core/src/`.
+- **Alternatives considered:** Keeping registry suite run slots in the Sheet menu (rejected: WebApp must be primary FE); adding a second `doGet(e)` (rejected: Apps Script supports one entry and existing JSON WebApp actions must remain intact).
+- **Consequences:** Operators must deploy/push GAS and verify in a bound Apps Script runtime before any production-ready claim. WebApp suite runs are manual-only, append reports after Drive export so Sheet rows include Drive metadata, and old report rows/files are not overwritten.
+- **Links:** `00_SYSTEM_BRAIN/000_REPORTS/029_PHASE_F_WEBAPP_FE_RUNTIME_REPORT_20260511_223900.md`, `00_SYSTEM_BRAIN/000_PROMPTS/029_PHASE_F_WEBAPP_FE_RUNTIME_PROMPT_20260511_223100.md`
+
+## 2026-05-11 — Phase G Guided Runtime Session layer
+
+- **Context:** Move CBV Test Console WebApp from a manual runtime console toward a guided operational runtime with sessions, state machine, timeline, guidance, recovery, and runtime lock.
+- **Decision:** Add Phase G runtime layers as append-only sheet-backed logs (`CBV_TC_RUNTIME_SESSION`, `CBV_TC_RUNTIME_TIMELINE`, `CBV_TC_RUNTIME_LOCK_LOG`) plus current active session/lock properties for operation. Extend WebApp APIs and FE with a Guidance screen while keeping suite execution manual-only.
+- **Alternatives considered:** Encoding guidance only in FE state (rejected: loses operational memory); auto-running recovery or verification after failures (rejected: violates manual-first and production-safe rules).
+- **Consequences:** Runtime history is auditable through append-only logs, but live Apps Script verification is still required. Active session/lock properties are operational cursors, not audit history; Sheet logs are the source for continuity.
+- **Links:** `00_SYSTEM_BRAIN/000_PROMPTS/030_PHASE_G_RUNTIME_SESSION_GUIDANCE_LAYER_PROMPT_20260511_230200.md`, `00_SYSTEM_BRAIN/000_REPORTS/030_PHASE_G_RUNTIME_SESSION_GUIDANCE_LAYER_REPORT_20260511_231000.md`
