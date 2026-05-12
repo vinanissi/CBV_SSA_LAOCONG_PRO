@@ -69,10 +69,10 @@ HAND-A adds **five click-by-click** AppSheet guides + index pointer; no runtime.
 
 ## GIT STATUS
 
-Clean on `phase/from-v2.4.1-TASK-FIN` at `39e3bc6`.
+Branch `phase/from-v2.4.1-TASK-FIN` pushed to `origin`; HAND-A deliverables merged on branch.
 
 ## COMMIT / PUSH / TAG STATUS
 
-- **Commits:** `8f9e065` — `docs(appsheet): add click-by-click setup guide`; `5434b3d` — `docs(report): add git metadata for APPSHEET-HAND-A`; `39e3bc6` — `docs(handoff): add git refs for APPSHEET-HAND-A`
+- **Commits (HAND-A line, chronological):** `8f9e065` — `docs(appsheet): add click-by-click setup guide`; `5434b3d` — `docs(report): add git metadata for APPSHEET-HAND-A`; `39e3bc6` — `docs(handoff): add git refs for APPSHEET-HAND-A`; `0916719` — `docs(report): sync HAND-A git section to tip`
 - **Push:** succeeded to `origin/phase/from-v2.4.1-TASK-FIN`
-- **Tag:** `v2.4.8-APPSHEET-CLICK-BY-CLICK-GUIDE` → `39e3bc6` (forced update after report/handoff polish)
+- **Tag:** `v2.4.8-APPSHEET-CLICK-BY-CLICK-GUIDE` — force-pushed on `origin` to match branch tip at phase close (`git pull` then `git show v2.4.8-APPSHEET-CLICK-BY-CLICK-GUIDE`)

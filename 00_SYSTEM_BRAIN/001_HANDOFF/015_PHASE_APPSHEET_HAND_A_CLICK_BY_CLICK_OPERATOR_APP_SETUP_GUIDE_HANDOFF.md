@@ -43,5 +43,5 @@ Chạy pilot: một người **không** dev làm theo 5 file trên môi trườn
 ## Git (reference)
 
 - Main docs commit: `8f9e065` — `docs(appsheet): add click-by-click setup guide`
-- Report metadata commit: `5434b3d` — `docs(report): add git metadata for APPSHEET-HAND-A`
-- Tag: `v2.4.8-APPSHEET-CLICK-BY-CLICK-GUIDE` (points at tip after report update)
+- Follow-up: `5434b3d`, `39e3bc6`, `0916719` — report/handoff git metadata and report sync
+- Tag: `v2.4.8-APPSHEET-CLICK-BY-CLICK-GUIDE` — on `origin`, matches branch tip at phase close
