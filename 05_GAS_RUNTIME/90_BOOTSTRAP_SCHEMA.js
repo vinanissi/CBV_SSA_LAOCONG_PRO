@@ -145,7 +145,16 @@ const CBV_SCHEMA_MANIFEST = {
     'SOURCE_HASH',
     'RESOLVED_AT',
     'RESOLVED_BY',
-    'NOTE'
+    'NOTE',
+    'ACKNOWLEDGED_AT',
+    'ACKNOWLEDGED_BY',
+    'STATE_CHANGED_AT',
+    'STATE_CHANGED_BY',
+    'ESCALATED_AT',
+    'EXPIRES_AT',
+    'AUTO_CLEARED_AT',
+    'AUTO_CLEARED_BY',
+    'LAST_ACTION'
   ]
 };
 

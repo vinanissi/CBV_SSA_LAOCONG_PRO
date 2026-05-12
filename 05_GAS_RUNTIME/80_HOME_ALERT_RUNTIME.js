@@ -1,5 +1,5 @@
 /**
- * PHASE_80A — HOME_ALERT sheet-driven runtime.
+ * PHASE_80B — HOME_ALERT operational state runtime (extends PHASE_80A).
  *
  * Principles:
  * - GAS computes, Sheet stores, AppSheet displays.
@@ -7,6 +7,41 @@
  * - Append-only audit log via ADMIN_AUDIT_LOG (no delete of old alerts).
  * - No triggers created here; manual-first.
  */
+
+// ===== Operational States =====
+
+var HOME_ALERT_STATUS = {
+  OPEN: 'OPEN',
+  ACKNOWLEDGED: 'ACKNOWLEDGED',
+  IN_PROGRESS: 'IN_PROGRESS',
+  WAITING_RESPONSE: 'WAITING_RESPONSE',
+  ESCALATED: 'ESCALATED',
+  RESOLVED: 'RESOLVED',
+  AUTO_CLEARED: 'AUTO_CLEARED',
+  EXPIRED: 'EXPIRED'
+};
+
+function HomeAlert_isActiveStatus_(status) {
+  return [HOME_ALERT_STATUS.OPEN, HOME_ALERT_STATUS.ACKNOWLEDGED, HOME_ALERT_STATUS.IN_PROGRESS, HOME_ALERT_STATUS.WAITING_RESPONSE, HOME_ALERT_STATUS.ESCALATED].indexOf(String(status || '').trim()) >= 0;
+}
+
+function HomeAlert_isTerminalStatus_(status) {
+  return [HOME_ALERT_STATUS.RESOLVED, HOME_ALERT_STATUS.AUTO_CLEARED, HOME_ALERT_STATUS.EXPIRED].indexOf(String(status || '').trim()) >= 0;
+}
+
+function HomeAlert_allowedTransitions_() {
+  var S = HOME_ALERT_STATUS;
+  return {
+    OPEN: [S.ACKNOWLEDGED, S.IN_PROGRESS, S.WAITING_RESPONSE, S.ESCALATED, S.RESOLVED],
+    ACKNOWLEDGED: [S.IN_PROGRESS, S.WAITING_RESPONSE, S.ESCALATED, S.RESOLVED],
+    IN_PROGRESS: [S.WAITING_RESPONSE, S.ESCALATED, S.RESOLVED],
+    WAITING_RESPONSE: [S.IN_PROGRESS, S.ESCALATED, S.RESOLVED],
+    ESCALATED: [S.IN_PROGRESS, S.WAITING_RESPONSE, S.RESOLVED],
+    RESOLVED: [],
+    AUTO_CLEARED: [],
+    EXPIRED: []
+  };
+}
 
 function HomeAlert_bootstrap() {
   var traceId = HomeAlert_newTraceId_();
@@ -31,13 +66,24 @@ function HomeAlert_bootstrap() {
   return { ok: true, traceId: traceId };
 }
 
-function HomeAlert_refresh() {
+/**
+ * Refresh alerts from sources and upsert into HOME_ALERT.
+ *
+ * Options (manual-first defaults):
+ * - autoClearMissing: mark alerts not generated in this run as AUTO_CLEARED (default false)
+ * - autoExpire: expire alerts when EXPIRES_AT < now (default false)
+ */
+function HomeAlert_refresh(options) {
   var traceId = HomeAlert_newTraceId_();
   var startedAt = cbvNow();
   HomeAlert_ensureHomeAlertSheet_();
 
+  var opts = options || {};
+  var autoClearMissing = opts.autoClearMissing === true;
+  var autoExpire = opts.autoExpire === true;
+
   var generated = [];
-  var stats = { traceId: traceId, generated: 0, upserted: 0, updated: 0, inserted: 0, errors: [] };
+  var stats = { traceId: traceId, generated: 0, upserted: 0, updated: 0, inserted: 0, autoCleared: 0, expired: 0, errors: [] };
 
   try {
     generated = generated.concat(HomeAlert_generateFromTask_(traceId));
@@ -53,6 +99,9 @@ function HomeAlert_refresh() {
 
   stats.generated = generated.length;
 
+  var generatedIds = {};
+  generated.forEach(function(a) { generatedIds[String(a.ALERT_ID || '').trim()] = true; });
+
   generated.forEach(function(alert) {
     try {
       var r = HomeAlert_upsertAlert_(alert, traceId);
@@ -63,6 +112,22 @@ function HomeAlert_refresh() {
       stats.errors.push('UPSERT: ' + (e.message || String(e)));
     }
   });
+
+  try {
+    if (autoExpire) {
+      stats.expired = HomeAlert_autoExpire_(traceId);
+    }
+  } catch (e5) {
+    stats.errors.push('AUTO_EXPIRE: ' + (e5.message || String(e5)));
+  }
+
+  try {
+    if (autoClearMissing) {
+      stats.autoCleared = HomeAlert_autoClearMissing_(generatedIds, traceId);
+    }
+  } catch (e6) {
+    stats.errors.push('AUTO_CLEAR: ' + (e6.message || String(e6)));
+  }
 
   try {
     if (typeof logAdminAudit === 'function') {
@@ -122,10 +187,10 @@ function HomeAlert_generateFromTask_(traceId) {
       relatedEntityType: 'TASK_MAIN',
       relatedEntityId: id,
       relatedRecordUrl: '',
-      actionLabel: 'Resolve',
-      actionType: 'RESOLVE_ALERT',
+      actionLabel: 'Acknowledge',
+      actionType: 'ACK_ALERT',
       actionPayload: { alertCode: 'TASK_OVERDUE', taskId: id },
-      status: 'OPEN',
+      status: HOME_ALERT_STATUS.OPEN,
       isActive: true,
       isResolved: false,
       dueAt: dueDt,
@@ -180,10 +245,10 @@ function HomeAlert_generateFromFinance_(traceId) {
       relatedEntityType: 'FINANCE_TRANSACTION',
       relatedEntityId: id,
       relatedRecordUrl: '',
-      actionLabel: 'Resolve',
-      actionType: 'RESOLVE_ALERT',
+      actionLabel: 'Acknowledge',
+      actionType: 'ACK_ALERT',
       actionPayload: { alertCode: 'FIN_UNCONFIRMED_OLD', financeId: id },
-      status: 'OPEN',
+      status: HOME_ALERT_STATUS.OPEN,
       isActive: true,
       isResolved: false,
       dueAt: '',
@@ -237,10 +302,10 @@ function HomeAlert_generateFromLogs_(traceId) {
         relatedEntityType: sheetName,
         relatedEntityId: id,
         relatedRecordUrl: '',
-        actionLabel: 'Resolve',
-        actionType: 'RESOLVE_ALERT',
+        actionLabel: 'Acknowledge',
+        actionType: 'ACK_ALERT',
         actionPayload: { alertCode: moduleCode + '_LOG_NOTE_ERROR', logId: id, table: sheetName },
-        status: 'OPEN',
+        status: HOME_ALERT_STATUS.OPEN,
         isActive: true,
         isResolved: false,
         dueAt: '',
@@ -277,10 +342,18 @@ function HomeAlert_upsertAlert_(alert, traceId) {
   var now = cbvNow();
 
   if (existing) {
-    var patch = {};
-    Object.keys(alert).forEach(function(k) { patch[k] = alert[k]; });
+    var patch = HomeAlert_mergeIncomingWithExisting_(existing, alert);
     patch.UPDATED_AT = now;
     patch.TRACE_ID = traceId || patch.TRACE_ID || '';
+    patch.STATE_CHANGED_AT = existing.STATE_CHANGED_AT || '';
+    patch.STATE_CHANGED_BY = existing.STATE_CHANGED_BY || '';
+    patch.ACKNOWLEDGED_AT = existing.ACKNOWLEDGED_AT || '';
+    patch.ACKNOWLEDGED_BY = existing.ACKNOWLEDGED_BY || '';
+    patch.ESCALATED_AT = existing.ESCALATED_AT || '';
+    patch.AUTO_CLEARED_AT = existing.AUTO_CLEARED_AT || '';
+    patch.AUTO_CLEARED_BY = existing.AUTO_CLEARED_BY || '';
+    patch.EXPIRES_AT = existing.EXPIRES_AT || patch.EXPIRES_AT || '';
+    patch.LAST_ACTION = existing.LAST_ACTION || '';
     if (existing.CREATED_AT) patch.CREATED_AT = existing.CREATED_AT;
     _updateRow(sheetName, existing._rowNumber, patch);
     return { action: 'UPDATE', alertId: alertId };
@@ -291,42 +364,39 @@ function HomeAlert_upsertAlert_(alert, traceId) {
   if (!record.CREATED_AT) record.CREATED_AT = now;
   record.UPDATED_AT = now;
   record.TRACE_ID = traceId || record.TRACE_ID || '';
+  record.STATE_CHANGED_AT = now;
+  record.STATE_CHANGED_BY = (typeof mapCurrentUserEmailToInternalId === 'function' ? mapCurrentUserEmailToInternalId() : null) || cbvUser();
+  record.LAST_ACTION = 'UPSERT_INSERT';
   _appendRecord(sheetName, record);
   return { action: 'INSERT', alertId: alertId };
 }
 
 function HomeAlert_resolveAlert(alertId, note) {
-  HomeAlert_ensureHomeAlertSheet_();
-  var traceId = HomeAlert_newTraceId_();
-  var sheetName = HomeAlert_getSheetName_();
-  var sheet = _sheet(sheetName);
-  var rows = _rows(sheet);
-  var id = String(alertId || '').trim();
-  cbvAssert(id, 'alertId required');
+  return HomeAlert_transitionAlert_(alertId, HOME_ALERT_STATUS.RESOLVED, { RESOLVED_AT: cbvNow(), RESOLVED_BY: HomeAlert_actorId_() }, note || '');
+}
 
-  var row = rows.find(function(r) { return String(r.ALERT_ID || '').trim() === id; }) || null;
-  cbvAssert(row, 'Alert not found: ' + id);
+function HomeAlert_acknowledgeAlert(alertId, note) {
+  return HomeAlert_transitionAlert_(alertId, HOME_ALERT_STATUS.ACKNOWLEDGED, { ACKNOWLEDGED_AT: cbvNow(), ACKNOWLEDGED_BY: HomeAlert_actorId_() }, note || '');
+}
 
-  var before = { STATUS: row.STATUS, IS_ACTIVE: row.IS_ACTIVE, IS_RESOLVED: row.IS_RESOLVED, NOTE: row.NOTE };
-  var patch = {
-    STATUS: 'RESOLVED',
-    IS_ACTIVE: false,
-    IS_RESOLVED: true,
-    RESOLVED_AT: cbvNow(),
-    RESOLVED_BY: (typeof mapCurrentUserEmailToInternalId === 'function' ? mapCurrentUserEmailToInternalId() : null) || cbvUser(),
-    NOTE: note || row.NOTE || '',
-    UPDATED_AT: cbvNow(),
-    TRACE_ID: traceId
-  };
-  _updateRow(sheetName, row._rowNumber, patch);
+function HomeAlert_startProgress(alertId, note) {
+  return HomeAlert_transitionAlert_(alertId, HOME_ALERT_STATUS.IN_PROGRESS, {}, note || '');
+}
 
-  try {
-    if (typeof logAdminAudit === 'function') {
-      logAdminAudit('HOME_ALERT_RESOLVE', 'HOME_ALERT', id, 'UPDATE', before, patch, 'Resolve alert ' + id);
-    }
-  } catch (e) {}
+function HomeAlert_waitResponse(alertId, note) {
+  return HomeAlert_transitionAlert_(alertId, HOME_ALERT_STATUS.WAITING_RESPONSE, {}, note || '');
+}
 
-  return { ok: true, alertId: id, traceId: traceId };
+function HomeAlert_escalateAlert(alertId, note) {
+  return HomeAlert_transitionAlert_(alertId, HOME_ALERT_STATUS.ESCALATED, { ESCALATED_AT: cbvNow() }, note || '');
+}
+
+function HomeAlert_expireAlert(alertId, note) {
+  return HomeAlert_transitionAlert_(alertId, HOME_ALERT_STATUS.EXPIRED, {}, note || 'expired');
+}
+
+function HomeAlert_autoClearAlert(alertId, note) {
+  return HomeAlert_transitionAlert_(alertId, HOME_ALERT_STATUS.AUTO_CLEARED, { AUTO_CLEARED_AT: cbvNow(), AUTO_CLEARED_BY: HomeAlert_actorId_() }, note || 'auto-cleared');
 }
 
 function HomeAlert_healthCheck() {
@@ -374,7 +444,7 @@ function HomeAlert_selfTest() {
 
   // Refresh must return stats.
   try {
-    var r = HomeAlert_refresh();
+    var r = HomeAlert_refresh({ autoClearMissing: false, autoExpire: false });
     checks.push({ name: 'refresh', ok: r.ok, details: { traceId: r.traceId, stats: r.stats } });
     if (!r.ok) warnings.push('Refresh had errors: ' + JSON.stringify(r.stats.errors || []));
   } catch (e2) {
@@ -382,12 +452,21 @@ function HomeAlert_selfTest() {
     errors.push('Refresh exception: ' + (e2.message || String(e2)));
   }
 
+  try {
+    var s = HomeAlert_validateStateMachine_();
+    checks.push({ name: 'stateMachine', ok: s.ok, details: s });
+    if (!s.ok) errors.push('State machine invalid: ' + JSON.stringify(s.errors || []));
+  } catch (e3) {
+    checks.push({ name: 'stateMachine', ok: false, details: { error: e3.message || String(e3) } });
+    errors.push('State machine exception: ' + (e3.message || String(e3)));
+  }
+
   var status = errors.length > 0 ? 'FAIL' : (warnings.length > 0 ? 'GO_WITH_WARNINGS' : 'GO');
   var severity = errors.length > 0 ? 'CRITICAL' : (warnings.length > 0 ? 'WARNING' : 'OK');
 
   return {
     ok: status !== 'FAIL',
-    phase: 'PHASE_80A_HOME_ALERT_SHEET_DRIVEN_RUNTIME',
+    phase: 'PHASE_80B_HOME_ALERT_OPERATIONAL_STATE_RUNTIME',
     status: status,
     severity: severity,
     checkedAt: cbvNow(),
@@ -398,7 +477,7 @@ function HomeAlert_selfTest() {
     checks: checks,
     warnings: warnings,
     errors: errors,
-    nextStep: status === 'GO' ? 'Manual AppSheet setup: add HOME_ALERT table + views/slice/actions.' : 'Fix errors then rerun HomeAlert_selfTest().',
+    nextStep: status === 'GO' ? 'Manual AppSheet setup: add HOME_ALERT table + operational actions (ACK/IN_PROGRESS/WAIT/ESCALATE/RESOLVE).' : 'Fix errors then rerun HomeAlert_selfTest().',
     reportText: '',
     reportJson: { health: h },
     contractVersion: 'CBV_TEST_CONSOLE_V1'
@@ -480,7 +559,7 @@ function HomeAlert_buildAlert_(p) {
     ACTION_LABEL: p.actionLabel || '',
     ACTION_TYPE: p.actionType || '',
     ACTION_PAYLOAD_JSON: JSON.stringify(p.actionPayload || {}),
-    STATUS: p.status || 'OPEN',
+    STATUS: p.status || HOME_ALERT_STATUS.OPEN,
     IS_ACTIVE: p.isActive === true,
     IS_RESOLVED: p.isResolved === true,
     CREATED_AT: '',
@@ -495,7 +574,16 @@ function HomeAlert_buildAlert_(p) {
     SOURCE_HASH: sourceHash,
     RESOLVED_AT: '',
     RESOLVED_BY: '',
-    NOTE: ''
+    NOTE: '',
+    ACKNOWLEDGED_AT: '',
+    ACKNOWLEDGED_BY: '',
+    STATE_CHANGED_AT: '',
+    STATE_CHANGED_BY: '',
+    ESCALATED_AT: '',
+    EXPIRES_AT: p.expiresAt || '',
+    AUTO_CLEARED_AT: '',
+    AUTO_CLEARED_BY: '',
+    LAST_ACTION: ''
   };
 }
 
@@ -534,5 +622,174 @@ function HomeAlert_TestConsole_formatReportText_(r) {
   if ((r.errors || []).length) lines.push('errors=' + JSON.stringify(r.errors, null, 2));
   lines.push('nextStep=' + r.nextStep);
   return lines.join('\n');
+}
+
+function HomeAlert_actorId_() {
+  return (typeof mapCurrentUserEmailToInternalId === 'function' ? mapCurrentUserEmailToInternalId() : null) || cbvUser();
+}
+
+function HomeAlert_mergeIncomingWithExisting_(existing, incoming) {
+  var exStatus = String(existing.STATUS || '').trim();
+  var patch = {};
+
+  // Always refresh "computed" presentation fields.
+  [
+    'ALERT_CODE', 'ALERT_TYPE', 'SEVERITY', 'PRIORITY_SCORE', 'TITLE', 'MESSAGE',
+    'MODULE_CODE', 'RELATED_ENTITY_TYPE', 'RELATED_ENTITY_ID', 'RELATED_RECORD_URL',
+    'ACTION_LABEL', 'ACTION_TYPE', 'ACTION_PAYLOAD_JSON',
+    'SORT_KEY', 'DISPLAY_GROUP', 'BADGE_TEXT', 'BADGE_COLOR', 'SOURCE_HASH'
+  ].forEach(function(k) { patch[k] = incoming[k]; });
+
+  // Keep assignment/due unless incoming explicitly provides.
+  patch.DUE_AT = incoming.DUE_AT !== undefined && incoming.DUE_AT !== '' ? incoming.DUE_AT : (existing.DUE_AT || '');
+  patch.ASSIGNED_TO = incoming.ASSIGNED_TO !== undefined && incoming.ASSIGNED_TO !== '' ? incoming.ASSIGNED_TO : (existing.ASSIGNED_TO || '');
+  patch.EXPIRES_AT = incoming.EXPIRES_AT !== undefined && incoming.EXPIRES_AT !== '' ? incoming.EXPIRES_AT : (existing.EXPIRES_AT || '');
+
+  // Manual-first: do NOT override operational status unless existing is OPEN (or blank).
+  if (!exStatus || exStatus === HOME_ALERT_STATUS.OPEN) {
+    patch.STATUS = incoming.STATUS || HOME_ALERT_STATUS.OPEN;
+    patch.IS_ACTIVE = incoming.IS_ACTIVE === true;
+    patch.IS_RESOLVED = incoming.IS_RESOLVED === true;
+  } else {
+    patch.STATUS = existing.STATUS;
+    patch.IS_ACTIVE = existing.IS_ACTIVE;
+    patch.IS_RESOLVED = existing.IS_RESOLVED;
+  }
+
+  // Preserve terminal fields.
+  patch.RESOLVED_AT = existing.RESOLVED_AT || '';
+  patch.RESOLVED_BY = existing.RESOLVED_BY || '';
+  patch.NOTE = existing.NOTE || '';
+
+  // Operational timestamps preserved.
+  patch.ACKNOWLEDGED_AT = existing.ACKNOWLEDGED_AT || '';
+  patch.ACKNOWLEDGED_BY = existing.ACKNOWLEDGED_BY || '';
+  patch.STATE_CHANGED_AT = existing.STATE_CHANGED_AT || '';
+  patch.STATE_CHANGED_BY = existing.STATE_CHANGED_BY || '';
+  patch.ESCALATED_AT = existing.ESCALATED_AT || '';
+  patch.AUTO_CLEARED_AT = existing.AUTO_CLEARED_AT || '';
+  patch.AUTO_CLEARED_BY = existing.AUTO_CLEARED_BY || '';
+  patch.LAST_ACTION = existing.LAST_ACTION || '';
+
+  return patch;
+}
+
+function HomeAlert_transitionAlert_(alertId, toStatus, extraPatch, note) {
+  HomeAlert_ensureHomeAlertSheet_();
+  var traceId = HomeAlert_newTraceId_();
+  var sheetName = HomeAlert_getSheetName_();
+  var rows = _rows(_sheet(sheetName));
+  var id = String(alertId || '').trim();
+  cbvAssert(id, 'alertId required');
+
+  var row = rows.find(function(r) { return String(r.ALERT_ID || '').trim() === id; }) || null;
+  cbvAssert(row, 'Alert not found: ' + id);
+
+  var fromStatus = String(row.STATUS || HOME_ALERT_STATUS.OPEN).trim();
+  var allowed = HomeAlert_allowedTransitions_();
+  var allowedNext = allowed[fromStatus] || [];
+  cbvAssert(allowedNext.indexOf(toStatus) >= 0 || fromStatus === toStatus, 'Invalid transition: ' + fromStatus + ' -> ' + toStatus);
+
+  var now = cbvNow();
+  var patch = {
+    STATUS: toStatus,
+    IS_ACTIVE: HomeAlert_isActiveStatus_(toStatus),
+    IS_RESOLVED: HomeAlert_isTerminalStatus_(toStatus),
+    UPDATED_AT: now,
+    TRACE_ID: traceId,
+    STATE_CHANGED_AT: now,
+    STATE_CHANGED_BY: HomeAlert_actorId_(),
+    LAST_ACTION: 'TRANSITION_' + fromStatus + '_TO_' + toStatus
+  };
+
+  if (extraPatch) {
+    Object.keys(extraPatch).forEach(function(k) { patch[k] = extraPatch[k]; });
+  }
+
+  var n = String(note || '').trim();
+  if (n) {
+    var prev = String(row.NOTE || '').trim();
+    var entry = '[' + Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm') + '] ' + n;
+    patch.NOTE = prev ? (prev + '\n' + entry) : entry;
+  }
+
+  // Terminal field helpers
+  if (toStatus === HOME_ALERT_STATUS.RESOLVED) {
+    patch.RESOLVED_AT = patch.RESOLVED_AT || now;
+    patch.RESOLVED_BY = patch.RESOLVED_BY || HomeAlert_actorId_();
+  }
+  if (toStatus === HOME_ALERT_STATUS.AUTO_CLEARED) {
+    patch.AUTO_CLEARED_AT = patch.AUTO_CLEARED_AT || now;
+    patch.AUTO_CLEARED_BY = patch.AUTO_CLEARED_BY || HomeAlert_actorId_();
+  }
+
+  var before = {
+    STATUS: row.STATUS, IS_ACTIVE: row.IS_ACTIVE, IS_RESOLVED: row.IS_RESOLVED,
+    NOTE: row.NOTE, UPDATED_AT: row.UPDATED_AT
+  };
+  _updateRow(sheetName, row._rowNumber, patch);
+
+  try {
+    if (typeof logAdminAudit === 'function') {
+      logAdminAudit('HOME_ALERT_TRANSITION', 'HOME_ALERT', id, 'UPDATE', before, patch, 'Transition ' + fromStatus + ' -> ' + toStatus);
+    }
+  } catch (e) {}
+
+  return { ok: true, alertId: id, fromStatus: fromStatus, toStatus: toStatus, traceId: traceId };
+}
+
+function HomeAlert_autoClearMissing_(generatedIds, traceId) {
+  var sheetName = HomeAlert_getSheetName_();
+  var rows = _rows(_sheet(sheetName));
+  var cleared = 0;
+  rows.forEach(function(r) {
+    var id = String(r.ALERT_ID || '').trim();
+    if (!id) return;
+    if (generatedIds && generatedIds[id] === true) return;
+    var status = String(r.STATUS || '').trim();
+    if (!HomeAlert_isActiveStatus_(status)) return;
+    try {
+      HomeAlert_autoClearAlert(id, 'Not generated in refresh traceId=' + traceId);
+      cleared++;
+    } catch (e) {}
+  });
+  return cleared;
+}
+
+function HomeAlert_autoExpire_() {
+  var sheetName = HomeAlert_getSheetName_();
+  var rows = _rows(_sheet(sheetName));
+  var now = new Date();
+  var count = 0;
+  rows.forEach(function(r) {
+    var id = String(r.ALERT_ID || '').trim();
+    if (!id) return;
+    var status = String(r.STATUS || '').trim();
+    if (!HomeAlert_isActiveStatus_(status)) return;
+    var expiresAt = r.EXPIRES_AT;
+    var exp = expiresAt instanceof Date ? expiresAt : (expiresAt ? new Date(expiresAt) : null);
+    if (!exp || isNaN(exp.getTime())) return;
+    if (now.getTime() <= exp.getTime()) return;
+    try {
+      HomeAlert_expireAlert(id, 'EXPIRES_AT reached');
+      count++;
+    } catch (e) {}
+  });
+  return count;
+}
+
+function HomeAlert_validateStateMachine_() {
+  var errors = [];
+  var allowed = HomeAlert_allowedTransitions_();
+  Object.keys(HOME_ALERT_STATUS).forEach(function(k) {
+    var s = HOME_ALERT_STATUS[k];
+    if (allowed[s] === undefined) errors.push('Missing transitions for status: ' + s);
+  });
+  // Terminal statuses must have no outgoing transitions
+  [HOME_ALERT_STATUS.RESOLVED, HOME_ALERT_STATUS.AUTO_CLEARED, HOME_ALERT_STATUS.EXPIRED].forEach(function(s) {
+    var out = allowed[s] || [];
+    if (out.length) errors.push('Terminal status has outgoing transitions: ' + s);
+  });
+  return { ok: errors.length === 0, errors: errors };
 }
 

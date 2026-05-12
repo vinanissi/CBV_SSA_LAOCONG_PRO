@@ -36,20 +36,68 @@ Không tạo App formula phức tạp; tránh VC.
 
 ## 5) Actions (tuỳ chọn, manual-first)
 
-### A) Action Resolve (recommended)
+### A) Operational actions (recommended)
 
-Tạo action `ResolveAlert` (table: `HOME_ALERT`) theo hướng “data-change”:
+Tạo các action (table: `HOME_ALERT`) theo hướng “data-change” (không bot/automation):
 
-- Set values of some columns:
+#### 1) Acknowledge
+
+- Name: `AckAlert`
+- Set:
+  - `[STATUS]` = `"ACKNOWLEDGED"`
+  - `[ACKNOWLEDGED_AT]` = `NOW()`
+  - `[ACKNOWLEDGED_BY]` = `USEREMAIL()`
+  - `[STATE_CHANGED_AT]` = `NOW()`
+  - `[STATE_CHANGED_BY]` = `USEREMAIL()`
+  - `[IS_ACTIVE]` = `TRUE`
+  - `[IS_RESOLVED]` = `FALSE`
+
+#### 2) Start progress
+
+- Name: `StartProgress`
+- Set:
+  - `[STATUS]` = `"IN_PROGRESS"`
+  - `[STATE_CHANGED_AT]` = `NOW()`
+  - `[STATE_CHANGED_BY]` = `USEREMAIL()`
+
+#### 3) Waiting response
+
+- Name: `WaitResponse`
+- Set:
+  - `[STATUS]` = `"WAITING_RESPONSE"`
+  - `[STATE_CHANGED_AT]` = `NOW()`
+  - `[STATE_CHANGED_BY]` = `USEREMAIL()`
+
+#### 4) Escalate
+
+- Name: `EscalateAlert`
+- Set:
+  - `[STATUS]` = `"ESCALATED"`
+  - `[ESCALATED_AT]` = `NOW()`
+  - `[STATE_CHANGED_AT]` = `NOW()`
+  - `[STATE_CHANGED_BY]` = `USEREMAIL()`
+
+#### 5) Resolve
+
+- Name: `ResolveAlert`
+- Set:
   - `[STATUS]` = `"RESOLVED"`
   - `[IS_ACTIVE]` = `FALSE`
   - `[IS_RESOLVED]` = `TRUE`
   - `[RESOLVED_AT]` = `NOW()`
   - `[RESOLVED_BY]` = `USEREMAIL()` *(hoặc map sang internal id nếu hệ thống có)*
+  - `[STATE_CHANGED_AT]` = `NOW()`
+  - `[STATE_CHANGED_BY]` = `USEREMAIL()`
 
 Ghi chú:
 - Đây là thao tác manual trên Sheet; không bot/automation.
-- Nếu muốn chuẩn hoá resolve qua GAS (đảm bảo audit/trace), có thể tạo action gọi webhook tới `HomeAlert_resolveAlert(alertId, note)` (chỉ khi hệ thống đã có tuyến gọi GAS an toàn).
+- Nếu muốn chuẩn hoá transition qua GAS (đảm bảo audit/trace chuẩn), có thể tạo action gọi webhook tới các hàm:
+  - `HomeAlert_acknowledgeAlert(alertId, note)`
+  - `HomeAlert_startProgress(alertId, note)`
+  - `HomeAlert_waitResponse(alertId, note)`
+  - `HomeAlert_escalateAlert(alertId, note)`
+  - `HomeAlert_resolveAlert(alertId, note)`
+  *(chỉ khi hệ thống đã có tuyến gọi GAS an toàn)*.
 
 ### B) Open Related URL (optional)
 
@@ -61,5 +109,6 @@ Nếu có `RELATED_RECORD_URL`, tạo action “External: go to a website”:
 
 - Chạy `HomeAlert_bootstrap()` một lần để tạo sheet + headers (nếu chưa có).
 - Chạy `HomeAlert_refresh()` theo nhu cầu (menu / manual run).
+- Nếu muốn dùng operational state runtime đầy đủ: dùng các action ACK/IN_PROGRESS/WAIT/ESCALATE/RESOLVE ở trên (không bot).
 - Không tạo Bot, không tạo trigger tự động trước khi test console đạt `GO`.
 
