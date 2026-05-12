@@ -140,8 +140,20 @@ function buildCbvProMenu_() {
 }
 
 /**
+ * CBV Test Console — isolated from business menu (HOME_ALERT runtime QA).
+ */
+function buildCbvTestConsoleMenu_() {
+  var ui = SpreadsheetApp.getUi();
+  if (!ui) return;
+  ui.createMenu('🧪 CBV Test Console')
+    .addItem('HOME_ALERT Phase 82 — SLA & Escalation', 'menuCbvTestConsoleHomeAlertSla82')
+    .addToUi();
+}
+
+/**
  * onOpen trigger. Installs CBV PRO menu. Idempotent (menu recreated each open).
  */
 function onOpen() {
   buildCbvProMenu_();
+  buildCbvTestConsoleMenu_();
 }

@@ -836,7 +836,23 @@ function HomeAlert_buildAlert_(p) {
     QUEUE_SORT: '',
     WORKLOAD_KEY: '',
     OPERATOR_DASHBOARD_GROUP: '',
-    OPERATOR_DASHBOARD_SORT: ''
+    OPERATOR_DASHBOARD_SORT: '',
+    SLA_POLICY: p.slaPolicy || (p.dueAt ? 'USE_DUE_AT' : ''),
+    SLA_TARGET_MINUTES: '',
+    SLA_DUE_AT: '',
+    SLA_STATUS: '',
+    SLA_BREACH_LEVEL: 0,
+    SLA_ELAPSED_MINUTES: '',
+    SLA_LAST_CHECKED_AT: '',
+    SLA_NEXT_REVIEW_AT: '',
+    ESCALATION_LEVEL: 0,
+    ESCALATION_STATUS: 'NONE',
+    ESCALATION_REASON: '',
+    ESCALATED_BY: '',
+    ESCALATED_TO: '',
+    LAST_ESCALATION_CHECK_AT: '',
+    ESCALATION_NEXT_ACTION: '',
+    ESCALATION_TRACE_ID: ''
   };
 }
 
@@ -1118,7 +1134,8 @@ function HomeAlert_mergeIncomingWithExisting_(existing, incoming) {
     'CLAIMED_AT', 'CLAIMED_BY', 'ASSIGNED_BY', 'ASSIGNMENT_NOTE',
     'LAST_OPERATOR_ACTION', 'LAST_OPERATOR_ACTION_AT', 'LAST_OPERATOR_ACTION_BY',
     'IS_BLOCKED', 'BLOCKED_REASON',
-    'ASSIGNMENT_QUEUE', 'ASSIGNED_TEAM', 'ASSIGNED_TEAM_LABEL'
+    'ASSIGNMENT_QUEUE', 'ASSIGNED_TEAM', 'ASSIGNED_TEAM_LABEL',
+    'SLA_POLICY', 'SLA_TARGET_MINUTES'
   ];
   preserveOps.forEach(function(pk) {
     var inc = incoming[pk];
@@ -1169,6 +1186,217 @@ function HomeAlert_mergeIncomingWithExisting_(existing, incoming) {
 var HOME_ALERT_RUNTIME_QUEUE_CODES = [
   'UNASSIGNED_QUEUE', 'MY_QUEUE', 'TEAM_QUEUE', 'WAITING_QUEUE', 'ESCALATED_QUEUE', 'BLOCKED_QUEUE', 'DONE_QUEUE'
 ];
+
+// =============================================================================
+// PHASE_82 — SLA_AND_ESCALATION_RUNTIME (runtime-first, append-only audit, manual-first)
+// =============================================================================
+
+var HOME_ALERT_SLA_STATUS = {
+  NO_SLA: 'NO_SLA',
+  ON_TRACK: 'ON_TRACK',
+  DUE_SOON: 'DUE_SOON',
+  OVERDUE: 'OVERDUE',
+  BREACHED: 'BREACHED',
+  PAUSED: 'PAUSED',
+  RESOLVED: 'RESOLVED'
+};
+
+var HOME_ALERT_ESCALATION_STATUS = {
+  NONE: 'NONE',
+  SUGGESTED: 'SUGGESTED',
+  ESCALATED: 'ESCALATED',
+  ACKNOWLEDGED: 'ACKNOWLEDGED',
+  WAITING: 'WAITING',
+  RESOLVED: 'RESOLVED',
+  CANCELLED: 'CANCELLED'
+};
+
+/** @returns {number} */
+function HomeAlert_parseMinutes_(raw) {
+  var n = Math.round(Number(String(raw || '').trim()));
+  return isNaN(n) || n <= 0 ? 0 : n;
+}
+
+function HomeAlert_toDate_(v) {
+  if (!v) return null;
+  if (v instanceof Date) return isNaN(v.getTime()) ? null : v;
+  var d = new Date(v);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function HomeAlert_slaPickAnchor_(a, policy) {
+  var pol = String(policy || '').trim().toUpperCase();
+  if (pol === 'USE_DUE_AT' || pol === 'FROM_DUE_AT') {
+    return HomeAlert_toDate_(a.DUE_AT);
+  }
+  if (pol === 'FROM_CLAIMED') {
+    return HomeAlert_toDate_(a.CLAIMED_AT) || HomeAlert_toDate_(a.CREATED_AT);
+  }
+  if (pol === 'FROM_STATE') {
+    return HomeAlert_toDate_(a.STATE_CHANGED_AT) || HomeAlert_toDate_(a.UPDATED_AT) || HomeAlert_toDate_(a.CREATED_AT);
+  }
+  if (pol === 'FROM_LAST_ACTIVITY' || pol === 'FROM_ACTIVITY') {
+    return HomeAlert_toDate_(a.UPDATED_AT) || HomeAlert_toDate_(a.CREATED_AT);
+  }
+  // default FROM_CREATED
+  return HomeAlert_toDate_(a.CREATED_AT) || HomeAlert_toDate_(a.UPDATED_AT);
+}
+
+/**
+ * Computes SLA + escalation coordination columns. Mutates `alert` and returns patch.
+ * Non-destructive to manual escalation rows except sync from operational STATUS=ESCALATED.
+ */
+function HomeAlert_enrichSlaEscalationRuntime_(alert) {
+  var a = alert || {};
+  var patch = {};
+  var now = cbvNow();
+  var st = String(a.STATUS || '').trim();
+
+  if (HomeAlert_isTerminalStatus_(st)) {
+    patch.SLA_STATUS = HOME_ALERT_SLA_STATUS.RESOLVED;
+    patch.SLA_BREACH_LEVEL = 0;
+    patch.SLA_ELAPSED_MINUTES = '';
+    patch.SLA_NEXT_REVIEW_AT = '';
+    if (String(a.ESCALATION_STATUS || '').trim() !== HOME_ALERT_ESCALATION_STATUS.RESOLVED
+        && String(a.ESCALATION_STATUS || '').trim() !== HOME_ALERT_ESCALATION_STATUS.CANCELLED
+        && String(a.ESCALATION_STATUS || '').trim() !== HOME_ALERT_ESCALATION_STATUS.NONE) {
+      patch.ESCALATION_STATUS = HOME_ALERT_ESCALATION_STATUS.RESOLVED;
+      patch.ESCALATION_NEXT_ACTION = '';
+    }
+    Object.keys(patch).forEach(function(k) { a[k] = patch[k]; });
+    return patch;
+  }
+
+  if (String(a.SLA_STATUS || '').trim() === HOME_ALERT_SLA_STATUS.PAUSED) {
+    patch.SLA_STATUS = HOME_ALERT_SLA_STATUS.PAUSED;
+    patch.SLA_NEXT_REVIEW_AT = new Date(now.getTime() + 60 * 60 * 1000);
+    Object.keys(patch).forEach(function(k) { a[k] = patch[k]; });
+    return patch;
+  }
+
+  var policy = String(a.SLA_POLICY || '').trim();
+  var targetMin = HomeAlert_parseMinutes_(a.SLA_TARGET_MINUTES);
+  var dueAt = null;
+  var windowMin = targetMin;
+
+  if (!policy && HomeAlert_toDate_(a.DUE_AT)) {
+    policy = 'USE_DUE_AT';
+  }
+
+  if (String(policy).toUpperCase() === 'USE_DUE_AT' || String(policy).toUpperCase() === 'FROM_DUE_AT') {
+    dueAt = HomeAlert_toDate_(a.DUE_AT);
+    var created0 = HomeAlert_toDate_(a.CREATED_AT);
+    if (dueAt && created0) windowMin = Math.max(1, Math.round((dueAt.getTime() - created0.getTime()) / 60000));
+  } else if (policy && targetMin > 0) {
+    var anchor0 = HomeAlert_slaPickAnchor_(a, policy);
+    if (anchor0) dueAt = new Date(anchor0.getTime() + targetMin * 60000);
+  }
+
+  if (!dueAt || isNaN(dueAt.getTime())) {
+    patch.SLA_STATUS = HOME_ALERT_SLA_STATUS.NO_SLA;
+    patch.SLA_DUE_AT = '';
+    patch.SLA_BREACH_LEVEL = 0;
+    patch.SLA_ELAPSED_MINUTES = '';
+    patch.SLA_NEXT_REVIEW_AT = '';
+  } else {
+    patch.SLA_DUE_AT = dueAt;
+    var anchorForElapsed = HomeAlert_toDate_(a.CREATED_AT) || HomeAlert_toDate_(a.UPDATED_AT) || now;
+    if (policy && String(policy).toUpperCase() !== 'USE_DUE_AT' && String(policy).toUpperCase() !== 'FROM_DUE_AT') {
+      anchorForElapsed = HomeAlert_slaPickAnchor_(a, policy) || anchorForElapsed;
+    }
+    patch.SLA_ELAPSED_MINUTES = Math.max(0, Math.round((now.getTime() - anchorForElapsed.getTime()) / 60000));
+    var untilDueMs = dueAt.getTime() - now.getTime();
+    var win = windowMin > 0 ? windowMin : 60;
+    var soonMinutes = Math.max(5, Math.floor(win * 0.2));
+    var soonMs = soonMinutes * 60000;
+    var breach2Ms = 3 * 3600000;
+    if (untilDueMs < -breach2Ms) {
+      patch.SLA_STATUS = HOME_ALERT_SLA_STATUS.BREACHED;
+      patch.SLA_BREACH_LEVEL = 2;
+    } else if (untilDueMs < 0) {
+      patch.SLA_STATUS = HOME_ALERT_SLA_STATUS.OVERDUE;
+      patch.SLA_BREACH_LEVEL = 1;
+    } else if (untilDueMs <= soonMs) {
+      patch.SLA_STATUS = HOME_ALERT_SLA_STATUS.DUE_SOON;
+      patch.SLA_BREACH_LEVEL = 0;
+    } else {
+      patch.SLA_STATUS = HOME_ALERT_SLA_STATUS.ON_TRACK;
+      patch.SLA_BREACH_LEVEL = 0;
+    }
+    patch.SLA_NEXT_REVIEW_AT = new Date(Math.min(dueAt.getTime(), now.getTime() + 15 * 60000));
+  }
+
+  if (st === HOME_ALERT_STATUS.ESCALATED) {
+    var es = String(a.ESCALATION_STATUS || '').trim();
+    if (!es || es === HOME_ALERT_ESCALATION_STATUS.NONE || es === HOME_ALERT_ESCALATION_STATUS.SUGGESTED) {
+      patch.ESCALATION_STATUS = HOME_ALERT_ESCALATION_STATUS.ESCALATED;
+      patch.ESCALATION_LEVEL = Math.max(1, Number(a.ESCALATION_LEVEL || 1) || 1);
+      patch.ESCALATION_REASON = patch.ESCALATION_REASON || a.ESCALATION_REASON || 'Operational status ESCALATED';
+      patch.ESCALATION_NEXT_ACTION = 'Theo dõi xử lý sau escalate.';
+    }
+  }
+
+  Object.keys(patch).forEach(function(k) { a[k] = patch[k]; });
+  return patch;
+}
+
+/**
+ * @returns {{ stuck: boolean, signals: Array<{code:string,message:string}> }}
+ */
+function HomeAlert_evaluateStuckSignals_(alert) {
+  var a = alert || {};
+  var signals = [];
+  if (!HomeAlert_isActiveStatus_(String(a.STATUS || '').trim())) {
+    return { stuck: false, signals: signals };
+  }
+
+  var now = cbvNow();
+  var st = String(a.STATUS || '').trim();
+  var assignee = String(a.ASSIGNED_TO || '').trim();
+
+  function ageHours(ref) {
+    var d = HomeAlert_toDate_(ref);
+    if (!d) return null;
+    return (now.getTime() - d.getTime()) / 3600000;
+  }
+
+  if (!assignee && (st === HOME_ALERT_STATUS.OPEN || st === HOME_ALERT_STATUS.ACKNOWLEDGED)) {
+    var ah = ageHours(a.CREATED_AT);
+    if (ah != null && ah >= 24) signals.push({ code: 'UNCLAIMED_TOO_LONG', message: 'Chưa claim >=24h' });
+  }
+
+  if (st === HOME_ALERT_STATUS.IN_PROGRESS) {
+    var ref = a.CLAIMED_AT || a.STATE_CHANGED_AT || a.UPDATED_AT;
+    var ih = ageHours(ref);
+    if (ih != null && ih >= 48) signals.push({ code: 'IN_PROGRESS_TOO_LONG', message: 'IN_PROGRESS >=48h không đổi trạng thái' });
+  }
+
+  if (st === HOME_ALERT_STATUS.WAITING_RESPONSE) {
+    var wh = ageHours(a.STATE_CHANGED_AT || a.UPDATED_AT);
+    if (wh != null && wh >= 72) signals.push({ code: 'WAITING_TOO_LONG', message: 'WAITING >=72h' });
+  }
+
+  if (a.IS_BLOCKED === true || String(a.IS_BLOCKED).toUpperCase() === 'TRUE') {
+    var bh = ageHours(a.UPDATED_AT || a.STATE_CHANGED_AT);
+    if (bh != null && bh >= 24) signals.push({ code: 'BLOCKED_TOO_LONG', message: 'BLOCKED >=24h' });
+  }
+
+  var slaSt = String(a.SLA_STATUS || '').trim();
+  if (slaSt === HOME_ALERT_SLA_STATUS.OVERDUE || slaSt === HOME_ALERT_SLA_STATUS.BREACHED) {
+    signals.push({ code: 'SLA_OVERDUE', message: 'SLA ' + slaSt });
+  }
+
+  if (assignee) {
+    try {
+      var loadRows = HomeAlertWorkload_getOperatorLoad_(assignee);
+      var row = loadRows && loadRows[0];
+      var ac = Number(row && row.ACTIVE_ALERT_COUNT) || 0;
+      if (ac >= 15) signals.push({ code: 'OPERATOR_OVERLOAD', message: 'ACTIVE_ALERT_COUNT>=' + ac });
+    } catch (eL) {}
+  }
+
+  return { stuck: signals.length > 0, signals: signals };
+}
 
 function HomeAlert_getWorkloadSheetName_() {
   return (typeof CBV_CONFIG !== 'undefined' && CBV_CONFIG.SHEETS && CBV_CONFIG.SHEETS.HOME_ALERT_WORKLOAD)
@@ -1345,26 +1573,25 @@ function HomeAlert_getOperatorDashboardGroup_(alert) {
 }
 
 function HomeAlert_getOperatorDashboardSort_(alert) {
-  var g = HomeAlert_getQueueGroup_(alert);
-  var ps = Number(alert.PRIORITY_SCORE || 0) || 0;
-  return g * 1000000 + Math.min(999999, ps);
+  var a = alert || {};
+  var g = HomeAlert_getQueueGroup_(a);
+  var ps = Number(a.PRIORITY_SCORE || 0) || 0;
+  var bonus = 0;
+  var ss = String(a.SLA_STATUS || '').trim();
+  if (ss === HOME_ALERT_SLA_STATUS.BREACHED) bonus = 500000;
+  else if (ss === HOME_ALERT_SLA_STATUS.OVERDUE) bonus = 250000;
+  else if (ss === HOME_ALERT_SLA_STATUS.DUE_SOON) bonus = 80000;
+  return g * 1000000 + bonus + Math.min(999999, ps);
 }
 
 function HomeAlert_detectStuck_(alert) {
-  var a = alert || {};
-  if (!HomeAlert_isActiveStatus_(String(a.STATUS || '').trim())) return false;
-  if (a.IS_BLOCKED === true || String(a.IS_BLOCKED).toUpperCase() === 'TRUE') return false;
-  var ref = a.CLAIMED_AT || a.STATE_CHANGED_AT || a.UPDATED_AT;
-  if (!ref) return false;
-  var dt = ref instanceof Date ? ref : new Date(ref);
-  if (isNaN(dt.getTime())) return false;
-  var ageH = (cbvNow().getTime() - dt.getTime()) / (3600 * 1000);
-  return ageH >= 48;
+  return HomeAlert_evaluateStuckSignals_(alert).stuck;
 }
 
 function HomeAlert_getStuckReason_(alert) {
-  if (!HomeAlert_detectStuck_(alert)) return '';
-  return 'No state change for >=48h since claim/state change (coordination threshold)';
+  var ev = HomeAlert_evaluateStuckSignals_(alert);
+  if (!ev.stuck) return '';
+  return ev.signals.map(function(s) { return s.message; }).join(' | ');
 }
 
 function HomeAlert_getEscalateAfterAt_(alert) {
@@ -1821,6 +2048,13 @@ function HomeAlert_enrichDesktopUxFields_(alert) {
 
   Object.keys(patch).forEach(function(k) { a[k] = patch[k]; });
 
+  // PHASE 82 — SLA + escalation runtime (before assignment so stuck logic can use SLA signals).
+  var slaEscalationPatch = HomeAlert_enrichSlaEscalationRuntime_(a);
+  Object.keys(slaEscalationPatch).forEach(function(sk) {
+    patch[sk] = slaEscalationPatch[sk];
+    a[sk] = slaEscalationPatch[sk];
+  });
+
   // PHASE 81 — assignment / queue / dashboard grouping (before attention so OPERATOR_* sees queue metadata).
   var assignmentPatch = HomeAlert_enrichAssignmentFields_(a);
   Object.keys(assignmentPatch).forEach(function(ak) { patch[ak] = assignmentPatch[ak]; });
@@ -2105,6 +2339,9 @@ function HomeAlert_enrichAttentionFields_(alert) {
 
 function HomeAlert_getAttentionLevel_(alert) {
   var a = alert || {};
+  var slaSt = String(a.SLA_STATUS || '').trim();
+  if (slaSt === HOME_ALERT_SLA_STATUS.BREACHED) return 'CRITICAL';
+  if (slaSt === HOME_ALERT_SLA_STATUS.OVERDUE) return 'WARNING';
   var st = String(a.STATUS || '').trim();
   if (st === HOME_ALERT_STATUS.WAITING_RESPONSE) return 'WAITING';
   if (st === HOME_ALERT_STATUS.ESCALATED) return 'WARNING';
@@ -2223,11 +2460,23 @@ function HomeAlert_buildOperatorMetaText_(alert) {
   if (st) bits.push(st);
   var owner = String(a.OWNER_LABEL || '').trim();
   if (owner) bits.push(owner);
+  var slaSt = String(a.SLA_STATUS || '').trim();
+  if (slaSt && slaSt !== HOME_ALERT_SLA_STATUS.NO_SLA) bits.push('SLA:' + slaSt);
+  var escSt = String(a.ESCALATION_STATUS || '').trim();
+  if (escSt && escSt !== HOME_ALERT_ESCALATION_STATUS.NONE) bits.push('Esc:' + escSt);
   return bits.join(' · ');
 }
 
 function HomeAlert_buildOperatorNextAction_(alert) {
   var a = alert || {};
+  var slaSt = String(a.SLA_STATUS || '').trim();
+  if (slaSt === HOME_ALERT_SLA_STATUS.BREACHED || slaSt === HOME_ALERT_SLA_STATUS.OVERDUE) {
+    return '👉 Ưu tiên xử lý SLA (' + slaSt + ').';
+  }
+  var escSt = String(a.ESCALATION_STATUS || '').trim();
+  if (escSt === HOME_ALERT_ESCALATION_STATUS.SUGGESTED) {
+    return '👉 Xem xét escalate theo gợi ý (runtime).';
+  }
   var focus = HomeAlert_getActionFocus_(a);
   if (!focus) return '👉 Chuyển trạng thái phù hợp hoặc thêm ghi chú.';
   return '👉 ' + focus + ' hoặc chuyển trạng thái phù hợp';
@@ -2691,8 +2940,8 @@ function HomeAlert_getOfficialOperatorDisplayConfig_() {
     secondary: 'OPERATOR_SECONDARY_TEXT',
     summary: 'OPERATOR_META_TEXT',
     nextAction: 'OPERATOR_NEXT_ACTION',
-    groupBy: 'ATTENTION_LABEL',
-    sortBy: 'DESKTOP_SORT',
+    groupBy: 'OPERATOR_DASHBOARD_GROUP',
+    sortBy: 'OPERATOR_DASHBOARD_SORT',
     sortOrder: 'DESC',
     hiddenOperatorFields: [
       'CARD_SORT',
@@ -2721,7 +2970,7 @@ function HomeAlert_validateOperatorDisplayPolicy_() {
 
   var requiredForOperator = [
     cfg.primary, cfg.secondary, cfg.summary, cfg.nextAction, cfg.groupBy, cfg.sortBy,
-    'ATTENTION_REASON', 'ACTION_FOCUS', 'ACTION_HINT', 'OWNER_LABEL',
+    'ATTENTION_LABEL', 'ATTENTION_REASON', 'ACTION_FOCUS', 'ACTION_HINT', 'OWNER_LABEL',
     'STATUS', 'DUE_AT', 'NOTE'
   ];
   requiredForOperator.forEach(function(c) {
@@ -3227,4 +3476,345 @@ function HomeAlertAssignment_TestConsole_copyAiHandoff() {
   ].join('\n');
   Logger.log(text);
   return text;
+}
+
+// =============================================================================
+// PHASE_82 — SLA / ESCALATION manual actions + test console
+// =============================================================================
+
+function HomeAlert_mergeRowWithPatch_(row, patch) {
+  var m = {};
+  Object.keys(row || {}).forEach(function(k) { m[k] = row[k]; });
+  Object.keys(patch || {}).forEach(function(k2) { m[k2] = patch[k2]; });
+  return m;
+}
+
+function HomeAlert_checkSlaRuntime() {
+  var traceId = HomeAlert_newTraceId_();
+  var now = cbvNow();
+  var updated = 0;
+  var errors = [];
+  try {
+    HomeAlert_ensureHomeAlertSheet_();
+    var sheetName = HomeAlert_getSheetName_();
+    var rows = _rows(_sheet(sheetName));
+    rows.forEach(function(row) {
+      var id = String(row.ALERT_ID || '').trim();
+      if (!id) return;
+      if (!HomeAlert_isActiveStatus_(String(row.STATUS || '').trim())) return;
+      try {
+        HomeAlert_patchAlertOperational_(id, { SLA_LAST_CHECKED_AT: now }, 'SLA_CHECK_RUNTIME', '');
+        updated++;
+      } catch (e1) {
+        errors.push(id + ': ' + (e1.message || String(e1)));
+      }
+    });
+  } catch (e0) {
+    errors.push(e0.message || String(e0));
+  }
+  return { ok: errors.length === 0, traceId: traceId, updated: updated, errors: errors };
+}
+
+function HomeAlert_detectStuckItems(options) {
+  var traceId = HomeAlert_newTraceId_();
+  var opts = options || {};
+  var apply = opts.apply !== false;
+  var items = [];
+  var patched = 0;
+  try {
+    HomeAlert_ensureHomeAlertSheet_();
+    var sheetName = HomeAlert_getSheetName_();
+    var rows = _rows(_sheet(sheetName));
+    rows.forEach(function(row) {
+      var id = String(row.ALERT_ID || '').trim();
+      if (!id) return;
+      var m = HomeAlert_mergeRowWithPatch_(row, {});
+      HomeAlert_enrichSlaEscalationRuntime_(m);
+      var ev = HomeAlert_evaluateStuckSignals_(m);
+      if (ev.stuck) {
+        items.push({ alertId: id, signals: ev.signals });
+        if (apply) {
+          var reason = ev.signals.map(function(s) { return s.message; }).join(' | ');
+          HomeAlert_patchAlertOperational_(id, { IS_STUCK: true, STUCK_REASON: reason }, 'STUCK_DETECT', '');
+          patched++;
+        }
+      } else if (apply) {
+        var was = row.IS_STUCK === true || String(row.IS_STUCK).toUpperCase() === 'TRUE';
+        if (was) {
+          HomeAlert_patchAlertOperational_(id, { IS_STUCK: false, STUCK_REASON: '' }, 'STUCK_CLEAR', '');
+          patched++;
+        }
+      }
+    });
+  } catch (e0) {
+    return { ok: false, traceId: traceId, items: items, patched: patched, error: e0.message || String(e0) };
+  }
+  return { ok: true, traceId: traceId, items: items, patched: patched };
+}
+
+function HomeAlert_suggestEscalations(options) {
+  var traceId = HomeAlert_newTraceId_();
+  var opts = options || {};
+  var apply = opts.apply !== false;
+  var suggested = 0;
+  try {
+    HomeAlert_ensureHomeAlertSheet_();
+    var sheetName = HomeAlert_getSheetName_();
+    var rows = _rows(_sheet(sheetName));
+    rows.forEach(function(row) {
+      var id = String(row.ALERT_ID || '').trim();
+      if (!id) return;
+      if (!HomeAlert_isActiveStatus_(String(row.STATUS || '').trim())) return;
+      var m = HomeAlert_mergeRowWithPatch_(row, {});
+      HomeAlert_enrichSlaEscalationRuntime_(m);
+      var ev = HomeAlert_evaluateStuckSignals_(m);
+      var curEsc = String(row.ESCALATION_STATUS || '').trim() || HOME_ALERT_ESCALATION_STATUS.NONE;
+      var slaSt = String(m.SLA_STATUS || '').trim();
+      var need = ev.stuck || slaSt === HOME_ALERT_SLA_STATUS.OVERDUE || slaSt === HOME_ALERT_SLA_STATUS.BREACHED;
+      if (!need) return;
+      if (curEsc === HOME_ALERT_ESCALATION_STATUS.ESCALATED
+        || curEsc === HOME_ALERT_ESCALATION_STATUS.ACKNOWLEDGED
+        || curEsc === HOME_ALERT_ESCALATION_STATUS.WAITING
+        || curEsc === HOME_ALERT_ESCALATION_STATUS.RESOLVED
+        || curEsc === HOME_ALERT_ESCALATION_STATUS.SUGGESTED) {
+        return;
+      }
+      if (!apply) {
+        suggested++;
+        return;
+      }
+      var reason = ev.stuck ? ev.signals.map(function(s) { return s.code; }).join(',') : ('SLA:' + slaSt);
+      HomeAlert_patchAlertOperational_(id, {
+        ESCALATION_STATUS: HOME_ALERT_ESCALATION_STATUS.SUGGESTED,
+        ESCALATION_REASON: reason,
+        LAST_ESCALATION_CHECK_AT: cbvNow(),
+        ESCALATION_NEXT_ACTION: 'Xem xét escalate manual hoặc HomeAlert_escalateByPolicy().'
+      }, 'ESCALATION_SUGGEST', '');
+      suggested++;
+    });
+  } catch (e0) {
+    return { ok: false, traceId: traceId, suggested: suggested, error: e0.message || String(e0) };
+  }
+  return { ok: true, traceId: traceId, suggested: suggested };
+}
+
+function HomeAlert_escalateByPolicy(alertId, payload) {
+  var id = String(alertId || '').trim();
+  var p = payload || {};
+  var toUid = String(p.toUserId || p.escalatedTo || '').trim();
+  var traceEsc = String(p.traceId || HomeAlert_newTraceId_()).trim();
+  var lvl = Math.max(1, Math.round(Number(p.level || 1)) || 1);
+  var reason = String(p.reason || 'Policy escalate').trim();
+  try {
+    var row = _rows(_sheet(HomeAlert_getSheetName_())).find(function(r) { return String(r.ALERT_ID || '').trim() === id; }) || null;
+    if (row) {
+      var es = String(row.ESCALATION_STATUS || '').trim();
+      if (es === HOME_ALERT_ESCALATION_STATUS.ESCALATED && String(row.ESCALATED_TO || '').trim() === toUid && Number(row.ESCALATION_LEVEL || 0) === lvl) {
+        return { ok: true, alertId: id, idempotent: true };
+      }
+    }
+  } catch (eR) {}
+  var patch = {
+    ESCALATION_LEVEL: lvl,
+    ESCALATION_STATUS: HOME_ALERT_ESCALATION_STATUS.ESCALATED,
+    ESCALATION_REASON: reason,
+    ESCALATED_AT: cbvNow(),
+    ESCALATED_BY: HomeAlert_actorId_(),
+    ESCALATED_TO: toUid,
+    LAST_ESCALATION_CHECK_AT: cbvNow(),
+    ESCALATION_NEXT_ACTION: 'Theo dõi người được escalate (' + (toUid || 'n/a') + ').',
+    ESCALATION_TRACE_ID: traceEsc
+  };
+  return HomeAlert_patchAlertOperational_(id, patch, 'ESCALATE_BY_POLICY', reason);
+}
+
+function HomeAlert_acknowledgeEscalation(alertId, note) {
+  var id = String(alertId || '').trim();
+  try {
+    var row = _rows(_sheet(HomeAlert_getSheetName_())).find(function(r) { return String(r.ALERT_ID || '').trim() === id; }) || null;
+    if (row && String(row.ESCALATION_STATUS || '').trim() === HOME_ALERT_ESCALATION_STATUS.ACKNOWLEDGED) {
+      return { ok: true, alertId: id, idempotent: true };
+    }
+  } catch (e0) {}
+  return HomeAlert_patchAlertOperational_(id, {
+    ESCALATION_STATUS: HOME_ALERT_ESCALATION_STATUS.ACKNOWLEDGED,
+    ESCALATION_NEXT_ACTION: 'Tiếp tục xử lý sau khi acknowledge escalate.'
+  }, 'ESCALATION_ACK', note || '');
+}
+
+function HomeAlert_resolveEscalation(alertId, note) {
+  var id = String(alertId || '').trim();
+  try {
+    var row = _rows(_sheet(HomeAlert_getSheetName_())).find(function(r) { return String(r.ALERT_ID || '').trim() === id; }) || null;
+    if (row && String(row.ESCALATION_STATUS || '').trim() === HOME_ALERT_ESCALATION_STATUS.RESOLVED) {
+      return { ok: true, alertId: id, idempotent: true };
+    }
+  } catch (e0) {}
+  return HomeAlert_patchAlertOperational_(id, {
+    ESCALATION_STATUS: HOME_ALERT_ESCALATION_STATUS.RESOLVED,
+    ESCALATION_NEXT_ACTION: ''
+  }, 'ESCALATION_RESOLVE', note || '');
+}
+
+function HomeAlert_pauseSla(alertId, note) {
+  return HomeAlert_patchAlertOperational_(String(alertId || '').trim(), {
+    SLA_STATUS: HOME_ALERT_SLA_STATUS.PAUSED,
+    SLA_NEXT_REVIEW_AT: ''
+  }, 'SLA_PAUSE', note || '');
+}
+
+function HomeAlert_resumeSla(alertId, note) {
+  return HomeAlert_patchAlertOperational_(String(alertId || '').trim(), {
+    SLA_STATUS: ''
+  }, 'SLA_RESUME', note || '');
+}
+
+var __HOME_ALERT_SLA_ESCALATION_TEST_CONSOLE_LAST_REPORT = null;
+
+function HomeAlertSlaEscalation_validateEnvelope_(rep) {
+  var need = ['ok', 'phase', 'status', 'checkedAt', 'runBy', 'traceId', 'testSuite', 'summary', 'checks', 'warnings', 'errors', 'nextStep', 'severity', 'reportText', 'reportJson', 'contractVersion', 'envelopeOk'];
+  var missing = need.filter(function(k) { return rep[k] === undefined; });
+  return { ok: missing.length === 0, missing: missing };
+}
+
+function HomeAlertSlaEscalation_TestConsole_run() {
+  var traceId = HomeAlert_newTraceId_();
+  var checks = [];
+  var warnings = [];
+  var errors = [];
+  var slaCols = [
+    'SLA_POLICY', 'SLA_TARGET_MINUTES', 'SLA_DUE_AT', 'SLA_STATUS', 'SLA_BREACH_LEVEL',
+    'SLA_ELAPSED_MINUTES', 'SLA_LAST_CHECKED_AT', 'SLA_NEXT_REVIEW_AT'
+  ];
+  var escCols = [
+    'ESCALATION_LEVEL', 'ESCALATION_STATUS', 'ESCALATION_REASON', 'ESCALATED_AT', 'ESCALATED_BY', 'ESCALATED_TO',
+    'LAST_ESCALATION_CHECK_AT', 'ESCALATION_NEXT_ACTION', 'ESCALATION_TRACE_ID'
+  ];
+
+  function addCheck(code, ok, severity, message, detail) {
+    checks.push({ code: code, ok: ok, severity: severity, message: message, detail: detail });
+    if (!ok && severity === 'ERROR') errors.push(message);
+    if (!ok && severity === 'WARNING') warnings.push(message);
+  }
+
+  try {
+    HomeAlert_ensureHomeAlertSheet_();
+    var headers = _headers(_sheet(HomeAlert_getSheetName_()));
+    var missSla = slaCols.filter(function(c) { return headers.indexOf(c) === -1; });
+    addCheck('SLA_COLUMNS', missSla.length === 0, missSla.length ? 'ERROR' : 'OK', missSla.length ? 'Missing SLA columns: ' + missSla.join(',') : 'SLA columns present', { missing: missSla });
+  } catch (e1) {
+    addCheck('SLA_COLUMNS', false, 'ERROR', e1.message || String(e1), {});
+  }
+
+  try {
+    var headers2 = _headers(_sheet(HomeAlert_getSheetName_()));
+    var missE = escCols.filter(function(c) { return headers2.indexOf(c) === -1; });
+    addCheck('ESCALATION_COLUMNS', missE.length === 0, missE.length ? 'ERROR' : 'OK', missE.length ? 'Missing escalation columns: ' + missE.join(',') : 'Escalation columns present', { missing: missE });
+  } catch (e2) {
+    addCheck('ESCALATION_COLUMNS', false, 'ERROR', e2.message || String(e2), {});
+  }
+
+  var slaEnumOk = Object.keys(HOME_ALERT_SLA_STATUS || {}).length >= 6;
+  addCheck('SLA_STATUS_ENUM', slaEnumOk, slaEnumOk ? 'OK' : 'ERROR', slaEnumOk ? 'SLA_STATUS enum usable' : 'SLA_STATUS enum missing', HOME_ALERT_SLA_STATUS);
+
+  var escEnumOk = Object.keys(HOME_ALERT_ESCALATION_STATUS || {}).length >= 6;
+  addCheck('ESCALATION_STATUS_ENUM', escEnumOk, escEnumOk ? 'OK' : 'ERROR', escEnumOk ? 'ESCALATION_STATUS enum usable' : 'ESCALATION_STATUS enum missing', HOME_ALERT_ESCALATION_STATUS);
+
+  addCheck('STUCK_HELPER', typeof HomeAlert_evaluateStuckSignals_ === 'function', typeof HomeAlert_evaluateStuckSignals_ === 'function' ? 'OK' : 'ERROR', 'evaluateStuckSignals_', {});
+  addCheck('DETECT_STUCK_PUBLIC', typeof HomeAlert_detectStuckItems === 'function', typeof HomeAlert_detectStuckItems === 'function' ? 'OK' : 'ERROR', 'HomeAlert_detectStuckItems', {});
+  var manualOk = typeof HomeAlert_checkSlaRuntime === 'function'
+    && typeof HomeAlert_suggestEscalations === 'function'
+    && typeof HomeAlert_escalateByPolicy === 'function';
+  addCheck('MANUAL_ACTIONS', manualOk, manualOk ? 'OK' : 'ERROR', 'Manual SLA/escalation actions', {});
+
+  try {
+    var pol = HomeAlert_validateOperatorDisplayPolicy_();
+    addCheck('OPERATOR_DISPLAY_POLICY', pol.ok, pol.ok ? 'OK' : 'ERROR', 'Operator display policy', { errors: pol.errors });
+    if (!pol.ok) errors = errors.concat(pol.errors || []);
+    warnings = warnings.concat(pol.warnings || []);
+  } catch (eP) {
+    addCheck('OPERATOR_DISPLAY_POLICY', false, 'ERROR', eP.message || String(eP), {});
+  }
+
+  var legacyRequired = ['DISPLAY_TITLE', 'CARD_GROUP', 'DESKTOP_TITLE'];
+  try {
+    var h3 = _headers(_sheet(HomeAlert_getSheetName_()));
+    var missL = legacyRequired.filter(function(c) { return h3.indexOf(c) === -1; });
+    addCheck('LEGACY_NOT_OPERATOR_REQUIRED', true, missL.length ? 'WARNING' : 'OK',
+      missL.length ? 'Legacy columns missing (acceptable for operator-only UX if absent): ' + missL.join(',') : 'Legacy sample columns present for admin/debug',
+      { missing: missL });
+    if (missL.length) warnings.push('Legacy DISPLAY/CARD/DESKTOP optional for operator UX.');
+  } catch (eL) {
+    addCheck('LEGACY_NOT_OPERATOR_REQUIRED', true, 'WARNING', eL.message || String(eL), {});
+  }
+
+  var auditOk = typeof logAdminAudit === 'function';
+  addCheck('AUDIT_SINK', auditOk, auditOk ? 'OK' : 'ERROR', 'logAdminAudit for append-only audit', {});
+
+  var noAuto = typeof HomeAlert_installPhase82ProductionTriggers !== 'function';
+  addCheck('NO_AUTO_PRODUCTION_TRIGGER', noAuto, noAuto ? 'OK' : 'ERROR', 'No Phase82 auto-trigger installer', {});
+
+  addCheck('REPORT_ENVELOPE_HELPER', typeof HomeAlertSlaEscalation_validateEnvelope_ === 'function', typeof HomeAlertSlaEscalation_validateEnvelope_ === 'function' ? 'OK' : 'ERROR', 'validateEnvelope_', {});
+
+  var refreshResult = null;
+  try {
+    refreshResult = HomeAlert_refresh({ autoClearMissing: false, autoExpire: false });
+    var rOk = !!(refreshResult && refreshResult.ok);
+    addCheck('REFRESH_SAFE', rOk, rOk ? 'OK' : 'WARNING', 'HomeAlert_refresh', refreshResult);
+    if (refreshResult && !refreshResult.ok) warnings.push('Refresh errors: ' + JSON.stringify(refreshResult.stats.errors || []));
+  } catch (eR) {
+    addCheck('REFRESH_SAFE', false, 'ERROR', eR.message || String(eR), {});
+  }
+
+  var status = errors.length > 0 ? 'FAIL' : (warnings.length > 0 ? 'GO_WITH_WARNINGS' : 'GO');
+  var severity = errors.length > 0 ? 'CRITICAL' : (warnings.length > 0 ? 'WARNING' : 'OK');
+
+  var report = {
+    ok: status !== 'FAIL',
+    phase: 'PHASE_82_SLA_AND_ESCALATION_RUNTIME',
+    status: status,
+    severity: severity,
+    checkedAt: cbvNow(),
+    runBy: HomeAlert_actorId_(),
+    traceId: traceId,
+    testSuite: 'HOME_ALERT_SLA_ESCALATION_RUNTIME',
+    summary: 'HOME_ALERT SLA & escalation runtime: ' + status + ' (' + severity + ')',
+    checks: checks,
+    warnings: warnings,
+    errors: errors,
+    nextStep: status === 'GO'
+      ? 'Run HomeAlert_checkSlaRuntime() manually after workload refresh; tune SLA_POLICY/SLA_TARGET_MINUTES per alert type.'
+      : 'Fix errors then rerun HomeAlertSlaEscalation_TestConsole_run().',
+    reportText: '',
+    reportJson: { refresh: refreshResult },
+    contractVersion: 'CBV_TEST_CONSOLE_V1',
+    envelopeOk: false
+  };
+
+  var env = HomeAlertSlaEscalation_validateEnvelope_(report);
+  report.envelopeOk = env.ok;
+  if (!env.ok) {
+    warnings.push('Envelope missing keys: ' + (env.missing || []).join(','));
+    report.status = errors.length > 0 ? 'FAIL' : 'GO_WITH_WARNINGS';
+    report.ok = errors.length === 0;
+  }
+
+  report.reportText = [
+    '=== HOME_ALERT SLA / ESCALATION TEST CONSOLE (PHASE 82) ===',
+    'status=' + report.status + ' severity=' + report.severity,
+    'traceId=' + report.traceId,
+    'envelopeOk=' + report.envelopeOk,
+    (report.checks || []).map(function(c) { return (c.ok ? '[OK]' : '[X]') + ' ' + c.code + ': ' + c.message; }).join('\n')
+  ].join('\n');
+
+  __HOME_ALERT_SLA_ESCALATION_TEST_CONSOLE_LAST_REPORT = report;
+  Logger.log(report.reportText);
+  return report;
+}
+
+function HomeAlertSlaEscalation_TestConsole_showReport() {
+  var r = __HOME_ALERT_SLA_ESCALATION_TEST_CONSOLE_LAST_REPORT;
+  if (!r) return { ok: false, message: 'No report. Run HomeAlertSlaEscalation_TestConsole_run() first.' };
+  Logger.log(r.reportText || JSON.stringify(r, null, 2));
+  return r;
 }

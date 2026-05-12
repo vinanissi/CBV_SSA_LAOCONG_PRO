@@ -764,3 +764,11 @@ function menuGenerateHoSoReport() {
   ui.alert('📋 HoSo report\n\n' + summary + '\n\nSee details in AppSheet → HS_PRINT_VIEW');
 }
 
+/** CBV Test Console — HOME_ALERT Phase 82 SLA & escalation QA. */
+function menuCbvTestConsoleHomeAlertSla82() {
+  runSafeMenuStep_('HomeAlertSlaEscalation_TestConsole_run', 'HOME_ALERT SLA/Escalation test', function (r) {
+    if (!r) return 'No result';
+    return (r.status || '') + '\n' + (r.summary || '') + '\nEnvelope OK: ' + (r.envelopeOk ? 'yes' : 'no');
+  });
+}
+
