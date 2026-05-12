@@ -104,6 +104,7 @@ function HomeAlert_refresh(options) {
 
   generated.forEach(function(alert) {
     try {
+      HomeAlert_enrichUxFields_(alert);
       var r = HomeAlert_upsertAlert_(alert, traceId);
       stats.upserted++;
       if (r && r.action === 'INSERT') stats.inserted++;
@@ -355,6 +356,14 @@ function HomeAlert_upsertAlert_(alert, traceId) {
     patch.EXPIRES_AT = existing.EXPIRES_AT || patch.EXPIRES_AT || '';
     patch.LAST_ACTION = existing.LAST_ACTION || '';
     if (existing.CREATED_AT) patch.CREATED_AT = existing.CREATED_AT;
+
+    // Ensure UX fields match final merged operational status.
+    var mergedForUx = {};
+    Object.keys(existing).forEach(function(k) { mergedForUx[k] = existing[k]; });
+    Object.keys(patch).forEach(function(k2) { mergedForUx[k2] = patch[k2]; });
+    var uxPatch = HomeAlert_enrichUxFields_(mergedForUx);
+    Object.keys(uxPatch).forEach(function(k3) { patch[k3] = uxPatch[k3]; });
+
     _updateRow(sheetName, existing._rowNumber, patch);
     return { action: 'UPDATE', alertId: alertId };
   }
@@ -367,6 +376,10 @@ function HomeAlert_upsertAlert_(alert, traceId) {
   record.STATE_CHANGED_AT = now;
   record.STATE_CHANGED_BY = (typeof mapCurrentUserEmailToInternalId === 'function' ? mapCurrentUserEmailToInternalId() : null) || cbvUser();
   record.LAST_ACTION = 'UPSERT_INSERT';
+
+  // UX enrichment before insert.
+  HomeAlert_enrichUxFields_(record);
+
   _appendRecord(sheetName, record);
   return { action: 'INSERT', alertId: alertId };
 }
@@ -484,6 +497,173 @@ function HomeAlert_selfTest() {
   };
 }
 
+// ===== HOME_ALERT UX Test Console (separate) =====
+
+var __HOME_ALERT_UX_TEST_CONSOLE_LAST_REPORT = null;
+
+function HomeAlertUx_TestConsole_run() {
+  var traceId = HomeAlert_newTraceId_();
+  var checks = [];
+  var warnings = [];
+  var errors = [];
+
+  try {
+    var s = HomeAlertUx_checkSchema_();
+    checks.push({ name: 'schemaUxColumns', ok: s.ok, details: s });
+    if (!s.ok) errors = errors.concat(s.errors || []);
+  } catch (e1) {
+    checks.push({ name: 'schemaUxColumns', ok: false, details: { error: e1.message || String(e1) } });
+    errors.push('Schema check exception: ' + (e1.message || String(e1)));
+  }
+
+  try {
+    var sm = HomeAlert_validateStateMachine_();
+    checks.push({ name: 'stateMachine', ok: sm.ok, details: sm });
+    if (!sm.ok) errors.push('State machine invalid: ' + JSON.stringify(sm.errors || []));
+  } catch (e2) {
+    checks.push({ name: 'stateMachine', ok: false, details: { error: e2.message || String(e2) } });
+    errors.push('State machine exception: ' + (e2.message || String(e2)));
+  }
+
+  var refreshResult = null;
+  try {
+    refreshResult = HomeAlert_refresh({ autoClearMissing: false, autoExpire: false });
+    checks.push({ name: 'refresh', ok: refreshResult.ok, details: refreshResult.stats });
+    if (!refreshResult.ok) warnings.push('Refresh had errors: ' + JSON.stringify(refreshResult.stats.errors || []));
+  } catch (e3) {
+    checks.push({ name: 'refresh', ok: false, details: { error: e3.message || String(e3) } });
+    errors.push('Refresh exception: ' + (e3.message || String(e3)));
+  }
+
+  try {
+    var v = HomeAlertUx_validateUxOutput_();
+    checks.push({ name: 'uxOutput', ok: v.ok, details: v });
+    if (!v.ok) errors = errors.concat(v.errors || []);
+    warnings = warnings.concat(v.warnings || []);
+  } catch (e4) {
+    checks.push({ name: 'uxOutput', ok: false, details: { error: e4.message || String(e4) } });
+    errors.push('UX validate exception: ' + (e4.message || String(e4)));
+  }
+
+  var status = errors.length > 0 ? 'FAIL' : (warnings.length > 0 ? 'GO_WITH_WARNINGS' : 'GO');
+  var severity = errors.length > 0 ? 'CRITICAL' : (warnings.length > 0 ? 'WARNING' : 'OK');
+
+  var report = {
+    ok: status !== 'FAIL',
+    phase: 'PHASE_80C_HOME_ALERT_OPERATIONAL_UX_RUNTIME',
+    status: status,
+    severity: severity,
+    checkedAt: cbvNow(),
+    runBy: HomeAlert_actorId_(),
+    traceId: traceId,
+    testSuite: 'HOME_ALERT_UX_RUNTIME',
+    summary: 'HOME_ALERT UX runtime test: ' + status + ' (' + severity + ')',
+    checks: checks,
+    warnings: warnings,
+    errors: errors,
+    nextStep: status === 'GO' ? 'Update AppSheet Deck view to use DISPLAY_* and CARD_* fields; hide raw fields.' : 'Fix errors and rerun HomeAlertUx_TestConsole_run().',
+    reportText: '',
+    reportJson: { refresh: refreshResult },
+    contractVersion: 'CBV_TEST_CONSOLE_V1',
+    envelopeOk: true
+  };
+
+  report.reportText = HomeAlertUx_formatReportText_(report);
+  __HOME_ALERT_UX_TEST_CONSOLE_LAST_REPORT = report;
+  Logger.log(report.reportText);
+  return report;
+}
+
+function HomeAlertUx_TestConsole_showReport() {
+  var r = __HOME_ALERT_UX_TEST_CONSOLE_LAST_REPORT;
+  if (!r) return { ok: false, message: 'No report. Run HomeAlertUx_TestConsole_run() first.' };
+  Logger.log(r.reportText || JSON.stringify(r, null, 2));
+  return r;
+}
+
+function HomeAlertUx_TestConsole_copyAiHandoff() {
+  var r = __HOME_ALERT_UX_TEST_CONSOLE_LAST_REPORT;
+  if (!r) return 'No report. Run HomeAlertUx_TestConsole_run() first.';
+  var text = [
+    'PHASE: ' + r.phase,
+    'STATUS: ' + r.status,
+    'SEVERITY: ' + r.severity,
+    'TRACE: ' + r.traceId,
+    'CHECKED_AT: ' + r.checkedAt,
+    'SUMMARY: ' + r.summary,
+    'WARNINGS: ' + JSON.stringify(r.warnings || []),
+    'ERRORS: ' + JSON.stringify(r.errors || []),
+    'NEXT_STEP: ' + r.nextStep
+  ].join('\n');
+  Logger.log(text);
+  return text;
+}
+
+function HomeAlertUx_checkSchema_() {
+  var requiredUx = [
+    'DISPLAY_TITLE', 'DISPLAY_SUBTITLE', 'DISPLAY_SUMMARY', 'DISPLAY_FOOTER',
+    'DISPLAY_ICON', 'DISPLAY_COLOR', 'DISPLAY_ACTION_TEXT',
+    'CARD_GROUP', 'CARD_SORT', 'UX_VISIBLE', 'UX_GROUP_ORDER'
+  ];
+  var sheetName = HomeAlert_getSheetName_();
+  var sheet = _sheet(sheetName);
+  var headers = _headers(sheet);
+  var missing = requiredUx.filter(function(c) { return headers.indexOf(c) === -1; });
+  return { ok: missing.length === 0, sheet: sheetName, missing: missing, errors: missing.map(function(c) { return 'Missing UX column: ' + c; }) };
+}
+
+function HomeAlertUx_validateUxOutput_() {
+  var sheetName = HomeAlert_getSheetName_();
+  var rows = _rows(_sheet(sheetName));
+  var errors = [];
+  var warnings = [];
+
+  if (!rows || rows.length === 0) {
+    warnings.push('HOME_ALERT has no rows; cannot validate UX outputs on data.');
+    return { ok: true, warnings: warnings, errors: errors, sampleChecked: 0 };
+  }
+
+  var active = rows.filter(function(r) { return HomeAlert_isActiveStatus_(String(r.STATUS || '').trim()); });
+  var sample = (active.length ? active : rows).slice(0, 20);
+
+  sample.forEach(function(r) {
+    var id = String(r.ALERT_ID || '').trim();
+    if (!String(r.DISPLAY_TITLE || '').trim()) errors.push('DISPLAY_TITLE empty for ' + id);
+    if (!String(r.DISPLAY_SUMMARY || '').trim()) errors.push('DISPLAY_SUMMARY empty for ' + id);
+    if (!String(r.CARD_GROUP || '').trim()) errors.push('CARD_GROUP empty for ' + id);
+    if (!String(r.CARD_SORT || '').trim()) errors.push('CARD_SORT empty for ' + id);
+  });
+
+  // Duplicate checks
+  var seenId = {};
+  var dupIds = 0;
+  rows.forEach(function(r) {
+    var id = String(r.ALERT_ID || '').trim();
+    if (!id) return;
+    if (seenId[id]) dupIds++;
+    else seenId[id] = true;
+  });
+  if (dupIds > 0) errors.push('Duplicate ALERT_ID count=' + dupIds);
+
+  return { ok: errors.length === 0, warnings: warnings, errors: errors, sampleChecked: sample.length };
+}
+
+function HomeAlertUx_formatReportText_(r) {
+  var lines = [];
+  lines.push('=== HOME_ALERT UX TEST CONSOLE ===');
+  lines.push('phase=' + r.phase);
+  lines.push('status=' + r.status + ' severity=' + r.severity);
+  lines.push('checkedAt=' + r.checkedAt + ' runBy=' + r.runBy);
+  lines.push('traceId=' + r.traceId);
+  lines.push('summary=' + r.summary);
+  lines.push('checks=' + (r.checks ? r.checks.length : 0));
+  (r.checks || []).forEach(function(c) { lines.push('- ' + c.name + ': ' + (c.ok ? 'OK' : 'FAIL')); });
+  if ((r.warnings || []).length) lines.push('warnings=' + JSON.stringify(r.warnings, null, 2));
+  if ((r.errors || []).length) lines.push('errors=' + JSON.stringify(r.errors, null, 2));
+  lines.push('nextStep=' + r.nextStep);
+  return lines.join('\n');
+}
+
 // ===== Test Console (separate, not in business menu) =====
 
 var __HOME_ALERT_TEST_CONSOLE_LAST_REPORT = null;
@@ -583,7 +763,25 @@ function HomeAlert_buildAlert_(p) {
     EXPIRES_AT: p.expiresAt || '',
     AUTO_CLEARED_AT: '',
     AUTO_CLEARED_BY: '',
-    LAST_ACTION: ''
+    LAST_ACTION: '',
+    DISPLAY_TITLE: '',
+    DISPLAY_SUBTITLE: '',
+    DISPLAY_STATUS: '',
+    DISPLAY_BADGE: '',
+    DISPLAY_ICON: '',
+    DISPLAY_COLOR: '',
+    DISPLAY_ACTION_TEXT: '',
+    DISPLAY_PRIORITY_LABEL: '',
+    DISPLAY_TIME_AGO: '',
+    DISPLAY_ASSIGNEE: '',
+    DISPLAY_SUMMARY: '',
+    DISPLAY_FOOTER: '',
+    CARD_GROUP: '',
+    CARD_SORT: '',
+    CARD_LAYOUT: '',
+    UX_VISIBLE: '',
+    UX_GROUP_ORDER: '',
+    UX_ACTION_HINT: ''
   };
 }
 
@@ -628,6 +826,203 @@ function HomeAlert_actorId_() {
   return (typeof mapCurrentUserEmailToInternalId === 'function' ? mapCurrentUserEmailToInternalId() : null) || cbvUser();
 }
 
+/**
+ * Enrich UX/display fields for an alert record.
+ * Mutates the alert object and also returns a patch of UX fields.
+ */
+function HomeAlert_enrichUxFields_(alert) {
+  var a = alert || {};
+  var status = String(a.STATUS || '').trim() || HOME_ALERT_STATUS.OPEN;
+  var severity = String(a.SEVERITY || '').trim();
+  var moduleCode = String(a.MODULE_CODE || '').trim();
+  var alertCode = String(a.ALERT_CODE || '').trim();
+
+  var icon = HomeAlert_getDisplayIcon_(severity, moduleCode, alertCode);
+  var color = HomeAlert_getDisplayColor_(severity, status);
+  var actionText = HomeAlert_getDisplayActionText_(status);
+  var priorityLabel = HomeAlert_getDisplayPriorityLabel_(Number(a.PRIORITY_SCORE || 0), severity);
+  var timeAgo = HomeAlert_buildDisplayTimeAgo_(a);
+
+  var displayTitle = HomeAlert_buildDisplayTitle_(a, icon);
+  var displaySubtitle = HomeAlert_buildDisplaySubtitle_(a);
+  var displaySummary = HomeAlert_buildDisplaySummary_(a, timeAgo, priorityLabel);
+  var displayFooter = HomeAlert_buildDisplayFooter_(a);
+
+  var group = HomeAlert_getCardGroup_(a);
+  var sort = HomeAlert_getCardSort_(a);
+
+  var uxVisible = HomeAlert_isActiveStatus_(status);
+  var groupOrder = HomeAlert_getUxGroupOrder_(a);
+  var actionHint = HomeAlert_getUxActionHint_(status);
+
+  var patch = {
+    DISPLAY_TITLE: displayTitle,
+    DISPLAY_SUBTITLE: displaySubtitle,
+    DISPLAY_STATUS: status,
+    DISPLAY_BADGE: severity || '',
+    DISPLAY_ICON: icon,
+    DISPLAY_COLOR: color,
+    DISPLAY_ACTION_TEXT: actionText,
+    DISPLAY_PRIORITY_LABEL: priorityLabel,
+    DISPLAY_TIME_AGO: timeAgo,
+    DISPLAY_ASSIGNEE: String(a.ASSIGNED_TO || '').trim(),
+    DISPLAY_SUMMARY: displaySummary,
+    DISPLAY_FOOTER: displayFooter,
+    CARD_GROUP: group,
+    CARD_SORT: sort,
+    CARD_LAYOUT: 'STANDARD',
+    UX_VISIBLE: uxVisible === true,
+    UX_GROUP_ORDER: groupOrder,
+    UX_ACTION_HINT: actionHint
+  };
+
+  Object.keys(patch).forEach(function(k) { a[k] = patch[k]; });
+  return patch;
+}
+
+function HomeAlert_buildDisplayTitle_(alert, icon) {
+  var a = alert || {};
+  var code = String(a.ALERT_CODE || '').trim();
+  var base;
+  if (code === 'TASK_OVERDUE') base = 'Task quá hạn';
+  else if (code === 'FIN_UNCONFIRMED_OLD') base = 'Finance chờ xác nhận';
+  else if (code && code.indexOf('_LOG_NOTE_ERROR') >= 0) base = 'Lỗi runtime log';
+  else base = String(a.TITLE || 'Cảnh báo').trim();
+  return (icon ? (icon + ' ') : '') + base;
+}
+
+function HomeAlert_buildDisplaySubtitle_(alert) {
+  var a = alert || {};
+  var title = String(a.TITLE || '').trim();
+  if (title) return title;
+  var ent = String(a.RELATED_ENTITY_TYPE || '').trim();
+  var id = String(a.RELATED_ENTITY_ID || '').trim();
+  return [ent, id].filter(Boolean).join(' · ');
+}
+
+function HomeAlert_buildDisplaySummary_(alert, timeAgo, priorityLabel) {
+  var a = alert || {};
+  var status = String(a.STATUS || '').trim();
+  var sev = String(a.SEVERITY || '').trim();
+  var prio = priorityLabel || '';
+  var bits = [];
+  if (timeAgo) bits.push(timeAgo);
+  if (prio) bits.push(prio);
+  if (sev) bits.push(sev);
+  if (status) bits.push(status);
+  return bits.join(' · ');
+}
+
+function HomeAlert_buildDisplayFooter_(alert) {
+  var a = alert || {};
+  var moduleCode = String(a.MODULE_CODE || '').trim();
+  var assignee = String(a.ASSIGNED_TO || '').trim();
+  var hint = HomeAlert_getUxActionHint_(String(a.STATUS || '').trim());
+  return [moduleCode, assignee, hint].filter(Boolean).join(' · ');
+}
+
+function HomeAlert_getDisplayIcon_(severity, moduleCode, alertCode) {
+  var s = String(severity || '').trim().toUpperCase();
+  if (s === 'HIGH' || s === 'CRITICAL') return '🔴';
+  if (s === 'MEDIUM') return '🟠';
+  if (s === 'LOW') return '🟡';
+  if (moduleCode === 'TASK') return '🧩';
+  if (moduleCode === 'FINANCE') return '💰';
+  if (String(alertCode || '').indexOf('_LOG_NOTE_ERROR') >= 0) return '🧯';
+  return 'ℹ️';
+}
+
+function HomeAlert_getDisplayColor_(severity, status) {
+  var st = String(status || '').trim();
+  if (HomeAlert_isTerminalStatus_(st)) return 'Gray';
+  var s = String(severity || '').trim().toUpperCase();
+  if (s === 'HIGH' || s === 'CRITICAL') return 'Red';
+  if (s === 'MEDIUM') return 'Orange';
+  if (s === 'LOW') return 'Yellow';
+  return 'Blue';
+}
+
+function HomeAlert_getDisplayActionText_(status) {
+  var st = String(status || '').trim();
+  if (st === HOME_ALERT_STATUS.OPEN) return 'Nhận xử lý';
+  if (st === HOME_ALERT_STATUS.ACKNOWLEDGED) return 'Bắt đầu';
+  if (st === HOME_ALERT_STATUS.IN_PROGRESS) return 'Cập nhật';
+  if (st === HOME_ALERT_STATUS.WAITING_RESPONSE) return 'Tiếp tục';
+  if (st === HOME_ALERT_STATUS.ESCALATED) return 'Xử lý';
+  if (st === HOME_ALERT_STATUS.RESOLVED) return 'Đã xong';
+  if (st === HOME_ALERT_STATUS.AUTO_CLEARED) return 'Auto cleared';
+  if (st === HOME_ALERT_STATUS.EXPIRED) return 'Expired';
+  return '';
+}
+
+function HomeAlert_getUxActionHint_(status) {
+  var st = String(status || '').trim();
+  if (st === HOME_ALERT_STATUS.OPEN) return 'cần nhận xử lý';
+  if (st === HOME_ALERT_STATUS.ACKNOWLEDGED) return 'đã nhận';
+  if (st === HOME_ALERT_STATUS.IN_PROGRESS) return 'đang xử lý';
+  if (st === HOME_ALERT_STATUS.WAITING_RESPONSE) return 'chờ phản hồi';
+  if (st === HOME_ALERT_STATUS.ESCALATED) return 'đã escalated';
+  if (st === HOME_ALERT_STATUS.RESOLVED) return 'đã resolved';
+  if (st === HOME_ALERT_STATUS.AUTO_CLEARED) return 'auto cleared';
+  if (st === HOME_ALERT_STATUS.EXPIRED) return 'đã expired';
+  return '';
+}
+
+function HomeAlert_getDisplayPriorityLabel_(priorityScore, severity) {
+  var score = Number(priorityScore || 0);
+  var s = String(severity || '').trim().toUpperCase();
+  if (s === 'HIGH' || s === 'CRITICAL' || score >= 80) return 'HIGH';
+  if (s === 'MEDIUM' || score >= 50) return 'MEDIUM';
+  if (s === 'LOW' || score > 0) return 'LOW';
+  return '';
+}
+
+function HomeAlert_buildDisplayTimeAgo_(alert) {
+  var a = alert || {};
+  var dt = a.UPDATED_AT || a.CREATED_AT || '';
+  var d = dt instanceof Date ? dt : (dt ? new Date(dt) : null);
+  if (!d || isNaN(d.getTime())) return '';
+  var diff = Math.floor((new Date().getTime() - d.getTime()) / 1000);
+  if (diff < 60) return diff + 's ago';
+  var m = Math.floor(diff / 60);
+  if (m < 60) return m + 'm ago';
+  var h = Math.floor(m / 60);
+  if (h < 48) return h + 'h ago';
+  var days = Math.floor(h / 24);
+  return days + 'd ago';
+}
+
+function HomeAlert_getCardGroup_(alert) {
+  var a = alert || {};
+  var sev = String(a.SEVERITY || '').trim().toUpperCase();
+  if (sev === 'HIGH' || sev === 'CRITICAL') return '🚨 Khẩn cấp';
+  if (sev === 'MEDIUM') return '⚠️ Cần chú ý';
+  if (sev === 'LOW') return '🟡 Theo dõi';
+  return 'ℹ️ Thông tin';
+}
+
+function HomeAlert_getUxGroupOrder_(alert) {
+  var a = alert || {};
+  var sev = String(a.SEVERITY || '').trim().toUpperCase();
+  if (sev === 'HIGH' || sev === 'CRITICAL') return 1;
+  if (sev === 'MEDIUM') return 2;
+  if (sev === 'LOW') return 3;
+  return 9;
+}
+
+function HomeAlert_getCardSort_(alert) {
+  var a = alert || {};
+  var score = Number(a.PRIORITY_SCORE || 0);
+  var inv = Math.max(0, 999999 - Math.floor(score));
+  var invStr = String(inv);
+  while (invStr.length < 6) invStr = '0' + invStr;
+  var d = a.UPDATED_AT || a.CREATED_AT || cbvNow();
+  var dt = d instanceof Date ? d : (d ? new Date(d) : new Date());
+  var ts = Utilities.formatDate(dt, Session.getScriptTimeZone(), 'yyyyMMddHHmmss');
+  var id = String(a.ALERT_ID || '').trim();
+  return invStr + '_' + ts + (id ? '_' + id : '');
+}
+
 function HomeAlert_mergeIncomingWithExisting_(existing, incoming) {
   var exStatus = String(existing.STATUS || '').trim();
   var patch = {};
@@ -637,7 +1032,10 @@ function HomeAlert_mergeIncomingWithExisting_(existing, incoming) {
     'ALERT_CODE', 'ALERT_TYPE', 'SEVERITY', 'PRIORITY_SCORE', 'TITLE', 'MESSAGE',
     'MODULE_CODE', 'RELATED_ENTITY_TYPE', 'RELATED_ENTITY_ID', 'RELATED_RECORD_URL',
     'ACTION_LABEL', 'ACTION_TYPE', 'ACTION_PAYLOAD_JSON',
-    'SORT_KEY', 'DISPLAY_GROUP', 'BADGE_TEXT', 'BADGE_COLOR', 'SOURCE_HASH'
+    'SORT_KEY', 'DISPLAY_GROUP', 'BADGE_TEXT', 'BADGE_COLOR', 'SOURCE_HASH',
+    'DISPLAY_TITLE', 'DISPLAY_SUBTITLE', 'DISPLAY_STATUS', 'DISPLAY_BADGE', 'DISPLAY_ICON', 'DISPLAY_COLOR',
+    'DISPLAY_ACTION_TEXT', 'DISPLAY_PRIORITY_LABEL', 'DISPLAY_TIME_AGO', 'DISPLAY_ASSIGNEE', 'DISPLAY_SUMMARY', 'DISPLAY_FOOTER',
+    'CARD_GROUP', 'CARD_SORT', 'CARD_LAYOUT', 'UX_VISIBLE', 'UX_GROUP_ORDER', 'UX_ACTION_HINT'
   ].forEach(function(k) { patch[k] = incoming[k]; });
 
   // Keep assignment/due unless incoming explicitly provides.
@@ -722,6 +1120,13 @@ function HomeAlert_transitionAlert_(alertId, toStatus, extraPatch, note) {
     patch.AUTO_CLEARED_AT = patch.AUTO_CLEARED_AT || now;
     patch.AUTO_CLEARED_BY = patch.AUTO_CLEARED_BY || HomeAlert_actorId_();
   }
+
+  // UX enrichment for state change (must match new status).
+  var merged = {};
+  Object.keys(row).forEach(function(k0) { merged[k0] = row[k0]; });
+  Object.keys(patch).forEach(function(k1) { merged[k1] = patch[k1]; });
+  var ux = HomeAlert_enrichUxFields_(merged);
+  Object.keys(ux).forEach(function(k2) { patch[k2] = ux[k2]; });
 
   var before = {
     STATUS: row.STATUS, IS_ACTIVE: row.IS_ACTIVE, IS_RESOLVED: row.IS_RESOLVED,

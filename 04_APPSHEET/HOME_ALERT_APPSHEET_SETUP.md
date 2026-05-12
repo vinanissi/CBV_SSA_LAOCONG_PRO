@@ -19,9 +19,13 @@ Tạo slice `HOME_ALERT_ACTIVE`:
 - **HOME_ALERT_Dashboard** (type: Dashboard)
   - Primary: `ALERT_List` (slice: `HOME_ALERT_ACTIVE`)
   - Detail: `ALERT_Detail`
-- **ALERT_List** (type: Table / Deck)
+- **ALERT_List** (type: Deck)
   - Source: `HOME_ALERT_ACTIVE`
-  - Sort: `PRIORITY_SCORE` (desc), sau đó `SORT_KEY` (asc), sau đó `UPDATED_AT` (desc)
+  - Primary header: `DISPLAY_TITLE`
+  - Secondary header: `DISPLAY_SUBTITLE`
+  - Summary column: `DISPLAY_SUMMARY`
+  - Group by: `CARD_GROUP`
+  - Sort: `CARD_SORT` (asc)
 - **ALERT_Detail** (type: Detail)
   - Source: `HOME_ALERT` (hoặc `HOME_ALERT_ACTIVE` tuỳ nhu cầu)
 
@@ -33,6 +37,14 @@ Tạo slice `HOME_ALERT_ACTIVE`:
 - **Badge**: dùng `BADGE_TEXT` + `BADGE_COLOR`
 
 Không tạo App formula phức tạp; tránh VC.
+
+## 4.1) Operational cockpit fields (GAS-generated)
+
+Ưu tiên hiển thị các cột UX (do GAS tính):
+
+- `DISPLAY_TITLE`, `DISPLAY_SUBTITLE`, `DISPLAY_SUMMARY`, `DISPLAY_FOOTER`
+- `DISPLAY_ICON`, `DISPLAY_COLOR`, `DISPLAY_BADGE`, `DISPLAY_ACTION_TEXT`
+- `CARD_GROUP`, `CARD_SORT`
 
 ## 5) Actions (tuỳ chọn, manual-first)
 
@@ -111,4 +123,20 @@ Nếu có `RELATED_RECORD_URL`, tạo action “External: go to a website”:
 - Chạy `HomeAlert_refresh()` theo nhu cầu (menu / manual run).
 - Nếu muốn dùng operational state runtime đầy đủ: dùng các action ACK/IN_PROGRESS/WAIT/ESCALATE/RESOLVE ở trên (không bot).
 - Không tạo Bot, không tạo trigger tự động trước khi test console đạt `GO`.
+
+## 7) Hide raw fields (Detail UX)
+
+Trong `ALERT_Detail`, ẩn các cột raw (hoặc đánh dấu “Show?” = OFF) để chỉ để lại cột thân thiện:
+
+- `SOURCE_HASH`
+- `TRACE_ID`
+- `ACTION_PAYLOAD_JSON`
+- `RELATED_ENTITY_ID`
+
+Nếu hệ thống có các cột sau thì cũng ẩn (không bắt buộc tồn tại):
+
+- `ALERT_FINGERPRINT`
+- `ALERT_GROUP_KEY`
+
+Chỉ show các cột UX: `DISPLAY_*`, `CARD_*`, và một số field vận hành (STATUS, ASSIGNED_TO, DUE_AT, NOTE, timestamps).
 
