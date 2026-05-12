@@ -55,3 +55,9 @@ Expected checks include: assignment column headers, `HOME_ALERT_WORKLOAD` manife
 - **Actions:** `HomeAlert_claimAlert`, `HomeAlert_assignAlert`, `HomeAlert_transferQueue`, `HomeAlert_markWaiting`, `HomeAlert_escalateOperational`, `HomeAlert_markBlocked`, `HomeAlert_resolveOperational` — append notes + `LAST_OPERATOR_ACTION*`, respect 80B transitions where applicable.  
 - **Workload:** sheet `HOME_ALERT_WORKLOAD`, `HomeAlertWorkload_refresh()` manual; `HomeAlertWorkload_getOperatorLoad_`, `HomeAlertWorkload_TestConsole_run`.  
 - **No** production triggers, **no** VC/Bot, **no** AppSheet workload formulas.
+
+## GIT (post-agent)
+
+- **Commit:** `6f47ffc` — message: `phase: add operational assignment runtime`  
+- **Push:** success `origin/phase/from-v2.4.1-TASK-FIN`  
+- **Note:** `.clasp.json` left unstaged (local binding).
