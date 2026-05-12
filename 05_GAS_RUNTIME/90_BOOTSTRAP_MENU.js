@@ -149,6 +149,7 @@ function buildCbvTestConsoleMenu_() {
     .addItem('HOME_ALERT Phase 82 — SLA & Escalation', 'menuCbvTestConsoleHomeAlertSla82')
     .addItem('HOME_ALERT Phase 83 — SLA Policy Registry', 'menuCbvTestConsoleHomeAlertSla83')
     .addItem('HOME_ALERT Phase 84 — Safe Automation Runtime', 'menuCbvTestConsoleHomeAlertSafeAutomation84')
+    .addItem('REF-A — Operational Reference Layer', 'menuCbvTestConsoleOperationalReferenceRefA')
     .addToUi();
 }
 

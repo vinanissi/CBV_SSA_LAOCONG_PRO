@@ -73,6 +73,11 @@ function HomeAlert_bootstrap() {
   } catch (e84) {}
 
   try {
+    if (typeof CbvRef_ensureSheets === 'function') CbvRef_ensureSheets();
+    if (typeof CbvRef_seedDefaults === 'function') CbvRef_seedDefaults();
+  } catch (eRef) {}
+
+  try {
     if (typeof logAdminAudit === 'function') {
       logAdminAudit('HOME_ALERT_BOOTSTRAP', 'HOME_ALERT', 'HOME_ALERT', 'UPDATE', {}, { traceId: traceId }, 'HomeAlert_bootstrap ok');
     }

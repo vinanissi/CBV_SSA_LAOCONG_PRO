@@ -788,3 +788,11 @@ function menuCbvTestConsoleHomeAlertSafeAutomation84() {
   });
 }
 
+/** CBV Test Console — REF-A operational reference layer QA. */
+function menuCbvTestConsoleOperationalReferenceRefA() {
+  runSafeMenuStep_('CbvRef_TestConsole_run', 'Operational Reference Layer (REF-A) test', function (r) {
+    if (!r) return 'No result';
+    return (r.status || '') + '\n' + (r.summary || '') + '\nEnvelope OK: ' + (r.envelopeOk ? 'yes' : 'no');
+  });
+}
+
