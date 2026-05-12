@@ -106,6 +106,7 @@ Phase 83 introduces **policy-backed SLA thresholds** (due-soon, breach minutes, 
 
 ## COMMIT / PUSH / TAG STATUS
 
-- **Commit:** `5c0b67c` — `feat(home-alert): add phase 83 SLA policy registry`
+- **Commit:** `5c0b67c` — `feat(home-alert): add phase 83 SLA policy registry`  
+- **Docs:** `5c62113` — `docs(phase-83): fill report git and commit status`
 - **Push:** Success → `origin/phase/from-v2.4.1-TASK-FIN`
 - **Tag:** `v2.4.3-HOME-ALERT-SLA-POLICY` pushed to `origin`
