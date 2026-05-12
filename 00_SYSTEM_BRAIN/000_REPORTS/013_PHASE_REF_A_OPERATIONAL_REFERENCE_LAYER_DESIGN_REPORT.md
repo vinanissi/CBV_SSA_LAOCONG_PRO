@@ -81,10 +81,10 @@ Implemented in `83_OPERATIONAL_REFERENCE_RUNTIME.js`:
 
 ## GIT STATUS
 
-Clean after commit `15590dd` on `phase/from-v2.4.1-TASK-FIN`.
+Clean after commit `d06f09c` on `phase/from-v2.4.1-TASK-FIN`.
 
 ## COMMIT / PUSH / TAG STATUS
 
-- **Commit:** `15590dd` — `feat(reference): add operational reference layer`
+- **Commit:** `d06f09c` — `feat(reference): add operational reference layer`
 - **Push:** succeeded to `origin/phase/from-v2.4.1-TASK-FIN`
 - **Tag:** `v2.4.6-OPERATIONAL-REFERENCE-LAYER` pushed to `origin`
