@@ -85,7 +85,8 @@ Phase 82 adds SLA and escalation **coordination columns**, **runtime enrichment*
 
 ## GIT / PUSH / TAG
 
-- **Commit:** `9cab275` — `feat(home-alert): add phase 82 SLA and escalation runtime`
+- **Commit:** `9cab275` — `feat(home-alert): add phase 82 SLA and escalation runtime`  
+- **Docs follow-up:** `efb3c3a` — `docs(phase-82): fix report commit hash after amend`
 - **Push:** Success — `phase/from-v2.4.1-TASK-FIN` → `origin/phase/from-v2.4.1-TASK-FIN`
 - **Tag:** `v2.4.2-HOME-ALERT-SLA-ESCALATION` pushed to `origin`
 - **Note:** `.clasp.json` remains locally modified (pre-existing / not part of this commit); not changed by Phase 82 implementation.
