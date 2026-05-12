@@ -94,3 +94,21 @@ Operator role **không** được quyền view Admin Debug.
 | Legacy 80C–80D | §D — không dùng | §D + raw |
 
 Tài liệu AppSheet triển khai: `HOME_ALERT_APPSHEET_SETUP.md`, `HOME_ALERT_DESKTOP_WORKSPACE.md`.
+
+---
+
+## F. Coordination dashboard (Phase 81) — tùy view
+
+Khi cần cockpit **điều phối** (queue / escalation / blocked) thay vì chỉ attention label:
+
+| Vai trò AppSheet | Cột Sheet |
+|------------------|-----------|
+| **Primary header** | `OPERATOR_PRIMARY_TEXT` |
+| **Secondary header** | `OPERATOR_SECONDARY_TEXT` |
+| **Summary column** | `OPERATOR_META_TEXT` |
+| **Group by** | `OPERATOR_DASHBOARD_GROUP` |
+| **Sort by** | `OPERATOR_DASHBOARD_SORT` **DESC** *(Show? = OFF nếu chỉ dùng sort)* |
+
+Chế độ **80F (attention)** tại §A (`ATTENTION_LABEL` + `DESKTOP_SORT`) **vẫn giữ** làm chuẩn mặc định nếu chưa cần điều phối sâu; §F là **tùy chọn** triển khai thứ hai (hai Deck hoặc hai tab).
+
+Chi tiết queue / action / workload: `HOME_ALERT_ASSIGNMENT_RUNTIME_STANDARD.md`.

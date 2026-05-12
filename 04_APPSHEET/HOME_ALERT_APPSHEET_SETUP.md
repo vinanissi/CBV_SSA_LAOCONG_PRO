@@ -331,3 +331,42 @@ Chuẩn hoá sau 80C/80D/80E: **một bộ cột operator** + **legacy** tách b
 - **Operator:** chỉ cột canonical trong file chuẩn; **Admin Debug** được xem raw + legacy + enrichment (`DISPLAY_*`, `CARD_*`, `UX_*`, `DESKTOP_*`, `ATTENTION_*`, `ACTION_*`, `OWNER_*`, `OPERATOR_*`, sort/trace/payload).
 - **Không** thêm nhóm cột hiển thị mới trong phase 80F (chỉ tài liệu + helper GAS + test console).
 - Test: `HomeAlertDisplayStandard_TestConsole_run()`.
+
+## 11) Operational assignment runtime (Phase 81)
+
+**Chuẩn kiến trúc:** `HOME_ALERT_ASSIGNMENT_RUNTIME_STANDARD.md`  
+**Bảng phụ:** `HOME_ALERT_WORKLOAD` (GAS `HomeAlertWorkload_refresh()` — **manual**, không trigger).  
+**Test:** `HomeAlertAssignment_TestConsole_run()`.
+
+### 11.1 Bảng AppSheet
+
+- `HOME_ALERT` — đầy đủ cột `ASSIGNMENT_*`, `QUEUE_*`, `OPERATOR_DASHBOARD_*`, `WORKLOAD_KEY`, … (GAS enrich).  
+- `HOME_ALERT_WORKLOAD` — tổng hợp tải theo operator / pool (GAS tính, **không** formula workload trên AppSheet).
+
+### 11.2 Views (đề xuất)
+
+| View | Mục đích |
+|------|----------|
+| `HOME_ALERT_OPERATOR_DASHBOARD` | Deck điều phối: Group = `OPERATOR_DASHBOARD_GROUP`, Sort = `OPERATOR_DASHBOARD_SORT` DESC |
+| `HOME_ALERT_MY_QUEUE` | Slice / format: `ASSIGNMENT_QUEUE` = `MY_QUEUE` (hoặc filter tương đương do GAS đã set cột) |
+| `HOME_ALERT_UNASSIGNED_QUEUE` | `ASSIGNMENT_QUEUE` = `UNASSIGNED_QUEUE` |
+| `HOME_ALERT_ESCALATED_QUEUE` | `ASSIGNMENT_QUEUE` = `ESCALATED_QUEUE` hoặc `STATUS` = `ESCALATED` |
+| `HOME_ALERT_BLOCKED_QUEUE` | `IS_BLOCKED` = `TRUE` |
+| `HOME_ALERT_ADMIN_DEBUG` | Giữ như 80D/80F — raw + assignment columns |
+| `HOME_ALERT_WORKLOAD_DASHBOARD` | Bảng / chart từ `HOME_ALERT_WORKLOAD` |
+
+### 11.3 Actions (GAS — manual invoke)
+
+Mỗi action chỉ gọi GAS / webhook một hàm; **không** Bot; **không** VC; không tự động trigger.
+
+| AppSheet action | GAS |
+|-----------------|-----|
+| Claim | `HomeAlert_claimAlert` |
+| Assign | `HomeAlert_assignAlert` |
+| Transfer Queue | `HomeAlert_transferQueue` |
+| Mark Waiting | `HomeAlert_markWaiting` |
+| Escalate | `HomeAlert_escalateOperational` |
+| Block | `HomeAlert_markBlocked` |
+| Resolve | `HomeAlert_resolveOperational` |
+
+Các action legacy 80B (`Acknowledge`, `StartProgress`, …) vẫn hợp lệ nếu map đúng state machine; Phase 81 bổ sung lớp điều phối + `LAST_OPERATOR_ACTION*`.

@@ -133,6 +133,7 @@ Tất cả fields raw / runtime / state đều được phép `Show? = ON`:
 - `STATE_CHANGED_AT`, `STATE_CHANGED_BY`
 - `ESCALATED_AT`, `AUTO_CLEARED_AT`, `AUTO_CLEARED_BY`
 - Các cột UX/Card/Desktop/Attention/Operator (`DISPLAY_*`, `CARD_*`, `UX_*`, `DESKTOP_*`, `ATTENTION_*`, `ACTION_FOCUS`, `ACTION_HINT`, `ACTION_PRIORITY`, `OWNER_*`, `OPERATOR_*`) — admin quan sát để debug enrichment.
+- Phase 81 — điều phối: `ASSIGNMENT_*`, `QUEUE_*`, `WORKLOAD_KEY`, `OPERATOR_DASHBOARD_*`, `CLAIMED_*`, `LAST_OPERATOR_ACTION*`, `IS_BLOCKED`, `BLOCKED_REASON`, v.v.
 
 ### 2.3 Cấm
 
@@ -149,7 +150,39 @@ Tất cả fields raw / runtime / state đều được phép `Show? = ON`:
 - Khi cần debug, admin mở `HOME_ALERT_ADMIN_DEBUG`, không kéo raw fields ngược vào operator view.
 - Test console: `HomeAlertDesktop_TestConsole_run()` (80D), `HomeAlertAttention_TestConsole_run()` (80E), `HomeAlertDisplayStandard_TestConsole_run()` (80F).
 
-## 4) Online Drive archive
+## 4) Operational coordination (Phase 81)
+
+Tham chiếu: `HOME_ALERT_ASSIGNMENT_RUNTIME_STANDARD.md`.
+
+### 4.1 `HOME_ALERT_OPERATOR_DASHBOARD` (coordination mode)
+
+Song song với chế độ **attention (80F)** (`ATTENTION_LABEL` + `DESKTOP_SORT`), có thể bật **coordination Deck**:
+
+- **Primary:** `OPERATOR_PRIMARY_TEXT`  
+- **Secondary:** `OPERATOR_SECONDARY_TEXT`  
+- **Summary:** `OPERATOR_META_TEXT`  
+- **Group by:** `OPERATOR_DASHBOARD_GROUP`  
+- **Sort by:** `OPERATOR_DASHBOARD_SORT` **DESC** (cột sort — **Show? = OFF** nếu không muốn lộ số composite)
+
+Không dùng AppSheet formula để tính workload hay queue; toàn bộ từ GAS.
+
+### 4.2 Queue views
+
+Tạo slice theo cột vật lý GAS đã enrich (`ASSIGNMENT_QUEUE`, `IS_BLOCKED`, `STATUS`, …) cho các view:
+
+- `HOME_ALERT_MY_QUEUE`, `HOME_ALERT_UNASSIGNED_QUEUE`, `HOME_ALERT_ESCALATED_QUEUE`, `HOME_ALERT_BLOCKED_QUEUE` (định nghĩa trong `HOME_ALERT_APPSHEET_SETUP.md` §11).
+
+### 4.3 `HOME_ALERT_WORKLOAD_DASHBOARD`
+
+- **Source:** `HOME_ALERT_WORKLOAD`.  
+- **Refresh:** manual chạy `HomeAlertWorkload_refresh()` (menu / script editor).  
+- Không trigger production trong phase này.
+
+### 4.4 Test
+
+- `HomeAlertAssignment_TestConsole_run()` — schema assignment + workload + action probes + regression 80B/80E/80F.
+
+## 5) Online Drive archive
 
 - Folder online: `https://drive.google.com/drive/folders/1wQhgcq6An8YTu_6WD91p1nJLJ0gtChwG`.
 - Script Property đề xuất: `CBV_SYSTEM_BRAIN_DRIVE_FOLDER_ID = 1wQhgcq6An8YTu_6WD91p1nJLJ0gtChwG`.

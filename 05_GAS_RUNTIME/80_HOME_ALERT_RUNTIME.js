@@ -56,6 +56,9 @@ function HomeAlert_bootstrap() {
   }
 
   HomeAlert_ensureHomeAlertSheet_();
+  try {
+    HomeAlert_ensureWorkloadSheet_();
+  } catch (eW) {}
 
   try {
     if (typeof logAdminAudit === 'function') {
@@ -810,7 +813,30 @@ function HomeAlert_buildAlert_(p) {
     OPERATOR_SECONDARY_TEXT: '',
     OPERATOR_META_TEXT: '',
     OPERATOR_NEXT_ACTION: '',
-    OPERATOR_HIDE_SORT_KEYS: true
+    OPERATOR_HIDE_SORT_KEYS: true,
+    ASSIGNMENT_STATUS: '',
+    ASSIGNMENT_QUEUE: '',
+    ASSIGNED_TO_LABEL: '',
+    ASSIGNED_TEAM: '',
+    ASSIGNED_TEAM_LABEL: '',
+    ASSIGNED_BY: '',
+    ASSIGNMENT_NOTE: '',
+    CLAIMED_AT: '',
+    CLAIMED_BY: '',
+    LAST_OPERATOR_ACTION: '',
+    LAST_OPERATOR_ACTION_AT: '',
+    LAST_OPERATOR_ACTION_BY: '',
+    ESCALATE_AFTER_AT: '',
+    IS_STUCK: false,
+    STUCK_REASON: '',
+    IS_BLOCKED: false,
+    BLOCKED_REASON: '',
+    QUEUE_GROUP: '',
+    QUEUE_LABEL: '',
+    QUEUE_SORT: '',
+    WORKLOAD_KEY: '',
+    OPERATOR_DASHBOARD_GROUP: '',
+    OPERATOR_DASHBOARD_SORT: ''
   };
 }
 
@@ -1079,8 +1105,27 @@ function HomeAlert_mergeIncomingWithExisting_(existing, incoming) {
     'ACTION_FOCUS', 'ACTION_HINT', 'ACTION_PRIORITY',
     'OWNER_LABEL', 'OWNER_QUEUE',
     'OPERATOR_PRIMARY_TEXT', 'OPERATOR_SECONDARY_TEXT', 'OPERATOR_META_TEXT', 'OPERATOR_NEXT_ACTION',
-    'OPERATOR_HIDE_SORT_KEYS'
+    'OPERATOR_HIDE_SORT_KEYS',
+    'ASSIGNMENT_STATUS', 'ASSIGNMENT_QUEUE', 'ASSIGNED_TO_LABEL', 'ASSIGNED_TEAM', 'ASSIGNED_TEAM_LABEL',
+    'ASSIGNED_BY', 'ASSIGNMENT_NOTE', 'CLAIMED_AT', 'CLAIMED_BY',
+    'LAST_OPERATOR_ACTION', 'LAST_OPERATOR_ACTION_AT', 'LAST_OPERATOR_ACTION_BY',
+    'ESCALATE_AFTER_AT', 'IS_STUCK', 'STUCK_REASON', 'IS_BLOCKED', 'BLOCKED_REASON',
+    'QUEUE_GROUP', 'QUEUE_LABEL', 'QUEUE_SORT', 'WORKLOAD_KEY',
+    'OPERATOR_DASHBOARD_GROUP', 'OPERATOR_DASHBOARD_SORT'
   ].forEach(function(k) { patch[k] = incoming[k]; });
+
+  var preserveOps = [
+    'CLAIMED_AT', 'CLAIMED_BY', 'ASSIGNED_BY', 'ASSIGNMENT_NOTE',
+    'LAST_OPERATOR_ACTION', 'LAST_OPERATOR_ACTION_AT', 'LAST_OPERATOR_ACTION_BY',
+    'IS_BLOCKED', 'BLOCKED_REASON',
+    'ASSIGNMENT_QUEUE', 'ASSIGNED_TEAM', 'ASSIGNED_TEAM_LABEL'
+  ];
+  preserveOps.forEach(function(pk) {
+    var inc = incoming[pk];
+    var ex = existing[pk];
+    var incEmpty = inc === undefined || inc === null || inc === '';
+    if (incEmpty && ex !== undefined && ex !== null && ex !== '') patch[pk] = ex;
+  });
 
   // Keep assignment/due unless incoming explicitly provides.
   patch.DUE_AT = incoming.DUE_AT !== undefined && incoming.DUE_AT !== '' ? incoming.DUE_AT : (existing.DUE_AT || '');
@@ -1114,6 +1159,480 @@ function HomeAlert_mergeIncomingWithExisting_(existing, incoming) {
   patch.LAST_ACTION = existing.LAST_ACTION || '';
 
   return patch;
+}
+
+// =============================================================================
+// PHASE_81 — OPERATIONAL_ASSIGNMENT_RUNTIME (coordination fields + workload sheet)
+// Runtime-first; append-only audit; no triggers. ASSIGNMENT_* derived in GAS.
+// =============================================================================
+
+var HOME_ALERT_RUNTIME_QUEUE_CODES = [
+  'UNASSIGNED_QUEUE', 'MY_QUEUE', 'TEAM_QUEUE', 'WAITING_QUEUE', 'ESCALATED_QUEUE', 'BLOCKED_QUEUE', 'DONE_QUEUE'
+];
+
+function HomeAlert_getWorkloadSheetName_() {
+  return (typeof CBV_CONFIG !== 'undefined' && CBV_CONFIG.SHEETS && CBV_CONFIG.SHEETS.HOME_ALERT_WORKLOAD)
+    ? CBV_CONFIG.SHEETS.HOME_ALERT_WORKLOAD
+    : 'HOME_ALERT_WORKLOAD';
+}
+
+function HomeAlert_ensureWorkloadSheet_() {
+  var ss = SpreadsheetApp.getActive();
+  var name = HomeAlert_getWorkloadSheetName_();
+  var sheet = ss.getSheetByName(name);
+  if (!sheet) {
+    sheet = ss.insertSheet(name);
+    var headers = (typeof CBV_SCHEMA_MANIFEST !== 'undefined' && CBV_SCHEMA_MANIFEST.HOME_ALERT_WORKLOAD)
+      ? CBV_SCHEMA_MANIFEST.HOME_ALERT_WORKLOAD
+      : null;
+    cbvAssert(headers && headers.length > 0, 'Missing CBV_SCHEMA_MANIFEST.HOME_ALERT_WORKLOAD');
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    return { created: true, name: name };
+  }
+  return { created: false, name: name };
+}
+
+function HomeAlert_lookupUserDirectoryLabel_(userId) {
+  var id = String(userId || '').trim();
+  if (!id) return '';
+  try {
+    var udName = (typeof CBV_CONFIG !== 'undefined' && CBV_CONFIG.SHEETS && CBV_CONFIG.SHEETS.USER_DIRECTORY)
+      ? CBV_CONFIG.SHEETS.USER_DIRECTORY
+      : 'USER_DIRECTORY';
+    var sh = SpreadsheetApp.getActive().getSheetByName(udName);
+    if (!sh) return id;
+    var rows = _rows(sh);
+    var r = rows.find(function(x) { return String(x.ID || '').trim() === id; }) || null;
+    if (!r) return id;
+    return String(r.DISPLAY_NAME || r.FULL_NAME || r.EMAIL || id).trim() || id;
+  } catch (e) {
+    return id;
+  }
+}
+
+function HomeAlert_lastOperatorPatch_(actionKey) {
+  var now = cbvNow();
+  return {
+    LAST_OPERATOR_ACTION: String(actionKey || '').trim(),
+    LAST_OPERATOR_ACTION_AT: now,
+    LAST_OPERATOR_ACTION_BY: HomeAlert_actorId_()
+  };
+}
+
+function HomeAlert_appendAlertNote_(row, note, patch) {
+  var n = String(note || '').trim();
+  if (!n) return;
+  var prev = String(row.NOTE || '').trim();
+  var entry = '[' + Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm') + '] ' + n;
+  patch.NOTE = prev ? (prev + '\n' + entry) : entry;
+}
+
+function HomeAlert_patchAlertOperational_(alertId, patch, actionKey, note) {
+  HomeAlert_ensureHomeAlertSheet_();
+  var traceId = HomeAlert_newTraceId_();
+  var sheetName = HomeAlert_getSheetName_();
+  var rows = _rows(_sheet(sheetName));
+  var id = String(alertId || '').trim();
+  var row = rows.find(function(r) { return String(r.ALERT_ID || '').trim() === id; }) || null;
+  cbvAssert(row, 'Alert not found: ' + id);
+
+  var op = HomeAlert_lastOperatorPatch_(actionKey);
+  Object.keys(op).forEach(function(k) { patch[k] = op[k]; });
+  HomeAlert_appendAlertNote_(row, note, patch);
+
+  patch.UPDATED_AT = cbvNow();
+  patch.TRACE_ID = traceId;
+
+  var merged = {};
+  Object.keys(row).forEach(function(k0) { merged[k0] = row[k0]; });
+  Object.keys(patch).forEach(function(k1) { merged[k1] = patch[k1]; });
+
+  var ux = HomeAlert_enrichUxFields_(merged);
+  Object.keys(ux).forEach(function(k2) { patch[k2] = ux[k2]; });
+
+  var before = { STATUS: row.STATUS, ASSIGNED_TO: row.ASSIGNED_TO, ASSIGNMENT_QUEUE: row.ASSIGNMENT_QUEUE, IS_BLOCKED: row.IS_BLOCKED };
+  _updateRow(sheetName, row._rowNumber, patch);
+
+  try {
+    if (typeof logAdminAudit === 'function') {
+      logAdminAudit('HOME_ALERT_ASSIGNMENT_RUNTIME', 'HOME_ALERT', id, 'UPDATE', before, patch, 'HomeAlert_patchAlertOperational_ ' + actionKey);
+    }
+  } catch (e) {}
+
+  return { ok: true, alertId: id, action: actionKey, traceId: traceId };
+}
+
+function HomeAlert_getAssignmentStatus_(alert) {
+  var a = alert || {};
+  var stSheet = String(a.STATUS || '').trim();
+  if (HomeAlert_isTerminalStatus_(stSheet)) return 'RESOLVED';
+  if (a.IS_BLOCKED === true || String(a.IS_BLOCKED).toUpperCase() === 'TRUE') return 'BLOCKED';
+  if (stSheet === HOME_ALERT_STATUS.ESCALATED) return 'ESCALATED';
+  if (stSheet === HOME_ALERT_STATUS.WAITING_RESPONSE) return 'WAITING_RESPONSE';
+  if (stSheet === HOME_ALERT_STATUS.IN_PROGRESS) return 'IN_PROGRESS';
+  var h = String(a.ASSIGNED_TO || a.CLAIMED_BY || '').trim();
+  if (h) return 'ASSIGNED';
+  return 'UNASSIGNED';
+}
+
+function HomeAlert_getAssignmentQueue_(alert, perspectiveOperatorId) {
+  var a = alert || {};
+  var stSheet = String(a.STATUS || '').trim();
+  var q;
+  if (HomeAlert_isTerminalStatus_(stSheet)) q = 'DONE_QUEUE';
+  else if (a.IS_BLOCKED === true || String(a.IS_BLOCKED).toUpperCase() === 'TRUE') q = 'BLOCKED_QUEUE';
+  else if (stSheet === HOME_ALERT_STATUS.ESCALATED) q = 'ESCALATED_QUEUE';
+  else if (stSheet === HOME_ALERT_STATUS.WAITING_RESPONSE) q = 'WAITING_QUEUE';
+  else {
+    var assignee = String(a.ASSIGNED_TO || '').trim();
+    var pov = String(perspectiveOperatorId || '').trim();
+    if (!assignee) q = 'UNASSIGNED_QUEUE';
+    else if (pov && assignee === pov) q = 'MY_QUEUE';
+    else q = 'TEAM_QUEUE';
+  }
+  var route = String(a.ASSIGNED_TEAM || '').trim();
+  var allowOverride = [HOME_ALERT_STATUS.OPEN, HOME_ALERT_STATUS.ACKNOWLEDGED, HOME_ALERT_STATUS.IN_PROGRESS].indexOf(stSheet) >= 0;
+  if (allowOverride && route && HOME_ALERT_RUNTIME_QUEUE_CODES.indexOf(route) >= 0) return route;
+  return q;
+}
+
+function HomeAlert_getQueueGroup_(alert) {
+  var q = HomeAlert_getAssignmentQueue_(alert, HomeAlert_actorId_());
+  var map = {
+    UNASSIGNED_QUEUE: 10,
+    MY_QUEUE: 20,
+    TEAM_QUEUE: 30,
+    WAITING_QUEUE: 40,
+    ESCALATED_QUEUE: 50,
+    BLOCKED_QUEUE: 60,
+    DONE_QUEUE: 90
+  };
+  return map[q] != null ? map[q] : 0;
+}
+
+function HomeAlert_getQueueLabel_(alert) {
+  var q = HomeAlert_getAssignmentQueue_(alert, HomeAlert_actorId_());
+  var labels = {
+    UNASSIGNED_QUEUE: 'UNASSIGNED_QUEUE',
+    MY_QUEUE: 'MY_QUEUE',
+    TEAM_QUEUE: 'TEAM_QUEUE',
+    WAITING_QUEUE: 'WAITING_QUEUE',
+    ESCALATED_QUEUE: 'ESCALATED_QUEUE',
+    BLOCKED_QUEUE: 'BLOCKED_QUEUE',
+    DONE_QUEUE: 'DONE_QUEUE'
+  };
+  return labels[q] || q;
+}
+
+function HomeAlert_getQueueSort_(alert) {
+  var base = HomeAlert_getQueueGroup_(alert) * 100000;
+  var ps = Number(alert.PRIORITY_SCORE || 0) || 0;
+  return base + Math.min(99999, ps);
+}
+
+function HomeAlert_getOperatorDashboardGroup_(alert) {
+  var q = HomeAlert_getAssignmentQueue_(alert, HomeAlert_actorId_());
+  var dash = {
+    UNASSIGNED_QUEUE: '🚨 Chưa ai nhận',
+    MY_QUEUE: '👤 Việc của tôi',
+    TEAM_QUEUE: '👥 Việc của đội',
+    WAITING_QUEUE: '⏳ Chờ phản hồi',
+    ESCALATED_QUEUE: '🔥 Escalated',
+    BLOCKED_QUEUE: '⚠ Bị kẹt',
+    DONE_QUEUE: '✅ Đã xử lý'
+  };
+  return dash[q] || q;
+}
+
+function HomeAlert_getOperatorDashboardSort_(alert) {
+  var g = HomeAlert_getQueueGroup_(alert);
+  var ps = Number(alert.PRIORITY_SCORE || 0) || 0;
+  return g * 1000000 + Math.min(999999, ps);
+}
+
+function HomeAlert_detectStuck_(alert) {
+  var a = alert || {};
+  if (!HomeAlert_isActiveStatus_(String(a.STATUS || '').trim())) return false;
+  if (a.IS_BLOCKED === true || String(a.IS_BLOCKED).toUpperCase() === 'TRUE') return false;
+  var ref = a.CLAIMED_AT || a.STATE_CHANGED_AT || a.UPDATED_AT;
+  if (!ref) return false;
+  var dt = ref instanceof Date ? ref : new Date(ref);
+  if (isNaN(dt.getTime())) return false;
+  var ageH = (cbvNow().getTime() - dt.getTime()) / (3600 * 1000);
+  return ageH >= 48;
+}
+
+function HomeAlert_getStuckReason_(alert) {
+  if (!HomeAlert_detectStuck_(alert)) return '';
+  return 'No state change for >=48h since claim/state change (coordination threshold)';
+}
+
+function HomeAlert_getEscalateAfterAt_(alert) {
+  var a = alert || {};
+  if (String(a.STATUS || '').trim() !== HOME_ALERT_STATUS.WAITING_RESPONSE) return '';
+  var ref = a.STATE_CHANGED_AT || a.UPDATED_AT;
+  if (!ref) return '';
+  var dt = ref instanceof Date ? ref : new Date(ref);
+  if (isNaN(dt.getTime())) return '';
+  return new Date(dt.getTime() + 48 * 3600 * 1000);
+}
+
+function HomeAlert_enrichAssignmentFields_(alert) {
+  var a = alert || {};
+  var st = HomeAlert_getAssignmentStatus_(a);
+  var q = HomeAlert_getAssignmentQueue_(a, HomeAlert_actorId_());
+  var assignee = String(a.ASSIGNED_TO || '').trim();
+  var patch = {
+    ASSIGNMENT_STATUS: st,
+    ASSIGNMENT_QUEUE: q,
+    ASSIGNED_TO_LABEL: assignee ? HomeAlert_lookupUserDirectoryLabel_(assignee) : '',
+    ASSIGNED_TEAM: String(a.ASSIGNED_TEAM || '').trim(),
+    ASSIGNED_TEAM_LABEL: HomeAlert_getRuntimeQueueHumanLabel_(String(a.ASSIGNED_TEAM || '').trim()) || '',
+    QUEUE_GROUP: HomeAlert_getQueueGroup_(a),
+    QUEUE_LABEL: HomeAlert_getQueueLabel_(a),
+    QUEUE_SORT: HomeAlert_getQueueSort_(a),
+    WORKLOAD_KEY: [String(a.ASSIGNED_TEAM || '').trim() || 'NA', assignee || 'UNASSIGNED'].join('|'),
+    OPERATOR_DASHBOARD_GROUP: HomeAlert_getOperatorDashboardGroup_(a),
+    OPERATOR_DASHBOARD_SORT: HomeAlert_getOperatorDashboardSort_(a),
+    IS_STUCK: HomeAlert_detectStuck_(a),
+    STUCK_REASON: HomeAlert_getStuckReason_(a),
+    ESCALATE_AFTER_AT: HomeAlert_getEscalateAfterAt_(a)
+  };
+
+  Object.keys(patch).forEach(function(k) { a[k] = patch[k]; });
+  return patch;
+}
+
+function HomeAlert_getRuntimeQueueHumanLabel_(code) {
+  if (!code) return '';
+  var map = {
+    UNASSIGNED_QUEUE: 'Unassigned pool',
+    MY_QUEUE: 'My queue',
+    TEAM_QUEUE: 'Team queue',
+    WAITING_QUEUE: 'Waiting',
+    ESCALATED_QUEUE: 'Escalated',
+    BLOCKED_QUEUE: 'Blocked',
+    DONE_QUEUE: 'Done'
+  };
+  return map[code] || code;
+}
+
+function HomeAlert_claimAlert(alertId, note) {
+  HomeAlert_ensureHomeAlertSheet_();
+  var sheetName = HomeAlert_getSheetName_();
+  var rows = _rows(_sheet(sheetName));
+  var id = String(alertId || '').trim();
+  var row = rows.find(function(r) { return String(r.ALERT_ID || '').trim() === id; }) || null;
+  cbvAssert(row, 'Alert not found: ' + id);
+  var actor = HomeAlert_actorId_();
+  var cur = String(row.ASSIGNED_TO || '').trim();
+  cbvAssert(!cur || cur === actor, 'Alert already assigned to another operator');
+  var fromStatus = String(row.STATUS || HOME_ALERT_STATUS.OPEN).trim();
+  var towards = HOME_ALERT_STATUS.IN_PROGRESS;
+  var ex = { ASSIGNED_TO: actor, CLAIMED_AT: cbvNow(), CLAIMED_BY: actor, ASSIGNED_TEAM: '', ASSIGNED_TEAM_LABEL: '' };
+  Object.assign(ex, HomeAlert_lastOperatorPatch_('CLAIM'));
+  if (fromStatus === towards && cur === actor) {
+    return HomeAlert_patchAlertOperational_(id, ex, 'CLAIM', note);
+  }
+  if (fromStatus === towards && !cur) {
+    return HomeAlert_transitionAlert_(id, towards, ex, note || '');
+  }
+  var allowed = HomeAlert_allowedTransitions_()[fromStatus] || [];
+  cbvAssert(allowed.indexOf(towards) >= 0, 'Invalid transition for claim: ' + fromStatus + ' -> ' + towards);
+  return HomeAlert_transitionAlert_(id, towards, ex, note || '');
+}
+
+function HomeAlert_assignAlert(alertId, userId, note) {
+  HomeAlert_ensureHomeAlertSheet_();
+  var uid = String(userId || '').trim();
+  cbvAssert(uid, 'userId required');
+  var sheetName = HomeAlert_getSheetName_();
+  var rows = _rows(_sheet(sheetName));
+  var id = String(alertId || '').trim();
+  var row = rows.find(function(r) { return String(r.ALERT_ID || '').trim() === id; }) || null;
+  cbvAssert(row, 'Alert not found: ' + id);
+  cbvAssert(!HomeAlert_isTerminalStatus_(String(row.STATUS || '').trim()), 'Cannot assign terminal alert');
+  var fromStatus = String(row.STATUS || HOME_ALERT_STATUS.OPEN).trim();
+  var ex = { ASSIGNED_TO: uid, ASSIGNED_BY: HomeAlert_actorId_(), ASSIGNED_TEAM: '', ASSIGNED_TEAM_LABEL: '' };
+  Object.assign(ex, HomeAlert_lastOperatorPatch_('ASSIGN'));
+  var towards = fromStatus;
+  if (fromStatus === HOME_ALERT_STATUS.OPEN || fromStatus === HOME_ALERT_STATUS.ACKNOWLEDGED) {
+    towards = HOME_ALERT_STATUS.IN_PROGRESS;
+  }
+  if (towards !== fromStatus) {
+    var allowed = HomeAlert_allowedTransitions_()[fromStatus] || [];
+    cbvAssert(allowed.indexOf(towards) >= 0, 'Invalid transition for assign: ' + fromStatus + ' -> ' + towards);
+  }
+  return HomeAlert_transitionAlert_(id, towards, ex, note || '');
+}
+
+function HomeAlert_transferQueue(alertId, queueCode, note) {
+  var code = String(queueCode || '').trim();
+  cbvAssert(HOME_ALERT_RUNTIME_QUEUE_CODES.indexOf(code) >= 0, 'Invalid queueCode: ' + code);
+  var patch = { ASSIGNED_TEAM: code, ASSIGNED_TEAM_LABEL: HomeAlert_getRuntimeQueueHumanLabel_(code) };
+  return HomeAlert_patchAlertOperational_(String(alertId || '').trim(), patch, 'TRANSFER_QUEUE', note);
+}
+
+function HomeAlert_markWaiting(alertId, note) {
+  var ex = HomeAlert_lastOperatorPatch_('MARK_WAITING');
+  ex.ASSIGNED_TEAM = '';
+  ex.ASSIGNED_TEAM_LABEL = '';
+  return HomeAlert_transitionAlert_(String(alertId || '').trim(), HOME_ALERT_STATUS.WAITING_RESPONSE, ex, note || '');
+}
+
+function HomeAlert_escalateOperational(alertId, note) {
+  var ex = HomeAlert_lastOperatorPatch_('ESCALATE_OPS');
+  ex.ESCALATED_AT = cbvNow();
+  ex.ASSIGNED_TEAM = '';
+  ex.ASSIGNED_TEAM_LABEL = '';
+  return HomeAlert_transitionAlert_(String(alertId || '').trim(), HOME_ALERT_STATUS.ESCALATED, ex, note || '');
+}
+
+function HomeAlert_markBlocked(alertId, reason) {
+  var patch = {
+    IS_BLOCKED: true,
+    BLOCKED_REASON: String(reason || '').trim()
+  };
+  return HomeAlert_patchAlertOperational_(String(alertId || '').trim(), patch, 'BLOCK', String(reason || ''));
+}
+
+function HomeAlert_resolveOperational(alertId, note) {
+  var ex = HomeAlert_lastOperatorPatch_('RESOLVE_OPS');
+  ex.RESOLVED_AT = cbvNow();
+  ex.RESOLVED_BY = HomeAlert_actorId_();
+  ex.IS_BLOCKED = false;
+  ex.BLOCKED_REASON = '';
+  ex.ASSIGNED_TEAM = '';
+  ex.ASSIGNED_TEAM_LABEL = '';
+  return HomeAlert_transitionAlert_(String(alertId || '').trim(), HOME_ALERT_STATUS.RESOLVED, ex, note || '');
+}
+
+function HomeAlertWorkload_refresh() {
+  var traceId = HomeAlert_newTraceId_();
+  HomeAlert_ensureWorkloadSheet_();
+  var wlName = HomeAlert_getWorkloadSheetName_();
+  var wlSheet = _sheet(wlName);
+  var last = wlSheet.getLastRow();
+  if (last > 1) {
+    wlSheet.deleteRows(2, last - 1);
+  }
+
+  var homeName = HomeAlert_getSheetName_();
+  var alerts = _rows(_sheet(homeName));
+  var now = cbvNow();
+
+  var byOp = {};
+  var poolUnassigned = 0;
+  var poolOverdue = 0;
+  var poolEscalated = 0;
+  var poolBlocked = 0;
+  var poolWaiting = 0;
+
+  function bump(opId, field) {
+    var k = String(opId || '').trim() || '__UNASSIGNED__';
+    if (!byOp[k]) {
+      byOp[k] = {
+        OPERATOR_ID: k === '__UNASSIGNED__' ? '' : k,
+        OPERATOR_LABEL: k === '__UNASSIGNED__' ? '(Unassigned pool)' : HomeAlert_lookupUserDirectoryLabel_(k),
+        TEAM_ID: '',
+        TEAM_LABEL: '',
+        ACTIVE_ALERT_COUNT: 0,
+        UNASSIGNED_COUNT: 0,
+        OVERDUE_COUNT: 0,
+        ESCALATED_COUNT: 0,
+        BLOCKED_COUNT: 0,
+        WAITING_COUNT: 0
+      };
+    }
+    byOp[k][field] = (byOp[k][field] || 0) + 1;
+  }
+
+  alerts.forEach(function(r) {
+    var id = String(r.ALERT_ID || '').trim();
+    if (!id) return;
+    var st = String(r.STATUS || '').trim();
+    if (!HomeAlert_isActiveStatus_(st)) return;
+    var assignee = String(r.ASSIGNED_TO || '').trim();
+    var due = r.DUE_AT;
+    var dueDt = due instanceof Date ? due : (due ? new Date(due) : null);
+    var overdue = dueDt && !isNaN(dueDt.getTime()) && now.getTime() > dueDt.getTime();
+
+    if (!assignee) {
+      poolUnassigned++;
+      if (overdue) poolOverdue++;
+      if (st === HOME_ALERT_STATUS.ESCALATED) poolEscalated++;
+      if (r.IS_BLOCKED === true || String(r.IS_BLOCKED).toUpperCase() === 'TRUE') poolBlocked++;
+      if (st === HOME_ALERT_STATUS.WAITING_RESPONSE) poolWaiting++;
+      return;
+    }
+
+    bump(assignee, 'ACTIVE_ALERT_COUNT');
+    if (overdue) bump(assignee, 'OVERDUE_COUNT');
+    if (st === HOME_ALERT_STATUS.ESCALATED) bump(assignee, 'ESCALATED_COUNT');
+    if (r.IS_BLOCKED === true || String(r.IS_BLOCKED).toUpperCase() === 'TRUE') bump(assignee, 'BLOCKED_COUNT');
+    if (st === HOME_ALERT_STATUS.WAITING_RESPONSE) bump(assignee, 'WAITING_COUNT');
+  });
+
+  var records = [];
+  records.push({
+    WORKLOAD_ID: 'WL_POOL_UNASSIGNED',
+    OPERATOR_ID: '',
+    OPERATOR_LABEL: '(Pool)',
+    TEAM_ID: '',
+    TEAM_LABEL: '',
+    ACTIVE_ALERT_COUNT: poolUnassigned,
+    UNASSIGNED_COUNT: poolUnassigned,
+    OVERDUE_COUNT: poolOverdue,
+    ESCALATED_COUNT: poolEscalated,
+    BLOCKED_COUNT: poolBlocked,
+    WAITING_COUNT: poolWaiting,
+    LAST_REFRESH_AT: now,
+    TRACE_ID: traceId
+  });
+
+  Object.keys(byOp).forEach(function(k) {
+    if (k === '__UNASSIGNED__') return;
+    var o = byOp[k];
+    records.push({
+      WORKLOAD_ID: 'WL_' + HomeAlert_hashHex_(k).slice(0, 16),
+      OPERATOR_ID: o.OPERATOR_ID,
+      OPERATOR_LABEL: o.OPERATOR_LABEL,
+      TEAM_ID: o.TEAM_ID,
+      TEAM_LABEL: o.TEAM_LABEL,
+      ACTIVE_ALERT_COUNT: o.ACTIVE_ALERT_COUNT,
+      UNASSIGNED_COUNT: 0,
+      OVERDUE_COUNT: o.OVERDUE_COUNT,
+      ESCALATED_COUNT: o.ESCALATED_COUNT,
+      BLOCKED_COUNT: o.BLOCKED_COUNT,
+      WAITING_COUNT: o.WAITING_COUNT,
+      LAST_REFRESH_AT: now,
+      TRACE_ID: traceId
+    });
+  });
+
+  records.forEach(function(rec) {
+    _appendRecord(wlName, rec);
+  });
+
+  return { ok: true, traceId: traceId, rowsWritten: records.length };
+}
+
+function HomeAlertWorkload_getOperatorLoad_(operatorId) {
+  var id = String(operatorId || '').trim();
+  HomeAlert_ensureWorkloadSheet_();
+  var wlName = HomeAlert_getWorkloadSheetName_();
+  var rows = _rows(_sheet(wlName));
+  return rows.filter(function(r) { return String(r.OPERATOR_ID || '').trim() === id; });
+}
+
+function HomeAlertWorkload_TestConsole_run() {
+  var traceId = HomeAlert_newTraceId_();
+  try {
+    var r = HomeAlertWorkload_refresh();
+    return { ok: true, traceId: traceId, refresh: r };
+  } catch (e) {
+    return { ok: false, traceId: traceId, error: e.message || String(e) };
+  }
 }
 
 function HomeAlert_transitionAlert_(alertId, toStatus, extraPatch, note) {
@@ -1301,6 +1820,10 @@ function HomeAlert_enrichDesktopUxFields_(alert) {
   };
 
   Object.keys(patch).forEach(function(k) { a[k] = patch[k]; });
+
+  // PHASE 81 — assignment / queue / dashboard grouping (before attention so OPERATOR_* sees queue metadata).
+  var assignmentPatch = HomeAlert_enrichAssignmentFields_(a);
+  Object.keys(assignmentPatch).forEach(function(ak) { patch[ak] = assignmentPatch[ak]; });
 
   // PHASE 80E — operator attention runtime (depends on DESKTOP_* + DISPLAY_* already on `a`).
   var attentionPatch = HomeAlert_enrichAttentionFields_(a);
@@ -2408,4 +2931,300 @@ function HomeAlertDisplayStandard_formatReportText_(r) {
   lines.push('officialConfig=' + JSON.stringify((r.reportJson && r.reportJson.officialOperatorDisplayConfig) || {}));
   lines.push('driveOnlineOutputTarget=https://drive.google.com/drive/folders/' + driveFolderId);
   return lines.join('\n');
+}
+
+// ===== HOME_ALERT Assignment / coordination runtime test console (Phase 81) =====
+
+var __HOME_ALERT_ASSIGNMENT_TEST_CONSOLE_LAST_REPORT = null;
+
+function HomeAlertAssignment_checkSchema_() {
+  var required = [
+    'ASSIGNMENT_STATUS', 'ASSIGNMENT_QUEUE', 'ASSIGNED_TO_LABEL', 'ASSIGNED_TEAM', 'ASSIGNED_TEAM_LABEL',
+    'ASSIGNED_BY', 'ASSIGNMENT_NOTE', 'CLAIMED_AT', 'CLAIMED_BY',
+    'LAST_OPERATOR_ACTION', 'LAST_OPERATOR_ACTION_AT', 'LAST_OPERATOR_ACTION_BY',
+    'ESCALATE_AFTER_AT', 'IS_STUCK', 'STUCK_REASON', 'IS_BLOCKED', 'BLOCKED_REASON',
+    'QUEUE_GROUP', 'QUEUE_LABEL', 'QUEUE_SORT', 'WORKLOAD_KEY',
+    'OPERATOR_DASHBOARD_GROUP', 'OPERATOR_DASHBOARD_SORT'
+  ];
+  var sheetName = HomeAlert_getSheetName_();
+  var sheet = _sheet(sheetName);
+  var headers = _headers(sheet);
+  var missing = required.filter(function(c) { return headers.indexOf(c) === -1; });
+  return {
+    ok: missing.length === 0,
+    sheet: sheetName,
+    missing: missing,
+    errors: missing.map(function(c) { return 'Missing assignment column: ' + c; })
+  };
+}
+
+function HomeAlertAssignment_checkWorkloadManifest_() {
+  var errors = [];
+  if (typeof CBV_SCHEMA_MANIFEST === 'undefined' || !CBV_SCHEMA_MANIFEST.HOME_ALERT_WORKLOAD) {
+    errors.push('CBV_SCHEMA_MANIFEST.HOME_ALERT_WORKLOAD missing');
+    return { ok: false, errors: errors };
+  }
+  var cols = CBV_SCHEMA_MANIFEST.HOME_ALERT_WORKLOAD;
+  ['WORKLOAD_ID', 'OPERATOR_ID', 'LAST_REFRESH_AT', 'TRACE_ID'].forEach(function(c) {
+    if (cols.indexOf(c) === -1) errors.push('HOME_ALERT_WORKLOAD manifest missing: ' + c);
+  });
+  return { ok: errors.length === 0, errors: errors, columns: cols };
+}
+
+function HomeAlertAssignment_checkWorkloadSheetHeaders_() {
+  try {
+    HomeAlert_ensureWorkloadSheet_();
+    var wl = HomeAlert_getWorkloadSheetName_();
+    var headers = _headers(_sheet(wl));
+    var need = (typeof CBV_SCHEMA_MANIFEST !== 'undefined' && CBV_SCHEMA_MANIFEST.HOME_ALERT_WORKLOAD)
+      ? CBV_SCHEMA_MANIFEST.HOME_ALERT_WORKLOAD
+      : [];
+    var missing = need.filter(function(c) { return headers.indexOf(c) === -1; });
+    return { ok: missing.length === 0, sheet: wl, missing: missing, errors: missing.map(function(m) { return 'Workload sheet missing: ' + m; }) };
+  } catch (e) {
+    return { ok: false, errors: [e.message || String(e)] };
+  }
+}
+
+function HomeAlertAssignment_formatReportText_(r) {
+  var driveFolderId = (r.reportJson && r.reportJson.driveFolderId) || HomeAlert_getSystemBrainDriveFolderId_();
+  var lines = [];
+  lines.push('=== HOME_ALERT ASSIGNMENT RUNTIME TEST CONSOLE (PHASE 81) ===');
+  lines.push('phase=' + r.phase);
+  lines.push('status=' + r.status + ' severity=' + r.severity);
+  lines.push('checkedAt=' + r.checkedAt + ' runBy=' + r.runBy);
+  lines.push('traceId=' + r.traceId);
+  lines.push('summary=' + r.summary);
+  lines.push('checks=' + (r.checks ? r.checks.length : 0));
+  (r.checks || []).forEach(function(c) { lines.push('- ' + c.name + ': ' + (c.ok ? 'OK' : 'FAIL')); });
+  if ((r.warnings || []).length) lines.push('warnings=' + JSON.stringify(r.warnings, null, 2));
+  if ((r.errors || []).length) lines.push('errors=' + JSON.stringify(r.errors, null, 2));
+  lines.push('nextStep=' + r.nextStep);
+  lines.push('driveOnlineOutputTarget=https://drive.google.com/drive/folders/' + driveFolderId);
+  return lines.join('\n');
+}
+
+function HomeAlertAssignment_TestConsole_run() {
+  var traceId = HomeAlert_newTraceId_();
+  var checks = [];
+  var warnings = [];
+  var errors = [];
+
+  try {
+    var s = HomeAlertAssignment_checkSchema_();
+    checks.push({ name: 'schemaAssignmentColumns', ok: s.ok, details: s });
+    if (!s.ok) errors = errors.concat(s.errors || []);
+  } catch (e0) {
+    checks.push({ name: 'schemaAssignmentColumns', ok: false, details: { error: e0.message || String(e0) } });
+    errors.push('Schema check exception: ' + (e0.message || String(e0)));
+  }
+
+  try {
+    var wm = HomeAlertAssignment_checkWorkloadManifest_();
+    checks.push({ name: 'workloadManifest', ok: wm.ok, details: wm });
+    if (!wm.ok) errors = errors.concat(wm.errors || []);
+  } catch (e0b) {
+    checks.push({ name: 'workloadManifest', ok: false, details: { error: e0b.message || String(e0b) } });
+    errors.push('Workload manifest exception: ' + (e0b.message || String(e0b)));
+  }
+
+  try {
+    var wh = HomeAlertAssignment_checkWorkloadSheetHeaders_();
+    checks.push({ name: 'workloadSheetHeaders', ok: wh.ok, details: wh });
+    if (!wh.ok) errors = errors.concat(wh.errors || []);
+  } catch (e0c) {
+    checks.push({ name: 'workloadSheetHeaders', ok: false, details: { error: e0c.message || String(e0c) } });
+    errors.push('Workload sheet header exception: ' + (e0c.message || String(e0c)));
+  }
+
+  try {
+    var sm = HomeAlert_validateStateMachine_();
+    checks.push({ name: 'stateMachine', ok: sm.ok, details: sm });
+    if (!sm.ok) errors.push('State machine invalid: ' + JSON.stringify(sm.errors || []));
+  } catch (e1) {
+    checks.push({ name: 'stateMachine', ok: false, details: { error: e1.message || String(e1) } });
+    errors.push('State machine exception: ' + (e1.message || String(e1)));
+  }
+
+  var refreshResult = null;
+  try {
+    refreshResult = HomeAlert_refresh({ autoClearMissing: false, autoExpire: false });
+    checks.push({ name: 'refresh', ok: refreshResult.ok, details: refreshResult.stats });
+    if (!refreshResult.ok) warnings.push('Refresh had errors: ' + JSON.stringify(refreshResult.stats.errors || []));
+  } catch (e2) {
+    checks.push({ name: 'refresh', ok: false, details: { error: e2.message || String(e2) } });
+    errors.push('Refresh exception: ' + (e2.message || String(e2)));
+  }
+
+  try {
+    var homeRows = _rows(_sheet(HomeAlert_getSheetName_()));
+    var sample = homeRows.filter(function(r) { return String(r.ALERT_ID || '').trim(); }).slice(0, 5);
+    var enrichOk = true;
+    var enrichDetails = [];
+    sample.forEach(function(r) {
+      var st = String(r.ASSIGNMENT_STATUS || '').trim();
+      if (!st) enrichOk = false;
+      enrichDetails.push({ id: String(r.ALERT_ID || '').trim(), ASSIGNMENT_STATUS: st, ASSIGNMENT_QUEUE: String(r.ASSIGNMENT_QUEUE || '').trim() });
+    });
+    checks.push({ name: 'assignmentEnrichSample', ok: sample.length === 0 ? true : enrichOk, details: { rows: enrichDetails } });
+    if (sample.length && !enrichOk) errors.push('ASSIGNMENT_STATUS empty on refreshed sample rows (enrich regression)');
+    if (!sample.length) warnings.push('No HOME_ALERT rows to verify assignment enrich output.');
+  } catch (e2b) {
+    checks.push({ name: 'assignmentEnrichSample', ok: false, details: { error: e2b.message || String(e2b) } });
+    errors.push('Assignment enrich sample exception: ' + (e2b.message || String(e2b)));
+  }
+
+  var workloadRefresh = null;
+  try {
+    workloadRefresh = HomeAlertWorkload_refresh();
+    checks.push({ name: 'workloadRefresh', ok: workloadRefresh.ok, details: workloadRefresh });
+    if (!workloadRefresh || !workloadRefresh.ok) errors.push('HomeAlertWorkload_refresh failed');
+  } catch (eW) {
+    checks.push({ name: 'workloadRefresh', ok: false, details: { error: eW.message || String(eW) } });
+    errors.push('Workload refresh exception: ' + (eW.message || String(eW)));
+  }
+
+  var actionProbe = { claim: false, assign: false, wait: false, block: false, escalate: false, transfer: false };
+  try {
+    var rows = _rows(_sheet(HomeAlert_getSheetName_()));
+    var probeId = '';
+    var probe = rows.find(function(r) {
+      var st = String(r.STATUS || '').trim();
+      return HomeAlert_isActiveStatus_(st) && st === HOME_ALERT_STATUS.OPEN && !String(r.ASSIGNED_TO || '').trim();
+    });
+    if (probe) probeId = String(probe.ALERT_ID || '').trim();
+    if (!probeId) {
+      warnings.push('No OPEN+unassigned alert found; skipping mutating action probes (claim/wait/escalate/block/resolve).');
+      checks.push({ name: 'operationalActionProbe', ok: true, details: { skipped: true } });
+    } else {
+      HomeAlert_claimAlert(probeId, 'Phase81 test claim');
+      var afterClaim = _rows(_sheet(HomeAlert_getSheetName_())).find(function(r) { return String(r.ALERT_ID || '').trim() === probeId; });
+      actionProbe.claim = String(afterClaim.ASSIGNED_TO || '').trim() === String(HomeAlert_actorId_()).trim()
+        && String(afterClaim.STATUS || '').trim() === HOME_ALERT_STATUS.IN_PROGRESS;
+      if (!actionProbe.claim) errors.push('claim probe failed for ' + probeId);
+
+      HomeAlert_assignAlert(probeId, HomeAlert_actorId_(), 'Phase81 test assign self');
+      actionProbe.assign = true;
+
+      HomeAlert_transferQueue(probeId, 'TEAM_QUEUE', 'Phase81 transfer');
+      actionProbe.transfer = true;
+
+      HomeAlert_markWaiting(probeId, 'Phase81 test wait');
+      var afterWait = _rows(_sheet(HomeAlert_getSheetName_())).find(function(r) { return String(r.ALERT_ID || '').trim() === probeId; });
+      actionProbe.wait = String(afterWait.STATUS || '').trim() === HOME_ALERT_STATUS.WAITING_RESPONSE;
+
+      HomeAlert_escalateOperational(probeId, 'Phase81 test escalate');
+      var afterEsc = _rows(_sheet(HomeAlert_getSheetName_())).find(function(r) { return String(r.ALERT_ID || '').trim() === probeId; });
+      actionProbe.escalate = String(afterEsc.STATUS || '').trim() === HOME_ALERT_STATUS.ESCALATED;
+
+      HomeAlert_markBlocked(probeId, 'Phase81 blocked');
+      var afterBlock = _rows(_sheet(HomeAlert_getSheetName_())).find(function(r) { return String(r.ALERT_ID || '').trim() === probeId; });
+      actionProbe.block = afterBlock.IS_BLOCKED === true || String(afterBlock.IS_BLOCKED).toUpperCase() === 'TRUE';
+
+      HomeAlert_resolveOperational(probeId, 'Phase81 test resolve cleanup');
+      checks.push({ name: 'operationalActionProbe', ok: actionProbe.claim && actionProbe.wait && actionProbe.escalate && actionProbe.block, details: actionProbe });
+      if (!(actionProbe.claim && actionProbe.wait && actionProbe.escalate && actionProbe.block)) {
+        errors.push('Operational action probe incomplete: ' + JSON.stringify(actionProbe));
+      }
+    }
+  } catch (e3) {
+    checks.push({ name: 'operationalActionProbe', ok: false, details: { error: e3.message || String(e3), actionProbe: actionProbe } });
+    errors.push('Action probe exception: ' + (e3.message || String(e3)));
+  }
+
+  try {
+    var pol = HomeAlert_validateOperatorDisplayPolicy_();
+    checks.push({ name: 'displayStandard80F', ok: pol.ok, details: { errors: pol.errors, warningsCount: (pol.warnings || []).length } });
+    if (!pol.ok) errors = errors.concat(pol.errors || []);
+    warnings = warnings.concat(pol.warnings || []);
+  } catch (e4) {
+    checks.push({ name: 'displayStandard80F', ok: false, details: { error: e4.message || String(e4) } });
+    errors.push('80F policy exception: ' + (e4.message || String(e4)));
+  }
+
+  try {
+    var att = HomeAlertAttention_validateOutput_();
+    checks.push({ name: 'attentionOutput80E', ok: att.ok, details: att });
+    if (!att.ok) errors = errors.concat(att.errors || []);
+    warnings = warnings.concat(att.warnings || []);
+  } catch (e5) {
+    checks.push({ name: 'attentionOutput80E', ok: false, details: { error: e5.message || String(e5) } });
+    errors.push('80E attention exception: ' + (e5.message || String(e5)));
+  }
+
+  try {
+    var dup = HomeAlertDesktop_checkNoDuplicateAlertId_();
+    checks.push({ name: 'noDuplicateAlertId', ok: dup.ok, details: dup });
+    if (!dup.ok) errors.push('Duplicate ALERT_ID count=' + (dup.duplicates || 0));
+  } catch (e6) {
+    checks.push({ name: 'noDuplicateAlertId', ok: false, details: { error: e6.message || String(e6) } });
+    errors.push('Duplicate check exception: ' + (e6.message || String(e6)));
+  }
+
+  var status = errors.length > 0 ? 'FAIL' : (warnings.length > 0 ? 'GO_WITH_WARNINGS' : 'GO');
+  var severity = errors.length > 0 ? 'CRITICAL' : (warnings.length > 0 ? 'WARNING' : 'OK');
+  var driveFolderId = HomeAlert_getSystemBrainDriveFolderId_();
+
+  var report = {
+    ok: status !== 'FAIL',
+    phase: 'PHASE_81_OPERATIONAL_ASSIGNMENT_RUNTIME',
+    status: status,
+    severity: severity,
+    checkedAt: cbvNow(),
+    runBy: HomeAlert_actorId_(),
+    traceId: traceId,
+    testSuite: 'HOME_ALERT_ASSIGNMENT_RUNTIME',
+    summary: 'HOME_ALERT operational assignment runtime: ' + status + ' (' + severity + ')',
+    checks: checks,
+    warnings: warnings,
+    errors: errors,
+    nextStep: status === 'GO'
+      ? 'Wire AppSheet actions to GAS (Claim/Assign/Transfer/Mark Waiting/Escalate/Block/Resolve) per HOME_ALERT_APPSHEET_SETUP.md; bind coordination Deck per HOME_ALERT_ASSIGNMENT_RUNTIME_STANDARD.md.'
+      : 'Fix errors then rerun HomeAlertAssignment_TestConsole_run().',
+    reportText: '',
+    reportJson: {
+      refresh: refreshResult,
+      workloadRefresh: workloadRefresh,
+      actionProbe: actionProbe,
+      driveFolderId: driveFolderId,
+      driveFolderUrl: 'https://drive.google.com/drive/folders/' + driveFolderId,
+      driveFolderConfigKey: 'CBV_SYSTEM_BRAIN_DRIVE_FOLDER_ID',
+      driveAutoUpload: false
+    },
+    contractVersion: 'CBV_TEST_CONSOLE_V1',
+    envelopeOk: true
+  };
+
+  report.reportText = HomeAlertAssignment_formatReportText_(report);
+  __HOME_ALERT_ASSIGNMENT_TEST_CONSOLE_LAST_REPORT = report;
+  Logger.log(report.reportText);
+  return report;
+}
+
+function HomeAlertAssignment_TestConsole_showReport() {
+  var r = __HOME_ALERT_ASSIGNMENT_TEST_CONSOLE_LAST_REPORT;
+  if (!r) return { ok: false, message: 'No report. Run HomeAlertAssignment_TestConsole_run() first.' };
+  Logger.log(r.reportText || JSON.stringify(r, null, 2));
+  return r;
+}
+
+function HomeAlertAssignment_TestConsole_copyAiHandoff() {
+  var r = __HOME_ALERT_ASSIGNMENT_TEST_CONSOLE_LAST_REPORT;
+  if (!r) return 'No report. Run HomeAlertAssignment_TestConsole_run() first.';
+  var driveFolderId = (r.reportJson && r.reportJson.driveFolderId) || HomeAlert_getSystemBrainDriveFolderId_();
+  var text = [
+    'PHASE: ' + r.phase,
+    'STATUS: ' + r.status,
+    'SEVERITY: ' + r.severity,
+    'TRACE: ' + r.traceId,
+    'CHECKED_AT: ' + r.checkedAt,
+    'SUMMARY: ' + r.summary,
+    'WARNINGS: ' + JSON.stringify(r.warnings || []),
+    'ERRORS: ' + JSON.stringify(r.errors || []),
+    'NEXT_STEP: ' + r.nextStep,
+    'ASSIGNMENT_STANDARD: HOME_ALERT_ASSIGNMENT_RUNTIME_STANDARD.md',
+    'DRIVE_ONLINE_OUTPUT_TARGET: https://drive.google.com/drive/folders/' + driveFolderId
+  ].join('\n');
+  Logger.log(text);
+  return text;
 }
