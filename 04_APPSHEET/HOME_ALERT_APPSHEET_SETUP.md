@@ -173,6 +173,9 @@ Các cột vật lý được append vào `HOME_ALERT` (không thay thế `DISPL
 
 ### 8.2 ALERT_List (operator cockpit)
 
+> **Phase 80E (khuyến nghị):** dùng cấu hình **§9 Operator Attention** (`OPERATOR_*`, ẩn sort key) — đây là chuẩn operator mới.  
+> Đoạn dưới là **baseline Phase 80D** (deck `DESKTOP_*`) nếu chưa adopt 80E.
+
 - **View type:** `Deck`.
 - **Source:** `HOME_ALERT_ACTIVE` (slice `[IS_ACTIVE] = TRUE`).
 - **Primary header:** `DESKTOP_TITLE`.
@@ -229,3 +232,78 @@ Folder online archive cho `000_SYSTEM_BRAIN`:
 - **Không upload tự động** ở phase này. Chỉ chuẩn bị cấu hình + tài liệu hóa.
 - Khi cần export, dùng manual run theo runbook (chưa tạo trigger).
 
+## 9) Operator Attention Runtime (Phase 80E)
+
+Mục tiêu: operator **3 giây** biết việc nào cần xử lý trước; **không lộ** field kỹ thuật sort (`CARD_SORT`, `DESKTOP_SORT`, `SORT_KEY`). Các cột sort chỉ dùng trong cấu hình **Sort by** của view — **không** đặt làm Primary/Secondary/Summary/Label.
+
+GAS: `HomeAlert_enrichAttentionFields_()` (gọi sau `DESKTOP_*` trong `HomeAlert_enrichDesktopUxFields_()`). Test: `HomeAlertAttention_TestConsole_run()`.
+
+### 9.1 Schema bổ sung (append-only)
+
+| Cột | Mục đích |
+|-----|----------|
+| `ATTENTION_LEVEL` | `CRITICAL` / `WARNING` / `WAITING` / `INFO` |
+| `ATTENTION_LABEL` | Nhãn ngắn (vd: Cần xử lý ngay) |
+| `ATTENTION_ICON` | Icon attention |
+| `ATTENTION_COLOR` | Màu AppSheet (Red/Orange/Yellow/Blue) |
+| `ATTENTION_REASON` | Lý do ngắn (vd: Task quá hạn 50 ngày) |
+| `ACTION_FOCUS` | Hành động trọng tâm (vd: Nhận xử lý) |
+| `ACTION_HINT` | Gợi ý thao tác (vd: Bấm Nhận xử lý hoặc…) |
+| `ACTION_PRIORITY` | Số ưu tiên 0–100 (từ `PRIORITY_SCORE`) |
+| `OWNER_LABEL` | Chuỗi phụ trách (vd: Phụ trách: USR_001) |
+| `OWNER_QUEUE` | Queue logic (vd: TASK_QUEUE) |
+| `OPERATOR_PRIMARY_TEXT` | Dòng chính deck (attention + headline) |
+| `OPERATOR_SECONDARY_TEXT` | Dòng phụ (subtitle nghiệp vụ) |
+| `OPERATOR_META_TEXT` | Meta một dòng (quá hạn · status · phụ trách) |
+| `OPERATOR_NEXT_ACTION` | Câu “👉 …” bước tiếp theo |
+| `OPERATOR_HIDE_SORT_KEYS` | `TRUE` — nhắc ẩn sort key trên UI operator |
+
+### 9.2 `ALERT_List` — **operator view** (không lộ sort key)
+
+**Không show** (Show? = OFF trên toàn bộ view operator; không dùng làm header/summary/label):
+
+- `CARD_SORT`
+- `DESKTOP_SORT`
+- `SORT_KEY`
+
+Các cột trên **chỉ** dùng trong **Sort by** của view (backend sort), không dùng làm title/header/summary.
+
+**Cấu hình đề xuất (Deck):**
+
+- **Source:** `HOME_ALERT_ACTIVE`
+- **Primary header:** `OPERATOR_PRIMARY_TEXT`
+- **Secondary header:** `OPERATOR_SECONDARY_TEXT`
+- **Summary column:** `OPERATOR_META_TEXT`
+- **Group by:** `DESKTOP_GROUP` **hoặc** `ATTENTION_LABEL`
+- **Sort by:** `DESKTOP_SORT` **DESC** *(cột vẫn tồn tại trên sheet; không hiển thị trong UI)*
+- **Icon (tuỳ chọn):** `ATTENTION_ICON` hoặc `DISPLAY_ICON`
+
+### 9.3 `ALERT_Detail` — **operator view**
+
+**Chỉ show** (Show? = ON):
+
+- `OPERATOR_PRIMARY_TEXT`
+- `OPERATOR_SECONDARY_TEXT`
+- `OPERATOR_META_TEXT`
+- `OPERATOR_NEXT_ACTION`
+- `ATTENTION_REASON`
+- `ACTION_FOCUS`
+- `ACTION_HINT`
+- `OWNER_LABEL`
+- `STATUS`
+- `DUE_AT`
+- `NOTE`
+
+**Ẩn** (Show? = OFF):
+
+- `CARD_SORT`, `DESKTOP_SORT`, `SORT_KEY`
+- `ALERT_ID`, `ALERT_CODE`, `ALERT_TYPE`
+- `SOURCE_HASH`, `TRACE_ID`, `ACTION_PAYLOAD_JSON`
+- `ALERT_FINGERPRINT`, `ALERT_GROUP_KEY` *(nếu có)*
+- `RELATED_ENTITY_ID`, `LAST_ACTION`
+
+### 9.4 Cấm (80E)
+
+- Không Virtual Column, không Bot, không formula phức tạp cho attention.
+- Không hiển thị sort key string cho operator (chỉ sort backend).
+- Raw/debug chỉ trong Admin Debug view (`HOME_ALERT_DESKTOP_WORKSPACE.md`).

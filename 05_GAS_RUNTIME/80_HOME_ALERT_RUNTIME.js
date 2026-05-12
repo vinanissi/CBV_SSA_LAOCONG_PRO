@@ -795,7 +795,22 @@ function HomeAlert_buildAlert_(p) {
     DESKTOP_DETAIL_DEBUG_VISIBLE: false,
     DESKTOP_GROUP: '',
     DESKTOP_SORT: '',
-    DESKTOP_IS_OPERATOR_VIEW: true
+    DESKTOP_IS_OPERATOR_VIEW: true,
+    ATTENTION_LEVEL: '',
+    ATTENTION_LABEL: '',
+    ATTENTION_ICON: '',
+    ATTENTION_COLOR: '',
+    ATTENTION_REASON: '',
+    ACTION_FOCUS: '',
+    ACTION_HINT: '',
+    ACTION_PRIORITY: 0,
+    OWNER_LABEL: '',
+    OWNER_QUEUE: '',
+    OPERATOR_PRIMARY_TEXT: '',
+    OPERATOR_SECONDARY_TEXT: '',
+    OPERATOR_META_TEXT: '',
+    OPERATOR_NEXT_ACTION: '',
+    OPERATOR_HIDE_SORT_KEYS: true
   };
 }
 
@@ -1059,7 +1074,12 @@ function HomeAlert_mergeIncomingWithExisting_(existing, incoming) {
     'DESKTOP_META_LINE', 'DESKTOP_ACTION_LINE',
     'DESKTOP_DETAIL_TITLE', 'DESKTOP_DETAIL_SUMMARY', 'DESKTOP_DETAIL_CONTEXT', 'DESKTOP_DETAIL_NEXT_ACTION',
     'DESKTOP_DETAIL_DEBUG_VISIBLE',
-    'DESKTOP_GROUP', 'DESKTOP_SORT', 'DESKTOP_IS_OPERATOR_VIEW'
+    'DESKTOP_GROUP', 'DESKTOP_SORT', 'DESKTOP_IS_OPERATOR_VIEW',
+    'ATTENTION_LEVEL', 'ATTENTION_LABEL', 'ATTENTION_ICON', 'ATTENTION_COLOR', 'ATTENTION_REASON',
+    'ACTION_FOCUS', 'ACTION_HINT', 'ACTION_PRIORITY',
+    'OWNER_LABEL', 'OWNER_QUEUE',
+    'OPERATOR_PRIMARY_TEXT', 'OPERATOR_SECONDARY_TEXT', 'OPERATOR_META_TEXT', 'OPERATOR_NEXT_ACTION',
+    'OPERATOR_HIDE_SORT_KEYS'
   ].forEach(function(k) { patch[k] = incoming[k]; });
 
   // Keep assignment/due unless incoming explicitly provides.
@@ -1281,6 +1301,11 @@ function HomeAlert_enrichDesktopUxFields_(alert) {
   };
 
   Object.keys(patch).forEach(function(k) { a[k] = patch[k]; });
+
+  // PHASE 80E — operator attention runtime (depends on DESKTOP_* + DISPLAY_* already on `a`).
+  var attentionPatch = HomeAlert_enrichAttentionFields_(a);
+  Object.keys(attentionPatch).forEach(function(k2) { patch[k2] = attentionPatch[k2]; });
+
   return patch;
 }
 
@@ -1505,6 +1530,186 @@ function HomeAlert_extractDaysFromBadge_(badge) {
   return isNaN(n) ? null : n;
 }
 
+// =============================================================================
+// PHASE 80E — OPERATOR ATTENTION RUNTIME
+// =============================================================================
+// Operator-facing text + attention level; sort keys (CARD_SORT/DESKTOP_SORT)
+// remain sheet columns for sort only — not shown in operator UX (see AppSheet docs).
+// =============================================================================
+
+/**
+ * Enrich attention / operator display fields. Requires DESKTOP_* already on `alert`.
+ * Mutates `alert` and returns patch for ATTENTION_*, ACTION_*, OWNER_*, OPERATOR_*.
+ */
+function HomeAlert_enrichAttentionFields_(alert) {
+  var a = alert || {};
+
+  var level = HomeAlert_getAttentionLevel_(a);
+  var label = HomeAlert_getAttentionLabel_(a);
+  var icon = HomeAlert_getAttentionIcon_(a);
+  var color = HomeAlert_getAttentionColor_(a);
+  var reason = HomeAlert_getAttentionReason_(a);
+  var actionFocus = HomeAlert_getActionFocus_(a);
+  var actionHint = HomeAlert_getActionHint_(a);
+  var actionPriority = HomeAlert_getActionPriority_(a);
+  var ownerLabel = HomeAlert_getOwnerLabel_(a);
+  var ownerQueue = HomeAlert_getOwnerQueue_(a);
+
+  a.OWNER_LABEL = ownerLabel;
+  a.OWNER_QUEUE = ownerQueue;
+
+  var patch = {
+    ATTENTION_LEVEL: level,
+    ATTENTION_LABEL: label,
+    ATTENTION_ICON: icon,
+    ATTENTION_COLOR: color,
+    ATTENTION_REASON: reason,
+    ACTION_FOCUS: actionFocus,
+    ACTION_HINT: actionHint,
+    ACTION_PRIORITY: actionPriority,
+    OWNER_LABEL: ownerLabel,
+    OWNER_QUEUE: ownerQueue,
+    OPERATOR_PRIMARY_TEXT: HomeAlert_buildOperatorPrimaryText_(a),
+    OPERATOR_SECONDARY_TEXT: HomeAlert_buildOperatorSecondaryText_(a),
+    OPERATOR_META_TEXT: HomeAlert_buildOperatorMetaText_(a),
+    OPERATOR_NEXT_ACTION: HomeAlert_buildOperatorNextAction_(a),
+    OPERATOR_HIDE_SORT_KEYS: true
+  };
+
+  Object.keys(patch).forEach(function(k) { a[k] = patch[k]; });
+  return patch;
+}
+
+function HomeAlert_getAttentionLevel_(alert) {
+  var a = alert || {};
+  var st = String(a.STATUS || '').trim();
+  if (st === HOME_ALERT_STATUS.WAITING_RESPONSE) return 'WAITING';
+  if (st === HOME_ALERT_STATUS.ESCALATED) return 'WARNING';
+  var sev = String(a.SEVERITY || '').trim().toUpperCase();
+  if (sev === 'HIGH' || sev === 'CRITICAL') return 'CRITICAL';
+  if (sev === 'MEDIUM') return 'WARNING';
+  if (sev === 'LOW') return 'INFO';
+  if (HomeAlert_isTerminalStatus_(st)) return 'INFO';
+  return 'INFO';
+}
+
+function HomeAlert_getAttentionLabel_(alert) {
+  var lvl = HomeAlert_getAttentionLevel_(alert);
+  if (lvl === 'CRITICAL') return 'Cần xử lý ngay';
+  if (lvl === 'WARNING') return 'Cần chú ý';
+  if (lvl === 'WAITING') return 'Đang chờ phản hồi';
+  return 'Thông tin';
+}
+
+function HomeAlert_getAttentionIcon_(alert) {
+  var lvl = HomeAlert_getAttentionLevel_(alert);
+  if (lvl === 'CRITICAL') return '🔴';
+  if (lvl === 'WARNING') return '🟠';
+  if (lvl === 'WAITING') return '🟡';
+  return 'ℹ️';
+}
+
+function HomeAlert_getAttentionColor_(alert) {
+  var lvl = HomeAlert_getAttentionLevel_(alert);
+  if (lvl === 'CRITICAL') return 'Red';
+  if (lvl === 'WARNING') return 'Orange';
+  if (lvl === 'WAITING') return 'Yellow';
+  return 'Blue';
+}
+
+function HomeAlert_getAttentionReason_(alert) {
+  var a = alert || {};
+  var prim = String(a.DESKTOP_PRIMARY_LINE || '').trim();
+  if (prim) {
+    var parts = prim.split(' · ');
+    if (parts.length && parts[0]) return parts[0];
+    return prim;
+  }
+  var msg = String(a.MESSAGE || '').trim();
+  if (msg) return msg.length > 120 ? msg.slice(0, 120) + '…' : msg;
+  return 'Cần xem xét';
+}
+
+function HomeAlert_getActionFocus_(alert) {
+  var a = alert || {};
+  return HomeAlert_getDisplayActionText_(String(a.STATUS || '').trim());
+}
+
+/**
+ * ACTION_HINT column (Phase 80E). Khác với UX_ACTION_HINT / HomeAlert_getUxActionHint_.
+ */
+function HomeAlert_getActionHint_(alert) {
+  var focus = HomeAlert_getActionFocus_(alert);
+  if (!focus) return 'Cập nhật trạng thái phù hợp trên AppSheet.';
+  return 'Bấm ' + focus + ' hoặc cập nhật trạng thái';
+}
+
+function HomeAlert_getActionPriority_(alert) {
+  var a = alert || {};
+  var n = Math.round(Number(a.PRIORITY_SCORE || 0));
+  if (isNaN(n)) n = 0;
+  if (n < 0) n = 0;
+  if (n > 100) n = 100;
+  return n;
+}
+
+function HomeAlert_getOwnerLabel_(alert) {
+  var a = alert || {};
+  var assignee = String(a.ASSIGNED_TO || '').trim();
+  return 'Phụ trách: ' + (assignee || 'chưa giao');
+}
+
+function HomeAlert_getOwnerQueue_(alert) {
+  var a = alert || {};
+  var mod = String(a.MODULE_CODE || '').trim().toUpperCase();
+  if (mod === 'TASK') return 'TASK_QUEUE';
+  if (mod === 'FINANCE') return 'FINANCE_QUEUE';
+  return 'GENERAL_QUEUE';
+}
+
+function HomeAlert_buildOperatorHeadline_(alert) {
+  var a = alert || {};
+  var code = String(a.ALERT_CODE || '').trim();
+  if (code === 'TASK_OVERDUE') return 'Task quá hạn';
+  if (code === 'FIN_UNCONFIRMED_OLD') return 'Giao dịch chờ xác nhận';
+  if (code.indexOf('_LOG_NOTE_ERROR') >= 0) return 'Lỗi runtime log';
+  return HomeAlert_desktopFallbackTitle_(a);
+}
+
+function HomeAlert_buildOperatorPrimaryText_(alert) {
+  var a = alert || {};
+  var icon = HomeAlert_getAttentionIcon_(a);
+  var label = HomeAlert_getAttentionLabel_(a);
+  var head = HomeAlert_buildOperatorHeadline_(a);
+  return icon + ' ' + label + ' — ' + head;
+}
+
+function HomeAlert_buildOperatorSecondaryText_(alert) {
+  var a = alert || {};
+  var s = String(a.DESKTOP_SUBTITLE || '').trim();
+  if (s) return s;
+  return String(a.DISPLAY_SUBTITLE || '').trim();
+}
+
+function HomeAlert_buildOperatorMetaText_(alert) {
+  var a = alert || {};
+  var bits = [];
+  var prim = String(a.DESKTOP_PRIMARY_LINE || '').trim();
+  if (prim) bits.push(prim);
+  var st = String(a.STATUS || '').trim();
+  if (st) bits.push(st);
+  var owner = String(a.OWNER_LABEL || '').trim();
+  if (owner) bits.push(owner);
+  return bits.join(' · ');
+}
+
+function HomeAlert_buildOperatorNextAction_(alert) {
+  var a = alert || {};
+  var focus = HomeAlert_getActionFocus_(a);
+  if (!focus) return '👉 Chuyển trạng thái phù hợp hoặc thêm ghi chú.';
+  return '👉 ' + focus + ' hoặc chuyển trạng thái phù hợp';
+}
+
 // ===== HOME_ALERT Desktop Operational Test Console (separate) =====
 
 var __HOME_ALERT_DESKTOP_TEST_CONSOLE_LAST_REPORT = null;
@@ -1725,3 +1930,210 @@ function HomeAlertDesktop_formatReportText_(r) {
   return lines.join('\n');
 }
 
+// ===== HOME_ALERT Operator Attention Test Console (Phase 80E) =====
+
+var __HOME_ALERT_ATTENTION_TEST_CONSOLE_LAST_REPORT = null;
+
+function HomeAlertAttention_TestConsole_run() {
+  var traceId = HomeAlert_newTraceId_();
+  var checks = [];
+  var warnings = [];
+  var errors = [];
+
+  try {
+    var s = HomeAlertAttention_checkSchema_();
+    checks.push({ name: 'schemaAttentionColumns', ok: s.ok, details: s });
+    if (!s.ok) errors = errors.concat(s.errors || []);
+  } catch (e1) {
+    checks.push({ name: 'schemaAttentionColumns', ok: false, details: { error: e1.message || String(e1) } });
+    errors.push('Schema check exception: ' + (e1.message || String(e1)));
+  }
+
+  try {
+    var sm = HomeAlert_validateStateMachine_();
+    checks.push({ name: 'stateMachine', ok: sm.ok, details: sm });
+    if (!sm.ok) errors.push('State machine invalid: ' + JSON.stringify(sm.errors || []));
+  } catch (e2) {
+    checks.push({ name: 'stateMachine', ok: false, details: { error: e2.message || String(e2) } });
+    errors.push('State machine exception: ' + (e2.message || String(e2)));
+  }
+
+  try {
+    var sDesk = HomeAlertDesktop_checkSchema_();
+    checks.push({ name: 'schemaDesktopColumns', ok: sDesk.ok, details: sDesk });
+    if (!sDesk.ok) errors = errors.concat(sDesk.errors || []);
+  } catch (eD) {
+    checks.push({ name: 'schemaDesktopColumns', ok: false, details: { error: eD.message || String(eD) } });
+    errors.push('Desktop schema check exception: ' + (eD.message || String(eD)));
+  }
+
+  var refreshResult = null;
+  try {
+    refreshResult = HomeAlert_refresh({ autoClearMissing: false, autoExpire: false });
+    checks.push({ name: 'refresh', ok: refreshResult.ok, details: refreshResult.stats });
+    if (!refreshResult.ok) warnings.push('Refresh had errors: ' + JSON.stringify(refreshResult.stats.errors || []));
+  } catch (e3) {
+    checks.push({ name: 'refresh', ok: false, details: { error: e3.message || String(e3) } });
+    errors.push('Refresh exception: ' + (e3.message || String(e3)));
+  }
+
+  try {
+    var v = HomeAlertAttention_validateOutput_();
+    checks.push({ name: 'attentionOutput', ok: v.ok, details: v });
+    if (!v.ok) errors = errors.concat(v.errors || []);
+    warnings = warnings.concat(v.warnings || []);
+  } catch (e4) {
+    checks.push({ name: 'attentionOutput', ok: false, details: { error: e4.message || String(e4) } });
+    errors.push('Attention validate exception: ' + (e4.message || String(e4)));
+  }
+
+  try {
+    var dup = HomeAlertDesktop_checkNoDuplicateAlertId_();
+    checks.push({ name: 'noDuplicateAlertId', ok: dup.ok, details: dup });
+    if (!dup.ok) errors.push('Duplicate ALERT_ID count=' + (dup.duplicates || 0));
+  } catch (e5) {
+    checks.push({ name: 'noDuplicateAlertId', ok: false, details: { error: e5.message || String(e5) } });
+    errors.push('Duplicate check exception: ' + (e5.message || String(e5)));
+  }
+
+  var status = errors.length > 0 ? 'FAIL' : (warnings.length > 0 ? 'GO_WITH_WARNINGS' : 'GO');
+  var severity = errors.length > 0 ? 'CRITICAL' : (warnings.length > 0 ? 'WARNING' : 'OK');
+
+  var driveFolderId = HomeAlert_getSystemBrainDriveFolderId_();
+
+  var report = {
+    ok: status !== 'FAIL',
+    phase: 'PHASE_80E_OPERATOR_ATTENTION_RUNTIME',
+    status: status,
+    severity: severity,
+    checkedAt: cbvNow(),
+    runBy: HomeAlert_actorId_(),
+    traceId: traceId,
+    testSuite: 'HOME_ALERT_OPERATOR_ATTENTION_RUNTIME',
+    summary: 'HOME_ALERT operator attention runtime test: ' + status + ' (' + severity + ')',
+    checks: checks,
+    warnings: warnings,
+    errors: errors,
+    nextStep: status === 'GO'
+      ? 'Configure AppSheet ALERT_List/ALERT_Detail operator view per HOME_ALERT_APPSHEET_SETUP.md (OPERATOR_* only; hide CARD_SORT/DESKTOP_SORT/SORT_KEY).'
+      : 'Fix errors then rerun HomeAlertAttention_TestConsole_run().',
+    reportText: '',
+    reportJson: {
+      refresh: refreshResult,
+      driveFolderId: driveFolderId,
+      driveFolderUrl: 'https://drive.google.com/drive/folders/' + driveFolderId,
+      driveFolderConfigKey: 'CBV_SYSTEM_BRAIN_DRIVE_FOLDER_ID',
+      driveAutoUpload: false
+    },
+    contractVersion: 'CBV_TEST_CONSOLE_V1',
+    envelopeOk: true
+  };
+
+  report.reportText = HomeAlertAttention_formatReportText_(report);
+  __HOME_ALERT_ATTENTION_TEST_CONSOLE_LAST_REPORT = report;
+  Logger.log(report.reportText);
+  return report;
+}
+
+function HomeAlertAttention_TestConsole_showReport() {
+  var r = __HOME_ALERT_ATTENTION_TEST_CONSOLE_LAST_REPORT;
+  if (!r) return { ok: false, message: 'No report. Run HomeAlertAttention_TestConsole_run() first.' };
+  Logger.log(r.reportText || JSON.stringify(r, null, 2));
+  return r;
+}
+
+function HomeAlertAttention_TestConsole_copyAiHandoff() {
+  var r = __HOME_ALERT_ATTENTION_TEST_CONSOLE_LAST_REPORT;
+  if (!r) return 'No report. Run HomeAlertAttention_TestConsole_run() first.';
+  var driveFolderId = (r.reportJson && r.reportJson.driveFolderId) || HomeAlert_getSystemBrainDriveFolderId_();
+  var text = [
+    'PHASE: ' + r.phase,
+    'STATUS: ' + r.status,
+    'SEVERITY: ' + r.severity,
+    'TRACE: ' + r.traceId,
+    'CHECKED_AT: ' + r.checkedAt,
+    'SUMMARY: ' + r.summary,
+    'WARNINGS: ' + JSON.stringify(r.warnings || []),
+    'ERRORS: ' + JSON.stringify(r.errors || []),
+    'NEXT_STEP: ' + r.nextStep,
+    'DRIVE_ONLINE_OUTPUT_TARGET: https://drive.google.com/drive/folders/' + driveFolderId
+  ].join('\n');
+  Logger.log(text);
+  return text;
+}
+
+function HomeAlertAttention_checkSchema_() {
+  var required = [
+    'ATTENTION_LEVEL', 'ATTENTION_LABEL', 'ATTENTION_ICON', 'ATTENTION_COLOR', 'ATTENTION_REASON',
+    'ACTION_FOCUS', 'ACTION_HINT', 'ACTION_PRIORITY',
+    'OWNER_LABEL', 'OWNER_QUEUE',
+    'OPERATOR_PRIMARY_TEXT', 'OPERATOR_SECONDARY_TEXT', 'OPERATOR_META_TEXT', 'OPERATOR_NEXT_ACTION',
+    'OPERATOR_HIDE_SORT_KEYS'
+  ];
+  var sheetName = HomeAlert_getSheetName_();
+  var sheet = _sheet(sheetName);
+  var headers = _headers(sheet);
+  var missing = required.filter(function(c) { return headers.indexOf(c) === -1; });
+  return {
+    ok: missing.length === 0,
+    sheet: sheetName,
+    missing: missing,
+    errors: missing.map(function(c) { return 'Missing attention/operator column: ' + c; })
+  };
+}
+
+function HomeAlertAttention_validateOutput_() {
+  var sheetName = HomeAlert_getSheetName_();
+  var rows = _rows(_sheet(sheetName));
+  var errors = [];
+  var warnings = [];
+  var headers = _headers(_sheet(sheetName));
+
+  if (headers.indexOf('CARD_SORT') === -1 || headers.indexOf('DESKTOP_SORT') === -1) {
+    errors.push('Sort key columns CARD_SORT/DESKTOP_SORT must exist in schema for backend sort');
+  }
+
+  if (!rows || rows.length === 0) {
+    warnings.push('HOME_ALERT has no rows; cannot validate OPERATOR_* outputs on data.');
+    return { ok: true, warnings: warnings, errors: errors, sampleChecked: 0 };
+  }
+
+  var active = rows.filter(function(r) { return HomeAlert_isActiveStatus_(String(r.STATUS || '').trim()); });
+  var sample = (active.length ? active : rows).slice(0, 20);
+
+  sample.forEach(function(r) {
+    var id = String(r.ALERT_ID || '').trim();
+    if (!String(r.OPERATOR_PRIMARY_TEXT || '').trim()) errors.push('OPERATOR_PRIMARY_TEXT empty for ' + id);
+    if (!String(r.OPERATOR_META_TEXT || '').trim()) errors.push('OPERATOR_META_TEXT empty for ' + id);
+    if (!String(r.OPERATOR_NEXT_ACTION || '').trim()) errors.push('OPERATOR_NEXT_ACTION empty for ' + id);
+    var hide = r.OPERATOR_HIDE_SORT_KEYS;
+    var hideOk = hide === true || String(hide).toUpperCase() === 'TRUE';
+    if (!hideOk) errors.push('OPERATOR_HIDE_SORT_KEYS not TRUE for ' + id);
+
+    if (!String(r.DESKTOP_TITLE || '').trim()) errors.push('DESKTOP_TITLE missing for ' + id + ' (Phase 80D regression)');
+    if (!String(r.CARD_SORT || '').trim() || !String(r.DESKTOP_SORT || '').trim()) {
+      errors.push('CARD_SORT/DESKTOP_SORT must remain populated for sort backend on ' + id);
+    }
+  });
+
+  return { ok: errors.length === 0, warnings: warnings, errors: errors, sampleChecked: sample.length };
+}
+
+function HomeAlertAttention_formatReportText_(r) {
+  var driveFolderId = (r.reportJson && r.reportJson.driveFolderId) || HomeAlert_getSystemBrainDriveFolderId_();
+  var lines = [];
+  lines.push('=== HOME_ALERT OPERATOR ATTENTION TEST CONSOLE ===');
+  lines.push('phase=' + r.phase);
+  lines.push('status=' + r.status + ' severity=' + r.severity);
+  lines.push('checkedAt=' + r.checkedAt + ' runBy=' + r.runBy);
+  lines.push('traceId=' + r.traceId);
+  lines.push('summary=' + r.summary);
+  lines.push('checks=' + (r.checks ? r.checks.length : 0));
+  (r.checks || []).forEach(function(c) { lines.push('- ' + c.name + ': ' + (c.ok ? 'OK' : 'FAIL')); });
+  if ((r.warnings || []).length) lines.push('warnings=' + JSON.stringify(r.warnings, null, 2));
+  if ((r.errors || []).length) lines.push('errors=' + JSON.stringify(r.errors, null, 2));
+  lines.push('nextStep=' + r.nextStep);
+  lines.push('operatorUxHideSortKeys=true (do not show CARD_SORT/DESKTOP_SORT/SORT_KEY in operator views)');
+  lines.push('driveOnlineOutputTarget=https://drive.google.com/drive/folders/' + driveFolderId);
+  return lines.join('\n');
+}

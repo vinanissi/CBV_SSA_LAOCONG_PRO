@@ -1,14 +1,15 @@
-# HOME_ALERT — Desktop Operational Workspace (Phase 80D)
+# HOME_ALERT — Desktop Operational Workspace (Phase 80D + 80E)
 
 Tài liệu này định nghĩa **2 view tách biệt** cho HOME_ALERT trên AppSheet desktop:
 
-1. `HOME_ALERT_OPERATOR_DASHBOARD` — operator view, chỉ DESKTOP_* + minimal ops.
+1. `HOME_ALERT_OPERATOR_DASHBOARD` — operator view: **Phase 80E** dùng `OPERATOR_*` + `ATTENTION_*` (không lộ sort key); Phase 80D dùng `DESKTOP_*` làm baseline.
 2. `HOME_ALERT_ADMIN_DEBUG` — admin debug view, được phép xem raw/runtime fields.
 
 Mục tiêu:
 
 - 3 giây hiểu việc cần xử lý.
 - Cockpit operator không có cảm giác raw database / debug view.
+- **Không lộ** `CARD_SORT`, `DESKTOP_SORT`, `SORT_KEY` trên UI operator — chỉ dùng **Sort by** backend.
 - Detail panel thân thiện cho người vận hành.
 - Raw / debug fields chỉ tồn tại trong admin debug view, **không trộn vào operator UX**.
 
@@ -18,7 +19,7 @@ Tham chiếu: `CBV Operational Ecosystem Standard V1` — runtime-first, manual-
 
 ## 1) `HOME_ALERT_OPERATOR_DASHBOARD` (Operator)
 
-Đây là cockpit chính cho người vận hành. Không hiển thị raw fields.
+Đây là cockpit chính cho người vận hành. Không hiển thị raw fields; **Phase 80E: không hiển thị sort key** (`CARD_SORT`, `DESKTOP_SORT`, `SORT_KEY`).
 
 ### 1.1 Cấu trúc
 
@@ -33,43 +34,44 @@ Tham chiếu: `CBV Operational Ecosystem Standard V1` — runtime-first, manual-
 
 Reuse `HOME_ALERT_ACTIVE` (`[IS_ACTIVE] = TRUE`).
 
-### 1.3 `ALERT_Deck` (deck view)
+### 1.3 `ALERT_Deck` (deck view) — **Phase 80E (khuyến nghị)**
 
 - **View type:** `Deck`.
 - **Source:** `HOME_ALERT_ACTIVE`.
-- **Primary header:** `DESKTOP_TITLE`.
-- **Secondary header:** `DESKTOP_SUBTITLE`.
-- **Summary column:** `DESKTOP_PRIMARY_LINE` (ưu tiên) hoặc `DESKTOP_SECONDARY_LINE`.
-- **Group by:** `DESKTOP_GROUP`.
-- **Sort by:** `DESKTOP_SORT` (DESC để priority cao + cập nhật mới nổi lên trước).
-- **Icon:** `DISPLAY_ICON` (đã có từ Phase 80C).
+- **Primary header:** `OPERATOR_PRIMARY_TEXT` *(sort key **không** được dùng làm header)*.
+- **Secondary header:** `OPERATOR_SECONDARY_TEXT`.
+- **Summary column:** `OPERATOR_META_TEXT`.
+- **Group by:** `DESKTOP_GROUP` hoặc `ATTENTION_LABEL`.
+- **Sort by:** `DESKTOP_SORT` **DESC** — cấu hình sort trên view; **Show? = OFF** cho `DESKTOP_SORT`, `CARD_SORT`, `SORT_KEY` (không đưa vào cột hiển thị).
+- **Icon:** `ATTENTION_ICON` hoặc `DISPLAY_ICON`.
 
-### 1.4 `ALERT_Detail` (operator-friendly)
+### 1.3b Baseline Phase 80D (nếu chưa adopt 80E)
 
-Chỉ show các field operator-friendly. Tất cả raw / debug fields phải `Show? = OFF`.
+- Primary: `DESKTOP_TITLE`, Secondary: `DESKTOP_SUBTITLE`, Summary: `DESKTOP_PRIMARY_LINE`, Group: `DESKTOP_GROUP`, Sort: `DESKTOP_SORT` DESC — vẫn **ẩn** các cột sort khỏi mọi vùng hiển thị text (chỉ Sort by).
 
-| Show | Field | Mục đích |
-|------|-------|----------|
-| ✅ | `DESKTOP_DETAIL_TITLE` | Tiêu đề trong detail panel |
-| ✅ | `DESKTOP_DETAIL_SUMMARY` | Mô tả tự nhiên cho operator |
-| ✅ | `DESKTOP_DETAIL_CONTEXT` | Nguồn / mã liên quan |
-| ✅ | `DESKTOP_DETAIL_NEXT_ACTION` | Gợi ý bước tiếp theo |
-| ✅ | `STATUS` | Trạng thái thao tác |
-| ✅ | `ASSIGNED_TO` | Phụ trách |
-| ✅ | `DUE_AT` | Hạn xử lý |
-| ✅ | `NOTE` | Ghi chú thao tác |
-| ✅ | `DISPLAY_FOOTER` | Footer card (module/assignee/hint) |
-| ❌ | `ALERT_ID` | raw key, ẩn |
-| ❌ | `ALERT_CODE` | raw code, ẩn |
-| ❌ | `ALERT_TYPE` | raw classification, ẩn |
-| ❌ | `SOURCE_HASH` | dedupe hash, ẩn |
-| ❌ | `TRACE_ID` | trace, ẩn |
-| ❌ | `ACTION_PAYLOAD_JSON` | raw JSON, ẩn |
-| ❌ | `ALERT_FINGERPRINT` | *(nếu có)* dedupe, ẩn |
-| ❌ | `ALERT_GROUP_KEY` | *(nếu có)* grouping, ẩn |
-| ❌ | `RELATED_ENTITY_ID` | raw ID, ẩn (operator dùng `DESKTOP_DETAIL_CONTEXT`) |
-| ❌ | `LAST_ACTION` | runtime audit, ẩn |
-| ❌ | `DESKTOP_DETAIL_DEBUG_VISIBLE` | flag cho debug view, ẩn |
+### 1.4 `ALERT_Detail` (operator-friendly) — **Phase 80E**
+
+Chỉ show các field operator-friendly. Raw / debug / **sort** fields phải `Show? = OFF`.
+
+| Show | Field |
+|------|-------|
+| ✅ | `OPERATOR_PRIMARY_TEXT` |
+| ✅ | `OPERATOR_SECONDARY_TEXT` |
+| ✅ | `OPERATOR_META_TEXT` |
+| ✅ | `OPERATOR_NEXT_ACTION` |
+| ✅ | `ATTENTION_REASON` |
+| ✅ | `ACTION_FOCUS` |
+| ✅ | `ACTION_HINT` |
+| ✅ | `OWNER_LABEL` |
+| ✅ | `STATUS` |
+| ✅ | `DUE_AT` |
+| ✅ | `NOTE` |
+
+**Ẩn (bắt buộc):** `CARD_SORT`, `DESKTOP_SORT`, `SORT_KEY`, `ALERT_ID`, `ALERT_CODE`, `ALERT_TYPE`, `SOURCE_HASH`, `TRACE_ID`, `ACTION_PAYLOAD_JSON`, `ALERT_FINGERPRINT`, `ALERT_GROUP_KEY`, `RELATED_ENTITY_ID`, `LAST_ACTION`, `DESKTOP_DETAIL_DEBUG_VISIBLE`, `OPERATOR_HIDE_SORT_KEYS` *(cờ nội bộ, không cần show)*.
+
+### 1.4b Baseline Phase 80D detail (legacy)
+
+Nếu chưa adopt 80E: dùng bảng `DESKTOP_DETAIL_*` + `DISPLAY_FOOTER` như tài liệu 80D; vẫn **ẩn** mọi sort key.
 
 ### 1.5 Actions hiển thị
 
@@ -78,9 +80,21 @@ Reuse Phase 80B actions (`AckAlert`, `StartProgress`, `WaitResponse`, `EscalateA
 ### 1.6 Cấm
 
 - Không hiển thị raw fields ở operator dashboard.
+- **Không hiển thị** `CARD_SORT`, `DESKTOP_SORT`, `SORT_KEY` như text/label/header — chỉ dùng **Sort by** của view.
 - Không dùng Virtual Column.
 - Không dùng AppSheet Bot/Automation.
 - Không trộn operator UX với debug schema.
+
+### 1.7 Checklist — tránh lộ sort key (Phase 80E)
+
+- [ ] Trong `ALERT_Deck`, **Primary / Secondary / Summary** không trỏ tới `CARD_SORT`, `DESKTOP_SORT`, `SORT_KEY`.
+- [ ] **Sort by** = `DESKTOP_SORT` DESC (hoặc policy sort khác), nhưng các cột sort có **Show? = OFF** trên view operator.
+- [ ] Không dùng sort key trong **Show_if**, **Formatting rules** hiển thị text cho operator.
+- [ ] Deck dùng `OPERATOR_PRIMARY_TEXT` / `OPERATOR_SECONDARY_TEXT` / `OPERATOR_META_TEXT` (GAS sinh).
+- [ ] Detail operator dùng danh sách §1.4; sort columns ẩn.
+- [ ] Chạy `HomeAlertAttention_TestConsole_run()` sau `HomeAlert_bootstrap()` để chốt schema + enrich.
+
+**Nguyên tắc:** sort key chỉ để **sắp xếp hàng**, không dùng làm title/header/summary cho operator.
 
 ---
 
@@ -111,7 +125,7 @@ Tất cả fields raw / runtime / state đều được phép `Show? = ON`:
 - `ACKNOWLEDGED_AT`, `ACKNOWLEDGED_BY`
 - `STATE_CHANGED_AT`, `STATE_CHANGED_BY`
 - `ESCALATED_AT`, `AUTO_CLEARED_AT`, `AUTO_CLEARED_BY`
-- Các cột UX/Card/Desktop (`DISPLAY_*`, `CARD_*`, `UX_*`, `DESKTOP_*`) — admin có thể quan sát để debug enrichment.
+- Các cột UX/Card/Desktop/Attention/Operator (`DISPLAY_*`, `CARD_*`, `UX_*`, `DESKTOP_*`, `ATTENTION_*`, `ACTION_FOCUS`, `ACTION_HINT`, `ACTION_PRIORITY`, `OWNER_*`, `OPERATOR_*`) — admin quan sát để debug enrichment.
 
 ### 2.3 Cấm
 
@@ -123,10 +137,10 @@ Tất cả fields raw / runtime / state đều được phép `Show? = ON`:
 
 ## 3) Vận hành & manual-first
 
-- Sau khi append schema `DESKTOP_*` ở GAS (`HomeAlert_bootstrap()`), chạy `HomeAlert_refresh()` để enrich.
+- Sau khi append schema `DESKTOP_*` / `OPERATOR_*` ở GAS (`HomeAlert_bootstrap()`), chạy `HomeAlert_refresh()` để enrich.
 - Trên AppSheet, cấu hình 2 view ở trên theo doc; không tạo trigger.
 - Khi cần debug, admin mở `HOME_ALERT_ADMIN_DEBUG`, không kéo raw fields ngược vào operator view.
-- Test console: `HomeAlertDesktop_TestConsole_run()` để chốt GO/FAIL phase 80D.
+- Test console: `HomeAlertDesktop_TestConsole_run()` (80D), `HomeAlertAttention_TestConsole_run()` (80E).
 
 ## 4) Online Drive archive
 
