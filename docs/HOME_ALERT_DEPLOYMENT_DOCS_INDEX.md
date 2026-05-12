@@ -16,6 +16,11 @@
 | `appsheet/APPSHEET_HOME_ALERT_INSTALL_GUIDE.md` | Admin AppSheet | Admin / Runtime Owner |
 | `appsheet/APPSHEET_HOME_ALERT_FORMULA_REFERENCE.md` | Admin AppSheet | Supervisor (đọc hiểu) |
 | `appsheet/APPSHEET_REFERENCE_BINDING_CHECKLIST.md` | Admin AppSheet | Admin (go-live binding) |
+| `appsheet/CLICK_BY_CLICK_HOME_ALERT_SETUP.md` | Người mới / Pilot | Admin (hỗ trợ) |
+| `appsheet/CLICK_BY_CLICK_TABLES_AND_COLUMNS.md` | Người mới / Pilot | Admin AppSheet |
+| `appsheet/CLICK_BY_CLICK_SLICES.md` | Người mới / Pilot | Admin AppSheet |
+| `appsheet/CLICK_BY_CLICK_VIEWS_AND_DASHBOARD.md` | Người mới / Pilot | Admin AppSheet |
+| `appsheet/CLICK_BY_CLICK_ACTIONS_SECURITY.md` | Người mới / Pilot | Admin AppSheet |
 | `operations/OPERATIONAL_REFERENCE_LAYER_DESIGN.md` | Admin / Runtime Owner | Admin AppSheet (context Ref layer) |
 | `training/HOME_ALERT_OPERATOR_MANUAL.md` | Operator | Supervisor |
 | `training/HOME_ALERT_SUPERVISOR_MANUAL.md` | Supervisor / Team Lead | Admin |
@@ -35,6 +40,16 @@
 7. `training/HOME_ALERT_OPERATOR_MANUAL.md` — đào tạo operator.
 8. `training/HOME_ALERT_SUPERVISOR_MANUAL.md` — đào tạo supervisor.
 
+### Người chỉ cần thao tác (không rành kỹ thuật) — đọc theo thứ tự
+
+1. `appsheet/CLICK_BY_CLICK_HOME_ALERT_SETUP.md`  
+2. `appsheet/CLICK_BY_CLICK_TABLES_AND_COLUMNS.md`  
+3. `appsheet/CLICK_BY_CLICK_SLICES.md`  
+4. `appsheet/CLICK_BY_CLICK_VIEWS_AND_DASHBOARD.md`  
+5. `appsheet/CLICK_BY_CLICK_ACTIONS_SECURITY.md`  
+
+Sau đó nếu cần hiểu sâu: `APPSHEET_HOME_ALERT_INSTALL_GUIDE.md` và `APPSHEET_HOME_ALERT_FORMULA_REFERENCE.md`.
+
 ---
 
 ## Thứ tự triển khai (deploy lần đầu)
@@ -44,7 +59,7 @@
 | 1. Pre-deploy + git state | `operations/...RUNBOOK.md` §1–§2 | Admin |
 | 2. GAS deploy + bootstrap | `admin/...OWNER_GUIDE.md` §2–§3, `operations/...RUNBOOK.md` §3–§4 | Admin |
 | 3. Test console (82/83/84) | `admin/...OWNER_GUIDE.md` §4, `operations/...RUNBOOK.md` §6 | Admin |
-| 4. AppSheet setup | `appsheet/...INSTALL_GUIDE.md` + `appsheet/...REFERENCE_BINDING_CHECKLIST.md` + `appsheet/...FORMULA_REFERENCE.md` | Admin AppSheet |
+| 4. AppSheet setup | `appsheet/CLICK_BY_CLICK_*.md` (5 file) **hoặc** `appsheet/...INSTALL_GUIDE.md` + checklist + formula | Admin AppSheet / Pilot |
 | 5. Pilot rollout | `operations/...RUNBOOK.md` §7 | Admin + Supervisor + Pilot operators |
 | 6. Training | `training/HOME_ALERT_OPERATOR_MANUAL.md` + `training/HOME_ALERT_SUPERVISOR_MANUAL.md` | Supervisor |
 | 7. Go-live | `operations/...RUNBOOK.md` §9 | Tất cả |
@@ -59,7 +74,7 @@
 | Mục | Trạng thái |
 |-----|-----------|
 | Doc files cần | Đủ bộ HOME_ALERT appsheet + operations + index (đã bổ sung checklist REF-A) |
-| Brain artifacts | Prompt/Report/Handoff `012_*` (DOCS-A), `013_*` (REF-A), `014_*` (APPSHEET-REF-A) trong `00_SYSTEM_BRAIN/` |
+| Brain artifacts | `012_*`–`015_*` trong `00_SYSTEM_BRAIN/` (kèm prompt/report/handoff từng phase) |
 | Code changes | KHÔNG (DOCS-A không sửa runtime) |
 | Schema changes | KHÔNG |
 | Trigger changes | KHÔNG |
@@ -74,7 +89,27 @@
 - Phase 83 — SLA Policy Registry: report `010_*`, handoff `010_*`.
 - Phase 84 — Safe Automation Runtime: report `011_*`, handoff `011_*`.
 - DOCS-A — file này + `012_*` prompt/report/handoff.
-- Phase APPSHEET-REF-A — `014_*` prompt/report/handoff + checklist `docs/appsheet/APPSHEET_REFERENCE_BINDING_CHECKLIST.md`.
+- Phase APPSHEET-REF-A — `014_*` prompt/report/handoff + `docs/appsheet/APPSHEET_REFERENCE_BINDING_CHECKLIST.md`.
+- Phase APPSHEET-HAND-A — `015_*` prompt/report/handoff + `docs/appsheet/CLICK_BY_CLICK_*.md` (5 file).
+
+---
+
+## PHASE APPSHEET-HAND-A — Click-by-Click Setup
+
+**Trạng thái:** **docs-only** — không thay runtime GAS, không đổi `.clasp.json` / `scriptId`.  
+**Dành cho:** Người **chỉ biết thao tác cơ bản**, cần **cầm tay chỉ việc** trên AppSheet.com.
+
+| File | Nội dung chính |
+|------|----------------|
+| `appsheet/CLICK_BY_CLICK_HOME_ALERT_SETUP.md` | Tạo app, Data/Tables, Preview, điện thoại |
+| `appsheet/CLICK_BY_CLICK_TABLES_AND_COLUMNS.md` | Add table, Regenerate, Key/Label, Ref/Enum |
+| `appsheet/CLICK_BY_CLICK_SLICES.md` | New Slice, công thức copy-paste |
+| `appsheet/CLICK_BY_CLICK_VIEWS_AND_DASHBOARD.md` | UX/Views, Deck `OPERATOR_*`, format rule |
+| `appsheet/CLICK_BY_CLICK_ACTIONS_SECURITY.md` | Actions, Security filter, cấm Bot/auto |
+
+**Artifacts:** `015_*` trong `00_SYSTEM_BRAIN/`.
+
+---
 
 ## PHASE APPSHEET-REF-A — Reference / Enum Binding
 
@@ -102,4 +137,5 @@
 - Không thay đổi `OPERATOR_*` contract.
 - Không thêm AppSheet Bot.
 - Không tự ý mở rộng allowlist Phase 84.
-- APPSHEET-REF-A — chỉ tài liệu AppSheet binding; không mở ENV-A; không Phase 85 / AI / Queue Intelligence.
+- APPSHEET-REF-A — chỉ tài liệu binding reference/enum; không mở ENV-A; không Phase 85 / AI / Queue Intelligence.
+- APPSHEET-HAND-A — chỉ hướng dẫn thao tác AppSheet; không thay runtime.
