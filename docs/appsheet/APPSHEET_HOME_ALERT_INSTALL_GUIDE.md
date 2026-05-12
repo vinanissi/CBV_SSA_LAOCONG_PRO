@@ -1,9 +1,9 @@
 # AppSheet HOME_ALERT — Install Guide
 
 **Audience:** Admin / Runtime Owner cài đặt AppSheet HOME_ALERT lần đầu hoặc khi tái cấu trúc app.  
-**Phase:** DOCS-A (sau Phase 82/83/84).  
+**Phase:** DOCS-A (sau Phase 82/83/84) + **APPSHEET-REF-A** (binding reference/enum sau Phase REF-A runtime).  
 **Reference:** CBV Operational Ecosystem Standard V1.  
-**Tag baseline:** `v2.4.4-HOME-ALERT-SAFE-AUTOMATION` trở lên.
+**Tag baseline:** `v2.4.4-HOME-ALERT-SAFE-AUTOMATION` trở lên; binding reference/enum: `v2.4.6-OPERATIONAL-REFERENCE-LAYER` trở lên.
 
 > ⚠️ App này KHÔNG dùng AppSheet Bot. Không cài automation trong AppSheet. Mọi automation thật chỉ chạy trong GAS Safe Automation Runtime (Phase 84).
 
@@ -51,6 +51,131 @@ Nếu spreadsheet đổi (ví dụ sandbox vs production), tạo **AppSheet app 
 
 ---
 
+## 3A. Reference / Enum Binding sau REF-A (PHASE APPSHEET-REF-A)
+
+**Mục đích:** AppSheet đọc đúng lớp reference/enum đã chuẩn hóa ở spreadsheet (REF-A), không thêm runtime GAS mới, không mở ENV-A, không bật automation mới.  
+**Tài liệu chi tiết công thức:** `APPSHEET_HOME_ALERT_FORMULA_REFERENCE.md` §6B. **Checklist thực hiện:** `APPSHEET_REFERENCE_BINDING_CHECKLIST.md`. **Thiết kế lớp reference:** `operations/OPERATIONAL_REFERENCE_LAYER_DESIGN.md`.
+
+### 1) Tables reference cần add vào AppSheet
+
+| Table | Ghi chú |
+|-------|---------|
+| `ENUM_DICTIONARY` | Giá trị enum hợp lệ theo `ENUM_GROUP` |
+| `USER_DIRECTORY` | Danh bạ người dùng / operator |
+| `MASTER_CODE` | Mã chuẩn theo `MASTER_GROUP` (MODULE, ALERT, ACTION, …) |
+| `DON_VI` | Đơn vị tổ chức |
+| `TEAM_DIRECTORY` | Team vận hành (gắn `DON_VI_ID`) |
+| `ROLE_PERMISSION_MATRIX` | Ma trận quyền (admin) |
+| `FEATURE_FLAG` | Bật/tắt tính năng (admin) |
+| `SYSTEM_REGISTRY` | Registry tài nguyên hệ thống (admin) |
+
+### 2) Table mode khuyến nghị
+
+| Table | Update mode |
+|-------|-------------|
+| `ENUM_DICTIONARY` | **Read-only** |
+| `MASTER_CODE` | **Read-only** |
+| `DON_VI` | **Read-only** hoặc **Admin-only** edit |
+| `TEAM_DIRECTORY` | **Read-only** hoặc **Admin-only** edit |
+| `USER_DIRECTORY` | **Read-only** hoặc **Admin-only** edit |
+| `ROLE_PERMISSION_MATRIX` | **Admin-only** |
+| `FEATURE_FLAG` | **Admin-only** |
+| `SYSTEM_REGISTRY` | **Admin-only** |
+
+### 3) Key / Label mapping
+
+Trên spreadsheet REF-A, một số cột “Key chuẩn” trùng ý nghĩa với tên AppSheet sau đây; nếu sheet **chưa** có cột tên đúng, dùng cột fallback bên phải.
+
+**ENUM_DICTIONARY**
+
+- **Key (AppSheet):** `ENUM_ID` — map tới cột thực tế **`ID`** (chuẩn hiện tại). Nếu sau này thêm cột `ENUM_ID` riêng thì đổi Key sang cột đó.
+- **Label:** `ENUM_LABEL` (fallback: `DISPLAY_TEXT`).
+- **Fallback key tổng hợp (virtual column / expression):** `CONCATENATE([ENUM_GROUP], "|", IF(ISBLANK([ENUM_CODE]), [ENUM_VALUE], [ENUM_CODE]))` — `ENUM_CODE` trùng hoặc bổ sung cho `ENUM_VALUE`.
+
+**USER_DIRECTORY**
+
+- **Key:** `USER_ID` — map tới **`ID`** nếu chưa có cột `USER_ID` (REF-A có thể append `USER_ID`; nếu trống thì dùng `ID`).
+- **Label:** `DISPLAY_NAME` với fallback: `IF(ISBLANK([DISPLAY_NAME]), [FULL_NAME], [DISPLAY_NAME])`.
+
+**MASTER_CODE**
+
+- **Key:** `MASTER_ID` — map tới **`ID`** nếu chưa có `MASTER_ID` điền sẵn.
+- **Label:** `MASTER_LABEL` với fallback: `IF(ISBLANK([MASTER_LABEL]), IF(ISBLANK([MASTER_CODE]), [CODE], [MASTER_LABEL]), [MASTER_LABEL])` — tức ưu tiên `MASTER_LABEL`, sau đó cột alias `MASTER_CODE` (nếu có), cuối cùng `CODE`.
+
+**DON_VI**
+
+- **Key:** `DON_VI_ID` — map tới **`ID`** nếu `DON_VI_ID` trống.
+- **Label:** `DON_VI_NAME` với fallback: `IF(ISBLANK([DON_VI_NAME]), [NAME], [DON_VI_NAME])`.
+
+**TEAM_DIRECTORY**
+
+- **Key:** `TEAM_ID`
+- **Label:** `TEAM_NAME`
+
+### 4) Reference binding cho `HOME_ALERT`
+
+| Column | Binding khuyến nghị |
+|--------|----------------------|
+| `ASSIGNED_TO` | **Ref** → `USER_DIRECTORY` (Key `USER_ID` / `ID`; hiển thị theo label §3) |
+| `CLAIMED_BY` | **Ref** → `USER_DIRECTORY` |
+| `ASSIGNED_BY` | **Ref** → `USER_DIRECTORY` |
+| `ESCALATED_BY` | **Ref** → `USER_DIRECTORY` |
+| `RESOLVED_BY` | **Ref** → `USER_DIRECTORY` |
+| `ASSIGNED_TEAM` | **Ref** → `TEAM_DIRECTORY` (`TEAM_ID`) — nếu đang lưu text legacy, dần chuyển sang Ref |
+| `MODULE_CODE` | **Valid_If** hoặc **Ref** slice `MASTER_CODE` nhóm `MODULE_CODE` (xem Formula Reference §6B) |
+| `ALERT_CODE` | **Valid_If** / slice `MASTER_CODE` nhóm `ALERT_CODE` |
+| `ACTION_TYPE` | **Valid_If** / slice `MASTER_CODE` nhóm `ACTION_CODE` |
+| `STATUS` | **Enum** từ `ENUM_DICTIONARY` nhóm `ALERT_STATUS` (hoặc Valid_If tương đương) |
+| `SLA_STATUS` | **Enum** nhóm `SLA_STATUS` |
+| `ESCALATION_STATUS` | **Enum** nhóm `ESCALATION_STATUS` |
+| `ATTENTION_LEVEL` | **Enum** nhóm `ATTENTION_LEVEL` |
+
+### 5) Reference binding cho `HOME_ALERT_SLA_POLICY`
+
+| Column | Binding |
+|--------|---------|
+| `ALERT_CODE` | `MASTER_CODE` nhóm `ALERT_CODE` |
+| `MODULE_CODE` | `MASTER_CODE` nhóm `MODULE_CODE` |
+| `SEVERITY` | `ENUM_DICTIONARY` nhóm `SEVERITY` |
+| `SLA_POLICY` | `MASTER_CODE` nhóm `SLA_POLICY_CODE` (hoặc enum cố định đã thỏa manifest — thống nhất một nguồn) |
+| `ESCALATE_TO_TEAM` | `TEAM_DIRECTORY` |
+| `ESCALATE_TO_USER` | `USER_DIRECTORY` |
+| `ACTIVE` | **Yes/No** |
+
+### 6) Reference binding cho `HOME_ALERT_AUTOMATION_CONFIG`
+
+| Column | Binding |
+|--------|---------|
+| `AUTOMATION_CODE` | `MASTER_CODE` nhóm `AUTOMATION_CODE` |
+| `AUTOMATION_TYPE` | `ENUM_DICTIONARY` nhóm `AUTOMATION_TYPE` |
+| `ENABLED`, `SAFE_MODE`, `ALLOW_WRITE`, `ALLOW_TRIGGER_INSTALL` | **Yes/No** |
+| `FUNCTION_NAME` | **Text**, read-only trong AppSheet |
+
+### 7) Reference binding cho `TASK_MAIN` *(nếu table có trong app)*
+
+| Column | Binding |
+|--------|---------|
+| `OWNER_ID` | `USER_DIRECTORY` |
+| `REPORTER_ID` | `USER_DIRECTORY` |
+| `DON_VI_ID` | `DON_VI` |
+| `STATUS` | `ENUM_DICTIONARY` nhóm `TASK_STATUS` (nếu có) |
+| `PRIORITY` | `ENUM_DICTIONARY` nhóm `PRIORITY` |
+
+### 8) Operator dashboard contract (giữ nguyên)
+
+- Primary header = **`OPERATOR_PRIMARY_TEXT`**
+- Secondary header = **`OPERATOR_SECONDARY_TEXT`**
+- Summary = **`OPERATOR_META_TEXT`**
+- Next action = **`OPERATOR_NEXT_ACTION`**
+- Group by = **`OPERATOR_DASHBOARD_GROUP`**
+- Sort by = **`OPERATOR_DASHBOARD_SORT`** **DESC**
+
+### 9) Cấm dùng legacy display cho operator deck
+
+Không bind operator deck vào: `DISPLAY_*`, `CARD_*`, `UX_*`, `DESKTOP_*` (chỉ dùng ngoài operator-facing nếu thật sự cần, có phê duyệt).
+
+---
+
 ## 4. Column role / type gợi ý
 
 ### HOME_ALERT (operator-facing)
@@ -64,12 +189,12 @@ Nếu spreadsheet đổi (ví dụ sandbox vs production), tạo **AppSheet app 
 | `STATUS` | Enum | — | OPEN / ACKNOWLEDGED / IN_PROGRESS / WAITING_RESPONSE / ESCALATED / RESOLVED |
 | `IS_ACTIVE` | Yes/No | — | Read-only |
 | `IS_RESOLVED` | Yes/No | — | Read-only |
-| `MODULE_CODE` | Text | — | TASK / FIN / HOSO |
+| `MODULE_CODE` | Ref hoặc Text + Valid_If | — | Khuyến nghị: slice `MASTER_CODE` nhóm `MODULE_CODE` |
 | `RELATED_ENTITY_TYPE` | Text | — | Read-only |
 | `RELATED_ENTITY_ID` | Text | Ref (nếu link TASK_MAIN) | Optional |
 | `RELATED_RECORD_URL` | URL | — | Open record cha |
-| `ASSIGNED_TO` | Ref (USERS) | — | Operator/manager |
-| `ASSIGNED_TEAM` | Text | — | Team code |
+| `ASSIGNED_TO` | Ref | — | `USER_DIRECTORY` (Key `USER_ID` / `ID`) |
+| `ASSIGNED_TEAM` | Ref hoặc Text | — | Khuyến nghị: `TEAM_DIRECTORY` (`TEAM_ID`) |
 | `CREATED_AT` | DateTime | — | Read-only |
 | `UPDATED_AT` | DateTime | — | Read-only |
 | `DUE_AT` | DateTime | — | Read-only (set bởi nguồn) |

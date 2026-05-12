@@ -1,8 +1,8 @@
 # AppSheet HOME_ALERT — Formula Reference
 
 **Audience:** Admin AppSheet cài đặt slice / format rule / security filter / show_if.  
-**Phase reference:** DOCS-A.  
-**Pair with:** `APPSHEET_HOME_ALERT_INSTALL_GUIDE.md`.
+**Phase reference:** DOCS-A + **APPSHEET-REF-A**.  
+**Pair with:** `APPSHEET_HOME_ALERT_INSTALL_GUIDE.md`, `APPSHEET_REFERENCE_BINDING_CHECKLIST.md`.
 
 > Tất cả công thức bên dưới là **AppSheet expression** (KHÔNG phải Google Sheets formula). Không
 > dùng dấu `;` kiểu locale VN/EU — AppSheet luôn dùng `,` để tách tham số. Xem §7 "Lưu ý locale".
@@ -339,6 +339,264 @@ Deck/Detail/Card view operator dùng đúng:
   `LAST_OPERATOR_ACTION`, `LAST_OPERATOR_ACTION_AT`.
 - **Link**: `RELATED_RECORD_URL`, `RELATED_ENTITY_TYPE`, `RELATED_ENTITY_ID`.
 - **Note**: `NOTE`, `BLOCKED_REASON`, `STUCK_REASON`.
+
+---
+
+## 6B. Reference / Enum Formula Library (APPSHEET-REF-A)
+
+Tất cả block dưới đây là **AppSheet expression** — dùng dấu **phẩy `,`** tách tham số (không dùng `;` kiểu Google Sheets locale VN/EU). Bảng tên mặc định: `ENUM_DICTIONARY`, `MASTER_CODE`, `USER_DIRECTORY`, `TEAM_DIRECTORY` (đổi nếu app đặt alias).
+
+### 1) Slice formulas — `MASTER_CODE`
+
+**`MC_MODULE_CODE`**
+
+```
+AND(
+  [MASTER_GROUP] = "MODULE_CODE",
+  [IS_ACTIVE] = TRUE,
+  [IS_DELETED] <> TRUE
+)
+```
+
+**`MC_ALERT_CODE`**
+
+```
+AND(
+  [MASTER_GROUP] = "ALERT_CODE",
+  [IS_ACTIVE] = TRUE,
+  [IS_DELETED] <> TRUE
+)
+```
+
+**`MC_QUEUE_CODE`**
+
+```
+AND(
+  [MASTER_GROUP] = "QUEUE_CODE",
+  [IS_ACTIVE] = TRUE,
+  [IS_DELETED] <> TRUE
+)
+```
+
+**`MC_ACTION_CODE`**
+
+```
+AND(
+  [MASTER_GROUP] = "ACTION_CODE",
+  [IS_ACTIVE] = TRUE,
+  [IS_DELETED] <> TRUE
+)
+```
+
+**`MC_POLICY_CODE`**
+
+```
+AND(
+  [MASTER_GROUP] = "POLICY_CODE",
+  [IS_ACTIVE] = TRUE,
+  [IS_DELETED] <> TRUE
+)
+```
+
+**`MC_AUTOMATION_CODE`**
+
+```
+AND(
+  [MASTER_GROUP] = "AUTOMATION_CODE",
+  [IS_ACTIVE] = TRUE,
+  [IS_DELETED] <> TRUE
+)
+```
+
+> Nếu hàng cũ chưa có `IS_ACTIVE`, có thể nới: `OR(ISBLANK([IS_ACTIVE]), [IS_ACTIVE] = TRUE)` thay cho `[IS_ACTIVE] = TRUE` cho đến khi dữ liệu đồng bộ.
+
+### 2) Slice formulas — `ENUM_DICTIONARY`
+
+**`ENUM_SLA_STATUS`**
+
+```
+AND(
+  [ENUM_GROUP] = "SLA_STATUS",
+  [IS_ACTIVE] = TRUE,
+  [IS_DELETED] <> TRUE
+)
+```
+
+**`ENUM_ESCALATION_STATUS`**
+
+```
+AND(
+  [ENUM_GROUP] = "ESCALATION_STATUS",
+  [IS_ACTIVE] = TRUE,
+  [IS_DELETED] <> TRUE
+)
+```
+
+**`ENUM_ALERT_STATUS`**
+
+```
+AND(
+  [ENUM_GROUP] = "ALERT_STATUS",
+  [IS_ACTIVE] = TRUE,
+  [IS_DELETED] <> TRUE
+)
+```
+
+**`ENUM_PRIORITY`**
+
+```
+AND(
+  [ENUM_GROUP] = "PRIORITY",
+  [IS_ACTIVE] = TRUE,
+  [IS_DELETED] <> TRUE
+)
+```
+
+**`ENUM_SEVERITY`**
+
+```
+AND(
+  [ENUM_GROUP] = "SEVERITY",
+  [IS_ACTIVE] = TRUE,
+  [IS_DELETED] <> TRUE
+)
+```
+
+**`ENUM_ROLE_CODE`**
+
+```
+AND(
+  [ENUM_GROUP] = "ROLE_CODE",
+  [IS_ACTIVE] = TRUE,
+  [IS_DELETED] <> TRUE
+)
+```
+
+**`ENUM_USER_STATUS`**
+
+```
+AND(
+  [ENUM_GROUP] = "USER_STATUS",
+  [IS_ACTIVE] = TRUE,
+  [IS_DELETED] <> TRUE
+)
+```
+
+### 3) Valid_If formulas (ví dụ)
+
+**`SLA_STATUS` (HOME_ALERT hoặc cột tương đương)**
+
+```
+SELECT(
+  ENUM_DICTIONARY[ENUM_CODE],
+  AND(
+    [ENUM_GROUP] = "SLA_STATUS",
+    [IS_ACTIVE] = TRUE,
+    [IS_DELETED] <> TRUE
+  )
+)
+```
+
+> Nếu slice chỉ trả `ENUM_VALUE` thay vì `ENUM_CODE`, đổi cột đầu `SELECT` thành `ENUM_DICTIONARY[ENUM_VALUE]`.
+
+**`MODULE_CODE`**
+
+```
+SELECT(
+  MASTER_CODE[MASTER_CODE],
+  AND(
+    [MASTER_GROUP] = "MODULE_CODE",
+    [IS_ACTIVE] = TRUE,
+    [IS_DELETED] <> TRUE
+  )
+)
+```
+
+> Nếu cột `MASTER_CODE` trống trên một số dòng, dùng virtual column `IF(ISBLANK([MASTER_CODE]), [CODE], [MASTER_CODE])` trong slice nguồn, rồi `SELECT` cột đó.
+
+**`ASSIGNED_TO` (operator — chỉ user active + operator)**
+
+```
+SELECT(
+  USER_DIRECTORY[USER_ID],
+  AND(
+    [USER_STATUS] = "ACTIVE",
+    [IS_OPERATOR] = TRUE,
+    [IS_DELETED] <> TRUE
+  )
+)
+```
+
+> Nếu Key thực tế là `ID` chứ chưa backfill `USER_ID`, đổi `USER_DIRECTORY[USER_ID]` → `USER_DIRECTORY[ID]`.
+
+**`ASSIGNED_TEAM`**
+
+```
+SELECT(
+  TEAM_DIRECTORY[TEAM_ID],
+  AND(
+    [STATUS] = "ACTIVE",
+    [IS_DELETED] <> TRUE
+  )
+)
+```
+
+### 4) Security filter formulas (mẫu REF-A + `USER_DIRECTORY`)
+
+**Operator `HOME_ALERT` (điều chỉnh theo kiểu lưu `ASSIGNED_TO`)**
+
+```
+OR(
+  [ASSIGNED_TO] = LOOKUP(USEREMAIL(), "USER_DIRECTORY", "EMAIL", "USER_ID"),
+  [CLAIMED_BY] = LOOKUP(USEREMAIL(), "USER_DIRECTORY", "EMAIL", "USER_ID"),
+  IN(USEREMAIL(), SPLIT([ACTION_PAYLOAD_JSON], ","))
+)
+```
+
+> Nếu `ASSIGNED_TO` đang lưu **email** thay vì `USER_ID`, thêm nhánh `[ASSIGNED_TO] = USEREMAIL()` hoặc chuẩn hóa dữ liệu về `USER_ID` (khuyến nghị).
+
+**Supervisor (team do supervisor quản lý)**
+
+```
+IN(
+  [ASSIGNED_TEAM],
+  SELECT(
+    TEAM_DIRECTORY[TEAM_ID],
+    [SUPERVISOR_ID] = LOOKUP(USEREMAIL(), "USER_DIRECTORY", "EMAIL", "USER_ID")
+  )
+)
+```
+
+**Admin**
+
+```
+LOOKUP(USEREMAIL(), "USER_DIRECTORY", "EMAIL", "IS_ADMIN") = TRUE
+```
+
+> Kết hợp các nhánh bằng `OR(...)` với filter hiện có (§3). Tránh `FIRST(SELECT(...))` trong security filter — ưu tiên `ANY(SELECT(...))` khi logic phức tạp (baseline TASK_MAIN).
+
+### 5) Show_If formulas (mẫu)
+
+**Admin panels**
+
+```
+LOOKUP(USEREMAIL(), "USER_DIRECTORY", "EMAIL", "IS_ADMIN") = TRUE
+```
+
+**Supervisor dashboard**
+
+```
+LOOKUP(USEREMAIL(), "USER_DIRECTORY", "EMAIL", "IS_SUPERVISOR") = TRUE
+```
+
+### 6) Enum display note
+
+- Nếu cột là **Enum** nhưng giá trị lấy từ `ENUM_DICTIONARY`, ưu tiên **Valid_If** hoặc **Ref** tới slice enum để tránh drift text.
+- Muốn **label đẹp**: Ref tới `ENUM_DICTIONARY` và hiển thị `ENUM_LABEL` / `DISPLAY_TEXT`, lưu key ở cột business (`ENUM_CODE` / `ENUM_VALUE`).
+
+### 7) Locale note (AppSheet)
+
+AppSheet expression **luôn** dùng `,` làm separator. Không copy công thức Google Sheets có `;` vào AppSheet.
 
 ---
 

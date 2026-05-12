@@ -15,6 +15,8 @@
 |------|----------------|--------------|
 | `appsheet/APPSHEET_HOME_ALERT_INSTALL_GUIDE.md` | Admin AppSheet | Admin / Runtime Owner |
 | `appsheet/APPSHEET_HOME_ALERT_FORMULA_REFERENCE.md` | Admin AppSheet | Supervisor (đọc hiểu) |
+| `appsheet/APPSHEET_REFERENCE_BINDING_CHECKLIST.md` | Admin AppSheet | Admin (go-live binding) |
+| `operations/OPERATIONAL_REFERENCE_LAYER_DESIGN.md` | Admin / Runtime Owner | Admin AppSheet (context Ref layer) |
 | `training/HOME_ALERT_OPERATOR_MANUAL.md` | Operator | Supervisor |
 | `training/HOME_ALERT_SUPERVISOR_MANUAL.md` | Supervisor / Team Lead | Admin |
 | `admin/HOME_ALERT_ADMIN_RUNTIME_OWNER_GUIDE.md` | Admin / Runtime Owner | Supervisor (read-only) |
@@ -25,11 +27,13 @@
 ## Thứ tự đọc (lần đầu)
 
 1. `admin/HOME_ALERT_ADMIN_RUNTIME_OWNER_GUIDE.md` — hiểu vai trò + cấm.
-2. `appsheet/APPSHEET_HOME_ALERT_INSTALL_GUIDE.md` — cấu trúc tables/slices/views/actions.
-3. `appsheet/APPSHEET_HOME_ALERT_FORMULA_REFERENCE.md` — công thức cụ thể.
-4. `operations/HOME_ALERT_OPERATIONAL_DEPLOYMENT_RUNBOOK.md` — runbook deploy.
-5. `training/HOME_ALERT_OPERATOR_MANUAL.md` — đào tạo operator.
-6. `training/HOME_ALERT_SUPERVISOR_MANUAL.md` — đào tạo supervisor.
+2. `operations/OPERATIONAL_REFERENCE_LAYER_DESIGN.md` — lớp reference/enum (REF-A) là gì, không lưu ENV ở đâu.
+3. `appsheet/APPSHEET_HOME_ALERT_INSTALL_GUIDE.md` — cấu trúc tables/slices/views/actions (kèm §3A binding).
+4. `appsheet/APPSHEET_REFERENCE_BINDING_CHECKLIST.md` — checklist binding từng bước.
+5. `appsheet/APPSHEET_HOME_ALERT_FORMULA_REFERENCE.md` — công thức slice/security/Valid_If (kèm §6B).
+6. `operations/HOME_ALERT_OPERATIONAL_DEPLOYMENT_RUNBOOK.md` — runbook deploy.
+7. `training/HOME_ALERT_OPERATOR_MANUAL.md` — đào tạo operator.
+8. `training/HOME_ALERT_SUPERVISOR_MANUAL.md` — đào tạo supervisor.
 
 ---
 
@@ -40,9 +44,9 @@
 | 1. Pre-deploy + git state | `operations/...RUNBOOK.md` §1–§2 | Admin |
 | 2. GAS deploy + bootstrap | `admin/...OWNER_GUIDE.md` §2–§3, `operations/...RUNBOOK.md` §3–§4 | Admin |
 | 3. Test console (82/83/84) | `admin/...OWNER_GUIDE.md` §4, `operations/...RUNBOOK.md` §6 | Admin |
-| 4. AppSheet setup | `appsheet/...INSTALL_GUIDE.md` + `appsheet/...FORMULA_REFERENCE.md` | Admin AppSheet |
+| 4. AppSheet setup | `appsheet/...INSTALL_GUIDE.md` + `appsheet/...REFERENCE_BINDING_CHECKLIST.md` + `appsheet/...FORMULA_REFERENCE.md` | Admin AppSheet |
 | 5. Pilot rollout | `operations/...RUNBOOK.md` §7 | Admin + Supervisor + Pilot operators |
-| 6. Training | `training/OPERATOR_MANUAL.md` + `training/SUPERVISOR_MANUAL.md` | Supervisor |
+| 6. Training | `training/HOME_ALERT_OPERATOR_MANUAL.md` + `training/HOME_ALERT_SUPERVISOR_MANUAL.md` | Supervisor |
 | 7. Go-live | `operations/...RUNBOOK.md` §9 | Tất cả |
 | 8. First-week monitoring | `operations/...RUNBOOK.md` §10 | Admin + Supervisor |
 | 9. Cân nhắc bật safe trigger | `admin/...OWNER_GUIDE.md` §5–§6 | Admin (có phê duyệt) |
@@ -54,8 +58,8 @@
 
 | Mục | Trạng thái |
 |-----|-----------|
-| Doc files cần | Đủ 6 file chính + 4 README folder + index này |
-| Brain artifacts | Prompt + Report + Handoff (012_*) trong `00_SYSTEM_BRAIN/` |
+| Doc files cần | Đủ bộ HOME_ALERT appsheet + operations + index (đã bổ sung checklist REF-A) |
+| Brain artifacts | Prompt/Report/Handoff `012_*` (DOCS-A), `013_*` (REF-A), `014_*` (APPSHEET-REF-A) trong `00_SYSTEM_BRAIN/` |
 | Code changes | KHÔNG (DOCS-A không sửa runtime) |
 | Schema changes | KHÔNG |
 | Trigger changes | KHÔNG |
@@ -70,6 +74,21 @@
 - Phase 83 — SLA Policy Registry: report `010_*`, handoff `010_*`.
 - Phase 84 — Safe Automation Runtime: report `011_*`, handoff `011_*`.
 - DOCS-A — file này + `012_*` prompt/report/handoff.
+- Phase APPSHEET-REF-A — `014_*` prompt/report/handoff + checklist `docs/appsheet/APPSHEET_REFERENCE_BINDING_CHECKLIST.md`.
+
+## PHASE APPSHEET-REF-A — Reference / Enum Binding
+
+**Trạng thái:** **docs-only** — không đổi core runtime trong phase này; admin áp dụng trên AppSheet Designer.  
+**Mục tiêu:** Bind đúng 8 bảng reference + enum tới `HOME_ALERT`, SLA policy, automation config, `TASK_MAIN`; giữ nguyên contract `OPERATOR_*`.
+
+| Tài liệu | Ai đọc | Thứ tự (sau REF-A runtime) |
+|----------|--------|----------------------------|
+| `appsheet/APPSHEET_HOME_ALERT_INSTALL_GUIDE.md` (§3A) | Admin AppSheet | 1 |
+| `appsheet/APPSHEET_REFERENCE_BINDING_CHECKLIST.md` | Admin AppSheet | 2 |
+| `appsheet/APPSHEET_HOME_ALERT_FORMULA_REFERENCE.md` (§6B) | Admin AppSheet | 3 |
+| `operations/OPERATIONAL_REFERENCE_LAYER_DESIGN.md` | Admin / Runtime Owner | 0 (context) hoặc song song mục 1 |
+
+**Artifacts:** `014_*` prompt / report / handoff trong `00_SYSTEM_BRAIN/`.
 
 ---
 
@@ -83,3 +102,4 @@
 - Không thay đổi `OPERATOR_*` contract.
 - Không thêm AppSheet Bot.
 - Không tự ý mở rộng allowlist Phase 84.
+- APPSHEET-REF-A — chỉ tài liệu AppSheet binding; không mở ENV-A; không Phase 85 / AI / Queue Intelligence.
