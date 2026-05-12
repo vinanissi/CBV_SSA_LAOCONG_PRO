@@ -8,7 +8,7 @@
 
 - `00_SYSTEM_BRAIN/000_PROMPTS/014_PHASE_APPSHEET_REF_A_REFERENCE_AND_ENUM_BINDING_PROMPT.md`
 - `docs/appsheet/APPSHEET_REFERENCE_BINDING_CHECKLIST.md`
-- `00_SYSTEM_BRAIN/000_REPORTS/014_PHASE_APPSHEET_REF_A_REFERENCE_AND_ENUM_BINDING_REPORT.md` (this file)
+- `00_SYSTEM_BRAIN/000_REPORTS/014_PHASE_APPSHEET_REF_A_REFERENCE_AND_ENUM_BINDING_REPORT.md`
 - `00_SYSTEM_BRAIN/001_HANDOFF/014_PHASE_APPSHEET_REF_A_REFERENCE_AND_ENUM_BINDING_HANDOFF.md`
 
 ## FILES UPDATED
@@ -67,8 +67,10 @@ Sample row-level patterns using `USER_DIRECTORY` + `LOOKUP(USEREMAIL(), …)`; n
 
 ## GIT STATUS
 
-_(Populated at commit — see `git log -1`.)_
+Clean on `phase/from-v2.4.1-TASK-FIN` at tip `ba76844` after APPSHEET-REF-A docs commit.
 
 ## COMMIT / PUSH / TAG STATUS
 
-_(Populated after git.)_
+- **Commit:** `ba76844` — `docs(appsheet): add reference and enum binding guide`
+- **Push:** succeeded to `origin/phase/from-v2.4.1-TASK-FIN`
+- **Tag:** `v2.4.7-APPSHEET-REFERENCE-BINDING` pushed to `origin`
