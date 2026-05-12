@@ -73,10 +73,12 @@ All rows: `ENABLED=true`, `SAFE_MODE=true`, `ALLOW_TRIGGER_INSTALL=false` (manua
 
 ## GIT STATUS
 
-- See final `git status` after commit in deployment session.
+- Branch: `phase/from-v2.4.1-TASK-FIN`
+- Last commit: `23f0ad9` — `feat(home-alert): add phase 84 safe automation runtime`
+- Working tree: clean after commit
 
 ## COMMIT / PUSH / TAG STATUS
 
-- Intended commit message: `feat(home-alert): add phase 84 safe automation runtime`
-- Intended tag: `v2.4.4-HOME-ALERT-SAFE-AUTOMATION`
-- If `git push` or tag push fails due to auth, treat as environment/credential issue, not a code defect.
+- **Commit:** `23f0ad9` on `phase/from-v2.4.1-TASK-FIN`
+- **Push:** succeeded to `origin/phase/from-v2.4.1-TASK-FIN`
+- **Tag:** `v2.4.4-HOME-ALERT-SAFE-AUTOMATION` created and pushed to `origin`
