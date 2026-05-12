@@ -69,8 +69,10 @@ HAND-A adds **five click-by-click** AppSheet guides + index pointer; no runtime.
 
 ## GIT STATUS
 
-_(After commit.)_
+Clean on `phase/from-v2.4.1-TASK-FIN` at `8f9e065`.
 
 ## COMMIT / PUSH / TAG STATUS
 
-_(After git.)_
+- **Commit:** `8f9e065` — `docs(appsheet): add click-by-click setup guide`
+- **Push:** succeeded to `origin/phase/from-v2.4.1-TASK-FIN`
+- **Tag:** `v2.4.8-APPSHEET-CLICK-BY-CLICK-GUIDE` pushed to `origin`
