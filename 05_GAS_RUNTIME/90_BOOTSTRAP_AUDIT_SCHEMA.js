@@ -162,6 +162,20 @@ var CBV_AUDIT_SCHEMA = {
     auditColumns: ['CREATED_AT'],
     refColumns: { FIN_ID: 'FINANCE_TRANSACTION' },
     enumColumns: {}
+  },
+  HOME_ALERT: {
+    requiredColumns: ['ALERT_ID', 'ALERT_CODE', 'SEVERITY', 'STATUS', 'IS_ACTIVE', 'IS_RESOLVED', 'CREATED_AT', 'UPDATED_AT', 'TRACE_ID', 'SOURCE_HASH'],
+    optionalColumns: [
+      'ALERT_TYPE', 'PRIORITY_SCORE', 'TITLE', 'MESSAGE', 'MODULE_CODE',
+      'RELATED_ENTITY_TYPE', 'RELATED_ENTITY_ID', 'RELATED_RECORD_URL',
+      'ACTION_LABEL', 'ACTION_TYPE', 'ACTION_PAYLOAD_JSON',
+      'DUE_AT', 'ASSIGNED_TO', 'SORT_KEY', 'DISPLAY_GROUP', 'BADGE_TEXT', 'BADGE_COLOR',
+      'RESOLVED_AT', 'RESOLVED_BY', 'NOTE'
+    ],
+    key: 'ALERT_ID',
+    auditColumns: ['CREATED_AT', 'UPDATED_AT'],
+    refColumns: { ASSIGNED_TO: 'USER_DIRECTORY' },
+    enumColumns: {}
   }
 };
 
