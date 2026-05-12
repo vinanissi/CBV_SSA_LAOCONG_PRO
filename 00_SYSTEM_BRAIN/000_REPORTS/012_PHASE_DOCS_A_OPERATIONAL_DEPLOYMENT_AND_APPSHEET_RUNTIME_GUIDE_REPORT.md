@@ -177,3 +177,17 @@ xong. Tham khảo handoff `012_*_HANDOFF.md` cho ràng buộc.
 
 > Lưu ý: nếu push fail do auth thì KHÔNG coi là docs fail; ghi rõ ở handoff/commit log để admin tự
 > push sau.
+
+---
+
+## COMMIT / PUSH / TAG STATUS (append)
+
+- **Commit:** `d9ffd1c` — `docs(home-alert): add operational deployment and appsheet guide`
+  - 14 file mới, 2150 insertions, 0 deletions.
+  - Phạm vi: 11 file dưới `docs/` (6 tài liệu chính + 4 README folder + 1 index tổng) + 3 brain
+    artifact `012_*` trong `00_SYSTEM_BRAIN/`.
+- **Push:** Success → `origin/phase/from-v2.4.1-TASK-FIN` (e8b8478..d9ffd1c).
+- **Tag:** `v2.4.5-HOME-ALERT-DEPLOYMENT-DOCS` (annotated) đã tạo và push lên origin.
+- **Post-commit `git status`:** clean (chỉ còn các untracked / modified ngoài phạm vi DOCS-A nếu
+  có).
+- **Auth:** Không gặp lỗi auth ở phase này.
