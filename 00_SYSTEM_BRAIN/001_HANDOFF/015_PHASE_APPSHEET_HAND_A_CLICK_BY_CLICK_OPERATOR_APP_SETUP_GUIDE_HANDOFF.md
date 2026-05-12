@@ -39,3 +39,9 @@ Chạy pilot: một người **không** dev làm theo 5 file trên môi trườn
 - `OPERATOR_*` contract; cấm legacy deck columns.  
 - Không thêm AppSheet Bot / auto workflows trái chuẩn CBV.  
 - Không đụng `.clasp.json` / `scriptId` khi chỉ làm doc phase tương tự.
+
+## Git (reference)
+
+- Main docs commit: `8f9e065` — `docs(appsheet): add click-by-click setup guide`
+- Report metadata commit: `5434b3d` — `docs(report): add git metadata for APPSHEET-HAND-A`
+- Tag: `v2.4.8-APPSHEET-CLICK-BY-CLICK-GUIDE` (points at tip after report update)
