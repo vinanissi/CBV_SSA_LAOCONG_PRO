@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top" />
+    <style>
+      body {
+        font-family: 'Segoe UI', Arial, sans-serif;
+        margin: 0;
+        padding: 14px;
+        background: #f4f6f8;
+        color: #1a1a1a;
+      }
+      h1 {
+        font-size: 18px;
+        margin: 0 0 4px 0;
+      }
+      .sub {
+        font-size: 13px;
+        color: #555;
+        margin-bottom: 12px;
+      }
+      .guide {
+        background: #e8f4fd;
+        border: 1px solid #b6d9f7;
+        border-radius: 6px;
+        padding: 10px 12px;
+        margin-bottom: 12px;
+        font-size: 13px;
+      }
+      .warn {
+        background: #fff8e6;
+        border: 1px solid #f0c96a;
+        border-radius: 6px;
+        padding: 8px 10px;
+        margin-bottom: 10px;
+        font-size: 12px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      @media (max-width: 720px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .card {
+        background: #fff;
+        border-radius: 8px;
+        border: 1px solid #dde3ea;
+        padding: 10px;
+        min-height: 120px;
+      }
+      .card h2 {
+        font-size: 14px;
+        margin: 0 0 8px 0;
+      }
+      ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        max-height: 220px;
+        overflow: auto;
+      }
+      li {
+        padding: 6px 4px;
+        border-bottom: 1px solid #eef1f4;
+        font-size: 13px;
+        cursor: pointer;
+      }
+      li:hover {
+        background: #f0f7ff;
+      }
+      .badge {
+        display: inline-block;
+        font-size: 11px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        background: #eef2f6;
+        margin-left: 6px;
+      }
+      .actions {
+        margin-top: 12px;
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      button {
+        padding: 8px 14px;
+        border-radius: 6px;
+        border: 1px solid #2b6cb0;
+        background: #2b6cb0;
+        color: #fff;
+        font-size: 13px;
+        cursor: pointer;
+      }
+      button.secondary {
+        background: #fff;
+        color: #2b6cb0;
+      }
+      .muted {
+        color: #666;
+        font-size: 12px;
+      }
+      .state {
+        text-align: center;
+        padding: 24px;
+        font-size: 14px;
+      }
+      .err {
+        color: #9b2c2c;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Home / Today Workspace</h1>
+    <div class="sub">Việc trong ngày — trạng thái hiển thị theo ngôn ngữ vận hành, không dùng mã kỹ thuật.</div>
+    <div id="guide" class="guide" style="display: none"></div>
+    <div id="warnBox" style="display: none"></div>
+    <div id="loading" class="state">Đang tải…</div>
+    <div id="error" class="state err" style="display: none"></div>
+    <div id="main" style="display: none">
+      <div class="grid">
+        <div class="card">
+          <h2>Việc hôm nay</h2>
+          <ul id="listToday"></ul>
+          <div class="muted" id="emptyToday" style="display: none">Không có việc trong nhóm này.</div>
+        </div>
+        <div class="card">
+          <h2>Quá hạn</h2>
+          <ul id="listOverdue"></ul>
+          <div class="muted" id="emptyOverdue" style="display: none">Không có việc quá hạn.</div>
+        </div>
+        <div class="card">
+          <h2>Đang chờ phản hồi</h2>
+          <ul id="listWait"></ul>
+          <div class="muted" id="emptyWait" style="display: none">Không có việc đang chờ.</div>
+        </div>
+        <div class="card">
+          <h2>Cần admin xử lý</h2>
+          <ul id="listAdmin"></ul>
+          <div class="muted" id="emptyAdmin" style="display: none">Không có việc trong hàng chờ admin.</div>
+        </div>
+      </div>
+      <div class="actions">
+        <button type="button" id="btnFocus">Mở Focus Task</button>
+        <button type="button" class="secondary" id="btnRefresh">Tải lại</button>
+      </div>
+    </div>
+    <script>
+      var vmCache = null;
+      var selectedId = '';
+
+      function showErr(msg) {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('main').style.display = 'none';
+        var e = document.getElementById('error');
+        e.style.display = 'block';
+        e.textContent = msg || 'Lỗi không xác định.';
+      }
+
+      function fillList(id, items, emptyId) {
+        var ul = document.getElementById(id);
+        var em = document.getElementById(emptyId);
+        ul.innerHTML = '';
+        if (!items || !items.length) {
+          em.style.display = 'block';
+          return;
+        }
+        em.style.display = 'none';
+        for (var i = 0; i < items.length; i++) {
+          var it = items[i];
+          var li = document.createElement('li');
+          li.textContent = it.title;
+          var b = document.createElement('span');
+          b.className = 'badge';
+          b.textContent = it.statusLabel;
+          li.appendChild(b);
+          li.title = it.nextHint || '';
+          li.onclick = (function (tid) {
+            return function () {
+              selectedId = tid;
+              try {
+                li.parentElement.querySelectorAll('li').forEach(function (x) {
+                  x.style.background = '';
+                });
+              } catch (e) {}
+              li.style.background = '#e6f0ff';
+              google.script.run.TASK_FE_syncActiveTaskId_(tid);
+            };
+          })(it.id);
+          ul.appendChild(li);
+        }
+      }
+
+      function render(vm) {
+        vmCache = vm;
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('error').style.display = 'none';
+        document.getElementById('main').style.display = 'block';
+        var g = document.getElementById('guide');
+        g.style.display = 'block';
+        g.textContent = vm.guidance || '';
+
+        var wb = document.getElementById('warnBox');
+        if (vm.warnings && vm.warnings.length) {
+          wb.style.display = 'block';
+          wb.className = 'warn';
+          wb.innerHTML = vm.warnings.map(function (w) {
+            return '<div>' + w + '</div>';
+          }).join('');
+        } else wb.style.display = 'none';
+
+        var s = vm.sections || {};
+        fillList('listToday', s.today || [], 'emptyToday');
+        fillList('listOverdue', s.overdue || [], 'emptyOverdue');
+        fillList('listWait', s.waitingResponse || [], 'emptyWait');
+        fillList('listAdmin', s.adminAttention || [], 'emptyAdmin');
+      }
+
+      function load() {
+        document.getElementById('loading').style.display = 'block';
+        google.script.run
+          .withSuccessHandler(function (res) {
+            if (!res || res.ok === false) {
+              showErr((res && res.message) || 'Không đọc được dữ liệu.');
+              return;
+            }
+            render(res.data || {});
+          })
+          .withFailureHandler(function (err) {
+            showErr(err && err.message ? err.message : String(err));
+          })
+          .TASK_FE_Home_getSnapshot();
+      }
+
+      function openFocus() {
+        var id = selectedId || (vmCache && vmCache.focusTaskId) || '';
+        google.script.run.TASK_FE_Focus_open(id);
+      }
+
+      document.getElementById('btnRefresh').onclick = function () {
+        document.getElementById('main').style.display = 'none';
+        document.getElementById('loading').style.display = 'block';
+        load();
+      };
+      document.getElementById('btnFocus').onclick = openFocus;
+      load();
+    </script>
+  </body>
+</html>

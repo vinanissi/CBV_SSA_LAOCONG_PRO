@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top" />
+    <style>
+      body {
+        font-family: 'Segoe UI', Arial, sans-serif;
+        margin: 0;
+        padding: 14px;
+        background: #f4f6f8;
+        color: #1a1a1a;
+      }
+      h1 {
+        font-size: 18px;
+        margin: 0 0 4px 0;
+      }
+      .guide {
+        background: #e8f4fd;
+        border: 1px solid #b6d9f7;
+        border-radius: 6px;
+        padding: 10px 12px;
+        margin: 12px 0;
+        font-size: 13px;
+      }
+      .card {
+        background: #fff;
+        border: 1px solid #dde3ea;
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 10px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      th,
+      td {
+        border-bottom: 1px solid #eef1f4;
+        padding: 6px 4px;
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        color: #555;
+        font-weight: 600;
+      }
+      .muted {
+        color: #666;
+        font-size: 12px;
+      }
+      .state {
+        padding: 20px;
+        text-align: center;
+      }
+      .err {
+        color: #9b2c2c;
+      }
+      a {
+        color: #2b6cb0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Task Detail / Timeline</h1>
+    <div class="muted" id="tid"></div>
+    <div class="guide">Luồng thời gian giúp tránh “mù trạng thái”: ai làm gì, lúc nào, ghi chú gì.</div>
+    <div id="loading" class="state">Đang tải…</div>
+    <div id="error" class="state err" style="display: none"></div>
+    <div id="main" style="display: none">
+      <div class="card">
+        <strong>File liên quan</strong>
+        <div id="files" class="muted" style="margin-top: 6px"></div>
+      </div>
+      <div class="card">
+        <strong>Lịch sử xử lý</strong>
+        <table>
+          <thead>
+            <tr>
+              <th>Thời điểm</th>
+              <th>Người thao tác</th>
+              <th>Hoạt động</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+        <div id="emptyEv" class="muted" style="display: none; margin-top: 8px">Chưa có sự kiện — có thể sheet log chưa có dữ liệu.</div>
+      </div>
+    </div>
+    <script>
+      var bootId = <?!= bootTaskId ?>;
+
+      function showErr(m) {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('error').style.display = 'block';
+        document.getElementById('error').textContent = m;
+      }
+
+      function render(data) {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('main').style.display = 'block';
+        document.getElementById('tid').textContent = 'TASK_ID: ' + (data.taskId || '');
+        var fs = data.files || [];
+        var fh = document.getElementById('files');
+        if (!fs.length) fh.textContent = 'Không có tệp đính kèm.';
+        else {
+          fh.innerHTML = fs
+            .map(function (f) {
+              if (f.url) return '<div><a href="' + f.url + '" target="_blank" rel="noopener">' + f.name + '</a></div>';
+              return '<div>' + f.name + '</div>';
+            })
+            .join('');
+        }
+        var ev = data.events || [];
+        var tb = document.getElementById('tbody');
+        tb.innerHTML = '';
+        if (!ev.length) document.getElementById('emptyEv').style.display = 'block';
+        else {
+          document.getElementById('emptyEv').style.display = 'none';
+          for (var i = 0; i < ev.length; i++) {
+            var e = ev[i];
+            var tr = document.createElement('tr');
+            tr.innerHTML =
+              '<td>' +
+              (e.at || '') +
+              '</td><td>' +
+              (e.actor || '') +
+              '</td><td>' +
+              (e.action || '') +
+              '<div class="muted">' +
+              (e.note || '') +
+              '</div></td>';
+            tb.appendChild(tr);
+          }
+        }
+      }
+
+      function load() {
+        var id = bootId || '';
+        if (!id) {
+          showErr('Thiếu TASK_ID — mở từ menu hoặc chọn việc ở Home.');
+          return;
+        }
+        google.script.run
+          .withSuccessHandler(function (res) {
+            if (!res || res.ok === false) {
+              showErr((res && res.message) || 'Không đọc được timeline.');
+              return;
+            }
+            render(res.data || {});
+          })
+          .withFailureHandler(function (err) {
+            showErr(err && err.message ? err.message : String(err));
+          })
+          .TASK_FE_Timeline_get(id);
+      }
+      load();
+    </script>
+  </body>
+</html>

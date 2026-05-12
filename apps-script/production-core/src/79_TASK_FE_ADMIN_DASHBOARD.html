@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top" />
+    <style>
+      body {
+        font-family: 'Segoe UI', Arial, sans-serif;
+        margin: 0;
+        padding: 14px;
+        background: #f4f6f8;
+      }
+      h1 {
+        font-size: 18px;
+        margin: 0 0 8px 0;
+      }
+      .guide {
+        background: #e8f4fd;
+        border: 1px solid #b6d9f7;
+        border-radius: 6px;
+        padding: 10px 12px;
+        margin-bottom: 12px;
+        font-size: 13px;
+      }
+      .warn {
+        background: #fff8e6;
+        border: 1px solid #f0c96a;
+        border-radius: 6px;
+        padding: 8px 10px;
+        margin-bottom: 10px;
+        font-size: 12px;
+      }
+      .kpis {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      @media (max-width: 900px) {
+        .kpis {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      .kpi {
+        background: #fff;
+        border: 1px solid #dde3ea;
+        border-radius: 8px;
+        padding: 10px;
+        text-align: center;
+      }
+      .kpi .n {
+        font-size: 22px;
+        font-weight: 700;
+      }
+      .kpi .l {
+        font-size: 12px;
+        color: #555;
+      }
+      .grid2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      @media (max-width: 800px) {
+        .grid2 {
+          grid-template-columns: 1fr;
+        }
+      }
+      .card {
+        background: #fff;
+        border: 1px solid #dde3ea;
+        border-radius: 8px;
+        padding: 10px;
+        max-height: 260px;
+        overflow: auto;
+      }
+      .card h2 {
+        font-size: 14px;
+        margin: 0 0 6px 0;
+      }
+      li {
+        font-size: 13px;
+        margin-bottom: 4px;
+      }
+      .state {
+        padding: 24px;
+        text-align: center;
+      }
+      .err {
+        color: #9b2c2c;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Admin Dashboard</h1>
+    <div id="loading" class="state">Đang tải…</div>
+    <div id="error" class="state err" style="display: none"></div>
+    <div id="main" style="display: none">
+      <div class="guide" id="g"></div>
+      <div id="wbox" style="display: none"></div>
+      <div class="kpis">
+        <div class="kpi">
+          <div class="n" id="kOd"></div>
+          <div class="l">Quá hạn</div>
+        </div>
+        <div class="kpi">
+          <div class="n" id="kSt"></div>
+          <div class="l">Bị kẹt</div>
+        </div>
+        <div class="kpi">
+          <div class="n" id="kAp"></div>
+          <div class="l">Chờ admin</div>
+        </div>
+        <div class="kpi">
+          <div class="n" id="kCl"></div>
+          <div class="l">Chờ khách</div>
+        </div>
+      </div>
+      <div class="card" style="max-height: none; margin-bottom: 10px">
+        <h2>Cảnh báo workflow</h2>
+        <ul id="wf"></ul>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <h2>Quá hạn</h2>
+          <ul id="l1"></ul>
+        </div>
+        <div class="card">
+          <h2>Bị kẹt</h2>
+          <ul id="l2"></ul>
+        </div>
+        <div class="card">
+          <h2>Chờ duyệt (admin)</h2>
+          <ul id="l3"></ul>
+        </div>
+        <div class="card">
+          <h2>Chờ khách</h2>
+          <ul id="l4"></ul>
+        </div>
+      </div>
+      <div class="card" style="max-height: none">
+        <h2>Nhân sự quá tải (≥ 8 việc mở)</h2>
+        <ul id="l5"></ul>
+      </div>
+    </div>
+    <script>
+      function showErr(m) {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('error').style.display = 'block';
+        document.getElementById('error').textContent = m;
+      }
+      function fillUl(id, items, labelFn) {
+        var u = document.getElementById(id);
+        u.innerHTML = '';
+        if (!items || !items.length) {
+          u.innerHTML = '<li class="muted">Không có mục.</li>';
+          return;
+        }
+        for (var i = 0; i < items.length; i++) {
+          var it = items[i];
+          var li = document.createElement('li');
+          li.textContent = labelFn(it);
+          u.appendChild(li);
+        }
+      }
+      function go(res) {
+        if (!res || res.ok === false) {
+          showErr((res && res.message) || 'Lỗi tải dashboard.');
+          return;
+        }
+        var d = res.data || {};
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('main').style.display = 'block';
+        document.getElementById('g').textContent = d.guidance || '';
+        var wb = document.getElementById('wbox');
+        if (d.warnings && d.warnings.length) {
+          wb.style.display = 'block';
+          wb.className = 'warn';
+          wb.innerHTML = d.warnings.join('<br/>');
+        } else wb.style.display = 'none';
+        var c = d.counts || {};
+        document.getElementById('kOd').textContent = c.overdue != null ? c.overdue : 0;
+        document.getElementById('kSt').textContent = c.stuck != null ? c.stuck : 0;
+        document.getElementById('kAp').textContent = c.waitingApproval != null ? c.waitingApproval : 0;
+        document.getElementById('kCl').textContent = c.waitingClient != null ? c.waitingClient : 0;
+        var wf = d.workflowWarnings || [];
+        fillUl(
+          'wf',
+          wf.length ? wf.map(function (w) {
+            return { t: w };
+          }) : [{ t: 'Không có cảnh báo tự động.' }],
+          function (it) {
+            return it.t;
+          }
+        );
+        var L = d.lists || {};
+        fillUl('l1', L.overdue, function (it) {
+          return it.title + ' — ' + (it.ownerId || '');
+        });
+        fillUl('l2', L.stuck, function (it) {
+          return it.title + ' — ' + (it.ownerId || '');
+        });
+        fillUl('l3', L.waitingApproval, function (it) {
+          return it.title + ' — ' + (it.ownerId || '');
+        });
+        fillUl('l4', L.waitingClient, function (it) {
+          return it.title + ' — ' + (it.ownerId || '');
+        });
+        fillUl('l5', L.overload, function (it) {
+          return it.ownerId + ': ' + it.openCount + ' việc';
+        });
+      }
+      google.script.run
+        .withSuccessHandler(go)
+        .withFailureHandler(function (err) {
+          showErr(err && err.message ? err.message : String(err));
+        })
+        .TASK_FE_Admin_getDashboardSnapshot();
+    </script>
+  </body>
+</html>

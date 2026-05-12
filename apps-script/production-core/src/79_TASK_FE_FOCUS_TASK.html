@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top" />
+    <style>
+      body {
+        font-family: 'Segoe UI', Arial, sans-serif;
+        margin: 0;
+        padding: 14px;
+        background: #f4f6f8;
+        color: #1a1a1a;
+      }
+      h1 {
+        font-size: 18px;
+        margin: 0 0 4px 0;
+      }
+      .pill {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: #e6f0ff;
+        font-size: 12px;
+        margin-bottom: 8px;
+      }
+      .guide {
+        background: #e8f4fd;
+        border: 1px solid #b6d9f7;
+        border-radius: 6px;
+        padding: 10px 12px;
+        margin: 10px 0;
+        font-size: 13px;
+      }
+      .card {
+        background: #fff;
+        border: 1px solid #dde3ea;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 10px;
+      }
+      .goal {
+        font-size: 14px;
+        line-height: 1.4;
+      }
+      ul.ck {
+        padding-left: 18px;
+        margin: 8px 0 0 0;
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      button {
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid #2b6cb0;
+        background: #2b6cb0;
+        color: #fff;
+        font-size: 13px;
+        cursor: pointer;
+      }
+      button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      button.secondary {
+        background: #fff;
+        color: #2b6cb0;
+      }
+      textarea {
+        width: 100%;
+        min-height: 52px;
+        margin-top: 6px;
+        font-family: inherit;
+        font-size: 13px;
+      }
+      .state {
+        padding: 20px;
+        text-align: center;
+      }
+      .err {
+        color: #9b2c2c;
+      }
+      .muted {
+        color: #666;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Focus Task</h1>
+    <div class="pill" id="statusPill"></div>
+    <div class="muted" id="dueLine"></div>
+    <div id="loading" class="state">Đang tải…</div>
+    <div id="error" class="state err" style="display: none"></div>
+    <div id="main" style="display: none">
+      <div class="guide" id="nextGuide"></div>
+      <div class="card">
+        <strong id="title"></strong>
+        <div class="goal" id="goal"></div>
+      </div>
+      <div class="card">
+        <strong>Checklist</strong>
+        <ul class="ck" id="cklist"></ul>
+        <div class="muted" id="ckEmpty" style="display: none">Chưa có mục checklist.</div>
+      </div>
+      <div class="card">
+        <div class="muted">Ghi chú kèm hành động (tuỳ chọn)</div>
+        <textarea id="note"></textarea>
+        <div class="actions" id="btnRow"></div>
+      </div>
+      <div class="actions">
+        <button type="button" class="secondary" id="btnDetail">Mở chi tiết / timeline</button>
+        <button type="button" class="secondary" id="btnReload">Tải lại</button>
+      </div>
+    </div>
+    <script>
+      var bootId = <?!= bootTaskId ?>;
+      var currentId = '';
+
+      function showErr(m) {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('error').style.display = 'block';
+        document.getElementById('error').textContent = m;
+      }
+
+      function render(vm) {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('error').style.display = 'none';
+        document.getElementById('main').style.display = 'block';
+        currentId = vm.taskId || '';
+        document.getElementById('title').textContent = vm.title || '';
+        document.getElementById('goal').textContent = vm.goal || '';
+        document.getElementById('statusPill').textContent = vm.statusLabel || '';
+        document.getElementById('nextGuide').textContent = vm.nextAction || '';
+        document.getElementById('dueLine').textContent = vm.due ? 'Hạn: ' + vm.due : '';
+        var ck = vm.checklist || [];
+        var ul = document.getElementById('cklist');
+        ul.innerHTML = '';
+        if (!ck.length) document.getElementById('ckEmpty').style.display = 'block';
+        else {
+          document.getElementById('ckEmpty').style.display = 'none';
+          for (var i = 0; i < ck.length; i++) {
+            var li = document.createElement('li');
+            li.textContent = (ck[i].done ? '☑ ' : '☐ ') + (ck[i].title || '');
+            ul.appendChild(li);
+          }
+        }
+        var row = document.getElementById('btnRow');
+        row.innerHTML = '';
+        var acts = vm.actions || [];
+        for (var j = 0; j < acts.length; j++) {
+          var a = acts[j];
+          var b = document.createElement('button');
+          b.textContent = a.label;
+          b.disabled = !a.enabled;
+          b.onclick = (function (code) {
+            return function () {
+              if (!currentId) return;
+              document.getElementById('loading').style.display = 'block';
+              google.script.run
+                .withSuccessHandler(function (res) {
+                  document.getElementById('loading').style.display = 'none';
+                  if (!res || res.ok === false) {
+                    alert((res && res.message) || 'Không thực hiện được.');
+                  }
+                  load();
+                })
+                .withFailureHandler(function (err) {
+                  document.getElementById('loading').style.display = 'none';
+                  alert(err && err.message ? err.message : String(err));
+                })
+                .TASK_FE_Focus_applyAction({ taskId: currentId, action: code, note: document.getElementById('note').value });
+            };
+          })(a.code);
+          row.appendChild(b);
+        }
+      }
+
+      function load() {
+        var id = bootId || '';
+        if (!id) {
+          showErr('Chưa chọn việc — quay lại Home và chọn một dòng, hoặc dán TASK_ID vào menu Chi tiết.');
+          return;
+        }
+        document.getElementById('loading').style.display = 'block';
+        google.script.run
+          .withSuccessHandler(function (res) {
+            document.getElementById('loading').style.display = 'none';
+            if (!res || res.ok === false) {
+              showErr((res && res.message) || 'Không có ngữ cảnh việc.');
+              return;
+            }
+            render(res.data || {});
+          })
+          .withFailureHandler(function (err) {
+            document.getElementById('loading').style.display = 'none';
+            showErr(err && err.message ? err.message : String(err));
+          })
+          .TASK_FE_Focus_getTaskContext(id);
+      }
+
+      document.getElementById('btnReload').onclick = load;
+      document.getElementById('btnDetail').onclick = function () {
+        if (!currentId) return;
+        google.script.run.TASK_FE_Detail_open(currentId);
+      };
+      load();
+    </script>
+  </body>
+</html>
