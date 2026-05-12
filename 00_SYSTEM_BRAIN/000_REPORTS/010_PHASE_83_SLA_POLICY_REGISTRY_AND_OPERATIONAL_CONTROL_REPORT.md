@@ -99,10 +99,13 @@ Phase 83 introduces **policy-backed SLA thresholds** (due-soon, breach minutes, 
 
 ## GIT STATUS
 
-*(Post-commit: see shell — branch `phase/from-v2.4.1-TASK-FIN`.)*
+- Branch: `phase/from-v2.4.1-TASK-FIN` (synced with `origin`)
+- Clean except any unrelated local edits outside this phase
 
 ---
 
 ## COMMIT / PUSH / TAG STATUS
 
-*(Filled after `git commit`, `git push`, `git tag`.)*
+- **Commit:** `5c0b67c` — `feat(home-alert): add phase 83 SLA policy registry`
+- **Push:** Success → `origin/phase/from-v2.4.1-TASK-FIN`
+- **Tag:** `v2.4.3-HOME-ALERT-SLA-POLICY` pushed to `origin`
