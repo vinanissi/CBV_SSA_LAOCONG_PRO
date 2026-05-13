@@ -234,6 +234,32 @@ Sau đó nếu cần hiểu sâu: `APPSHEET_HOME_ALERT_INSTALL_GUIDE.md` và `AP
 
 ---
 
+## PHASE 94 — WebApp UI Foundation Freeze / UAT Hardening (GAS + docs)
+
+**Trạng thái:** UI Foundation Freeze (pilot tier) — **không** thêm feature, **không** mở write/mutation, **không** xác nhận production.  
+**Mục tiêu:** chuẩn hóa và đóng băng WebApp UI contract (route, FE state, safety footer, responsive/a11y) + master UAT checklist + Test Console Phase 94 (CBV_TCS_V1) trước khi staff trial.
+
+| Tài liệu / công cụ | Ghi chú |
+|--------------------|--------|
+| `docs/webapp/PHASE_94_WEBAPP_UI_FOUNDATION_FREEZE_UAT_HARDENING.md` | Tổng quan phase 94 |
+| `docs/webapp/WEBAPP_UI_FOUNDATION_STANDARD.md` | Page shell, nav, cards, badges, safety, states, read-first, responsive, accessibility |
+| `docs/webapp/WEBAPP_ROUTE_FREEZE_MATRIX.md` | Frozen route matrix + support endpoints |
+| `docs/webapp/WEBAPP_FE_STATE_FREEZE_STANDARD.md` | FE state vocabulary freeze |
+| `docs/webapp/WEBAPP_SAFETY_FOOTER_STANDARD.md` | Exact safety phrases |
+| `docs/webapp/WEBAPP_RESPONSIVE_ACCESSIBILITY_BASELINE.md` | Pilot responsive + a11y baseline |
+| `docs/webapp/WEBAPP_UAT_MASTER_CHECKLIST.md` | Master UAT checklist |
+| `docs/webapp/WEBAPP_ROUTE_SMOKE_TEST_MATRIX.md` | Per-route smoke matrix |
+| `docs/webapp/WEBAPP_UI_CONSISTENCY_AUDIT.md` | Audit findings + future polish rules |
+| `05_GAS_RUNTIME/998B_WEBAPP_UI_FREEZE_AUDIT.js` | Audit runtime + scoped mutation validator |
+| `05_GAS_RUNTIME/998C_WEBAPP_UI_FREEZE_TEST_CONSOLE.js` | Test Console Phase 94 (CBV_TCS_V1) |
+| `00_SYSTEM_BRAIN/002_DECISIONS/033_WEBAPP_UI_FOUNDATION_FREEZE_DECISION.md` | Freeze decision |
+
+**Routes affected:** none added; freezes existing 8 operational routes + `?action=ping`.  
+**Artifacts:** `033_*` trong `00_SYSTEM_BRAIN/` (prompt, report, handoff, decision).  
+**Next:** Phase 95 — WebApp Pilot UAT Runbook / Staff Trial.
+
+---
+
 ## Liên kết phase trước
 
 - Phase 82 — SLA + Escalation Runtime: report `00_SYSTEM_BRAIN/000_REPORTS/009_*`, handoff

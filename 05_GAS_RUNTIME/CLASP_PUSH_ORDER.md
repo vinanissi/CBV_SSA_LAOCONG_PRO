@@ -125,6 +125,8 @@ The sequence in `.clasp.json` filePushOrder is the deployment order. **HOME_ALER
    997_WEBAPP_ADMIN_REFERENCE_DATA.js
    998_WEBAPP_ADMIN_REFERENCE_RENDERER.js
    998A_WEBAPP_ADMIN_REFERENCE_TEST_CONSOLE.js
+   998B_WEBAPP_UI_FREEZE_AUDIT.js
+   998C_WEBAPP_UI_FREEZE_TEST_CONSOLE.js
    96_WEBAPP_DOGET_DISPATCHER.js
    999_WEBAPP_DOGET_DISPATCHER_FINAL.js
 ```
@@ -146,6 +148,12 @@ The sequence in `.clasp.json` filePushOrder is the deployment order. **HOME_ALER
 - `997_WEBAPP_ADMIN_REFERENCE_DATA.js` defines `CbvWebAppAdminRef_getGovernanceSummary`, `_getEnumSummary`, `_getUserRoleSummary`, `_getFeatureFlagSummary`, `_getSystemRegistrySummary`, `_getUiContractSummary`, `_getRouteRegistrySummary`, `_validate`. Pure read-first; probes `ENUM_DICTIONARY`, `USER_DIRECTORY`, `MASTER_CODE`, `DON_VI`, `TEAM_DIRECTORY`, `ROLE_PERMISSION_MATRIX`, `FEATURE_FLAG`, `SYSTEM_REGISTRY`, `CBV_UI_CONTRACT`. Secret-pattern columns (`TOKEN`, `SECRET`, `API_KEY`, `PRIVATE_KEY`, `PASSWORD`, `CLIENT_SECRET`, …) are masked — values are never surfaced.
 - `998_WEBAPP_ADMIN_REFERENCE_RENDERER.js` provides `CbvWebAppAdminRef_renderReferenceViewer()` plus per-section renderers. Consumed lazily by `98_WEBAPP_WORKSPACE_PILOT_RENDERER.js` (`renderAdminReferencePlaceholder`) — no hard load-order coupling.
 - `998A_WEBAPP_ADMIN_REFERENCE_TEST_CONSOLE.js` provides the Phase 93 Test Console (`CbvWebAppAdminRef_TestConsole_*`) for menu under `🧪 CBV Test Console → Phase 93 — Admin Reference`. Read-first only.
+
+### Phase 94 — WebApp UI Foundation Freeze / UAT Hardening (load order rationale)
+
+- `998B_WEBAPP_UI_FREEZE_AUDIT.js` defines `CbvWebAppUiFreeze_getRouteFreezeMatrix`, `_getUiStandard`, `_getUatChecklist`, `_validate`. Pure read-first; cross-checks the frozen route matrix against the live `CbvWebAppWorkspace_routeRegistry()` and runs a namespace-scoped mutation probe (same verb-at-start + allowlist pattern as Phase 91.1 / 92 / 93).
+- `998C_WEBAPP_UI_FREEZE_TEST_CONSOLE.js` provides the Phase 94 Test Console (`CbvWebAppUiFreeze_TestConsole_*`) for menu under `🧪 CBV Test Console → Phase 94 — UI Freeze / UAT`. Read-first only; emits a full CBV_TCS_V1 envelope.
+- Apps Script cannot read `.clasp.json` at runtime, so the “999 last” rule is **enforced locally** and **documented here**. The validator surfaces this as a WARNING and points to this file for confirmation.
 - `999_WEBAPP_DOGET_DISPATCHER_FINAL.js` **MUST remain absolute last** in `filePushOrder`.
 
 SHARED layer excerpt (matches push order after file helper):

@@ -1121,6 +1121,44 @@ function menuCbvTestConsoleWebAppAdminRef93_copyReport() {
   });
 }
 
+/** CBV Test Console — Phase 94 WebApp UI Foundation Freeze / UAT Hardening. */
+function menuCbvTestConsoleWebAppUiFreeze94_run() {
+  runSafeMenuStep_('CbvWebAppUiFreeze_TestConsole_run', 'UI Freeze Health Check', function (r) {
+    if (!r) return 'No result';
+    return (r.status || '') + '\n' + (r.summary || '') + '\nEnvelope OK: ' + (r.envelopeOk ? 'yes' : 'no');
+  });
+}
+
+function menuCbvTestConsoleWebAppUiFreeze94_routeMatrix() {
+  runSafeMenuStep_('CbvWebAppUiFreeze_TestConsole_showRouteFreezeMatrix', 'Route Freeze Matrix', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleWebAppUiFreeze94_uiStandard() {
+  runSafeMenuStep_('CbvWebAppUiFreeze_TestConsole_showUiStandard', 'UI Standard', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleWebAppUiFreeze94_uatChecklist() {
+  runSafeMenuStep_('CbvWebAppUiFreeze_TestConsole_showUatChecklist', 'UAT Checklist', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleWebAppUiFreeze94_handoff() {
+  runSafeMenuStep_('CbvWebAppUiFreeze_TestConsole_showHandoffPrompt', 'AI Handoff Prompt', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleWebAppUiFreeze94_copyReport() {
+  runSafeMenuStep_('CbvWebAppUiFreeze_TestConsole_copyLatestReport', 'Copy Latest Report', function (r) {
+    return r && r.ok ? 'Dialog opened — select JSON and copy.' : (r && r.message) || 'Done';
+  });
+}
+
 /** CBV Test Console — HOME_ALERT Phase 82 SLA & escalation QA. */
 function menuCbvTestConsoleHomeAlertSla82() {
   runSafeMenuStep_('HomeAlertSlaEscalation_TestConsole_run', 'HOME_ALERT SLA/Escalation test', function (r) {
