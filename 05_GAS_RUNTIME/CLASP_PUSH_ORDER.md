@@ -127,6 +127,8 @@ The sequence in `.clasp.json` filePushOrder is the deployment order. **HOME_ALER
    998A_WEBAPP_ADMIN_REFERENCE_TEST_CONSOLE.js
    998B_WEBAPP_UI_FREEZE_AUDIT.js
    998C_WEBAPP_UI_FREEZE_TEST_CONSOLE.js
+   998D_WEBAPP_UAT_RUNBOOK.js
+   998E_WEBAPP_UAT_TEST_CONSOLE.js
    96_WEBAPP_DOGET_DISPATCHER.js
    999_WEBAPP_DOGET_DISPATCHER_FINAL.js
 ```
@@ -154,6 +156,12 @@ The sequence in `.clasp.json` filePushOrder is the deployment order. **HOME_ALER
 - `998B_WEBAPP_UI_FREEZE_AUDIT.js` defines `CbvWebAppUiFreeze_getRouteFreezeMatrix`, `_getUiStandard`, `_getUatChecklist`, `_validate`. Pure read-first; cross-checks the frozen route matrix against the live `CbvWebAppWorkspace_routeRegistry()` and runs a namespace-scoped mutation probe (same verb-at-start + allowlist pattern as Phase 91.1 / 92 / 93).
 - `998C_WEBAPP_UI_FREEZE_TEST_CONSOLE.js` provides the Phase 94 Test Console (`CbvWebAppUiFreeze_TestConsole_*`) for menu under `🧪 CBV Test Console → Phase 94 — UI Freeze / UAT`. Read-first only; emits a full CBV_TCS_V1 envelope.
 - Apps Script cannot read `.clasp.json` at runtime, so the “999 last” rule is **enforced locally** and **documented here**. The validator surfaces this as a WARNING and points to this file for confirmation.
+
+### Phase 95 — WebApp Pilot UAT / Staff Trial Runbook (load order rationale)
+
+- `998D_WEBAPP_UAT_RUNBOOK.js` defines `CbvWebAppUat_getPilotScope`, `_getAdminScript`, `_getSupervisorScript`, `_getOperatorScript`, `_getFeedbackSchema`, `_getIssueTriageMatrix`, `_getGoNoGoCriteria`, `_validate`. Pure read-first; advisory dependency on Phase 94 (`CbvWebAppUiFreeze_getRouteFreezeMatrix`) — surfaces a WARNING if Phase 94 runtime is not present. Phase 95-scoped mutation probe uses the same verb-at-start + allowlist pattern as Phase 91.1 / 92 / 93 / 94.
+- `998E_WEBAPP_UAT_TEST_CONSOLE.js` provides the Phase 95 Test Console (`CbvWebAppUat_TestConsole_*`) for menu under `🧪 CBV Test Console → Phase 95 — Pilot UAT`. Read-first only; emits a full CBV_TCS_V1 envelope; persists last report via `PropertiesService` under `CBV_WEBAPP_UAT_TC_LAST_REPORT_JSON`.
+- No HTML / no renderer change. Phase 95 surfaces only as documentation + Test Console menu items.
 - `999_WEBAPP_DOGET_DISPATCHER_FINAL.js` **MUST remain absolute last** in `filePushOrder`.
 
 SHARED layer excerpt (matches push order after file helper):

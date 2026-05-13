@@ -260,6 +260,32 @@ Sau đó nếu cần hiểu sâu: `APPSHEET_HOME_ALERT_INSTALL_GUIDE.md` và `AP
 
 ---
 
+## PHASE 95 — WebApp Pilot UAT / Staff Trial Runbook (docs + GAS test console)
+
+**Trạng thái:** Runbook-only (pilot tier). **Không** thêm feature, **không** mở write/mutation, **không** AppSheet Bot, **không** AI runtime, **không** xác nhận production.  
+**Mục tiêu:** chuẩn hóa quy trình staff trial cho WebApp đã đóng băng ở Phase 94 — Admin/Supervisor/Operator scripts, feedback schema, triage matrix, go/no-go criteria, signoff template, plus Test Console Phase 95 (CBV_TCS_V1).
+
+| Tài liệu / công cụ | Ghi chú |
+|--------------------|--------|
+| `docs/webapp/PHASE_95_WEBAPP_PILOT_UAT_STAFF_TRIAL_RUNBOOK.md` | Tổng quan phase 95 |
+| `docs/webapp/WEBAPP_PILOT_UAT_RUNBOOK.md` | Operational playbook (preparation → triage → signoff) |
+| `docs/webapp/WEBAPP_ADMIN_UAT_SCRIPT.md` | Admin script (A1–A10) |
+| `docs/webapp/WEBAPP_SUPERVISOR_UAT_SCRIPT.md` | Supervisor script (S1–S9) |
+| `docs/webapp/WEBAPP_OPERATOR_UAT_SCRIPT.md` | Operator script (O1–O9), 4 devices |
+| `docs/webapp/WEBAPP_UAT_FEEDBACK_SCHEMA.md` | 17 trường feedback, append-only |
+| `docs/webapp/WEBAPP_UAT_RESULT_LOG_CONTRACT.md` | Optional sheet contract (no auto-create) |
+| `docs/webapp/WEBAPP_UAT_ISSUE_TRIAGE_MATRIX.md` | BLOCKER / HIGH / MEDIUM / LOW / OBSERVATION |
+| `docs/webapp/WEBAPP_PILOT_GO_NO_GO_CRITERIA.md` | GO / GO_WITH_WARNINGS / NO_GO + waiver rules |
+| `docs/webapp/WEBAPP_PILOT_SIGNOFF_TEMPLATE.md` | Filled per pilot, append-only |
+| `05_GAS_RUNTIME/998D_WEBAPP_UAT_RUNBOOK.js` | Pilot scope, scripts, feedback, triage, go/no-go, scoped mutation validator |
+| `05_GAS_RUNTIME/998E_WEBAPP_UAT_TEST_CONSOLE.js` | Test Console Phase 95 (CBV_TCS_V1) |
+
+**Routes affected:** none added; reuses 8 frozen routes + `?action=ping`.  
+**Artifacts:** `034_*` trong `00_SYSTEM_BRAIN/` (prompt, report, handoff).  
+**Next (conditional):** Phase 96 — Controlled WebApp Action Design / Mutation Guard Blueprint (only on GO / GO_WITH_WARNINGS). On NO_GO, Phase 96 must be a UAT Fix Pack.
+
+---
+
 ## Liên kết phase trước
 
 - Phase 82 — SLA + Escalation Runtime: report `00_SYSTEM_BRAIN/000_REPORTS/009_*`, handoff

@@ -1159,6 +1159,62 @@ function menuCbvTestConsoleWebAppUiFreeze94_copyReport() {
   });
 }
 
+/** CBV Test Console — Phase 95 WebApp Pilot UAT / Staff Trial Runbook. */
+function menuCbvTestConsoleWebAppUat95_run() {
+  runSafeMenuStep_('CbvWebAppUat_TestConsole_run', 'Pilot UAT Readiness Check', function (r) {
+    if (!r) return 'No result';
+    return (r.status || '') + '\n' + (r.summary || '') + '\nEnvelope OK: ' + (r.envelopeOk ? 'yes' : 'no');
+  });
+}
+
+function menuCbvTestConsoleWebAppUat95_pilotScope() {
+  runSafeMenuStep_('CbvWebAppUat_TestConsole_showPilotScope', 'Pilot Scope', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleWebAppUat95_adminScript() {
+  runSafeMenuStep_('CbvWebAppUat_TestConsole_showAdminScript', 'Admin UAT Script', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleWebAppUat95_supervisorScript() {
+  runSafeMenuStep_('CbvWebAppUat_TestConsole_showSupervisorScript', 'Supervisor UAT Script', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleWebAppUat95_operatorScript() {
+  runSafeMenuStep_('CbvWebAppUat_TestConsole_showOperatorScript', 'Operator UAT Script', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleWebAppUat95_feedbackSchema() {
+  runSafeMenuStep_('CbvWebAppUat_TestConsole_showFeedbackSchema', 'Feedback Schema', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleWebAppUat95_goNoGo() {
+  runSafeMenuStep_('CbvWebAppUat_TestConsole_showGoNoGoCriteria', 'Go/No-Go Criteria', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleWebAppUat95_handoff() {
+  runSafeMenuStep_('CbvWebAppUat_TestConsole_showHandoffPrompt', 'AI Handoff Prompt', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleWebAppUat95_copyReport() {
+  runSafeMenuStep_('CbvWebAppUat_TestConsole_copyLatestReport', 'Copy Latest Report', function (r) {
+    return r && r.ok ? 'Dialog opened — select JSON and copy.' : (r && r.message) || 'Done';
+  });
+}
+
 /** CBV Test Console — HOME_ALERT Phase 82 SLA & escalation QA. */
 function menuCbvTestConsoleHomeAlertSla82() {
   runSafeMenuStep_('HomeAlertSlaEscalation_TestConsole_run', 'HOME_ALERT SLA/Escalation test', function (r) {
