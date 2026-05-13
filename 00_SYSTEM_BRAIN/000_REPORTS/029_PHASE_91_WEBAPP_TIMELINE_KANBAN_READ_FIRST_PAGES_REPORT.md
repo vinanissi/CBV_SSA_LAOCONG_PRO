@@ -5,7 +5,7 @@
 | Phase | PHASE_91_WEBAPP_TIMELINE_KANBAN_READ_FIRST_PAGES |
 | Contract version | CBV_TCS_V1 |
 | Branch | `phase/from-v2.4.1-TASK-FIN` |
-| Commit hash | `<TO_BE_FILLED_AFTER_COMMIT>` |
+| Commit hash | `944f5c8` (on branch `phase/from-v2.4.1-TASK-FIN`; placeholder updated via follow-up commit) |
 | Pilot readiness | **GO_WITH_WARNINGS** (until operator UAT) |
 | Production readiness | **NOT YET** |
 
