@@ -94,7 +94,18 @@ No HTML files in 05_GAS_RUNTIME. If added later, include in filePushOrder after 
 
 ## Exact filePushOrder (matches .clasp.json)
 
-The sequence in `.clasp.json` filePushOrder is the deployment order. SHARED layer excerpt (matches push order after file helper):
+The sequence in `.clasp.json` filePushOrder is the deployment order. **HOME_ALERT + UI contract** (excerpt):
+
+```
+   80_HOME_ALERT_RUNTIME.js
+   81_HOME_ALERT_SLA_POLICY_RUNTIME.js
+   82_HOME_ALERT_SAFE_AUTOMATION_RUNTIME.js
+   83_OPERATIONAL_REFERENCE_RUNTIME.js
+   84_UNIFIED_UI_CONTRACT_RUNTIME.js
+   85_UNIFIED_UI_CONTRACT_TEST_CONSOLE.js
+```
+
+SHARED layer excerpt (matches push order after file helper):
 
 ```
    03_SHARED_FILE_HELPER.js

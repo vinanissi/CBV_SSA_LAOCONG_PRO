@@ -764,6 +764,53 @@ function menuGenerateHoSoReport() {
   ui.alert('📋 HoSo report\n\n' + summary + '\n\nSee details in AppSheet → HS_PRINT_VIEW');
 }
 
+/** CBV Test Console — Phase 85 Unified UI Contract */
+function menuCbvTestConsoleUiContract85_bootstrap() {
+  runSafeMenuStep_('CbvUiContract_bootstrap', 'Bootstrap UI Contract', function (r) {
+    if (!r) return 'No result';
+    return JSON.stringify(r, null, 2);
+  });
+}
+
+function menuCbvTestConsoleUiContract85_health() {
+  runSafeMenuStep_('CbvUiContract_healthCheck', 'UI Contract Health Check', function (r) {
+    if (!r) return 'No result';
+    return (r.status || '') + '\n' + (r.summary || '') + '\nEnvelope OK: ' + (r.envelopeOk ? 'yes' : 'no');
+  });
+}
+
+function menuCbvTestConsoleUiContract85_validate() {
+  runSafeMenuStep_('CbvUiContract_validate', 'Validate UI Contract', function (r) {
+    if (!r) return 'No result';
+    return 'ok=' + r.ok + '\nerrors=' + (r.errors || []).length + '\n' + (r.errors || []).slice(0, 8).join('\n');
+  });
+}
+
+function menuCbvTestConsoleUiContract85_pilotMatrix() {
+  runSafeMenuStep_('CbvUiContract_generatePilotMatrix', 'Pilot Matrix', function (r) {
+    if (!r || !r.matrix) return 'No result';
+    var m = r.matrix;
+    return [
+      'appSheetDaily: ' + m.appSheetDaily.length,
+      'webAppAdvanced: ' + m.webAppAdvanced.length,
+      'both: ' + m.both.length,
+      'notPilotReady: ' + m.notPilotReady.length
+    ].join('\n');
+  });
+}
+
+function menuCbvTestConsoleUiContract85_handoff() {
+  runSafeMenuStep_('CbvUiContract_TestConsole_showHandoffPrompt', 'AI Handoff Prompt', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleUiContract85_copyReport() {
+  runSafeMenuStep_('CbvUiContract_TestConsole_copyLatestReport', 'Copy Latest Report', function (r) {
+    return r && r.ok ? 'Dialog opened — select JSON and copy.' : (r && r.message) || 'Done';
+  });
+}
+
 /** CBV Test Console — HOME_ALERT Phase 82 SLA & escalation QA. */
 function menuCbvTestConsoleHomeAlertSla82() {
   runSafeMenuStep_('HomeAlertSlaEscalation_TestConsole_run', 'HOME_ALERT SLA/Escalation test', function (r) {

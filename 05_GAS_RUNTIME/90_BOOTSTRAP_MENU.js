@@ -146,6 +146,15 @@ function buildCbvTestConsoleMenu_() {
   var ui = SpreadsheetApp.getUi();
   if (!ui) return;
   ui.createMenu('🧪 CBV Test Console')
+    .addSubMenu(
+      ui.createMenu('Phase 85 — UI Contract')
+        .addItem('Bootstrap UI Contract', 'menuCbvTestConsoleUiContract85_bootstrap')
+        .addItem('Run UI Contract Health Check', 'menuCbvTestConsoleUiContract85_health')
+        .addItem('Validate UI Contract', 'menuCbvTestConsoleUiContract85_validate')
+        .addItem('Generate Pilot Matrix', 'menuCbvTestConsoleUiContract85_pilotMatrix')
+        .addItem('Show AI Handoff Prompt', 'menuCbvTestConsoleUiContract85_handoff')
+        .addItem('Copy Latest Report', 'menuCbvTestConsoleUiContract85_copyReport')
+    )
     .addItem('HOME_ALERT Phase 82 — SLA & Escalation', 'menuCbvTestConsoleHomeAlertSla82')
     .addItem('HOME_ALERT Phase 83 — SLA Policy Registry', 'menuCbvTestConsoleHomeAlertSla83')
     .addItem('HOME_ALERT Phase 84 — Safe Automation Runtime', 'menuCbvTestConsoleHomeAlertSafeAutomation84')
