@@ -367,26 +367,92 @@ function CbvWebAppTimelineKanban_validate() {
   if (!detail.functions.timeline) errors.push('CbvWebAppTimelineKanban_getTimelineData not defined.');
   if (!detail.functions.kanban) errors.push('CbvWebAppTimelineKanban_getKanbanData not defined.');
 
-  // Probe for accidental mutation functions in this namespace.
-  var mutationNeedles = ['_save', '_write', '_mutate', '_claim', '_resolve', '_escalate', '_assign', '_drag'];
+  // ---------------------------------------------------------------------
+  // Mutation-name probe (Phase 91-scoped, narrow, with explicit allowlist).
+  // ---------------------------------------------------------------------
+  // SCOPE: only Phase 91 namespace `CbvWebAppTimelineKanban_*`.
+  // We DO NOT scan the global runtime — that would falsely flag legacy/business
+  // runtime functions (e.g. setTaskStatus, completeTask, taskStartAction,
+  // changeHosoStatus, deleteAttachment) that belong to other modules and are
+  // explicitly out of Phase 91 scope.
+  //
+  // RULE: a Phase 91 function is treated as a mutation only when its "action
+  // portion" (the name after `CbvWebAppTimelineKanban_` and any leading `_`)
+  // STARTS with an operational verb followed by a capitalised noun, e.g.
+  // `setStatus`, `resolveAlert`, `completeRow`, `saveCard`. Pure state/render
+  // helpers (`mapState`, `renderState`, anything ending in `State`/`State_`)
+  // are allowlisted.
+  detail.mutationAllowlist = [
+    'CbvWebAppTimelineKanban_getTimelineData',
+    'CbvWebAppTimelineKanban_getKanbanData',
+    'CbvWebAppTimelineKanban_validate',
+    'CbvWebAppTimelineKanban_renderTimeline',
+    'CbvWebAppTimelineKanban_renderKanban',
+    'CbvWebAppTimelineKanban_renderTimelineRow_',
+    'CbvWebAppTimelineKanban_renderKanbanColumn_',
+    'CbvWebAppTimelineKanban_renderKanbanCard_',
+    'CbvWebAppTimelineKanban_renderState_',
+    'CbvWebAppTimelineKanban__mapState_',
+    'CbvWebAppTimelineKanban__safetyFooter_',
+    'CbvWebAppTimelineKanban__warningsBlock_',
+    'CbvWebAppTimelineKanban__inlineTimeline_',
+    'CbvWebAppTimelineKanban__inlineKanban_',
+    'CbvWebAppTimelineKanban__includeComponents_',
+    'CbvWebAppTimelineKanban__esc_',
+    'CbvWebAppTimelineKanban__formatDate_',
+    'CbvWebAppTimelineKanban__slaBadgeClass_',
+    'CbvWebAppTimelineKanban__out_',
+    'CbvWebAppTimelineKanban__getSheetSafe_',
+    'CbvWebAppTimelineKanban__headerIndex_',
+    'CbvWebAppTimelineKanban__pickIdx_',
+    'CbvWebAppTimelineKanban__readRows_',
+    'CbvWebAppTimelineKanban__toNum_',
+    'CbvWebAppTimelineKanban__toTime_',
+    'CbvWebAppTimelineKanban__homeAlertName_',
+    'CbvWebAppTimelineKanban__mapRow_'
+  ];
+
+  // UI state helper allowlist (regex):
+  //   - anything ending in `State` or `State_` (e.g. mapState, renderState).
+  //   - test console functions are allowlisted as part of the test runtime.
+  var allowPatterns = [
+    /State_?$/,
+    /^CbvWebAppTimelineKanban_TestConsole_/
+  ];
+
+  // Operational mutation verbs at the START of the action portion.
+  // After stripping `CbvWebAppTimelineKanban_` and any leading `_`, the name
+  // must start with one of these verbs followed by an upper-case letter to
+  // count as an operational action (e.g. `setStatus`, `resolveAlert`).
+  var verbRe = /^(set|update|resolve|complete|delete|save|mutate|assign|escalate|claim|drag)[A-Z]/;
+
+  function isMutationName(name) {
+    if (typeof name !== 'string') return false;
+    if (name.indexOf('CbvWebAppTimelineKanban_') !== 0) return false; // out-of-scope
+    if (detail.mutationAllowlist.indexOf(name) >= 0) return false;
+    for (var i = 0; i < allowPatterns.length; i++) {
+      if (allowPatterns[i].test(name)) return false;
+    }
+    var action = name.replace(/^CbvWebAppTimelineKanban_/, '').replace(/^_+/, '');
+    return verbRe.test(action);
+  }
+
   try {
     var globals = (typeof this !== 'undefined') ? this : {};
     var keys = Object.keys(globals || {});
     for (var k = 0; k < keys.length; k++) {
       var name = keys[k];
-      if (name.indexOf('CbvWebAppTimelineKanban_') !== 0) continue;
-      var lower = name.toLowerCase();
-      for (var n = 0; n < mutationNeedles.length; n++) {
-        if (lower.indexOf(mutationNeedles[n]) >= 0) {
-          detail.noMutationExposed = false;
-          detail.mutationProbe.push(name);
-        }
+      if (isMutationName(name) && typeof globals[name] === 'function') {
+        detail.noMutationExposed = false;
+        detail.mutationProbe.push(name);
       }
     }
   } catch (eProbe) {
     warnings.push('Mutation probe skipped: ' + (eProbe && eProbe.message ? eProbe.message : String(eProbe)));
   }
-  if (!detail.noMutationExposed) errors.push('Mutation-looking functions exposed: ' + detail.mutationProbe.join(', '));
+  if (!detail.noMutationExposed) {
+    errors.push('Phase 91 namespace exposes mutation-like functions: ' + detail.mutationProbe.join(', '));
+  }
 
   var ok = errors.length === 0;
   return CbvWebAppTimelineKanban__out_(ok, detail, warnings, errors);

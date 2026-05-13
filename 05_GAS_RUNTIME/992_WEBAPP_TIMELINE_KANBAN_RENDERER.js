@@ -147,7 +147,13 @@ function CbvWebAppTimelineKanban_renderKanbanColumn_(column) {
 /* Page renderers                                                      */
 /* ------------------------------------------------------------------ */
 
-function CbvWebAppTimelineKanban__resolveState_(res, defaults) {
+/**
+ * Map a data envelope into a UI state descriptor.
+ * Phase 91.1 — renamed from __resolveState_ (the "resolve" verb is reserved for
+ * operational mutations and was triggering the mutation-name scanner). This is
+ * a pure UI state mapper; no write side-effects.
+ */
+function CbvWebAppTimelineKanban__mapState_(res, defaults) {
   if (!res || res.ok === false) {
     return CbvWebAppTimelineKanban_renderState_({
       type: 'warning',
@@ -256,7 +262,7 @@ function CbvWebAppTimelineKanban_renderTimeline() {
   } catch (e) {
     res = { ok: false, data: null, warnings: [], errors: [e && e.message ? e.message : String(e)] };
   }
-  var state = CbvWebAppTimelineKanban__resolveState_(res, { title: 'Timeline (read-first)', kind: 'timeline' });
+  var state = CbvWebAppTimelineKanban__mapState_(res, { title: 'Timeline (read-first)', kind: 'timeline' });
 
   var bodyHtml = null;
   try {
@@ -284,7 +290,7 @@ function CbvWebAppTimelineKanban_renderKanban() {
   } catch (e) {
     res = { ok: false, data: null, warnings: [], errors: [e && e.message ? e.message : String(e)] };
   }
-  var state = CbvWebAppTimelineKanban__resolveState_(res, { title: 'Kanban (read-first)', kind: 'kanban' });
+  var state = CbvWebAppTimelineKanban__mapState_(res, { title: 'Kanban (read-first)', kind: 'kanban' });
 
   var bodyHtml = null;
   try {

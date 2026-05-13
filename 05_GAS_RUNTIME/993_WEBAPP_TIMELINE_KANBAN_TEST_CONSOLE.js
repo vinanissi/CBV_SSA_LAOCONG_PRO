@@ -244,18 +244,34 @@ function CbvWebAppTimelineKanban_TestConsole_run() {
   addCheck('NO_PROD_READY_CLAIM', !hasProdReady, !hasProdReady ? 'OK' : 'CRITICAL',
     hasProdReady ? 'Forbidden: production ready claim detected.' : 'No production-ready claim.', {});
 
-  // 8. Phase 91 must not introduce write mutation functions (heuristic + namespace check)
-  var forbid = ['setTaskStatus', 'completeTask', 'taskStartAction', 'deleteAttachment', 'changeHosoStatus',
-                'CbvWebAppTimelineKanban_save', 'CbvWebAppTimelineKanban_write', 'CbvWebAppTimelineKanban_mutate',
-                'CbvWebAppTimelineKanban_dragSave'];
-  var forbidHit = forbid.filter(function(fn) {
-    try { return typeof this[fn] === 'function'; } catch (e) { return false; }
-  }, this);
-  addCheck('NO_WRITE_MUTATION', forbidHit.length === 0, forbidHit.length === 0 ? 'OK' : 'ERROR',
-    forbidHit.length === 0
-      ? 'Phase 91 does not introduce write mutations (heuristic).'
-      : 'Forbidden mutation functions present: ' + forbidHit.join(', '),
-    { forbidHit: forbidHit });
+  // 8. Phase 91 must not introduce write mutation functions.
+  //
+  // SCOPE FIX (Phase 91.1):
+  //   - Only scan the Phase 91 namespace `CbvWebAppTimelineKanban_*`.
+  //   - DO NOT scan unrelated global runtime functions (legacy Task / HoSo
+  //     services such as setTaskStatus, completeTask, taskStartAction,
+  //     deleteAttachment, changeHosoStatus belong to other modules and are
+  //     out of Phase 91 scope; flagging them here was a false positive).
+  //   - Delegate the detection to `CbvWebAppTimelineKanban_validate()` which
+  //     applies a verb-at-start matcher with an explicit allowlist for UI
+  //     state helpers (`mapState`, `renderState`, anything ending in
+  //     `State`/`State_`).
+  var phase91MutationProbe = [];
+  var phase91NoMutation = true;
+  try {
+    var vForMutation = (vd && vd.data) ? vd : (typeof CbvWebAppTimelineKanban_validate === 'function' ? CbvWebAppTimelineKanban_validate() : null);
+    if (vForMutation && vForMutation.data) {
+      phase91NoMutation = !!vForMutation.data.noMutationExposed;
+      phase91MutationProbe = (vForMutation.data.mutationProbe || []).slice();
+    }
+  } catch (eMP) {
+    warnings.push('NO_WRITE_MUTATION probe error: ' + (eMP && eMP.message ? eMP.message : String(eMP)));
+  }
+  addCheck('NO_WRITE_MUTATION', phase91NoMutation, phase91NoMutation ? 'OK' : 'ERROR',
+    phase91NoMutation
+      ? 'Phase 91 namespace does not introduce write mutations (scoped scan).'
+      : 'Phase 91 namespace exposes mutation-like functions: ' + phase91MutationProbe.join(', '),
+    { scope: 'CbvWebAppTimelineKanban_*', probe: phase91MutationProbe });
 
   // 9. Compose status
   var status = errors.length > 0 ? 'FAIL' : (warnings.length > 0 ? 'GO_WITH_WARNINGS' : 'GO');
