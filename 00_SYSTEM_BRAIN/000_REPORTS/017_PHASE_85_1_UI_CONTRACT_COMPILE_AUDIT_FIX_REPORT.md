@@ -27,8 +27,8 @@
 | Check | Result |
 |--------|--------|
 | `git status --short` | Recorded at commit time |
-| `node --check 05_GAS_RUNTIME/84_UNIFIED_UI_CONTRACT_RUNTIME.js` | See below |
-| `node --check 05_GAS_RUNTIME/85_UNIFIED_UI_CONTRACT_TEST_CONSOLE.js` | See below |
+| `node --check 05_GAS_RUNTIME/84_UNIFIED_UI_CONTRACT_RUNTIME.js` | Exit 0 |
+| `node --check 05_GAS_RUNTIME/85_UNIFIED_UI_CONTRACT_TEST_CONSOLE.js` | Exit 0 |
 | `JSON.parse(schema_manifest.json)` | OK |
 | Grep invalid `checks.push` shorthand in 84/85 | Cleared after fix |
 
@@ -62,4 +62,4 @@ git push origin phase/from-v2.4.1-TASK-FIN
 
 ## Commit hash
 
-_Placeholder until committed:_ (updated to actual hash in repo after `git commit`.)
+`7dbd346` — `fix(ui-contract): repair phase 85 compile and audit artifacts`
