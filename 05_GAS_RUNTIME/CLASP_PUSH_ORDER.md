@@ -88,7 +88,7 @@ CONFIG → ENUM → MASTER_CODE → USER → SHARED (repository, validation, log
 
 ## HTML files
 
-No HTML files in 05_GAS_RUNTIME. If added later, include in filePushOrder after the GAS files they depend on.
+HTML files under `05_GAS_RUNTIME/` (e.g. `05_GAS_RUNTIME/html/*.html`) are pushed by `clasp push` as part of the Apps Script project, but they are **not** part of `.clasp.json` `filePushOrder` (which orders JS assembly only). If HTML templates depend on server-side functions, ensure those JS files load earlier in `filePushOrder`.
 
 ---
 
@@ -108,6 +108,11 @@ The sequence in `.clasp.json` filePushOrder is the deployment order. **HOME_ALER
    88_APPSHEET_PILOT_SETUP_RUNTIME.js
    89_APPSHEET_PILOT_SETUP_TEST_CONSOLE.js
    90_FE_ARCHITECTURE_REBALANCE_TEST_CONSOLE.js
+   91_WEBAPP_WORKSPACE_CONFIG.js
+   92_WEBAPP_WORKSPACE_ROUTES.js
+   93_WEBAPP_WORKSPACE_API.js
+   94_WEBAPP_WORKSPACE_RENDERER.js
+   95_WEBAPP_WORKSPACE_TEST_CONSOLE.js
 ```
 
 SHARED layer excerpt (matches push order after file helper):

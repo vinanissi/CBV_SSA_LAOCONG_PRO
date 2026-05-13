@@ -931,6 +931,38 @@ function menuCbvTestConsoleFeArch88_copyReport() {
   });
 }
 
+/** CBV Test Console — Phase 89 WebApp workspace skeleton (CBV_TCS_V1) */
+function menuCbvTestConsoleWebAppWs89_run() {
+  runSafeMenuStep_('CbvWebAppWorkspace_TestConsole_run', 'WebApp Workspace Health Check', function (r) {
+    if (!r) return 'No result';
+    return (r.status || '') + '\n' + (r.summary || '') + '\nEnvelope OK: ' + (r.envelopeOk ? 'yes' : 'no');
+  });
+}
+
+function menuCbvTestConsoleWebAppWs89_routes() {
+  runSafeMenuStep_('CbvWebAppWorkspace_TestConsole_showRouteRegistry', 'Route Registry', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleWebAppWs89_home() {
+  runSafeMenuStep_('CbvWebAppWorkspace_TestConsole_showHomeSummary', 'Home Summary', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleWebAppWs89_handoff() {
+  runSafeMenuStep_('CbvWebAppWorkspace_TestConsole_showHandoffPrompt', 'AI Handoff Prompt', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleWebAppWs89_copyReport() {
+  runSafeMenuStep_('CbvWebAppWorkspace_TestConsole_copyLatestReport', 'Copy Latest Report', function (r) {
+    return r && r.ok ? 'Dialog opened — select JSON and copy.' : (r && r.message) || 'Done';
+  });
+}
+
 /** CBV Test Console — HOME_ALERT Phase 82 SLA & escalation QA. */
 function menuCbvTestConsoleHomeAlertSla82() {
   runSafeMenuStep_('HomeAlertSlaEscalation_TestConsole_run', 'HOME_ALERT SLA/Escalation test', function (r) {

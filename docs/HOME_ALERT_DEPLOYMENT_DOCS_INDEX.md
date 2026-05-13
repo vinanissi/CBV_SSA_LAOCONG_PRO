@@ -126,6 +126,24 @@ Sau đó nếu cần hiểu sâu: `APPSHEET_HOME_ALERT_INSTALL_GUIDE.md` và `AP
 
 ---
 
+## PHASE 89 — WebApp operational workspace skeleton (GAS + docs)
+
+**Trạng thái:** skeleton — **read-first**, **không** xác nhận production.  
+**Mục tiêu:** dựng nền WebApp-led operational workspace: route registry + dispatcher + HTML shell + read-first APIs + Test Console Phase 89.
+
+| Tài liệu / công cụ | Ghi chú |
+|--------------------|--------|
+| `docs/webapp/PHASE_89_WEBAPP_OPERATIONAL_WORKSPACE_SKELETON.md` | Tổng quan phase 89 |
+| `docs/webapp/WEBAPP_ROUTE_REGISTRY.md` | Route registry spec |
+| `docs/webapp/WEBAPP_READ_FIRST_API.md` | Read-first API contract |
+| `docs/webapp/WEBAPP_FE_TEST_BASELINE.md` | FE test baseline |
+| `05_GAS_RUNTIME/91_..95_WEBAPP_WORKSPACE_*.js` | Runtime skeleton + Test Console |
+| `05_GAS_RUNTIME/html/WEBAPP_WORKSPACE_*.html` | HTML templates |
+
+**Artifacts:** `025_*` trong `00_SYSTEM_BRAIN/` (prompt, report, handoff).
+
+---
+
 ## Liên kết phase trước
 
 - Phase 82 — SLA + Escalation Runtime: report `00_SYSTEM_BRAIN/000_REPORTS/009_*`, handoff

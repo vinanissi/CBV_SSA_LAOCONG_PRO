@@ -1,0 +1,35 @@
+<div>
+  <h3>My Queue (read-first)</h3>
+  <p class="muted">Phase 89: display-only. No claim/resolve/escalate actions here.</p>
+
+  <? var d = (MODEL && MODEL.data) ? MODEL.data : null; ?>
+  <? var rows = d && d.rows ? d.rows : []; ?>
+
+  <div class="muted">user: <code><?= d && d.userEmail ? d.userEmail : "" ?></code> · count: <?= d && d.count !== undefined ? d.count : 0 ?></div>
+
+  <? if (!rows || rows.length === 0) { ?>
+    <p class="muted" style="margin-top:10px">No rows (or sheet missing). See warnings above.</p>
+  <? } else { ?>
+    <div style="overflow:auto;margin-top:10px">
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead>
+          <tr>
+            <th style="text-align:left;border-bottom:1px solid #233256;padding:8px">ID</th>
+            <th style="text-align:left;border-bottom:1px solid #233256;padding:8px">Status</th>
+            <th style="text-align:left;border-bottom:1px solid #233256;padding:8px">Assigned</th>
+          </tr>
+        </thead>
+        <tbody>
+          <? for (var i=0;i<rows.length;i++) { ?>
+            <tr>
+              <td style="border-bottom:1px solid #1b2847;padding:8px"><code><?= rows[i].id ?></code></td>
+              <td style="border-bottom:1px solid #1b2847;padding:8px"><?= rows[i].status ?></td>
+              <td style="border-bottom:1px solid #1b2847;padding:8px" class="muted"><?= rows[i].assignedTo ?></td>
+            </tr>
+          <? } ?>
+        </tbody>
+      </table>
+    </div>
+  <? } ?>
+</div>
+

@@ -1,0 +1,23 @@
+<div>
+  <h3>SLA Dashboard (read-first)</h3>
+  <p class="muted">Phase 89: show simple counts from <code>SLA_STATUS</code> if available.</p>
+
+  <? var d = (MODEL && MODEL.data) ? MODEL.data : null; ?>
+  <? var counts = d && d.counts ? d.counts : {}; ?>
+
+  <? var keys = []; for (var k in counts) { keys.push(k); } keys.sort(); ?>
+
+  <? if (!keys.length) { ?>
+    <p class="muted">No SLA data (or columns missing). See warnings above.</p>
+  <? } else { ?>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:10px">
+      <? for (var i=0;i<keys.length;i++) { ?>
+        <div style="border:1px solid #233256;border-radius:12px;padding:12px">
+          <div style="font-weight:700"><?= keys[i] === "" ? "(blank)" : keys[i] ?></div>
+          <div class="muted">count: <?= counts[keys[i]] ?></div>
+        </div>
+      <? } ?>
+    </div>
+  <? } ?>
+</div>
+

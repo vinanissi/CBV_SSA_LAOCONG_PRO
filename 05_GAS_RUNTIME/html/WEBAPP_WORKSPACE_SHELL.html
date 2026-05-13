@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+  <head>
+    <base target="_top">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title><?= (MODEL && MODEL.title) ? MODEL.title : "WebApp Workspace" ?></title>
+    <style>
+      :root { --bg:#0b1220; --card:#111a2e; --text:#e7eefc; --muted:#a7b4d6; --line:#233256; --warn:#f5a524; --ok:#2dd4bf; }
+      body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: var(--bg); color: var(--text); }
+      .wrap { max-width: 980px; margin: 0 auto; padding: 16px; }
+      .top { display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+      .title { font-size: 18px; font-weight: 700; }
+      .badge { font-size: 12px; padding: 4px 8px; border-radius: 999px; border:1px solid var(--line); background:#0f1930; color: var(--muted); }
+      .badge.ok { color: var(--ok); border-color: rgba(45,212,191,.35); }
+      .badge.warn { color: var(--warn); border-color: rgba(245,165,36,.35); }
+      .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-top: 12px; }
+      .muted { color: var(--muted); }
+      a { color: #9dd5ff; }
+      code { background: rgba(255,255,255,.06); padding: 2px 6px; border-radius: 8px; }
+      .footer { margin-top: 12px; font-size: 12px; color: var(--muted); }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="top">
+        <div>
+          <div class="title"><?= MODEL.title ?></div>
+          <div class="muted">route: <code><?= MODEL.route ?></code></div>
+        </div>
+        <div class="badge ok">READ_FIRST</div>
+      </div>
+
+      <div class="card">
+        <?!= MODEL.navHtml ?>
+      </div>
+
+      <? if (MODEL.warnings && MODEL.warnings.length) { ?>
+        <div class="card">
+          <div class="badge warn">WARNING</div>
+          <div style="margin-top:8px">
+            <ul>
+              <? for (var i=0; i<MODEL.warnings.length; i++) { ?>
+                <li class="muted"><?= MODEL.warnings[i] ?></li>
+              <? } ?>
+            </ul>
+          </div>
+        </div>
+      <? } ?>
+
+      <div class="card">
+        <?!= MODEL.bodyHtml ?>
+      </div>
+
+      <div class="footer">
+        checkedAt: <?= MODEL.checkedAt ?>
+        <div>Rules: No auto assign · No auto resolve · No auto escalate · No production claim</div>
+      </div>
+    </div>
+  </body>
+</html>
+
