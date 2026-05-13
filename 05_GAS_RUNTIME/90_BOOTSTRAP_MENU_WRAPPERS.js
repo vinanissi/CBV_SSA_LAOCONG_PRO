@@ -811,6 +811,44 @@ function menuCbvTestConsoleUiContract85_copyReport() {
   });
 }
 
+/** CBV Test Console — Phase 86 UI Contract pilot binding */
+function menuCbvTestConsoleUiPilot86_health() {
+  runSafeMenuStep_('CbvUiPilotBinding_healthCheck', 'Pilot Binding Health Check', function (r) {
+    if (!r) return 'No result';
+    return (r.status || '') + '\n' + (r.summary || '') + '\nEnvelope OK: ' + (r.envelopeOk ? 'yes' : 'no');
+  });
+}
+
+function menuCbvTestConsoleUiPilot86_appsheetPlan() {
+  runSafeMenuStep_('CbvUiPilotBinding_TestConsole_showAppSheetPlan', 'AppSheet Binding Plan', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleUiPilot86_webappPlan() {
+  runSafeMenuStep_('CbvUiPilotBinding_TestConsole_showWebAppRoutePlan', 'WebApp Route Plan', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleUiPilot86_checklist() {
+  runSafeMenuStep_('CbvUiPilotBinding_TestConsole_showPilotChecklist', 'Pilot Checklist', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleUiPilot86_handoff() {
+  runSafeMenuStep_('CbvUiPilotBinding_TestConsole_showHandoffPrompt', 'AI Handoff Prompt', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleUiPilot86_copyReport() {
+  runSafeMenuStep_('CbvUiPilotBinding_TestConsole_copyLatestReport', 'Copy Latest Report', function (r) {
+    return r && r.ok ? 'Dialog opened — select JSON and copy.' : (r && r.message) || 'Done';
+  });
+}
+
 /** CBV Test Console — HOME_ALERT Phase 82 SLA & escalation QA. */
 function menuCbvTestConsoleHomeAlertSla82() {
   runSafeMenuStep_('HomeAlertSlaEscalation_TestConsole_run', 'HOME_ALERT SLA/Escalation test', function (r) {
