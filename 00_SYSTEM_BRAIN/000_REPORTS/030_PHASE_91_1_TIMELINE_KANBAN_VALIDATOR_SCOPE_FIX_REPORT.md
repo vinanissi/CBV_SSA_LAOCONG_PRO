@@ -5,7 +5,7 @@
 | Phase | PHASE_91_1_TIMELINE_KANBAN_VALIDATOR_SCOPE_FIX |
 | Branch | `phase/from-v2.4.1-TASK-FIN` |
 | Parent phase | Phase 91 (commit `944f5c8`) |
-| Commit hash | `<TO_BE_FILLED_AFTER_COMMIT>` |
+| Commit hash | `3d68679` (on branch `phase/from-v2.4.1-TASK-FIN`; placeholder updated via follow-up commit) |
 | Pilot readiness | **GO_WITH_WARNINGS** after rerun |
 | Production readiness | **NOT YET** |
 
