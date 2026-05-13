@@ -119,6 +119,9 @@ The sequence in `.clasp.json` filePushOrder is the deployment order. **HOME_ALER
    991_WEBAPP_TIMELINE_KANBAN_DATA.js
    992_WEBAPP_TIMELINE_KANBAN_RENDERER.js
    993_WEBAPP_TIMELINE_KANBAN_TEST_CONSOLE.js
+   994_WEBAPP_OBSERVABILITY_DATA.js
+   995_WEBAPP_OBSERVABILITY_RENDERER.js
+   996_WEBAPP_OBSERVABILITY_TEST_CONSOLE.js
    96_WEBAPP_DOGET_DISPATCHER.js
    999_WEBAPP_DOGET_DISPATCHER_FINAL.js
 ```
@@ -128,6 +131,12 @@ The sequence in `.clasp.json` filePushOrder is the deployment order. **HOME_ALER
 - `991_WEBAPP_TIMELINE_KANBAN_DATA.js` defines data helpers + constants used by the renderer and test console.
 - `992_WEBAPP_TIMELINE_KANBAN_RENDERER.js` depends on Phase 91 data; provides `CbvWebAppTimelineKanban_renderTimeline()` / `_renderKanban()` used by `98_WEBAPP_WORKSPACE_PILOT_RENDERER.js` lazily (no load-order coupling).
 - `993_WEBAPP_TIMELINE_KANBAN_TEST_CONSOLE.js` depends on data + renderer; provides `CbvWebAppTimelineKanban_TestConsole_*` for menu under `🧪 CBV Test Console → Phase 91 — Timeline / Kanban`.
+
+### Phase 92 — Observability / Runtime Health / Report Viewer (load order rationale)
+
+- `994_WEBAPP_OBSERVABILITY_DATA.js` defines `CbvWebAppObservability_getRuntimeHealth`, `_getRecentReports`, `_getReportDetail`, `_getTraceSummary`, `_validate` plus the per-phase test-console catalog. Pure read-first; reads `SYSTEM_HEALTH_LOG`, optionally `CBV_TEST_REPORTS`, and `PropertiesService` keys ending in `_LAST_REPORT_JSON`.
+- `995_WEBAPP_OBSERVABILITY_RENDERER.js` provides `CbvWebAppObservability_renderRuntimeHealth()` / `_renderReportViewer()`. Consumed lazily by `98_WEBAPP_WORKSPACE_PILOT_RENDERER.js` (`renderRuntimeHealthPlaceholder` / `renderReportsPlaceholder`) — no hard load-order coupling.
+- `996_WEBAPP_OBSERVABILITY_TEST_CONSOLE.js` provides the Phase 92 Test Console (`CbvWebAppObservability_TestConsole_*`) for menu under `🧪 CBV Test Console → Phase 92 — Observability`. Read-first only.
 - `999_WEBAPP_DOGET_DISPATCHER_FINAL.js` **MUST remain absolute last** in `filePushOrder`.
 
 SHARED layer excerpt (matches push order after file helper):

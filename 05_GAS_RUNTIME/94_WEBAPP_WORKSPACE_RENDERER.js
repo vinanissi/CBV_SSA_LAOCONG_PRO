@@ -57,6 +57,10 @@ function CbvWebAppWorkspace_render(route, params) {
     page = CbvWebAppPilotRenderer_renderTimelinePlaceholder();
   } else if (reg.route === '/home-alert/kanban' && typeof CbvWebAppPilotRenderer_renderKanbanPlaceholder === 'function') {
     page = CbvWebAppPilotRenderer_renderKanbanPlaceholder();
+  } else if (reg.route === '/runtime/health' && typeof CbvWebAppPilotRenderer_renderRuntimeHealthPlaceholder === 'function') {
+    page = CbvWebAppPilotRenderer_renderRuntimeHealthPlaceholder();
+  } else if (reg.route === '/reports' && typeof CbvWebAppPilotRenderer_renderReportsPlaceholder === 'function') {
+    page = CbvWebAppPilotRenderer_renderReportsPlaceholder();
   } else {
     page = CbvWebAppWorkspace_renderPlaceholder_(reg.route);
   }

@@ -152,3 +152,60 @@ function CbvWebAppPilotRenderer_renderKanbanPlaceholder() {
   };
 }
 
+/* ------------------------------------------------------------------ */
+/* Phase 92 — Observability placeholder dispatchers                    */
+/*                                                                     */
+/* The Phase 89 dispatcher (94_WEBAPP_WORKSPACE_RENDERER.js) routes    */
+/* /runtime/health and /reports here. If Phase 92 renderers are loaded */
+/* we delegate to them; otherwise we fall back to a clean read-first   */
+/* placeholder. Read-first only — no mutation, no auto-heal.           */
+/* ------------------------------------------------------------------ */
+
+function CbvWebAppPilotRenderer_renderRuntimeHealthPlaceholder() {
+  if (typeof CbvWebAppObservability_renderRuntimeHealth === 'function') {
+    try {
+      return CbvWebAppObservability_renderRuntimeHealth();
+    } catch (eRH) {
+      var fbWarn = ['Phase 92 runtime health renderer error: ' + (eRH && eRH.message ? eRH.message : String(eRH))];
+      return {
+        bodyHtml: '<div>' + (CbvWebAppPilotRenderer__includeComponents_() || '') +
+          '<div class="cbv-card"><h3>Runtime Health (preview — fallback)</h3>' +
+          '<p class="cbv-muted">Phase 92 renderer failed; showing read-first fallback. No mutations. No auto-heal.</p>' +
+          '<pre class="cbv-pre">' + JSON.stringify({ warnings: fbWarn }, null, 2) + '</pre></div></div>',
+        warnings: fbWarn
+      };
+    }
+  }
+  return {
+    bodyHtml: '<div>' + (CbvWebAppPilotRenderer__includeComponents_() || '') +
+      '<div class="cbv-card"><h3>Runtime Health (placeholder)</h3>' +
+      '<p class="cbv-muted">Read-first preview only. No mutations. Phase 92 renderer not loaded.</p>' +
+      '<p class="cbv-muted">Safety: No auto-heal · No auto resolve · No auto escalate · No production claim.</p></div></div>',
+    warnings: ['Phase 92 observability renderer not loaded.']
+  };
+}
+
+function CbvWebAppPilotRenderer_renderReportsPlaceholder() {
+  if (typeof CbvWebAppObservability_renderReportViewer === 'function') {
+    try {
+      return CbvWebAppObservability_renderReportViewer();
+    } catch (eRP) {
+      var fbWarnR = ['Phase 92 report viewer renderer error: ' + (eRP && eRP.message ? eRP.message : String(eRP))];
+      return {
+        bodyHtml: '<div>' + (CbvWebAppPilotRenderer__includeComponents_() || '') +
+          '<div class="cbv-card"><h3>Reports (preview — fallback)</h3>' +
+          '<p class="cbv-muted">Phase 92 renderer failed; showing read-first fallback. No mutations. No delete report. No edit report.</p>' +
+          '<pre class="cbv-pre">' + JSON.stringify({ warnings: fbWarnR }, null, 2) + '</pre></div></div>',
+        warnings: fbWarnR
+      };
+    }
+  }
+  return {
+    bodyHtml: '<div>' + (CbvWebAppPilotRenderer__includeComponents_() || '') +
+      '<div class="cbv-card"><h3>Reports (placeholder)</h3>' +
+      '<p class="cbv-muted">Read-first preview only. No mutations. Phase 92 renderer not loaded.</p>' +
+      '<p class="cbv-muted">Safety: No auto-heal · No auto resolve · No auto escalate · No production claim.</p></div></div>',
+    warnings: ['Phase 92 observability renderer not loaded.']
+  };
+}
+

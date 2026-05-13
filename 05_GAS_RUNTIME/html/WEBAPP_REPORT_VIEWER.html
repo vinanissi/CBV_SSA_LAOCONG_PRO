@@ -1,0 +1,68 @@
+<?!= COMPONENTS ?>
+
+<div class="cbv-card">
+  <h3>Report Viewer (read-first)</h3>
+  <div class="cbv-muted">Sources: CBV_TEST_REPORTS (sheet, if present) · SYSTEM_HEALTH_LOG · in-memory PropertiesService · Read-only.</div>
+
+  <? var st = MODEL && MODEL.state ? MODEL.state : {type:'ready'}; ?>
+  <? if (st.type && st.type !== 'ready') { ?>
+    <div class="cbv-state">
+      <span class="cbv-badge warn"><?= st.type.toUpperCase() ?></span>
+      <span style="margin-left:8px"><?= st.message ?></span>
+    </div>
+  <? } ?>
+
+  <? var r = MODEL && MODEL.result ? MODEL.result : null; ?>
+  <? var d = r && r.data ? r.data : null; ?>
+  <? var rows = d && d.rows ? d.rows : []; ?>
+
+  <div class="cbv-muted" style="margin-top:10px">count: <?= d && d.count !== undefined ? d.count : 0 ?></div>
+
+  <? if (!rows || rows.length === 0) { ?>
+    <div class="cbv-state cbv-muted">No reports visible. Run a phase Test Console to populate, or wait for CBV_TEST_REPORTS to appear.</div>
+  <? } else { ?>
+    <div style="margin-top:10px">
+      <? for (var i=0;i<rows.length;i++) { ?>
+        <? var x = rows[i]; ?>
+        <? var statusCls = "warn"; ?>
+        <? if (String(x.status||"").toUpperCase() === "GO" || String(x.status||"").toUpperCase() === "OK") statusCls = "ok"; ?>
+        <? if (String(x.status||"").toUpperCase() === "FAIL") statusCls = "crit"; ?>
+        <? var sevCls = "warn"; ?>
+        <? if (String(x.severity||"").toUpperCase() === "OK" || String(x.severity||"").toUpperCase() === "INFO") sevCls = "ok"; ?>
+        <? if (String(x.severity||"").toUpperCase() === "CRITICAL" || String(x.severity||"").toUpperCase() === "ERROR") sevCls = "crit"; ?>
+        <div class="cbv-card" style="margin:8px 0">
+          <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
+            <div style="font-weight:800"><?= x.phase || "(unknown phase)" ?></div>
+            <span class="cbv-badge <?= statusCls ?>"><?= x.status || "?" ?></span>
+          </div>
+          <div class="cbv-muted" style="margin-top:6px">
+            <code><?= x.reportId || "(no id)" ?></code>
+            <? if (x.severity) { ?> · <span class="cbv-badge <?= sevCls ?>"><?= x.severity ?></span><? } ?>
+            <? if (x.runBy) { ?> · runBy: <?= x.runBy ?><? } ?>
+            <? if (x.traceId) { ?> · trace: <code><?= x.traceId ?></code><? } ?>
+          </div>
+          <? if (x.summary) { ?>
+            <? var s = String(x.summary || ""); if (s.length > 280) s = s.substring(0,277) + "…"; ?>
+            <div class="cbv-muted" style="margin-top:6px"><?= s ?></div>
+          <? } ?>
+          <div class="cbv-muted" style="margin-top:6px">checkedAt: <?= x.checkedAt || "" ?> · source: <?= x.source || "" ?></div>
+        </div>
+      <? } ?>
+    </div>
+  <? } ?>
+</div>
+
+<? if (r && r.warnings && r.warnings.length) { ?>
+  <div class="cbv-card" style="margin-top:12px">
+    <h3>Warnings</h3>
+    <ul>
+      <? for (var j=0;j<r.warnings.length;j++) { ?>
+        <li class="cbv-muted"><?= r.warnings[j] ?></li>
+      <? } ?>
+    </ul>
+  </div>
+<? } ?>
+
+<div class="cbv-card" style="margin-top:14px">
+  <div class="cbv-muted">Read-first only. No delete report · No edit report · No auto-heal · No production claim.</div>
+</div>

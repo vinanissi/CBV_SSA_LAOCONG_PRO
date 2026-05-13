@@ -187,6 +187,30 @@ Sau đó nếu cần hiểu sâu: `APPSHEET_HOME_ALERT_INSTALL_GUIDE.md` và `AP
 
 ---
 
+## PHASE 92 — WebApp Runtime Health / Report Viewer pages (GAS + docs)
+
+**Trạng thái:** Operational Observability Layer — **read-first**, **không** auto-heal / auto resolve / auto escalate, **không** xác nhận production.  
+**Mục tiêu:** thay placeholder `/runtime/health` và `/reports` bằng renderer thật dựa trên per-phase Test Console probe + `SYSTEM_HEALTH_LOG` + `CBV_TEST_REPORTS` (nếu có) + in-memory `PropertiesService`; thêm Test Console Phase 92 (CBV_TCS_V1).
+
+| Tài liệu / công cụ | Ghi chú |
+|--------------------|--------|
+| `docs/webapp/PHASE_92_WEBAPP_RUNTIME_HEALTH_REPORT_VIEWER.md` | Tổng quan phase 92 |
+| `docs/webapp/WEBAPP_RUNTIME_HEALTH_DATA_BINDING.md` | Data binding Runtime Health (per-phase catalog, source priority) |
+| `docs/webapp/WEBAPP_REPORT_VIEWER_DATA_BINDING.md` | Data binding Report Viewer (sources, column adapter, detail behavior) |
+| `docs/webapp/WEBAPP_OBSERVABILITY_UAT_CHECKLIST.md` | UAT checklist read-first observability |
+| `05_GAS_RUNTIME/994_WEBAPP_OBSERVABILITY_DATA.js` | Data layer + per-phase catalog |
+| `05_GAS_RUNTIME/995_WEBAPP_OBSERVABILITY_RENDERER.js` | Renderer + state handling |
+| `05_GAS_RUNTIME/996_WEBAPP_OBSERVABILITY_TEST_CONSOLE.js` | Test Console Phase 92 (CBV_TCS_V1) |
+| `05_GAS_RUNTIME/html/WEBAPP_RUNTIME_HEALTH.html` | Runtime Health template |
+| `05_GAS_RUNTIME/html/WEBAPP_REPORT_VIEWER.html` | Report Viewer template |
+| `05_GAS_RUNTIME/html/WEBAPP_OBSERVABILITY_COMPONENTS.html` | Shared component styles |
+
+**Routes affected:** `/runtime/health`, `/reports` (Phase 89 placeholder fallback retained).  
+**Artifacts:** `031_*` trong `00_SYSTEM_BRAIN/` (prompt, report, handoff).  
+**Next:** Phase 93 — WebApp Admin Reference Viewer / Settings Read-First.
+
+---
+
 ## Liên kết phase trước
 
 - Phase 82 — SLA + Escalation Runtime: report `00_SYSTEM_BRAIN/000_REPORTS/009_*`, handoff
