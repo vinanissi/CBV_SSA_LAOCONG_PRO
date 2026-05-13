@@ -2,7 +2,7 @@
 
 **Branch:** `phase/from-v2.4.1-TASK-FIN`  
 **Standard:** CBV Operational Ecosystem Standard V1 · CBV_TCS_V1  
-**Commit:** `<TO_BE_FILLED_AFTER_COMMIT>`  
+**Commit:** `b8f1f65` (backfilled by follow-up commit per append-only audit rule)  
 **Status:** GO_WITH_WARNINGS (pilot only, manual UAT pending).
 
 ---
