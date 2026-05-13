@@ -20,7 +20,7 @@
 | `e7be76b` | Phase 85.1 — report commit hash follow-up |
 | `4495588` | Phase 85.2 — seed validation hotfix |
 | `82c60f6` | Phase 85.2 — report / local checks follow-up |
-| _(this document)_ | Phase 85.3 — pilot readiness closeout (see git log for hash) |
+| `1aa6d4e` | Phase 85.3 — pilot readiness closeout (this report + brain + doc) |
 
 ## 2. GAS evidence (as provided)
 
