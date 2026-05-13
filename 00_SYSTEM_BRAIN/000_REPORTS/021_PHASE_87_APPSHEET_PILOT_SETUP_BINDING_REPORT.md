@@ -1,4 +1,4 @@
-# Phase 87 â€” AppSheet pilot setup binding â€” closeout report
+# Phase 87 â?? AppSheet pilot setup binding â?? closeout report
 
 **Phase ID:** `PHASE_87_APPSHEET_PILOT_SETUP_BINDING`  
 **Date:** 2026-05-13  
@@ -7,7 +7,7 @@
 
 ## Summary
 
-Phase 87 adds AppSheet-specific setup matrices (docs + GAS builders), validation, health check, and Test Console actions under **ðŸ§ª CBV Test Console â†’ Phase 87 â€” AppSheet Pilot Setup**. Runtime files: `88_APPSHEET_PILOT_SETUP_RUNTIME.js`, `89_APPSHEET_PILOT_SETUP_TEST_CONSOLE.js`.
+Phase 87 adds AppSheet-specific setup matrices (docs + GAS builders), validation, health check, and Test Console actions under **ð?§ª CBV Test Console â?? Phase 87 â?? AppSheet Pilot Setup**. Runtime files: `88_APPSHEET_PILOT_SETUP_RUNTIME.js`, `89_APPSHEET_PILOT_SETUP_TEST_CONSOLE.js`.
 
 ## Artifacts
 
@@ -27,7 +27,7 @@ Phase 87 adds AppSheet-specific setup matrices (docs + GAS builders), validation
 
 ## GAS verification
 
-Run after `clasp push`: Phase 87 menu â†’ health + each matrix dialog. **Not executed in CI here.**
+Run after `clasp push`: Phase 87 menu â?? health + each matrix dialog. **Not executed in CI here.**
 
 ## Pilot / production readiness
 
@@ -38,8 +38,8 @@ Run after `clasp push`: Phase 87 menu â†’ health + each matrix dialog. **Not exe
 
 ## Commit hash
 
-`a9d18c06dcfde107e8a58b130fb46f655c2129aa` — feat(appsheet): add phase 87 pilot setup binding
+`30e5ca9a037456f79e583f66594bd1507e632395` ? feat(appsheet): add phase 87 pilot setup binding
 
 ## Optional tag
 
-`v2.4.4-appsheet-pilot-setup` â€” apply only after Phase 87 GAS health passes (optional).
+`v2.4.4-appsheet-pilot-setup` ? apply only after Phase 87 GAS health passes (optional).
