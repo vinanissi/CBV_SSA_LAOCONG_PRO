@@ -25,6 +25,8 @@ var CBV_FE_ARCH_DECISION_TEXT = [
   'Rules:',
   '- No AppSheet Bot.',
   '- No auto assign / auto resolve / auto escalate.',
+  '- No auto resolve',
+  '- No auto escalate',
   '- No destructive migration.',
   '- No production claim.',
   '- Manual-first → Auto-later; Human-in-the-loop; Audit-first.'

@@ -41,6 +41,8 @@ Hybrid nhưng **WebApp-led**.
 - No destructive migration
 - **No AppSheet Bot**
 - **No auto assign / auto resolve / auto escalate**
+- **No auto resolve**
+- **No auto escalate**
 - No ENV-A
 - No AI runtime
 - No queue intelligence

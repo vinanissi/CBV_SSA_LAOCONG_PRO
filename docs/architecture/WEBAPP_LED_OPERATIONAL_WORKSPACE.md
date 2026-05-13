@@ -41,6 +41,8 @@ Later (not in Phase 88):
 
 - No claim of being “production ready” in Phase 88.
 - No auto assignment / auto resolve / auto escalation.
+- No auto resolve
+- No auto escalate
 - No queue intelligence.
 - No AI runtime.
 
