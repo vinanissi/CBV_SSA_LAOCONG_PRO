@@ -110,6 +110,22 @@ Sau đó nếu cần hiểu sâu: `APPSHEET_HOME_ALERT_INSTALL_GUIDE.md` và `AP
 
 ---
 
+## PHASE 88 — FE architecture rebalance closeout (docs + decision + Test Console)
+
+**Trạng thái:** Architecture readiness **GO**; pilot readiness **GO**; **không** xác nhận production.  
+**Mục tiêu:** Chốt kiến trúc FE vận hành **WebApp-led hybrid** (Sheets/GAS runtime + WebApp workspace + AppSheet shell) và thêm Test Console gate Phase 88.
+
+| Tài liệu / quyết định / công cụ | Ghi chú |
+|-------------------------------|--------|
+| `docs/architecture/PHASE_88_FE_ARCHITECTURE_REBALANCE_CLOSEOUT.md` | Tổng quan phase 88 |
+| `docs/architecture/FE_OWNERSHIP_MATRIX.md` | Matrix WebApp/AppSheet ownership |
+| `00_SYSTEM_BRAIN/002_DECISIONS/022_FE_ARCHITECTURE_REBALANCE_DECISION.md` | Decision log |
+| `05_GAS_RUNTIME/90_FE_ARCHITECTURE_REBALANCE_TEST_CONSOLE.js` | 🧪 Test Console menu Phase 88 |
+
+**Artifacts:** `022_*` trong `00_SYSTEM_BRAIN/` (prompt, report, handoff).
+
+---
+
 ## Liên kết phase trước
 
 - Phase 82 — SLA + Escalation Runtime: report `00_SYSTEM_BRAIN/000_REPORTS/009_*`, handoff
