@@ -36,8 +36,8 @@
 
 | Check | Result |
 |--------|--------|
-| `node --check 05_GAS_RUNTIME/84_UNIFIED_UI_CONTRACT_RUNTIME.js` | Run in CI / dev (see commit) |
-| `node --check 05_GAS_RUNTIME/85_UNIFIED_UI_CONTRACT_TEST_CONSOLE.js` | Run in CI / dev |
+| `node --check 05_GAS_RUNTIME/84_UNIFIED_UI_CONTRACT_RUNTIME.js` | Exit 0 |
+| `node --check 05_GAS_RUNTIME/85_UNIFIED_UI_CONTRACT_TEST_CONSOLE.js` | Exit 0 |
 | `JSON.parse(schema_manifest.json)` | OK |
 
 ## GAS test result
@@ -55,4 +55,4 @@
 
 ## Commit hash
 
-_Recorded after `git commit`._
+`4495588` — `fix(ui-contract): repair phase 85 seed validation errors`
