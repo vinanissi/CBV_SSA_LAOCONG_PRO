@@ -27,3 +27,20 @@ Runtime: `CbvUiContract_generatePilotMatrix()` groups enabled rows (`CbvUiContra
 | ADMIN_REFERENCE_VIEWER | WEBAPP | no |
 
 Toggle `IS_PILOT_READY` as screens pass acceptance; never delete historical contract rows—disable with `IS_ENABLED` if a screen retires.
+
+---
+
+## Phase 85.3 pilot readiness result
+
+**Closeout date:** 2026-05-13
+
+| Gate | Result |
+|------|--------|
+| Bootstrap | **PASS** (`ok=true`, `seeded=3`, `skipped=9`, sheet already existed) |
+| Validate | **PASS** (`ok=true`, `errors=0`) |
+| Health Check | **GO** (`CBV_UI_CONTRACT health: GO (OK)`) |
+| Envelope | **PASS** |
+| Pilot readiness (`CBV_UI_CONTRACT` + GAS QA) | **GO** |
+| Production readiness (bound AppSheet + WebApp, org sign-off) | **NOT YET** |
+
+This section records evidence from the bound spreadsheet Test Console; it does not replace runtime `CbvUiContract_generatePilotMatrix()` for live grouping.
