@@ -6,6 +6,7 @@
  */
 
 var __CBV_FE_ARCH_TEST_CONSOLE_LAST_REPORT = null;
+var __CBV_FE_ARCH_TEST_CONSOLE_LAST_REPORT_PROP_KEY = 'CBV_FE_ARCH_TC_LAST_REPORT_JSON';
 
 var CBV_FE_ARCH_PHASE_ID = 'PHASE_88_FE_ARCHITECTURE_REBALANCE_CLOSEOUT';
 
@@ -190,8 +191,66 @@ function CbvFeArchitecture_TestConsole_run() {
   ].join('\n');
 
   __CBV_FE_ARCH_TEST_CONSOLE_LAST_REPORT = report;
-  Logger.log(report.reportText);
+  CbvFeArchitecture_TestConsole_storeLatestReport_(report);
+  CbvFeArchitecture_TestConsole_logReportDetails_(report);
   return report;
+}
+
+function CbvFeArchitecture_TestConsole_storeLatestReport_(report) {
+  try {
+    __CBV_FE_ARCH_TEST_CONSOLE_LAST_REPORT = report;
+    if (typeof PropertiesService !== 'undefined' && PropertiesService.getDocumentProperties) {
+      PropertiesService.getDocumentProperties().setProperty(__CBV_FE_ARCH_TEST_CONSOLE_LAST_REPORT_PROP_KEY, JSON.stringify(report || null));
+    }
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, message: e && e.message ? e.message : String(e) };
+  }
+}
+
+function CbvFeArchitecture_TestConsole_getLatestReport_() {
+  if (__CBV_FE_ARCH_TEST_CONSOLE_LAST_REPORT) return __CBV_FE_ARCH_TEST_CONSOLE_LAST_REPORT;
+  try {
+    if (typeof PropertiesService === 'undefined' || !PropertiesService.getDocumentProperties) return null;
+    var raw = PropertiesService.getDocumentProperties().getProperty(__CBV_FE_ARCH_TEST_CONSOLE_LAST_REPORT_PROP_KEY);
+    if (!raw) return null;
+    var rep = JSON.parse(raw);
+    __CBV_FE_ARCH_TEST_CONSOLE_LAST_REPORT = rep;
+    return rep;
+  } catch (e) {
+    return null;
+  }
+}
+
+function CbvFeArchitecture_TestConsole_logReportDetails_(report) {
+  try {
+    var r = report || {};
+    var failed = (r.checks || []).filter(function(c) { return c && c.ok === false; });
+    var lines = [
+      r.reportText || '',
+      '',
+      'failedChecks=' + failed.length
+    ];
+    if (failed.length) {
+      lines.push('--- failed checks (top 20) ---');
+      failed.slice(0, 20).forEach(function(c) {
+        lines.push('- ' + (c.code || 'NO_CODE') + ' [' + (c.severity || 'N/A') + '] ' + (c.message || ''));
+      });
+    }
+    lines.push('');
+    lines.push('warnings=' + ((r.warnings || []).length));
+    if (r.warnings && r.warnings.length) lines.push((r.warnings || []).slice(0, 20).map(function(w) { return '- ' + w; }).join('\n'));
+    lines.push('');
+    lines.push('errors=' + ((r.errors || []).length));
+    if (r.errors && r.errors.length) lines.push((r.errors || []).slice(0, 20).map(function(e) { return '- ' + e; }).join('\n'));
+    lines.push('');
+    lines.push('nextStep=' + (r.nextStep || ''));
+    Logger.log(lines.join('\n'));
+    return { ok: true, failedChecks: failed.length };
+  } catch (e0) {
+    Logger.log('CbvFeArchitecture_TestConsole_logReportDetails_ failed: ' + (e0 && e0.message ? e0.message : String(e0)));
+    return { ok: false };
+  }
 }
 
 function CbvFeArchitecture_TestConsole_showOwnershipMatrix() {
@@ -211,7 +270,7 @@ function CbvFeArchitecture_TestConsole_showHandoffPrompt() {
 
 function CbvFeArchitecture_TestConsole_copyLatestReport() {
   var ui = SpreadsheetApp.getUi();
-  var r = __CBV_FE_ARCH_TEST_CONSOLE_LAST_REPORT;
+  var r = CbvFeArchitecture_TestConsole_getLatestReport_();
   if (!r) {
     ui.alert('No report', 'Run "Run FE Architecture Health Check" first, or execute CbvFeArchitecture_TestConsole_run() in the script editor.', ui.ButtonSet.OK);
     return { ok: false };
