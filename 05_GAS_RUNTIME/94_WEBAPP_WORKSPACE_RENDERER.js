@@ -47,10 +47,19 @@ function CbvWebAppWorkspace_render(route, params) {
   }
 
   var page;
-  if (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.HOME) page = CbvWebAppWorkspace_renderHome_();
-  else if (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.QUEUE) page = CbvWebAppWorkspace_renderQueue_();
-  else if (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.SLA) page = CbvWebAppWorkspace_renderSla_();
-  else page = CbvWebAppWorkspace_renderPlaceholder_(reg.route);
+  if (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.HOME) {
+    page = (typeof CbvWebAppPilotRenderer_renderHome === 'function') ? CbvWebAppPilotRenderer_renderHome() : CbvWebAppWorkspace_renderHome_();
+  } else if (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.QUEUE) {
+    page = (typeof CbvWebAppPilotRenderer_renderQueue === 'function') ? CbvWebAppPilotRenderer_renderQueue() : CbvWebAppWorkspace_renderQueue_();
+  } else if (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.SLA) {
+    page = (typeof CbvWebAppPilotRenderer_renderSla === 'function') ? CbvWebAppPilotRenderer_renderSla() : CbvWebAppWorkspace_renderSla_();
+  } else if (reg.route === '/home-alert/timeline' && typeof CbvWebAppPilotRenderer_renderTimelinePlaceholder === 'function') {
+    page = CbvWebAppPilotRenderer_renderTimelinePlaceholder();
+  } else if (reg.route === '/home-alert/kanban' && typeof CbvWebAppPilotRenderer_renderKanbanPlaceholder === 'function') {
+    page = CbvWebAppPilotRenderer_renderKanbanPlaceholder();
+  } else {
+    page = CbvWebAppWorkspace_renderPlaceholder_(reg.route);
+  }
 
   page.title = reg.title;
   page.route = reg.route;

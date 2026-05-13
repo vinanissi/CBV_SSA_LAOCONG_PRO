@@ -1,0 +1,69 @@
+<?!= COMPONENTS ?>
+
+<div class="cbv-card">
+  <h3>Home Workspace (pilot)</h3>
+  <div class="cbv-muted">Read-first dashboard. No write actions.</div>
+
+  <? var st = MODEL && MODEL.state ? MODEL.state : {type:'ready'}; ?>
+  <? if (st.type && st.type !== 'ready') { ?>
+    <div class="cbv-state">
+      <span class="cbv-badge warn"><?= st.type.toUpperCase() ?></span>
+      <span style="margin-left:8px"><?= st.message ?></span>
+    </div>
+  <? } ?>
+
+  <? var r = MODEL && MODEL.result ? MODEL.result : null; ?>
+  <? var d = r && r.data ? r.data : null; ?>
+  <? var t = d && d.totals ? d.totals : {}; ?>
+
+  <div style="margin-top:12px" class="cbv-row">
+    <div class="cbv-card" style="flex:1;min-width:190px">
+      <div class="cbv-muted">My Queue</div>
+      <div style="font-size:22px;font-weight:800"><?= t.myQueue || 0 ?></div>
+      <div style="margin-top:8px"><a class="cbv-link" href="/home-alert/my-queue">Open My Queue</a></div>
+    </div>
+    <div class="cbv-card" style="flex:1;min-width:190px">
+      <div class="cbv-muted">Unassigned</div>
+      <div style="font-size:22px;font-weight:800"><?= t.unassigned || 0 ?></div>
+      <div style="margin-top:8px" class="cbv-muted">AppSheet primary initially</div>
+    </div>
+    <div class="cbv-card" style="flex:1;min-width:190px">
+      <div class="cbv-muted">Breached</div>
+      <div style="font-size:22px;font-weight:800"><?= t.breached || 0 ?></div>
+      <div style="margin-top:8px"><a class="cbv-link" href="/home-alert/sla">Open SLA</a></div>
+    </div>
+  </div>
+
+  <div style="margin-top:10px" class="cbv-row">
+    <div class="cbv-card" style="flex:1;min-width:190px">
+      <div class="cbv-muted">Escalated</div>
+      <div style="font-size:22px;font-weight:800"><?= t.escalated || 0 ?></div>
+    </div>
+    <div class="cbv-card" style="flex:1;min-width:190px">
+      <div class="cbv-muted">Blocked</div>
+      <div style="font-size:22px;font-weight:800"><?= t.blocked || 0 ?></div>
+    </div>
+    <div class="cbv-card" style="flex:1;min-width:190px">
+      <div class="cbv-muted">Resolved Today</div>
+      <div style="font-size:22px;font-weight:800"><?= t.resolvedToday || 0 ?></div>
+    </div>
+  </div>
+
+  <div style="margin-top:14px" class="cbv-row">
+    <a class="cbv-link" href="/home-alert/timeline">Timeline (placeholder)</a>
+    <a class="cbv-link" href="/home-alert/kanban">Kanban (placeholder)</a>
+    <a class="cbv-link" href="/runtime/health">Runtime (placeholder)</a>
+  </div>
+</div>
+
+<? if (r && r.warnings && r.warnings.length) { ?>
+  <div class="cbv-card" style="margin-top:12px">
+    <h3>Warnings</h3>
+    <ul>
+      <? for (var i=0;i<r.warnings.length;i++) { ?>
+        <li class="cbv-muted"><?= r.warnings[i] ?></li>
+      <? } ?>
+    </ul>
+  </div>
+<? } ?>
+

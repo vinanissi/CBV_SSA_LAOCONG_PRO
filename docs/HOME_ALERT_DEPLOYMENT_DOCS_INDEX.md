@@ -144,6 +144,26 @@ Sau đó nếu cần hiểu sâu: `APPSHEET_HOME_ALERT_INSTALL_GUIDE.md` và `AP
 
 ---
 
+## PHASE 90 — WebApp workspace pilot pages / data binding (GAS + docs)
+
+**Trạng thái:** pilot pages — **read-first**, **không** xác nhận production.  
+**Mục tiêu:** nâng Home/Queue/SLA thành pilot pages có data binding rõ ràng + FE state standard + Test Console Phase 90.
+
+| Tài liệu / công cụ | Ghi chú |
+|--------------------|--------|
+| `docs/webapp/PHASE_90_WEBAPP_WORKSPACE_PILOT_PAGES_DATA_BINDING.md` | Tổng quan phase 90 |
+| `docs/webapp/WEBAPP_HOME_WORKSPACE_DATA_BINDING.md` | Data binding Home |
+| `docs/webapp/WEBAPP_QUEUE_DATA_BINDING.md` | Data binding Queue |
+| `docs/webapp/WEBAPP_SLA_DASHBOARD_DATA_BINDING.md` | Data binding SLA |
+| `docs/webapp/WEBAPP_FE_STATE_STANDARD.md` | FE state standard |
+| `docs/webapp/WEBAPP_PILOT_UAT_CHECKLIST.md` | UAT checklist |
+| `05_GAS_RUNTIME/97_..98_..990_*.js` | Pilot data/renderer/test console |
+| `05_GAS_RUNTIME/html/WEBAPP_WORKSPACE_*_PILOT.html` | Pilot templates |
+
+**Artifacts:** `028_*` trong `00_SYSTEM_BRAIN/` (prompt, report, handoff).
+
+---
+
 ## Liên kết phase trước
 
 - Phase 82 — SLA + Escalation Runtime: report `00_SYSTEM_BRAIN/000_REPORTS/009_*`, handoff

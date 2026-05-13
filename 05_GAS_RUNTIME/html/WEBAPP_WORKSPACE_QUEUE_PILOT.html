@@ -1,0 +1,67 @@
+<?!= COMPONENTS ?>
+
+<div class="cbv-card">
+  <h3>My Queue (pilot)</h3>
+  <div class="cbv-muted">Read-first cards. No claim/resolve/escalate buttons.</div>
+
+  <? var st = MODEL && MODEL.state ? MODEL.state : {type:'ready'}; ?>
+  <? if (st.type && st.type !== 'ready') { ?>
+    <div class="cbv-state">
+      <span class="cbv-badge warn"><?= st.type.toUpperCase() ?></span>
+      <span style="margin-left:8px"><?= st.message ?></span>
+    </div>
+  <? } ?>
+
+  <? var r = MODEL && MODEL.result ? MODEL.result : null; ?>
+  <? var d = r && r.data ? r.data : null; ?>
+  <? var cards = d && d.cards ? d.cards : []; ?>
+
+  <div class="cbv-muted" style="margin-top:10px">
+    user: <code><?= d && d.userEmail ? d.userEmail : "" ?></code> · count: <?= d && d.count !== undefined ? d.count : 0 ?>
+  </div>
+
+  <? if (!cards || cards.length === 0) { ?>
+    <div class="cbv-state cbv-muted">Empty (or sheet missing). Check warnings.</div>
+  <? } else { ?>
+    <div style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px">
+      <? for (var i=0;i<cards.length;i++) { ?>
+        <? var c = cards[i]; ?>
+        <? var sev = (c.slaBreachLevel && c.slaBreachLevel > 0) ? "crit" : (c.slaStatus && (c.slaStatus.toUpperCase()==="OVERDUE" || c.slaStatus.toUpperCase()==="BREACHED") ? "warn" : "ok"); ?>
+        <div class="cbv-card">
+          <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
+            <div style="font-weight:800"><?= c.title ?></div>
+            <span class="cbv-badge <?= sev ?>"><?= (c.slaStatus || "SLA") ?><? if (c.slaBreachLevel) { ?> · L<?= c.slaBreachLevel ?><? } ?></span>
+          </div>
+          <div class="cbv-muted" style="margin-top:6px">
+            <code><?= c.id ?></code> · status: <?= c.status || "" ?>
+          </div>
+          <? if (c.operatorSecondaryText) { ?>
+            <div class="cbv-muted" style="margin-top:8px"><?= c.operatorSecondaryText ?></div>
+          <? } ?>
+          <? if (c.operatorMetaText) { ?>
+            <div class="cbv-muted" style="margin-top:6px"><?= c.operatorMetaText ?></div>
+          <? } ?>
+          <? if (c.operatorNextAction) { ?>
+            <div style="margin-top:10px">
+              <span class="cbv-badge">Next</span>
+              <span class="cbv-muted" style="margin-left:6px"><?= c.operatorNextAction ?></span>
+            </div>
+          <? } ?>
+          <div class="cbv-muted" style="margin-top:10px">updated: <?= c.updatedAt instanceof Date ? c.updatedAt : (c.updatedAt || "") ?></div>
+        </div>
+      <? } ?>
+    </div>
+  <? } ?>
+</div>
+
+<? if (r && r.warnings && r.warnings.length) { ?>
+  <div class="cbv-card" style="margin-top:12px">
+    <h3>Warnings</h3>
+    <ul>
+      <? for (var j=0;j<r.warnings.length;j++) { ?>
+        <li class="cbv-muted"><?= r.warnings[j] ?></li>
+      <? } ?>
+    </ul>
+  </div>
+<? } ?>
+

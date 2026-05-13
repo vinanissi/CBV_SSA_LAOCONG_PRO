@@ -1,0 +1,67 @@
+<?!= COMPONENTS ?>
+
+<div class="cbv-card">
+  <h3>SLA Dashboard (pilot)</h3>
+  <div class="cbv-muted">Read-first widgets. No auto resolve/escalate.</div>
+
+  <? var st = MODEL && MODEL.state ? MODEL.state : {type:'ready'}; ?>
+  <? if (st.type && st.type !== 'ready') { ?>
+    <div class="cbv-state">
+      <span class="cbv-badge warn"><?= st.type.toUpperCase() ?></span>
+      <span style="margin-left:8px"><?= st.message ?></span>
+    </div>
+  <? } ?>
+
+  <? var r = MODEL && MODEL.result ? MODEL.result : null; ?>
+  <? var d = r && r.data ? r.data : null; ?>
+  <? var byStatus = d && d.countsBySlaStatus ? d.countsBySlaStatus : {}; ?>
+  <? var byLevel = d && d.countsByBreachLevel ? d.countsByBreachLevel : {}; ?>
+  <? var breached = d && d.breachedItems ? d.breachedItems : []; ?>
+
+  <div style="margin-top:12px" class="cbv-row">
+    <div class="cbv-card" style="flex:1;min-width:240px">
+      <h3>Counts by SLA_STATUS</h3>
+      <div class="cbv-kv">
+        <? for (var k in byStatus) { ?>
+          <div class="cbv-muted"><?= k ?></div>
+          <div style="font-weight:800"><?= byStatus[k] ?></div>
+        <? } ?>
+      </div>
+    </div>
+    <div class="cbv-card" style="flex:1;min-width:240px">
+      <h3>Counts by Breach Level</h3>
+      <div class="cbv-kv">
+        <? for (var b in byLevel) { ?>
+          <div class="cbv-muted">L<?= b ?></div>
+          <div style="font-weight:800"><?= byLevel[b] ?></div>
+        <? } ?>
+      </div>
+      <div style="margin-top:10px" class="cbv-muted">resolvedCount: <b><?= d && d.resolvedCount ? d.resolvedCount : 0 ?></b></div>
+    </div>
+  </div>
+
+  <div class="cbv-card" style="margin-top:12px">
+    <h3>Breached (top)</h3>
+    <? if (!breached || breached.length === 0) { ?>
+      <div class="cbv-muted">No breached items (or columns missing).</div>
+    <? } else { ?>
+      <ul>
+        <? for (var i=0;i<breached.length;i++) { ?>
+          <li class="cbv-muted"><code><?= breached[i].id ?></code> · L<?= breached[i].breachLevel ?> · <?= breached[i].slaStatus ?> · <?= breached[i].title ?></li>
+        <? } ?>
+      </ul>
+    <? } ?>
+  </div>
+</div>
+
+<? if (r && r.warnings && r.warnings.length) { ?>
+  <div class="cbv-card" style="margin-top:12px">
+    <h3>Warnings</h3>
+    <ul>
+      <? for (var j=0;j<r.warnings.length;j++) { ?>
+        <li class="cbv-muted"><?= r.warnings[j] ?></li>
+      <? } ?>
+    </ul>
+  </div>
+<? } ?>
+
