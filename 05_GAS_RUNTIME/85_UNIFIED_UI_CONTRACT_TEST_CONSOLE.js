@@ -32,9 +32,16 @@ function CbvUiContract_TestConsole_run() {
   var errors = [];
 
   function addCheck(code, ok, severity, message, detail) {
-    checks.push({ code: code, ok: ok, severity: severity, message: message, detail: detail || {} });
-    if (!ok && severity === 'ERROR') errors.push(message);
-    if (!ok && severity === 'WARNING') warnings.push(message);
+    var sev;
+    if (ok) {
+      sev = severity || 'OK';
+    } else {
+      if (severity === 'WARNING' || severity === 'ERROR' || severity === 'CRITICAL') sev = severity;
+      else sev = 'ERROR';
+    }
+    checks.push({ code: code, ok: ok, severity: sev, message: message, detail: detail || {} });
+    if (!ok && (sev === 'ERROR' || sev === 'CRITICAL')) errors.push(message);
+    if (!ok && sev === 'WARNING') warnings.push(message);
   }
 
   var boot = null;
@@ -76,8 +83,7 @@ function CbvUiContract_TestConsole_run() {
   var rm = null;
   try {
     rm = CbvUiContract_buildWebAppRouteMap();
-    addCheck('WEBAPP_ROUTE_MAP', !!rm && rm.ok && rm.routes && rm.routes.length >= 5, rm && rm.routes && rm.routes.length >= 5 ? 'OK' : 'WARNING', 'buildWebAppRouteMap', { routeCount: rm && rm.routes ? rm.routes.length : 0 });
-    if (rm && rm.routes && rm.routes.length < 5) warnings.push('Expected several WebApp routes from baseline');
+    addCheck('WEBAPP_ROUTE_MAP', !!rm && rm.ok && rm.routes && rm.routes.length >= 5, rm && rm.routes && rm.routes.length >= 5 ? 'OK' : 'WARNING', 'buildWebAppRouteMap: expected several WebApp routes from baseline', { routeCount: rm && rm.routes ? rm.routes.length : 0 });
   } catch (e4) {
     addCheck('WEBAPP_ROUTE_MAP', false, 'ERROR', e4.message || String(e4), {});
   }

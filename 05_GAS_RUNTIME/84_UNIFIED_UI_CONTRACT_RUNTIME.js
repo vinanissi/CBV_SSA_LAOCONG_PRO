@@ -541,9 +541,22 @@ function CbvUiContract_healthCheck() {
 
   try {
     boot = CbvUiContract_bootstrap();
-    checks.push({ code: 'BOOTSTRAP_IDEMPOTENT', !!boot && boot.ok, 'OK', 'CbvUiContract_bootstrap', boot || {} });
+    var bootOk = !!boot && boot.ok === true;
+    checks.push({
+      code: 'BOOTSTRAP_IDEMPOTENT',
+      ok: bootOk,
+      severity: bootOk ? 'OK' : 'ERROR',
+      message: 'UI Contract bootstrap is idempotent.',
+      detail: boot || null
+    });
   } catch (e2) {
-    checks.push({ code: 'BOOTSTRAP_IDEMPOTENT', false, 'ERROR', e2.message || String(e2), {} });
+    checks.push({
+      code: 'BOOTSTRAP_IDEMPOTENT',
+      ok: false,
+      severity: 'ERROR',
+      message: String(e2.message || e2),
+      detail: {}
+    });
     errors.push(e2.message || String(e2));
   }
 
@@ -555,7 +568,15 @@ function CbvUiContract_healthCheck() {
     if (!v.ok) errors = errors.concat(v.errors || []);
     warnings = warnings.concat(v.warnings || []);
   } catch (e) {
-    errors.push(e.message || String(e));
+    var ev = e.message || String(e);
+    errors.push(ev);
+    checks.push({
+      code: 'VALIDATE',
+      ok: false,
+      severity: 'ERROR',
+      message: 'CbvUiContract_validate threw',
+      detail: { error: ev }
+    });
   }
 
   var status = errors.length > 0 ? 'FAIL' : (warnings.length > 0 ? 'GO_WITH_WARNINGS' : 'GO');
