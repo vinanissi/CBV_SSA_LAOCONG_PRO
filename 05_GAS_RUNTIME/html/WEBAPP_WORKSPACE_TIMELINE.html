@@ -1,0 +1,71 @@
+<?!= COMPONENTS ?>
+
+<div class="cbv-card">
+  <h3>Timeline (read-first)</h3>
+  <div class="cbv-muted">Sort: UPDATED_AT desc · fallback CREATED_AT desc · No edits / no mutation buttons.</div>
+
+  <? var st = MODEL && MODEL.state ? MODEL.state : {type:'ready'}; ?>
+  <? if (st.type && st.type !== 'ready') { ?>
+    <div class="cbv-state">
+      <span class="cbv-badge warn"><?= st.type.toUpperCase() ?></span>
+      <span style="margin-left:8px"><?= st.message ?></span>
+    </div>
+  <? } ?>
+
+  <? var r = MODEL && MODEL.result ? MODEL.result : null; ?>
+  <? var d = r && r.data ? r.data : null; ?>
+  <? var rows = d && d.rows ? d.rows : []; ?>
+
+  <div class="cbv-muted" style="margin-top:10px">count: <?= d && d.count !== undefined ? d.count : 0 ?></div>
+
+  <? if (!rows || rows.length === 0) { ?>
+    <div class="cbv-state cbv-muted">Empty (or HOME_ALERT missing). Check warnings.</div>
+  <? } else { ?>
+    <div style="margin-top:10px">
+      <? for (var i=0;i<rows.length;i++) { ?>
+        <? var x = rows[i]; ?>
+        <? var sev = (x.slaBreachLevel && x.slaBreachLevel > 0) ? "crit" : (x.slaStatus && (String(x.slaStatus).toUpperCase()==="OVERDUE" || String(x.slaStatus).toUpperCase()==="BREACHED") ? "warn" : "ok"); ?>
+        <div class="cbv-card" style="margin:8px 0">
+          <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
+            <div style="font-weight:800"><?= x.operatorPrimaryText || x.id || "(no title)" ?></div>
+            <span class="cbv-badge <?= sev ?>"><?= (x.slaStatus || "SLA") ?><? if (x.slaBreachLevel) { ?> · L<?= x.slaBreachLevel ?><? } ?></span>
+          </div>
+          <div class="cbv-muted" style="margin-top:6px">
+            <code><?= x.id ?></code>
+            <? if (x.status) { ?> · status: <?= x.status ?><? } ?>
+            <? if (x.assignedTo) { ?> · assigned: <?= x.assignedTo ?><? } ?>
+            <? if (x.moduleCode) { ?> · module: <?= x.moduleCode ?><? } ?>
+          </div>
+          <? if (x.operatorSecondaryText) { ?>
+            <div class="cbv-muted" style="margin-top:6px"><?= x.operatorSecondaryText ?></div>
+          <? } ?>
+          <? if (x.operatorMetaText) { ?>
+            <div class="cbv-muted" style="margin-top:4px"><?= x.operatorMetaText ?></div>
+          <? } ?>
+          <? if (x.operatorNextAction) { ?>
+            <div style="margin-top:8px">
+              <span class="cbv-badge">Next</span>
+              <span class="cbv-muted" style="margin-left:6px"><?= x.operatorNextAction ?></span>
+            </div>
+          <? } ?>
+          <div class="cbv-muted" style="margin-top:8px">when: <?= (x.timelineAt instanceof Date) ? x.timelineAt : (x.timelineAt || x.updatedAt || x.createdAt || "") ?></div>
+        </div>
+      <? } ?>
+    </div>
+  <? } ?>
+</div>
+
+<? if (r && r.warnings && r.warnings.length) { ?>
+  <div class="cbv-card" style="margin-top:12px">
+    <h3>Warnings</h3>
+    <ul>
+      <? for (var j=0;j<r.warnings.length;j++) { ?>
+        <li class="cbv-muted"><?= r.warnings[j] ?></li>
+      <? } ?>
+    </ul>
+  </div>
+<? } ?>
+
+<div class="cbv-card" style="margin-top:14px">
+  <div class="cbv-muted">Read-first only. Safety: No auto assign · No auto resolve · No auto escalate · No production claim.</div>
+</div>

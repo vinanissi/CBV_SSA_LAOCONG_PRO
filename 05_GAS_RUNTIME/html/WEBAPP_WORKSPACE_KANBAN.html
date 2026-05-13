@@ -1,0 +1,76 @@
+<?!= COMPONENTS ?>
+
+<div class="cbv-card">
+  <h3>Kanban (read-first)</h3>
+  <div class="cbv-muted">Group by STATUS · Cards read-only · No drag-drop save · No mutation.</div>
+
+  <? var st = MODEL && MODEL.state ? MODEL.state : {type:'ready'}; ?>
+  <? if (st.type && st.type !== 'ready') { ?>
+    <div class="cbv-state">
+      <span class="cbv-badge warn"><?= st.type.toUpperCase() ?></span>
+      <span style="margin-left:8px"><?= st.message ?></span>
+    </div>
+  <? } ?>
+
+  <? var r = MODEL && MODEL.result ? MODEL.result : null; ?>
+  <? var d = r && r.data ? r.data : null; ?>
+  <? var cols = d && d.columns ? d.columns : []; ?>
+
+  <div class="cbv-muted" style="margin-top:10px">
+    total: <?= d && d.total !== undefined ? d.total : 0 ?> · columns: <?= cols.length ?>
+  </div>
+
+  <? if (!cols || cols.length === 0) { ?>
+    <div class="cbv-state cbv-muted">Empty (or HOME_ALERT missing). Check warnings.</div>
+  <? } else { ?>
+    <div style="margin-top:10px;display:flex;gap:10px;overflow-x:auto;padding-bottom:6px">
+      <? for (var i=0;i<cols.length;i++) { ?>
+        <? var col = cols[i]; ?>
+        <? var cards = col.cards || []; ?>
+        <div class="cbv-card" style="min-width:240px;max-width:280px;flex:0 0 auto">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
+            <h3 style="margin:0"><?= col.status || "UNKNOWN" ?></h3>
+            <span class="cbv-badge"><?= col.count || cards.length || 0 ?></span>
+          </div>
+          <? if (!cards.length) { ?>
+            <div class="cbv-state cbv-muted">No cards in this column.</div>
+          <? } else { ?>
+            <? for (var c=0;c<cards.length;c++) { ?>
+              <? var card = cards[c]; ?>
+              <? var sev = (card.slaBreachLevel && card.slaBreachLevel > 0) ? "crit" : (card.slaStatus && (String(card.slaStatus).toUpperCase()==="OVERDUE" || String(card.slaStatus).toUpperCase()==="BREACHED") ? "warn" : "ok"); ?>
+              <div class="cbv-card" style="margin:6px 0">
+                <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start">
+                  <div style="font-weight:700"><?= card.title || card.id || "(no title)" ?></div>
+                  <span class="cbv-badge <?= sev ?>"><?= (card.slaStatus || "SLA") ?><? if (card.slaBreachLevel) { ?> · L<?= card.slaBreachLevel ?><? } ?></span>
+                </div>
+                <div class="cbv-muted" style="margin-top:6px">
+                  <code><?= card.id ?></code>
+                  <? if (card.assignedTo) { ?> · <?= card.assignedTo ?><? } ?>
+                </div>
+                <? if (card.operatorMetaText) { ?>
+                  <div class="cbv-muted" style="margin-top:4px"><?= card.operatorMetaText ?></div>
+                <? } ?>
+                <div class="cbv-muted" style="margin-top:6px">updated: <?= (card.updatedAt instanceof Date) ? card.updatedAt : (card.updatedAt || "") ?></div>
+              </div>
+            <? } ?>
+          <? } ?>
+        </div>
+      <? } ?>
+    </div>
+  <? } ?>
+</div>
+
+<? if (r && r.warnings && r.warnings.length) { ?>
+  <div class="cbv-card" style="margin-top:12px">
+    <h3>Warnings</h3>
+    <ul>
+      <? for (var j=0;j<r.warnings.length;j++) { ?>
+        <li class="cbv-muted"><?= r.warnings[j] ?></li>
+      <? } ?>
+    </ul>
+  </div>
+<? } ?>
+
+<div class="cbv-card" style="margin-top:14px">
+  <div class="cbv-muted">Read-first only. Safety: No auto assign · No auto resolve · No auto escalate · No production claim.</div>
+</div>

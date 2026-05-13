@@ -84,24 +84,71 @@ function CbvWebAppPilotRenderer_renderSla() {
 }
 
 function CbvWebAppPilotRenderer_renderTimelinePlaceholder() {
+  // Phase 91 — delegate to CbvWebAppTimelineKanban_renderTimeline if available.
+  // Phase 90 placeholder remains as fallback when Phase 91 not loaded yet.
+  if (typeof CbvWebAppTimelineKanban_renderTimeline === 'function') {
+    try {
+      return CbvWebAppTimelineKanban_renderTimeline();
+    } catch (eP91) {
+      // fall through to Phase 90 fallback below; surface as warning
+      var fallbackWarn = ['Phase 91 timeline renderer error: ' + (eP91 && eP91.message ? eP91.message : String(eP91))];
+      var resErr = { ok: false, data: null, warnings: fallbackWarn, errors: fallbackWarn };
+      return {
+        bodyHtml: '<div>' + (CbvWebAppPilotRenderer__includeComponents_() || '') +
+          '<div class="cbv-card"><h3>Timeline (preview — fallback)</h3>' +
+          '<p class="cbv-muted">Phase 91 renderer failed; showing Phase 90 fallback. No mutations.</p>' +
+          '<pre class="cbv-pre">' + JSON.stringify(resErr, null, 2) + '</pre></div></div>',
+        warnings: fallbackWarn
+      };
+    }
+  }
+
   var res = null;
   try {
     res = CbvWebAppPilotData_getTimelinePreview();
   } catch (e) {
     res = { ok: false, data: null, warnings: [], errors: [e && e.message ? e.message : String(e)] };
   }
-  var state = CbvWebAppPilotRenderer_renderState_({ type: 'partial', title: 'Timeline (preview)', message: 'Preview only in Phase 90. Full page in Phase 91.', detail: null });
-  return { bodyHtml: '<div>' + (CbvWebAppPilotRenderer__includeComponents_() || '') + '<div class="cbv-card"><h3>Timeline (preview)</h3><p class="cbv-muted">Read-first preview only. No mutations.</p><pre class="cbv-pre">' + JSON.stringify(res.data || {}, null, 2) + '</pre></div></div>', warnings: res.warnings || [] };
+  return {
+    bodyHtml: '<div>' + (CbvWebAppPilotRenderer__includeComponents_() || '') +
+      '<div class="cbv-card"><h3>Timeline (Phase 90 preview)</h3>' +
+      '<p class="cbv-muted">Read-first preview only. No mutations. Phase 91 renderer not loaded.</p>' +
+      '<pre class="cbv-pre">' + JSON.stringify(res.data || {}, null, 2) + '</pre></div></div>',
+    warnings: res.warnings || []
+  };
 }
 
 function CbvWebAppPilotRenderer_renderKanbanPlaceholder() {
+  // Phase 91 — delegate to CbvWebAppTimelineKanban_renderKanban if available.
+  // Phase 90 placeholder remains as fallback when Phase 91 not loaded yet.
+  if (typeof CbvWebAppTimelineKanban_renderKanban === 'function') {
+    try {
+      return CbvWebAppTimelineKanban_renderKanban();
+    } catch (eP91k) {
+      var fallbackWarnK = ['Phase 91 kanban renderer error: ' + (eP91k && eP91k.message ? eP91k.message : String(eP91k))];
+      var resErrK = { ok: false, data: null, warnings: fallbackWarnK, errors: fallbackWarnK };
+      return {
+        bodyHtml: '<div>' + (CbvWebAppPilotRenderer__includeComponents_() || '') +
+          '<div class="cbv-card"><h3>Kanban (preview — fallback)</h3>' +
+          '<p class="cbv-muted">Phase 91 renderer failed; showing Phase 90 fallback. No mutations.</p>' +
+          '<pre class="cbv-pre">' + JSON.stringify(resErrK, null, 2) + '</pre></div></div>',
+        warnings: fallbackWarnK
+      };
+    }
+  }
+
   var res = null;
   try {
     res = CbvWebAppPilotData_getKanbanPreview();
   } catch (e) {
     res = { ok: false, data: null, warnings: [], errors: [e && e.message ? e.message : String(e)] };
   }
-  var state = CbvWebAppPilotRenderer_renderState_({ type: 'partial', title: 'Kanban (preview)', message: 'Preview only in Phase 90. Full page in Phase 91.', detail: null });
-  return { bodyHtml: '<div>' + (CbvWebAppPilotRenderer__includeComponents_() || '') + '<div class="cbv-card"><h3>Kanban (preview)</h3><p class="cbv-muted">Read-first preview only. No mutations.</p><pre class="cbv-pre">' + JSON.stringify(res.data || {}, null, 2) + '</pre></div></div>', warnings: res.warnings || [] };
+  return {
+    bodyHtml: '<div>' + (CbvWebAppPilotRenderer__includeComponents_() || '') +
+      '<div class="cbv-card"><h3>Kanban (Phase 90 preview)</h3>' +
+      '<p class="cbv-muted">Read-first preview only. No mutations. Phase 91 renderer not loaded.</p>' +
+      '<pre class="cbv-pre">' + JSON.stringify(res.data || {}, null, 2) + '</pre></div></div>',
+    warnings: res.warnings || []
+  };
 }
 

@@ -164,6 +164,29 @@ Sau đó nếu cần hiểu sâu: `APPSHEET_HOME_ALERT_INSTALL_GUIDE.md` và `AP
 
 ---
 
+## PHASE 91 — WebApp Timeline / Kanban read-first pages (GAS + docs)
+
+**Trạng thái:** read-first pages — **không** drag-drop save, **không** xác nhận production.  
+**Mục tiêu:** thay placeholder Phase 90 cho `/home-alert/timeline` và `/home-alert/kanban` bằng renderer thật dựa trên HOME_ALERT; thêm Test Console Phase 91 (CBV_TCS_V1).
+
+| Tài liệu / công cụ | Ghi chú |
+|--------------------|--------|
+| `docs/webapp/PHASE_91_WEBAPP_TIMELINE_KANBAN_READ_FIRST_PAGES.md` | Tổng quan phase 91 |
+| `docs/webapp/WEBAPP_TIMELINE_DATA_BINDING.md` | Data binding Timeline (sort UPDATED_AT desc, fallback CREATED_AT) |
+| `docs/webapp/WEBAPP_KANBAN_DATA_BINDING.md` | Data binding Kanban (group by STATUS, 50 cards/column) |
+| `docs/webapp/WEBAPP_TIMELINE_KANBAN_UAT_CHECKLIST.md` | UAT checklist read-first |
+| `05_GAS_RUNTIME/991_WEBAPP_TIMELINE_KANBAN_DATA.js` | Data layer |
+| `05_GAS_RUNTIME/992_WEBAPP_TIMELINE_KANBAN_RENDERER.js` | Renderer + state handling |
+| `05_GAS_RUNTIME/993_WEBAPP_TIMELINE_KANBAN_TEST_CONSOLE.js` | Test Console Phase 91 (CBV_TCS_V1) |
+| `05_GAS_RUNTIME/html/WEBAPP_WORKSPACE_TIMELINE.html` | Timeline template |
+| `05_GAS_RUNTIME/html/WEBAPP_WORKSPACE_KANBAN.html` | Kanban template |
+
+**Routes affected:** `/home-alert/timeline`, `/home-alert/kanban` (Phase 90 placeholder fallback retained).  
+**Artifacts:** `029_*` trong `00_SYSTEM_BRAIN/` (prompt, report, handoff).  
+**Next:** Phase 92 — WebApp Runtime Health / Report Viewer Pages.
+
+---
+
 ## Liên kết phase trước
 
 - Phase 82 — SLA + Escalation Runtime: report `00_SYSTEM_BRAIN/000_REPORTS/009_*`, handoff

@@ -116,9 +116,19 @@ The sequence in `.clasp.json` filePushOrder is the deployment order. **HOME_ALER
    97_WEBAPP_WORKSPACE_PILOT_DATA.js
    98_WEBAPP_WORKSPACE_PILOT_RENDERER.js
    990_WEBAPP_WORKSPACE_PILOT_TEST_CONSOLE.js
+   991_WEBAPP_TIMELINE_KANBAN_DATA.js
+   992_WEBAPP_TIMELINE_KANBAN_RENDERER.js
+   993_WEBAPP_TIMELINE_KANBAN_TEST_CONSOLE.js
    96_WEBAPP_DOGET_DISPATCHER.js
    999_WEBAPP_DOGET_DISPATCHER_FINAL.js
 ```
+
+### Phase 91 — Timeline / Kanban read-first (load order rationale)
+
+- `991_WEBAPP_TIMELINE_KANBAN_DATA.js` defines data helpers + constants used by the renderer and test console.
+- `992_WEBAPP_TIMELINE_KANBAN_RENDERER.js` depends on Phase 91 data; provides `CbvWebAppTimelineKanban_renderTimeline()` / `_renderKanban()` used by `98_WEBAPP_WORKSPACE_PILOT_RENDERER.js` lazily (no load-order coupling).
+- `993_WEBAPP_TIMELINE_KANBAN_TEST_CONSOLE.js` depends on data + renderer; provides `CbvWebAppTimelineKanban_TestConsole_*` for menu under `🧪 CBV Test Console → Phase 91 — Timeline / Kanban`.
+- `999_WEBAPP_DOGET_DISPATCHER_FINAL.js` **MUST remain absolute last** in `filePushOrder`.
 
 SHARED layer excerpt (matches push order after file helper):
 
