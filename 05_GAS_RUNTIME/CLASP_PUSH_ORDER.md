@@ -122,6 +122,9 @@ The sequence in `.clasp.json` filePushOrder is the deployment order. **HOME_ALER
    994_WEBAPP_OBSERVABILITY_DATA.js
    995_WEBAPP_OBSERVABILITY_RENDERER.js
    996_WEBAPP_OBSERVABILITY_TEST_CONSOLE.js
+   997_WEBAPP_ADMIN_REFERENCE_DATA.js
+   998_WEBAPP_ADMIN_REFERENCE_RENDERER.js
+   998A_WEBAPP_ADMIN_REFERENCE_TEST_CONSOLE.js
    96_WEBAPP_DOGET_DISPATCHER.js
    999_WEBAPP_DOGET_DISPATCHER_FINAL.js
 ```
@@ -137,6 +140,12 @@ The sequence in `.clasp.json` filePushOrder is the deployment order. **HOME_ALER
 - `994_WEBAPP_OBSERVABILITY_DATA.js` defines `CbvWebAppObservability_getRuntimeHealth`, `_getRecentReports`, `_getReportDetail`, `_getTraceSummary`, `_validate` plus the per-phase test-console catalog. Pure read-first; reads `SYSTEM_HEALTH_LOG`, optionally `CBV_TEST_REPORTS`, and `PropertiesService` keys ending in `_LAST_REPORT_JSON`.
 - `995_WEBAPP_OBSERVABILITY_RENDERER.js` provides `CbvWebAppObservability_renderRuntimeHealth()` / `_renderReportViewer()`. Consumed lazily by `98_WEBAPP_WORKSPACE_PILOT_RENDERER.js` (`renderRuntimeHealthPlaceholder` / `renderReportsPlaceholder`) — no hard load-order coupling.
 - `996_WEBAPP_OBSERVABILITY_TEST_CONSOLE.js` provides the Phase 92 Test Console (`CbvWebAppObservability_TestConsole_*`) for menu under `🧪 CBV Test Console → Phase 92 — Observability`. Read-first only.
+
+### Phase 93 — WebApp Admin Reference Viewer / Settings Read-First (load order rationale)
+
+- `997_WEBAPP_ADMIN_REFERENCE_DATA.js` defines `CbvWebAppAdminRef_getGovernanceSummary`, `_getEnumSummary`, `_getUserRoleSummary`, `_getFeatureFlagSummary`, `_getSystemRegistrySummary`, `_getUiContractSummary`, `_getRouteRegistrySummary`, `_validate`. Pure read-first; probes `ENUM_DICTIONARY`, `USER_DIRECTORY`, `MASTER_CODE`, `DON_VI`, `TEAM_DIRECTORY`, `ROLE_PERMISSION_MATRIX`, `FEATURE_FLAG`, `SYSTEM_REGISTRY`, `CBV_UI_CONTRACT`. Secret-pattern columns (`TOKEN`, `SECRET`, `API_KEY`, `PRIVATE_KEY`, `PASSWORD`, `CLIENT_SECRET`, …) are masked — values are never surfaced.
+- `998_WEBAPP_ADMIN_REFERENCE_RENDERER.js` provides `CbvWebAppAdminRef_renderReferenceViewer()` plus per-section renderers. Consumed lazily by `98_WEBAPP_WORKSPACE_PILOT_RENDERER.js` (`renderAdminReferencePlaceholder`) — no hard load-order coupling.
+- `998A_WEBAPP_ADMIN_REFERENCE_TEST_CONSOLE.js` provides the Phase 93 Test Console (`CbvWebAppAdminRef_TestConsole_*`) for menu under `🧪 CBV Test Console → Phase 93 — Admin Reference`. Read-first only.
 - `999_WEBAPP_DOGET_DISPATCHER_FINAL.js` **MUST remain absolute last** in `filePushOrder`.
 
 SHARED layer excerpt (matches push order after file helper):

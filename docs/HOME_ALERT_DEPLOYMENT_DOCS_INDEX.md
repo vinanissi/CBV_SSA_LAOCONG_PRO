@@ -211,6 +211,29 @@ Sau đó nếu cần hiểu sâu: `APPSHEET_HOME_ALERT_INSTALL_GUIDE.md` và `AP
 
 ---
 
+## PHASE 93 — WebApp Admin Reference Viewer / Settings Read-First (GAS + docs)
+
+**Trạng thái:** Operational Governance Layer — **read-first**, **không** edit settings / toggle feature / delete user / permission change, secrets / tokens / API keys **masked**, **không** xác nhận production.  
+**Mục tiêu:** thay placeholder `/admin/reference` bằng renderer thật hiển thị governance summary, enum dictionary, user/role/team summary, feature flags, system registry, UI contract registry, route registry; thêm Test Console Phase 93 (CBV_TCS_V1).
+
+| Tài liệu / công cụ | Ghi chú |
+|--------------------|--------|
+| `docs/webapp/PHASE_93_WEBAPP_ADMIN_REFERENCE_VIEWER_SETTINGS_READ_FIRST.md` | Tổng quan phase 93 |
+| `docs/webapp/WEBAPP_ADMIN_REFERENCE_DATA_BINDING.md` | Sheet sources, field mapping, masking rules |
+| `docs/webapp/WEBAPP_ADMIN_REFERENCE_UAT_CHECKLIST.md` | UAT checklist read-first governance |
+| `docs/webapp/WEBAPP_GOVERNANCE_LAYER_OVERVIEW.md` | Why governance + relation to Observability + AppSheet/WebApp split |
+| `05_GAS_RUNTIME/997_WEBAPP_ADMIN_REFERENCE_DATA.js` | Data layer + governance probe + scoped mutation validator |
+| `05_GAS_RUNTIME/998_WEBAPP_ADMIN_REFERENCE_RENDERER.js` | Renderer + per-section sub-renderers + state |
+| `05_GAS_RUNTIME/998A_WEBAPP_ADMIN_REFERENCE_TEST_CONSOLE.js` | Test Console Phase 93 (CBV_TCS_V1) |
+| `05_GAS_RUNTIME/html/WEBAPP_ADMIN_REFERENCE_VIEWER.html` | Admin Reference Viewer template |
+| `05_GAS_RUNTIME/html/WEBAPP_ADMIN_REFERENCE_COMPONENTS.html` | Shared component styles |
+
+**Routes affected:** `/admin/reference` (Phase 89 placeholder fallback retained).  
+**Artifacts:** `032_*` trong `00_SYSTEM_BRAIN/` (prompt, report, handoff).  
+**Next:** Phase 94 — WebApp UI Foundation Freeze / UAT Hardening.
+
+---
+
 ## Liên kết phase trước
 
 - Phase 82 — SLA + Escalation Runtime: report `00_SYSTEM_BRAIN/000_REPORTS/009_*`, handoff

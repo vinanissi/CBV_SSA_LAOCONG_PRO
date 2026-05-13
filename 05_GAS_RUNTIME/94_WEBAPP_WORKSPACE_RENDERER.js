@@ -61,6 +61,8 @@ function CbvWebAppWorkspace_render(route, params) {
     page = CbvWebAppPilotRenderer_renderRuntimeHealthPlaceholder();
   } else if (reg.route === '/reports' && typeof CbvWebAppPilotRenderer_renderReportsPlaceholder === 'function') {
     page = CbvWebAppPilotRenderer_renderReportsPlaceholder();
+  } else if (reg.route === '/admin/reference' && typeof CbvWebAppPilotRenderer_renderAdminReferencePlaceholder === 'function') {
+    page = CbvWebAppPilotRenderer_renderAdminReferencePlaceholder();
   } else {
     page = CbvWebAppWorkspace_renderPlaceholder_(reg.route);
   }

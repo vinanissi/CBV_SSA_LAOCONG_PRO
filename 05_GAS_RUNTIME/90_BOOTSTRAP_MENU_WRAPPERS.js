@@ -1071,6 +1071,56 @@ function menuCbvTestConsoleWebAppObs92_copyReport() {
   });
 }
 
+/** CBV Test Console — Phase 93 WebApp Admin Reference Viewer / Settings Read-First. */
+function menuCbvTestConsoleWebAppAdminRef93_run() {
+  runSafeMenuStep_('CbvWebAppAdminRef_TestConsole_run', 'Admin Reference Health Check', function (r) {
+    if (!r) return 'No result';
+    return (r.status || '') + '\n' + (r.summary || '') + '\nEnvelope OK: ' + (r.envelopeOk ? 'yes' : 'no');
+  });
+}
+
+function menuCbvTestConsoleWebAppAdminRef93_governance() {
+  runSafeMenuStep_('CbvWebAppAdminRef_TestConsole_showGovernanceSummary', 'Governance Summary', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleWebAppAdminRef93_enum() {
+  runSafeMenuStep_('CbvWebAppAdminRef_TestConsole_showEnumSummary', 'Enum Summary', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleWebAppAdminRef93_userRole() {
+  runSafeMenuStep_('CbvWebAppAdminRef_TestConsole_showUserRoleSummary', 'User/Role Summary', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleWebAppAdminRef93_uiContract() {
+  runSafeMenuStep_('CbvWebAppAdminRef_TestConsole_showUiContractSummary', 'UI Contract Summary', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleWebAppAdminRef93_routeRegistry() {
+  runSafeMenuStep_('CbvWebAppAdminRef_TestConsole_showRouteRegistrySummary', 'Route Registry Summary', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleWebAppAdminRef93_handoff() {
+  runSafeMenuStep_('CbvWebAppAdminRef_TestConsole_showHandoffPrompt', 'AI Handoff Prompt', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleWebAppAdminRef93_copyReport() {
+  runSafeMenuStep_('CbvWebAppAdminRef_TestConsole_copyLatestReport', 'Copy Latest Report', function (r) {
+    return r && r.ok ? 'Dialog opened — select JSON and copy.' : (r && r.message) || 'Done';
+  });
+}
+
 /** CBV Test Console — HOME_ALERT Phase 82 SLA & escalation QA. */
 function menuCbvTestConsoleHomeAlertSla82() {
   runSafeMenuStep_('HomeAlertSlaEscalation_TestConsole_run', 'HOME_ALERT SLA/Escalation test', function (r) {

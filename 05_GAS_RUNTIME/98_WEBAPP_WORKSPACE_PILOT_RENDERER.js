@@ -209,3 +209,34 @@ function CbvWebAppPilotRenderer_renderReportsPlaceholder() {
   };
 }
 
+/* ------------------------------------------------------------------ */
+/* Phase 93 — Admin Reference Viewer placeholder dispatcher.           */
+/* Delegates to CbvWebAppAdminRef_renderReferenceViewer() if loaded.   */
+/* Otherwise falls back to a clean read-first placeholder.             */
+/* No edit / no toggle / no delete / no permission change.             */
+/* ------------------------------------------------------------------ */
+
+function CbvWebAppPilotRenderer_renderAdminReferencePlaceholder() {
+  if (typeof CbvWebAppAdminRef_renderReferenceViewer === 'function') {
+    try {
+      return CbvWebAppAdminRef_renderReferenceViewer();
+    } catch (eAR) {
+      var fbWarnA = ['Phase 93 admin reference renderer error: ' + (eAR && eAR.message ? eAR.message : String(eAR))];
+      return {
+        bodyHtml: '<div>' + (CbvWebAppPilotRenderer__includeComponents_() || '') +
+          '<div class="cbv-card"><h3>Admin Reference (preview — fallback)</h3>' +
+          '<p class="cbv-muted">Phase 93 renderer failed; showing read-first fallback. No edit · No toggle · No delete · Secrets masked.</p>' +
+          '<pre class="cbv-pre">' + JSON.stringify({ warnings: fbWarnA }, null, 2) + '</pre></div></div>',
+        warnings: fbWarnA
+      };
+    }
+  }
+  return {
+    bodyHtml: '<div>' + (CbvWebAppPilotRenderer__includeComponents_() || '') +
+      '<div class="cbv-card"><h3>Admin Reference (placeholder)</h3>' +
+      '<p class="cbv-muted">Read-first preview only. Phase 93 renderer not loaded.</p>' +
+      '<p class="cbv-muted">Safety: No edit settings · No toggle feature · No delete user · Secrets masked · No production claim.</p></div></div>',
+    warnings: ['Phase 93 admin reference renderer not loaded.']
+  };
+}
+

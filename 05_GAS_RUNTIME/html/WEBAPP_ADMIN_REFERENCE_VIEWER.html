@@ -1,0 +1,39 @@
+<!--
+  PHASE_93 — WebApp Admin Reference Viewer (read-first).
+  Operational Governance Layer.
+  No edit / no toggle / no delete / no permission change / no feature flag toggle.
+  Secrets are masked (never rendered).
+-->
+<?!= COMPONENTS ?>
+
+<div class="cbv-card">
+  <h3>Admin Reference Viewer (read-first)</h3>
+  <div class="cbv-muted">
+    Governance · sheet presence + summaries · enum / user / role / team / feature flag / system registry / UI contract / route registry · no mutation.
+  </div>
+</div>
+
+<?!= MODEL.sections.governance ?>
+<?!= MODEL.sections.enums ?>
+<?!= MODEL.sections.userRole ?>
+<?!= MODEL.sections.featureFlag ?>
+<?!= MODEL.sections.systemRegistry ?>
+<?!= MODEL.sections.uiContract ?>
+<?!= MODEL.sections.routeRegistry ?>
+
+<? if (MODEL.result && MODEL.result.warnings && MODEL.result.warnings.length) { ?>
+<div class="cbv-card" style="margin-top:12px">
+  <h3>Warnings</h3>
+  <ul>
+    <? for (var i = 0; i < MODEL.result.warnings.length; i++) { ?>
+      <li class="cbv-muted"><?= String(MODEL.result.warnings[i]) ?></li>
+    <? } ?>
+  </ul>
+</div>
+<? } ?>
+
+<div class="cbv-card" style="margin-top:14px">
+  <div class="cbv-muted">
+    Read-first governance. Safety: No edit · No toggle · No delete · No feature flag toggle · No permission change · Secrets masked · No production claim.
+  </div>
+</div>
