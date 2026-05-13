@@ -5,7 +5,7 @@
  * Rules: preserve action=ping; route queries go to WebApp workspace renderer; no destructive writes.
  */
 
-function doGet(e) {
+function CbvWebAppWorkspace__doGetDispatcher96_(e) {
   e = e || {};
   var p = e.parameter || {};
 
