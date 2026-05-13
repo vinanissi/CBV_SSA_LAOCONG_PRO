@@ -169,7 +169,9 @@ clasp push --force
 
 ## 15. Commit hash
 
-To be backfilled with a follow-up commit after the initial Phase 92 commit lands (mirroring the append-only audit pattern used for Phase 91): see `phase-92-commit-hash-here`.
+Initial Phase 92 commit: **`30a01ae`** — `feat(webapp): add phase 92 observability pages` (20 files changed, 2348 insertions).
+
+This hash is backfilled via a follow-up commit (append-only audit pattern, same as Phase 91) so the original commit remains immutable on the branch history.
 
 ## 16. Push result
 
