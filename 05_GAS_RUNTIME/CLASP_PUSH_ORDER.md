@@ -113,6 +113,7 @@ The sequence in `.clasp.json` filePushOrder is the deployment order. **HOME_ALER
    93_WEBAPP_WORKSPACE_API.js
    94_WEBAPP_WORKSPACE_RENDERER.js
    95_WEBAPP_WORKSPACE_TEST_CONSOLE.js
+   96_WEBAPP_DOGET_DISPATCHER.js
 ```
 
 SHARED layer excerpt (matches push order after file helper):

@@ -20,18 +20,10 @@ function CbvWebAppWorkspace_doGet(e) {
   return CbvWebAppWorkspace_render(route, p);
 }
 
-/**
- * Global doGet entrypoint for Web App.
- * Preserves existing webhook GET semantics while enabling WebApp workspace routes.
- */
-function doGet(e) {
-  return CbvWebAppWorkspace_doGet(e);
-}
-
 function CbvWebAppWorkspace__resolveRoute_(e) {
   e = e || {};
   var p = e.parameter || {};
-  var rt = String(p.route || '').trim();
+  var rt = String(p.route || p.path || '').trim();
   if (rt) return rt.charAt(0) === '/' ? rt : '/' + rt;
 
   var pi = String(e.pathInfo || '').trim();
