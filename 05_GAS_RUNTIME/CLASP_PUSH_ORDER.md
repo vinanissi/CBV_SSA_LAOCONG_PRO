@@ -105,6 +105,8 @@ The sequence in `.clasp.json` filePushOrder is the deployment order. **HOME_ALER
    85_UNIFIED_UI_CONTRACT_TEST_CONSOLE.js
    86_UI_CONTRACT_PILOT_BINDING_RUNTIME.js
    87_UI_CONTRACT_PILOT_BINDING_TEST_CONSOLE.js
+   88_APPSHEET_PILOT_SETUP_RUNTIME.js
+   89_APPSHEET_PILOT_SETUP_TEST_CONSOLE.js
 ```
 
 SHARED layer excerpt (matches push order after file helper):

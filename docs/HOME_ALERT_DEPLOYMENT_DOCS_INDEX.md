@@ -21,6 +21,13 @@
 | `appsheet/CLICK_BY_CLICK_SLICES.md` | Người mới / Pilot | Admin AppSheet |
 | `appsheet/CLICK_BY_CLICK_VIEWS_AND_DASHBOARD.md` | Người mới / Pilot | Admin AppSheet |
 | `appsheet/CLICK_BY_CLICK_ACTIONS_SECURITY.md` | Người mới / Pilot | Admin AppSheet |
+| `appsheet/PHASE_87_APPSHEET_PILOT_SETUP_BINDING.md` | Admin AppSheet (pilot) | Runtime owner |
+| `appsheet/APPSHEET_VIEW_SETUP_MATRIX.md` | Admin AppSheet (pilot) | Supervisor (read) |
+| `appsheet/APPSHEET_SLICE_SETUP_MATRIX.md` | Admin AppSheet (pilot) | — |
+| `appsheet/APPSHEET_MANUAL_ACTIONS_MATRIX.md` | Admin AppSheet (pilot) | Supervisor |
+| `appsheet/APPSHEET_SECURITY_FILTER_MATRIX.md` | Admin AppSheet (pilot) | — |
+| `appsheet/APPSHEET_PILOT_UAT_SCRIPT.md` | Pilot cohort | Admin |
+| `appsheet/APPSHEET_PILOT_SIGNOFF_CHECKLIST.md` | Admin / Supervisor | Runtime owner |
 | `operations/OPERATIONAL_REFERENCE_LAYER_DESIGN.md` | Admin / Runtime Owner | Admin AppSheet (context Ref layer) |
 | `training/HOME_ALERT_OPERATOR_MANUAL.md` | Operator | Supervisor |
 | `training/HOME_ALERT_SUPERVISOR_MANUAL.md` | Supervisor / Team Lead | Admin |
@@ -59,7 +66,7 @@ Sau đó nếu cần hiểu sâu: `APPSHEET_HOME_ALERT_INSTALL_GUIDE.md` và `AP
 | 1. Pre-deploy + git state | `operations/...RUNBOOK.md` §1–§2 | Admin |
 | 2. GAS deploy + bootstrap | `admin/...OWNER_GUIDE.md` §2–§3, `operations/...RUNBOOK.md` §3–§4 | Admin |
 | 3. Test console (82/83/84) | `admin/...OWNER_GUIDE.md` §4, `operations/...RUNBOOK.md` §6 | Admin |
-| 4. AppSheet setup | `appsheet/CLICK_BY_CLICK_*.md` (5 file) **hoặc** `appsheet/...INSTALL_GUIDE.md` + checklist + formula | Admin AppSheet / Pilot |
+| 4. AppSheet setup | `appsheet/CLICK_BY_CLICK_*.md` (5 file) **hoặc** `appsheet/...INSTALL_GUIDE.md` + checklist + formula; **pilot:** `PHASE_87_APPSHEET_PILOT_SETUP_BINDING.md` + `APPSHEET_*_MATRIX.md` + GAS Phase 87 Test Console | Admin AppSheet / Pilot |
 | 5. Pilot rollout | `operations/...RUNBOOK.md` §7 | Admin + Supervisor + Pilot operators |
 | 6. Training | `training/HOME_ALERT_OPERATOR_MANUAL.md` + `training/HOME_ALERT_SUPERVISOR_MANUAL.md` | Supervisor |
 | 7. Go-live | `operations/...RUNBOOK.md` §9 | Tất cả |
@@ -79,6 +86,27 @@ Sau đó nếu cần hiểu sâu: `APPSHEET_HOME_ALERT_INSTALL_GUIDE.md` và `AP
 | Schema changes | KHÔNG |
 | Trigger changes | KHÔNG |
 | AppSheet changes | KHÔNG (chỉ tài liệu, admin sẽ tự áp dụng) |
+
+---
+
+## PHASE 87 — AppSheet pilot setup binding (GAS + docs)
+
+**Trạng thái:** Pilot setup — **không** xác nhận production.  
+**Mục tiêu:** Ma trận view/slice/action/security + UAT + signoff; Test Console **Phase 87 — AppSheet Pilot Setup** (`CbvAppSheetPilot_*`, envelope `CBV_TCS_V1`).
+
+| Tài liệu / công cụ | Ghi chú |
+|--------------------|---------|
+| `docs/appsheet/PHASE_87_APPSHEET_PILOT_SETUP_BINDING.md` | Tổng quan phase |
+| `docs/appsheet/APPSHEET_VIEW_SETUP_MATRIX.md` | Tên view + SCREEN_CODE |
+| `docs/appsheet/APPSHEET_SLICE_SETUP_MATRIX.md` | Filter slice (không dùng `=` đầu dòng) |
+| `docs/appsheet/APPSHEET_MANUAL_ACTIONS_MATRIX.md` | ACK … RELEASE, manual only |
+| `docs/appsheet/APPSHEET_SECURITY_FILTER_MATRIX.md` | `USEREMAIL()` / `USERSETTINGS("Role")` |
+| `docs/appsheet/APPSHEET_PILOT_UAT_SCRIPT.md` | UAT theo role |
+| `docs/appsheet/APPSHEET_PILOT_SIGNOFF_CHECKLIST.md` | Signoff pilot (append-only) |
+| `05_GAS_RUNTIME/88_APPSHEET_PILOT_SETUP_RUNTIME.js` | Ma trận + validate + health |
+| `05_GAS_RUNTIME/89_APPSHEET_PILOT_SETUP_TEST_CONSOLE.js` | Menu Test Console |
+
+**Artifacts:** `021_*` trong `00_SYSTEM_BRAIN/` (prompt, report, handoff).
 
 ---
 

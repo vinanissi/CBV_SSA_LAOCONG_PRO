@@ -849,6 +849,56 @@ function menuCbvTestConsoleUiPilot86_copyReport() {
   });
 }
 
+/** CBV Test Console — Phase 87 AppSheet pilot setup (CBV_TCS_V1) */
+function menuCbvTestConsoleAppSheetPilot87_health() {
+  runSafeMenuStep_('CbvAppSheetPilot_healthCheck', 'AppSheet Pilot Setup Health Check', function (r) {
+    if (!r) return 'No result';
+    return (r.status || '') + '\n' + (r.summary || '') + '\nEnvelope OK: ' + (r.envelopeOk ? 'yes' : 'no');
+  });
+}
+
+function menuCbvTestConsoleAppSheetPilot87_views() {
+  runSafeMenuStep_('CbvAppSheetPilot_TestConsole_showViewMatrix', 'View Setup Matrix', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleAppSheetPilot87_slices() {
+  runSafeMenuStep_('CbvAppSheetPilot_TestConsole_showSliceMatrix', 'Slice Setup Matrix', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleAppSheetPilot87_actions() {
+  runSafeMenuStep_('CbvAppSheetPilot_TestConsole_showManualActionsMatrix', 'Manual Actions Matrix', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleAppSheetPilot87_security() {
+  runSafeMenuStep_('CbvAppSheetPilot_TestConsole_showSecurityFilterMatrix', 'Security Filter Matrix', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleAppSheetPilot87_uat() {
+  runSafeMenuStep_('CbvAppSheetPilot_TestConsole_showUatScript', 'UAT Script', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleAppSheetPilot87_handoff() {
+  runSafeMenuStep_('CbvAppSheetPilot_TestConsole_showHandoffPrompt', 'AI Handoff Prompt', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleAppSheetPilot87_copyReport() {
+  runSafeMenuStep_('CbvAppSheetPilot_TestConsole_copyLatestReport', 'Copy Latest Report', function (r) {
+    return r && r.ok ? 'Dialog opened — select JSON and copy.' : (r && r.message) || 'Done';
+  });
+}
+
 /** CBV Test Console — HOME_ALERT Phase 82 SLA & escalation QA. */
 function menuCbvTestConsoleHomeAlertSla82() {
   runSafeMenuStep_('HomeAlertSlaEscalation_TestConsole_run', 'HOME_ALERT SLA/Escalation test', function (r) {
