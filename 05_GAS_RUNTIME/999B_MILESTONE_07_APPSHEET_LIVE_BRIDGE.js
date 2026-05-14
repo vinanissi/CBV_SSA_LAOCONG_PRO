@@ -174,7 +174,7 @@ function CbvAppSheetLiveBridge_renderWorkboardRibbon_(params) {
   }
 
   if (!cfg || cfg.configured !== true || appsheetOff) {
-    row += '<div class="cbv-m07-appsheet-safe-disabled cbv-appsheet-live-bridge-safe-disabled cbv-muted">AppSheet chưa cấu hình — liên hệ quản trị để bật Script Properties (base URL, app id, view).</div>';
+    row += '<div class="cbv-m07-appsheet-safe-disabled cbv-appsheet-live-bridge-safe-disabled cbv-muted">AppSheet chưa cấu hình — liên hệ quản trị để cấu hình Script Properties (CBV_APPSHEET_TASK_MAIN_URL, CBV_APPSHEET_TASK_MAIN_DETAIL_URL, CBV_APPSHEET_TASK_MAIN_FORM_URL) hoặc cấu hình legacy (BASE_URL, APP_ID, views).</div>';
   }
 
   var modes = [
@@ -236,6 +236,19 @@ function CbvAppSheetLiveBridge_runHealth_() {
   var cfg = (typeof CbvAppSheetBridge_getConfig_ === 'function') ? CbvAppSheetBridge_getConfig_() : null;
   add('M07_CONFIG_EXISTS', !!cfg, 'ERROR', 'Config object readable', {});
   add('M07_CONFIGURED_BOOLEAN', !!(cfg && (cfg.configured === true || cfg.configured === false)), 'ERROR', 'configured is boolean', { configured: cfg ? cfg.configured : null });
+
+  var contractOk =
+    !!cfg &&
+    cfg.TASK_MAIN !== undefined &&
+    cfg.TASK_MAIN_DETAIL !== undefined &&
+    cfg.TASK_MAIN_FORM !== undefined &&
+    typeof cfg.configured === 'boolean' &&
+    typeof cfg.safeDisabled === 'boolean' &&
+    typeof cfg.source === 'string';
+  add('M07_APP_SHEET_RUNTIME', contractOk, contractOk ? 'OK' : 'ERROR', 'CbvAppSheetBridge_getConfig_ resolver contract (TASK_MAIN*, safeDisabled, source)', {
+    source: cfg ? cfg.source : null,
+    safeDisabled: cfg ? cfg.safeDisabled : null
+  });
 
   var dl = CbvAppSheetLiveBridge_buildDeepLink_({ taskId: 'HEALTH_ROW', mode: 'detail', route: '/workspace/workboard', source: 'health', returnRoute: '/workspace/workboard' });
   var urlStr = String(dl.url || '');

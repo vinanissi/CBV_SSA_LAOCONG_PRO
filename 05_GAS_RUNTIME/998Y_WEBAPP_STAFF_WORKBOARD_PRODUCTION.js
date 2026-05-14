@@ -3,7 +3,22 @@
  *
  * Workboard-first entry for staff: queue grouping, production task cards, AppSheet-safe links.
  * No auto assign / resolve / escalate. No fake production data.
+ *
+ * AppSheet runtime (official): Script Properties → GAS runtime fallback → safe-disabled.
+ * Do not hardcode AppSheet URLs in HTML; resolve only via CbvAppSheetBridge_getConfig_().
+ *
+ * Script Properties (canonical):
+ * - CBV_APPSHEET_TASK_MAIN_URL
+ * - CBV_APPSHEET_TASK_MAIN_DETAIL_URL
+ * - CBV_APPSHEET_TASK_MAIN_FORM_URL
+ *
+ * Legacy (optional, upload/feedback / old start URL pattern):
+ * - CBV_APPSHEET_APP_ID, CBV_APPSHEET_BASE_URL, CBV_APPSHEET_TASK_DETAIL_VIEW, …
  */
+
+var CBV_APPSHEET_PROP_TASK_MAIN_URL = 'CBV_APPSHEET_TASK_MAIN_URL';
+var CBV_APPSHEET_PROP_TASK_MAIN_DETAIL_URL = 'CBV_APPSHEET_TASK_MAIN_DETAIL_URL';
+var CBV_APPSHEET_PROP_TASK_MAIN_FORM_URL = 'CBV_APPSHEET_TASK_MAIN_FORM_URL';
 
 var CBV_APPSHEET_BRIDGE_PROP_APP_ID = 'CBV_APPSHEET_APP_ID';
 var CBV_APPSHEET_BRIDGE_PROP_BASE_URL = 'CBV_APPSHEET_BASE_URL';
@@ -12,17 +27,76 @@ var CBV_APPSHEET_BRIDGE_PROP_TASK_FORM_VIEW = 'CBV_APPSHEET_TASK_FORM_VIEW';
 var CBV_APPSHEET_BRIDGE_PROP_UPLOAD_VIEW = 'CBV_APPSHEET_UPLOAD_VIEW';
 var CBV_APPSHEET_BRIDGE_PROP_FEEDBACK_VIEW = 'CBV_APPSHEET_FEEDBACK_VIEW';
 
+/** Tier-2 resolver only (never emit from HTML templates). */
+function CbvAppSheetBridge__runtimeFallbackUrls_() {
+  return {
+    TASK_MAIN: 'https://www.appsheet.com/start/62ec023c-7587-432b-bf88-9106e3b23971',
+    TASK_MAIN_DETAIL:
+      'https://www.appsheet.com/template/appdef?appId=CBV_SSA_LAOCONG_V21-61865967&isCopiedApp=true&appName=CBV_SSA_LAOCONG_V21-61865967#UX.Views.TASK_MAIN_DETAIL_PRO',
+    TASK_MAIN_FORM:
+      'https://www.appsheet.com/template/appdef?appId=CBV_SSA_LAOCONG_V21-61865967&isCopiedApp=true&appName=CBV_SSA_LAOCONG_V21-61865967#UX.Views.TASK_MAIN_FORM_PRO'
+  };
+}
+
+function CbvAppSheetBridge__isHttpsTriple_(a, b, c) {
+  return !!(
+    a &&
+    b &&
+    c &&
+    /^https:\/\//i.test(String(a)) &&
+    /^https:\/\//i.test(String(b)) &&
+    /^https:\/\//i.test(String(c))
+  );
+}
+
+/** UX view slug from AppSheet template URL hash, e.g. #UX.Views.TASK_MAIN_DETAIL_PRO */
+function CbvAppSheetBridge__viewSlugFromTemplateUrl_(url) {
+  var m = /#UX\.Views\.([A-Za-z0-9_]+)/.exec(String(url || ''));
+  return m ? m[1] : '';
+}
+
 function CbvAppSheetBridge_getConfig_() {
+  var warnings = [];
+  var TASK_MAIN = '';
+  var TASK_MAIN_DETAIL = '';
+  var TASK_MAIN_FORM = '';
+
+  try {
+    if (typeof PropertiesService !== 'undefined' && PropertiesService.getScriptProperties) {
+      var sp0 = PropertiesService.getScriptProperties();
+      TASK_MAIN = String(sp0.getProperty(CBV_APPSHEET_PROP_TASK_MAIN_URL) || '').trim();
+      TASK_MAIN_DETAIL = String(sp0.getProperty(CBV_APPSHEET_PROP_TASK_MAIN_DETAIL_URL) || '').trim();
+      TASK_MAIN_FORM = String(sp0.getProperty(CBV_APPSHEET_PROP_TASK_MAIN_FORM_URL) || '').trim();
+    }
+  } catch (e0) {
+    warnings.push('SCRIPT_PROPERTIES: ' + (e0 && e0.message ? e0.message : String(e0)));
+  }
+
+  var fromScript = CbvAppSheetBridge__isHttpsTriple_(TASK_MAIN, TASK_MAIN_DETAIL, TASK_MAIN_FORM);
+
+  if (!fromScript) {
+    var fb = CbvAppSheetBridge__runtimeFallbackUrls_();
+    if (!TASK_MAIN) TASK_MAIN = fb.TASK_MAIN;
+    if (!TASK_MAIN_DETAIL) TASK_MAIN_DETAIL = fb.TASK_MAIN_DETAIL;
+    if (!TASK_MAIN_FORM) TASK_MAIN_FORM = fb.TASK_MAIN_FORM;
+  }
+
   var out = {
+    TASK_MAIN: TASK_MAIN,
+    TASK_MAIN_DETAIL: TASK_MAIN_DETAIL,
+    TASK_MAIN_FORM: TASK_MAIN_FORM,
     configured: false,
+    safeDisabled: true,
+    source: 'safe_disabled',
     appId: '',
     baseUrl: '',
     taskDetailView: '',
     taskFormView: '',
     uploadView: '',
     feedbackView: '',
-    warnings: []
+    warnings: warnings
   };
+
   try {
     if (typeof PropertiesService !== 'undefined' && PropertiesService.getScriptProperties) {
       var sp = PropertiesService.getScriptProperties();
@@ -34,9 +108,37 @@ function CbvAppSheetBridge_getConfig_() {
       out.feedbackView = String(sp.getProperty(CBV_APPSHEET_BRIDGE_PROP_FEEDBACK_VIEW) || '').trim();
     }
   } catch (e) {
-    out.warnings.push('SCRIPT_PROPERTIES: ' + (e && e.message ? e.message : String(e)));
+    out.warnings.push('SCRIPT_PROPERTIES_LEGACY: ' + (e && e.message ? e.message : String(e)));
   }
-  out.configured = !!(out.appId && out.baseUrl && /^https:\/\//i.test(out.baseUrl));
+
+  if (!out.baseUrl && TASK_MAIN && /^https:\/\//i.test(TASK_MAIN)) {
+    out.baseUrl = 'https://www.appsheet.com';
+  }
+  if (!out.appId && TASK_MAIN) {
+    var mx = /\/start\/([^/?#]+)/i.exec(TASK_MAIN);
+    if (mx) out.appId = mx[1];
+  }
+  if (!out.taskDetailView) out.taskDetailView = CbvAppSheetBridge__viewSlugFromTemplateUrl_(TASK_MAIN_DETAIL);
+  if (!out.taskFormView) out.taskFormView = CbvAppSheetBridge__viewSlugFromTemplateUrl_(TASK_MAIN_FORM);
+
+  var tripleOk = CbvAppSheetBridge__isHttpsTriple_(TASK_MAIN, TASK_MAIN_DETAIL, TASK_MAIN_FORM);
+  var legacyStart =
+    !!(out.appId && out.baseUrl && /^https:\/\//i.test(out.baseUrl) && out.taskDetailView);
+
+  if (tripleOk) {
+    out.configured = true;
+    out.safeDisabled = false;
+    out.source = fromScript ? 'script_properties' : 'runtime_fallback';
+  } else if (legacyStart) {
+    out.configured = true;
+    out.safeDisabled = false;
+    out.source = 'legacy_script_properties';
+  } else {
+    out.configured = false;
+    out.safeDisabled = true;
+    out.source = 'safe_disabled';
+  }
+
   return out;
 }
 
@@ -48,24 +150,48 @@ function CbvAppSheetBridge__trimSlash_(u) {
   return String(u || '').replace(/\/+$/, '');
 }
 
+/** Build AppSheet `/start/...` deep link with view + row (resolver output; not for HTML literals). */
+function CbvAppSheetBridge__buildStartUrlWithViewRow_(startUrl, viewSlug, rowId) {
+  var s = CbvAppSheetBridge__trimSlash_(String(startUrl || ''));
+  var v = String(viewSlug || '').trim();
+  var r = String(rowId || '').trim();
+  if (!s || !v || !r || !/^https:\/\//i.test(s)) return '';
+  var sep = s.indexOf('?') >= 0 ? '&' : '?';
+  return s + sep + 'view=' + encodeURIComponent(v) + '&row=' + encodeURIComponent(r);
+}
+
 function CbvAppSheetBridge_buildTaskDetailLink_(task) {
   var cfg = CbvAppSheetBridge_getConfig_();
-  if (!cfg.configured || !cfg.taskDetailView) return { ok: false, url: '', reason: 'NOT_CONFIGURED' };
   var id = String((task && task.taskId) || '').trim();
   if (!id) return { ok: false, url: '', reason: 'NO_TASK_ID' };
-  var base = CbvAppSheetBridge__trimSlash_(cfg.baseUrl);
-  var u = base + '/start?appId=' + encodeURIComponent(cfg.appId) + '&view=' + encodeURIComponent(cfg.taskDetailView) + '&row=' + encodeURIComponent(id);
-  return { ok: true, url: u, reason: '' };
+  if (!cfg.configured) return { ok: false, url: '', reason: 'NOT_CONFIGURED' };
+
+  var uNew = CbvAppSheetBridge__buildStartUrlWithViewRow_(cfg.TASK_MAIN, cfg.taskDetailView, id);
+  if (uNew) return { ok: true, url: uNew, reason: '' };
+
+  if (cfg.baseUrl && cfg.appId && cfg.taskDetailView) {
+    var base = CbvAppSheetBridge__trimSlash_(cfg.baseUrl);
+    var u = base + '/start?appId=' + encodeURIComponent(cfg.appId) + '&view=' + encodeURIComponent(cfg.taskDetailView) + '&row=' + encodeURIComponent(id);
+    return { ok: true, url: u, reason: '' };
+  }
+  return { ok: false, url: '', reason: 'NOT_CONFIGURED' };
 }
 
 function CbvAppSheetBridge_buildTaskEditLink_(task) {
   var cfg = CbvAppSheetBridge_getConfig_();
-  if (!cfg.configured || !cfg.taskFormView) return { ok: false, url: '', reason: 'NOT_CONFIGURED' };
   var id = String((task && task.taskId) || '').trim();
   if (!id) return { ok: false, url: '', reason: 'NO_TASK_ID' };
-  var base = CbvAppSheetBridge__trimSlash_(cfg.baseUrl);
-  var u = base + '/start?appId=' + encodeURIComponent(cfg.appId) + '&view=' + encodeURIComponent(cfg.taskFormView) + '&row=' + encodeURIComponent(id);
-  return { ok: true, url: u, reason: '' };
+  if (!cfg.configured) return { ok: false, url: '', reason: 'NOT_CONFIGURED' };
+
+  var uNew = CbvAppSheetBridge__buildStartUrlWithViewRow_(cfg.TASK_MAIN, cfg.taskFormView, id);
+  if (uNew) return { ok: true, url: uNew, reason: '' };
+
+  if (cfg.baseUrl && cfg.appId && cfg.taskFormView) {
+    var base = CbvAppSheetBridge__trimSlash_(cfg.baseUrl);
+    var u = base + '/start?appId=' + encodeURIComponent(cfg.appId) + '&view=' + encodeURIComponent(cfg.taskFormView) + '&row=' + encodeURIComponent(id);
+    return { ok: true, url: u, reason: '' };
+  }
+  return { ok: false, url: '', reason: 'NOT_CONFIGURED' };
 }
 
 function CbvAppSheetBridge_buildUploadLink_(task) {

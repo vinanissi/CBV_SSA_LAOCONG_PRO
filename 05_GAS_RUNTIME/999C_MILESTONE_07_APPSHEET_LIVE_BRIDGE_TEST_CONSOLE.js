@@ -120,6 +120,17 @@ function CbvTcsMilestone07AppSheetLiveBridge_TestConsole_runFull() {
     addCheck('M07_ROUTE_PARAM_TASK_DETAIL', false, 'ERROR', String(eR), {});
   }
 
+  try {
+    var retH = (typeof CbvAppSheetLiveBridge_buildWebAppReturnUrl_ === 'function')
+      ? CbvAppSheetLiveBridge_buildWebAppReturnUrl_('/workspace/staff/task-detail', 'M07HAND')
+      : '';
+    var retS = String(retH || '');
+    var handoffOk = retS.indexOf('M07HAND') >= 0 && retS.indexOf('taskId') >= 0;
+    addCheck('M07_CONTEXT_HANDOFF', handoffOk, handoffOk ? 'OK' : 'ERROR', 'Return URL preserves taskId for WebApp↔AppSheet handoff', { returnLen: retS.length });
+  } catch (eHo) {
+    addCheck('M07_CONTEXT_HANDOFF', false, 'ERROR', String(eHo), {});
+  }
+
   addCheck('FN_LIVE_BRIDGE_RIBBON', typeof CbvAppSheetLiveBridge_renderWorkboardRibbon_ === 'function', 'OK', 'CbvAppSheetLiveBridge_renderWorkboardRibbon_', {});
   addCheck('FN_LIVE_BRIDGE_DEEPLINK', typeof CbvAppSheetLiveBridge_buildDeepLink_ === 'function', 'OK', 'CbvAppSheetLiveBridge_buildDeepLink_', {});
   addCheck('FN_LIVE_BRIDGE_RETURN_URL', typeof CbvAppSheetLiveBridge_buildWebAppReturnUrl_ === 'function', 'OK', 'CbvAppSheetLiveBridge_buildWebAppReturnUrl_', {});
@@ -135,6 +146,31 @@ function CbvTcsMilestone07AppSheetLiveBridge_TestConsole_runFull() {
     addCheck('M07_RUNTIME_HEALTH', hBad.length === 0, hBad.length === 0 ? 'OK' : 'ERROR', 'CbvAppSheetLiveBridge_runHealth_ core checks', { checks: h.checks || [] });
   } catch (eH) {
     addCheck('M07_RUNTIME_HEALTH', false, 'ERROR', String(eH), {});
+  }
+
+  try {
+    var cfgDl = (typeof CbvAppSheetBridge_getConfig_ === 'function') ? CbvAppSheetBridge_getConfig_() : null;
+    var dlB = CbvAppSheetLiveBridge_buildDeepLink_({
+      taskId: 'M07_DLBUILD',
+      mode: 'detail',
+      route: '/workspace/workboard',
+      source: 'test',
+      returnRoute: '/workspace/workboard'
+    });
+    var uB = String((dlB && dlB.url) || '');
+    var dlBuildOk =
+      cfgDl && cfgDl.configured === true
+        ? dlB && dlB.ok === true && /^https:\/\//i.test(uB)
+        : dlB && dlB.ok === false && uB.length === 0;
+    addCheck(
+      'M07_DEEPLINK_BUILDER',
+      dlBuildOk,
+      dlBuildOk ? 'OK' : 'ERROR',
+      'Deep link builder uses resolver (https when configured; empty when safe-disabled)',
+      { configured: cfgDl ? cfgDl.configured : null, ok: dlB ? dlB.ok : null, urlLen: uB.length }
+    );
+  } catch (eBl) {
+    addCheck('M07_DEEPLINK_BUILDER', false, 'ERROR', String(eBl), {});
   }
 
   try {
