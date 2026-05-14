@@ -130,7 +130,7 @@ function CbvWebAppViUx_TestConsole_run() {
     if (typeof CbvWebAppWorkspace_routeRegistry === 'function') {
       var reg = CbvWebAppWorkspace_routeRegistry();
       var paths = (reg || []).map(function(r) { return r.route; }).sort().join('|');
-      var expected = '/admin/reference|/home-alert/kanban|/home-alert/my-queue|/home-alert/sla|/home-alert/timeline|/reports|/runtime/health|/workspace|/workspace/guided|/workspace/role-home|/workspace/today';
+      var expected = '/admin/reference|/home-alert/kanban|/home-alert/my-queue|/home-alert/sla|/home-alert/timeline|/reports|/runtime/health|/staff/feedback|/staff/task-detail|/staff/tasks|/workspace|/workspace/guided|/workspace/role-home|/workspace/staff/feedback|/workspace/staff/task-detail|/workspace/staff/tasks|/workspace/today';
       addCheck('ROUTE_PATHS_UNCHANGED', paths === expected, paths === expected ? 'OK' : 'WARNING',
         paths === expected ? 'Route paths match frozen set.' : 'Route registry paths drifted from expected freeze — verify Phase 94.',
         { paths: paths });

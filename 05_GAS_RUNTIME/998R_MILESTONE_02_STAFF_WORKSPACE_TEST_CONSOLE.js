@@ -66,6 +66,46 @@ function CbvTcsMilestone02StaffWorkspace__buildAiHandoffMd_(draft, traceId) {
   ].join('\n');
 }
 
+function CbvTcsMilestone02StaffWorkspace__viValidateDetail_(vu) {
+  if (!vu) {
+    return {
+      viOk: false,
+      note: 'CbvWebAppVi_validate returned null',
+      canonicalOk: false,
+      noMutationExposed: false,
+      missingRoutes: [],
+      missingLabels: [],
+      routeKeysCount: 0,
+      labelKeysCount: 0,
+      navExpectedCount: 0,
+      navActualCount: 0,
+      errorCount: 0,
+      warningCount: 0,
+      errorsSample: [],
+      warningsSample: []
+    };
+  }
+  var d = vu.data || {};
+  var errs = vu.errors || [];
+  var warns = vu.warnings || [];
+  return {
+    viOk: vu.ok === true,
+    canonicalOk: d.canonicalOk === true,
+    noMutationExposed: d.noMutationExposed === true,
+    missingRoutes: (d.missingRoutes || []).slice(),
+    missingLabels: (d.missingLabels || []).slice(),
+    routeKeysCount: typeof d.routeKeysCount === 'number' ? d.routeKeysCount : 0,
+    labelKeysCount: typeof d.labelKeysCount === 'number' ? d.labelKeysCount : 0,
+    navExpectedCount: typeof d.navExpectedCount === 'number' ? d.navExpectedCount : 0,
+    navActualCount: typeof d.navActualCount === 'number' ? d.navActualCount : 0,
+    errorCount: errs.length,
+    warningCount: warns.length,
+    errorsSample: errs.slice(0, 6),
+    warningsSample: warns.slice(0, 4),
+    mutationProbeCount: (d.mutationProbe || []).length
+  };
+}
+
 /**
  * One-click Milestone 02 staff workspace verification + Drive 6-file bundle.
  */
@@ -173,10 +213,11 @@ function CbvTcsMilestone02StaffWorkspace_TestConsole_runFull() {
   var vu = null;
   try {
     vu = (typeof CbvWebAppVi_validate === 'function') ? CbvWebAppVi_validate() : null;
-    addCheck('VI_VALIDATE', vu && vu.ok === true, vu && vu.ok ? 'OK' : 'ERROR', 'CbvWebAppVi_validate', {});
+    var viDetail = CbvTcsMilestone02StaffWorkspace__viValidateDetail_(vu);
+    addCheck('VI_VALIDATE', vu && vu.ok === true, vu && vu.ok ? 'OK' : 'ERROR', 'CbvWebAppVi_validate', viDetail);
     if (vu && vu.warnings) vu.warnings.forEach(function (w) { externalWarnings.push('VI_VALIDATE: ' + w); });
   } catch (eV) {
-    addCheck('VI_VALIDATE', false, 'WARNING', String(eV), {});
+    addCheck('VI_VALIDATE', false, 'WARNING', String(eV), { viOk: false, exception: String(eV) });
   }
 
   var vr = null;

@@ -179,8 +179,38 @@ var CBV_WEBAPP_VI_LABELS = {
   ff_disabled: 'đang tắt',
   users_count_short: 'người dùng',
   teams_count_short: 'đội',
-  roles_count_short: 'vai trò'
+  roles_count_short: 'vai trò',
+  staff_task_title: 'Việc nhân viên',
+  staff_task_detail_title: 'Chi tiết việc',
+  staff_feedback_title: 'Phản hồi vận hành',
+  staff_empty_state: 'Chưa có việc trong queue',
+  staff_next_action: 'Bước tiếp',
+  staff_quick_action: 'Thao tác nhanh',
+  staff_sla: 'SLA',
+  staff_priority: 'Ưu tiên',
+  staff_blocked: 'Bị chặn',
+  staff_pending: 'Đang xử lý',
+  staff_feedback_stuck: 'Báo kẹt',
+  staff_feedback_help: 'Cần hỗ trợ',
+  staff_read_first_note: 'READ_FIRST — WebApp chỉ xem; ghi dữ liệu trên AppSheet theo quy trình.'
 };
+
+/** Single source for nav count + VI checks (Phase 208 — staff routes). */
+var CBV_WEBAPP_VI_NAV_PAIRS = [
+  { route: '/workspace', key: 'nav_workspace' },
+  { route: '/workspace/today', key: 'nav_today_ops' },
+  { route: '/workspace/role-home', key: 'nav_role_home' },
+  { route: '/workspace/guided', key: 'nav_guided' },
+  { route: '/workspace/staff/tasks', key: 'nav_staff_tasks' },
+  { route: '/workspace/staff/feedback', key: 'nav_staff_feedback' },
+  { route: '/home-alert/my-queue', key: 'nav_my_queue' },
+  { route: '/home-alert/sla', key: 'nav_sla' },
+  { route: '/home-alert/timeline', key: 'nav_timeline' },
+  { route: '/home-alert/kanban', key: 'nav_kanban' },
+  { route: '/runtime/health', key: 'nav_runtime' },
+  { route: '/reports', key: 'nav_reports' },
+  { route: '/admin/reference', key: 'nav_admin_ref' }
+];
 
 var CBV_WEBAPP_VI_ROUTE_PAGE_TITLE = {
   '/workspace': 'Trang vận hành hôm nay',
@@ -215,21 +245,7 @@ function CbvWebAppVi_getRouteLabel(route) {
 }
 
 function CbvWebAppVi_getNavItems() {
-  var pairs = [
-    { route: '/workspace', key: 'nav_workspace' },
-    { route: '/workspace/today', key: 'nav_today_ops' },
-    { route: '/workspace/role-home', key: 'nav_role_home' },
-    { route: '/workspace/guided', key: 'nav_guided' },
-    { route: '/workspace/staff/tasks', key: 'nav_staff_tasks' },
-    { route: '/workspace/staff/feedback', key: 'nav_staff_feedback' },
-    { route: '/home-alert/my-queue', key: 'nav_my_queue' },
-    { route: '/home-alert/sla', key: 'nav_sla' },
-    { route: '/home-alert/timeline', key: 'nav_timeline' },
-    { route: '/home-alert/kanban', key: 'nav_kanban' },
-    { route: '/runtime/health', key: 'nav_runtime' },
-    { route: '/reports', key: 'nav_reports' },
-    { route: '/admin/reference', key: 'nav_admin_ref' }
-  ];
+  var pairs = CBV_WEBAPP_VI_NAV_PAIRS;
   var out = [];
   for (var i = 0; i < pairs.length; i++) {
     var p = pairs[i];
@@ -420,12 +436,18 @@ function CbvWebAppVi_validate() {
   var warnings = [];
   var errors = [];
   var detail = {
-    labelKeys: Object.keys(CBV_WEBAPP_VI_LABELS),
-    routeKeys: Object.keys(CBV_WEBAPP_VI_ROUTE_PAGE_TITLE),
+    labelKeyNames: Object.keys(CBV_WEBAPP_VI_LABELS),
+    routeKeyNames: Object.keys(CBV_WEBAPP_VI_ROUTE_PAGE_TITLE),
+    labelKeysCount: Object.keys(CBV_WEBAPP_VI_LABELS).length,
+    routeKeysCount: Object.keys(CBV_WEBAPP_VI_ROUTE_PAGE_TITLE).length,
     canonicalOk: false,
     noMutationExposed: true,
     mutationProbe: [],
-    mutationAllowlist: []
+    mutationAllowlist: [],
+    missingRoutes: [],
+    missingLabels: [],
+    navExpectedCount: CBV_WEBAPP_VI_NAV_PAIRS.length,
+    navActualCount: 0
   };
 
   var canonRef = (typeof CbvWebAppRouteUrl_getBaseUrl === 'function') ? CbvWebAppRouteUrl_getBaseUrl() : CBV_WEBAPP_VI_CANONICAL_EXEC_URL;
@@ -441,15 +463,44 @@ function CbvWebAppVi_validate() {
     warnings.push('Canonical URL should start with https://script.google.com/macros/s/ (Phase 96.1)');
   }
 
-  var frozen = ['/workspace', '/workspace/role-home', '/workspace/today', '/workspace/guided', '/home-alert/my-queue', '/home-alert/sla', '/home-alert/timeline', '/home-alert/kanban', '/runtime/health', '/reports', '/admin/reference'];
+  var frozen = [
+    '/workspace',
+    '/workspace/role-home',
+    '/workspace/today',
+    '/workspace/guided',
+    '/workspace/staff/tasks',
+    '/staff/tasks',
+    '/workspace/staff/task-detail',
+    '/staff/task-detail',
+    '/workspace/staff/feedback',
+    '/staff/feedback',
+    '/home-alert/my-queue',
+    '/home-alert/sla',
+    '/home-alert/timeline',
+    '/home-alert/kanban',
+    '/runtime/health',
+    '/reports',
+    '/admin/reference'
+  ];
   for (var i = 0; i < frozen.length; i++) {
     if (!CBV_WEBAPP_VI_ROUTE_PAGE_TITLE[frozen[i]]) {
+      detail.missingRoutes.push(frozen[i]);
       errors.push('Missing Vietnamese page title for route: ' + frozen[i]);
     }
   }
 
-  if (CbvWebAppVi_getNavItems().length !== 11) {
-    errors.push('Nav must expose exactly 11 items');
+  var navItems = CbvWebAppVi_getNavItems();
+  detail.navActualCount = navItems.length;
+  if (navItems.length !== CBV_WEBAPP_VI_NAV_PAIRS.length) {
+    errors.push('Nav must expose exactly ' + CBV_WEBAPP_VI_NAV_PAIRS.length + ' items (got ' + navItems.length + ')');
+  }
+  for (var nv = 0; nv < CBV_WEBAPP_VI_NAV_PAIRS.length; nv++) {
+    var pr = CBV_WEBAPP_VI_NAV_PAIRS[nv];
+    var lbl = CbvWebAppVi_getLabel(pr.key);
+    if (!String(lbl || '').trim()) {
+      detail.missingLabels.push(pr.key);
+      errors.push('Missing Vietnamese label for nav key: ' + pr.key);
+    }
   }
 
   var baseFooter = CbvWebAppVi_getSafetyFooter('/workspace');
