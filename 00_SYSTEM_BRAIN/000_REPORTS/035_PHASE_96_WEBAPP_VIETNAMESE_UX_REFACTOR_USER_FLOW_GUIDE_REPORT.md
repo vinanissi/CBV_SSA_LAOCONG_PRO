@@ -57,9 +57,10 @@ Menu: **Phase 96 — Vietnamese UX** — run health check, show dictionary/links
 
 | Check | Result |
 |-------|--------|
-| `node --check` on touched `.js` | Run in CI/workspace after pull (see commands below) |
-| GAS spreadsheet | Run **Run Vietnamese UX Health Check** after `clasp push` + new deployment version |
-| Manual `?route=` smoke | Use links in `WEBAPP_LINKS_AND_ROUTES_VI.md` |
+| `node --check` on touched `.js` (incl. `992` after `__inlineKanban_` fix) | **PASS** (2026-05-14) |
+| `schema_manifest.json` JSON parse | **PASS** |
+| GAS spreadsheet Test Console Phase 96 | **Pending** — chạy sau khi deploy version mới trên Apps Script |
+| Manual `?route=` smoke | **Pending** — dùng link trong `WEBAPP_LINKS_AND_ROUTES_VI.md` |
 
 ## 10. Warnings
 
@@ -90,8 +91,13 @@ clasp push --force
 ## 15. Commit hash
 
 - `da30f19` — `feat(webapp): localize workspace UX to Vietnamese`  
-- `fe7e7fb` — `docs(brain): backfill Phase 96 report commit hash`
+- `fe7e7fb` — `docs(brain): backfill Phase 96 report commit hash`  
+- `5136104` — `docs(brain): note Phase 96 clasp push success in report` (report text refresh)
 
 ## 16–18. Push / clasp / deploy
 
-Record actual results in your runbook after executing in your environment (network credentials vary).
+| Step | Result (2026-05-14) |
+|------|---------------------|
+| `git push origin phase/from-v2.4.1-TASK-FIN` | **Success** (đã đẩy `da30f19`, `fe7e7fb`, `5136104`) |
+| `clasp push --force` | **Success** — `exit_code: 0`, ~62s; `998F` / `998G` included in pushed file list |
+| Apps Script **Manage deployments → New version** | **Manual** — tạo version mới và trỏ Web deployment tới version chứa Phase 96 |
