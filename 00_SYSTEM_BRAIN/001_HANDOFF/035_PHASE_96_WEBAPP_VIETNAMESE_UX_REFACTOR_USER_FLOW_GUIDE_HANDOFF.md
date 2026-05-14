@@ -37,5 +37,5 @@ See `docs/webapp/WEBAPP_USER_FLOW_GUIDE_VI.md` and quick guides + `WEBAPP_LINKS_
 
 ## Recommended next phase
 
-- **Phase 97 — Staff Trial Execution / Feedback Capture**  
-- **Phase 96.1** — Copy audit / terminology fix loop if UAT checklist fails.
+- **Phase 96.1 — WebApp canonical route URL fix** (absolute `/exec?route=` links; see `036_*` handoff + `docs/webapp/PHASE_96_1_*`).
+- **Phase 97 — Staff Trial Execution / Feedback Capture** after 96.1 deploy + nav smoke test.

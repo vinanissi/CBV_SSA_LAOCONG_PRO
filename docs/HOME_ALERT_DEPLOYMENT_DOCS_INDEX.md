@@ -282,7 +282,7 @@ Sau đó nếu cần hiểu sâu: `APPSHEET_HOME_ALERT_INSTALL_GUIDE.md` và `AP
 
 **Routes affected:** none added; reuses 8 frozen routes + `?action=ping`.  
 **Artifacts:** `034_*` trong `00_SYSTEM_BRAIN/` (prompt, report, handoff).  
-**Next:** Phase 96 — WebApp Vietnamese UX / user-flow guides (nhãn tiếng Việt + tài liệu luồng; **không** đổi route, **không** mutation). Tiếp theo Phase 97 — Staff trial execution / feedback capture.
+**Next:** Phase 96 — WebApp Vietnamese UX / user-flow guides; sau đó Phase 96.1 — canonical route URL; rồi Phase 97 — staff trial execution / feedback capture.
 
 ---
 
@@ -308,7 +308,29 @@ Sau đó nếu cần hiểu sâu: `APPSHEET_HOME_ALERT_INSTALL_GUIDE.md` và `AP
 
 **Routes affected:** none (đường dẫn route giữ nguyên Phase 94).  
 **Artifacts:** `035_*` trong `00_SYSTEM_BRAIN/`.  
-**Next:** Phase 97 — Staff trial execution / feedback capture (GO_WITH_WARNINGS acceptable cho copy cho đến khi có phản hồi nhân sự).
+**Next:** Phase 96.1 — canonical route URL (href tuyệt đối `…/exec?route=`); sau đó Phase 97 — staff trial execution / feedback capture.
+
+---
+
+## PHASE 96.1 — WebApp canonical route URL (absolute links, no route rename)
+
+**Trạng thái:** Pilot tier — sửa navigation/link trong WebApp để dùng URL tuyệt đối `https://script.google.com/macros/s/…/exec?route=…` (encode), **không** đổi đường dẫn route Phase 94, **không** mutation/write API mới.
+
+| Tài liệu / công cụ | Ghi chú |
+|--------------------|--------|
+| `docs/webapp/PHASE_96_1_WEBAPP_CANONICAL_ROUTE_URL_FIX.md` | Tổng quan phase 96.1 |
+| `docs/webapp/WEBAPP_CANONICAL_ROUTE_URL_STANDARD.md` | Chuẩn BASE + `build(route)` + override `CBV_WEBAPP_BASE_URL` |
+| `docs/webapp/WEBAPP_ROUTE_LINK_AUDIT_CHECKLIST.md` | Checklist rà soát href trong template |
+| `docs/webapp/WEBAPP_LINKS_AND_ROUTES_VI.md` | Cập nhật mô tả URL chính thức + cảnh báo googleusercontent |
+| `05_GAS_RUNTIME/998H_WEBAPP_ROUTE_URL_HELPER.js` | `CbvWebAppRouteUrl_*` |
+| `05_GAS_RUNTIME/998I_WEBAPP_ROUTE_URL_TEST_CONSOLE.js` | Test Console Phase 96.1 (CBV_TCS_V1) |
+| `00_SYSTEM_BRAIN/000_PROMPTS/036_PHASE_96_1_WEBAPP_CANONICAL_ROUTE_URL_FIX_PROMPT.md` | Prompt archive |
+| `00_SYSTEM_BRAIN/000_REPORTS/036_PHASE_96_1_WEBAPP_CANONICAL_ROUTE_URL_FIX_REPORT.md` | Report |
+| `00_SYSTEM_BRAIN/001_HANDOFF/036_PHASE_96_1_WEBAPP_CANONICAL_ROUTE_URL_FIX_HANDOFF.md` | Handoff |
+
+**Routes affected:** none (chỉ cách dựng URL; `?route=` giữ nguyên path).  
+**Artifacts:** `036_*` trong `00_SYSTEM_BRAIN/`.  
+**Next:** Phase 97 — Staff trial execution / feedback capture.
 
 ---
 

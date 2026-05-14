@@ -1265,6 +1265,44 @@ function menuCbvTestConsoleWebAppVi96_copyReport() {
   });
 }
 
+/** CBV Test Console — Phase 96.1 WebApp canonical route URL (absolute /exec?route= links). */
+function menuCbvTestConsoleWebAppRoute961_run() {
+  runSafeMenuStep_('CbvWebAppRouteUrl_TestConsole_run', 'Route URL Health Check', function (r) {
+    if (!r) return 'No result';
+    return (r.status || '') + '\n' + (r.summary || '') + '\nEnvelope OK: ' + (r.envelopeOk ? 'yes' : 'no');
+  });
+}
+
+function menuCbvTestConsoleWebAppRoute961_map() {
+  runSafeMenuStep_('CbvWebAppRouteUrl_TestConsole_showRouteMap', 'Route URL Map', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleWebAppRoute961_nav() {
+  runSafeMenuStep_('CbvWebAppRouteUrl_TestConsole_showNavItems', 'Vietnamese Nav URLs', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleWebAppRoute961_checklist() {
+  runSafeMenuStep_('CbvWebAppRouteUrl_TestConsole_showAuditChecklist', 'Link Audit Checklist', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleWebAppRoute961_handoff() {
+  runSafeMenuStep_('CbvWebAppRouteUrl_TestConsole_showHandoffPrompt', 'AI Handoff Prompt', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleWebAppRoute961_copyReport() {
+  runSafeMenuStep_('CbvWebAppRouteUrl_TestConsole_copyLatestReport', 'Copy Latest Report', function (r) {
+    return r && r.ok ? 'Dialog opened — select JSON and copy.' : (r && r.message) || 'Done';
+  });
+}
+
 /** CBV Test Console — HOME_ALERT Phase 82 SLA & escalation QA. */
 function menuCbvTestConsoleHomeAlertSla82() {
   runSafeMenuStep_('HomeAlertSlaEscalation_TestConsole_run', 'HOME_ALERT SLA/Escalation test', function (r) {

@@ -1,19 +1,21 @@
 # WebApp — Liên kết chính thức và route (tiếng Việt)
 
-**Phase:** 96 — Vietnamese UX  
+**Phase:** 96 — Vietnamese UX · **96.1** — canonical route URL (absolute `/exec?route=`)  
 **Chuẩn:** CBV Operational Ecosystem V1 · WebApp read-first (Phase 94 freeze)
 
 ## URL WebApp chính thức (luôn dùng bản `/exec`)
 
 ```
-https://script.google.com/a/macros/htxdientu.com/s/AKfycbxJNx9Vw6NBRmSZx0ds7-sNAeyGo6VKTfO8PUDpcz8e7kq1o3W0eUWRP78zPfRlKXBUPA/exec
+https://script.google.com/macros/s/AKfycbxJNx9Vw6NBRmSZx0ds7-sNAeyGo6VKTfO8PUDpcz8e7kq1o3W0eUWRP78zPfRlKXBUPA/exec
 ```
 
-Gọi là **`WEBAPP_URL`** trong các tài liệu dưới đây.
+Gọi là **`WEBAPP_URL`** trong các tài liệu dưới đây. Chi tiết kỹ thuật và override: `docs/webapp/WEBAPP_CANONICAL_ROUTE_URL_STANDARD.md`.
 
 ### Cảnh báo — không dùng URL `googleusercontent.com`
 
 Sau khi mở WebApp, trình duyệt có thể chuyển sang URL dạng `script.googleusercontent.com/macros/.../userCodeAppPanel`. **Đó không phải link chia sẻ chính thức.** Khi gửi cho nhân sự, hướng dẫn training, hoặc ghi vào tài liệu vận hành, luôn dùng URL `/exec` ở trên (kèm `?route=` nếu cần deep link).
+
+**Phase 96.1 — điều hướng trong iframe:** Không dùng `href="/workspace"` hay `href="/home-alert/..."` trong HTML WebApp — đường dẫn tương đối sẽ resolve trên host `googleusercontent.com`. Trong runtime, dùng `CbvWebAppRouteUrl_build(route)` (file `998H`) hoặc `MODEL.routeUrls` từ renderer.
 
 ## Bảng route (đường dẫn không đổi — Phase 94)
 
@@ -38,4 +40,5 @@ Sức khỏe hệ thống và Báo cáo thêm cảnh báo **không tự động 
 
 ## Runtime GAS
 
-Dictionary và link máy: `05_GAS_RUNTIME/998F_WEBAPP_VI_UX_COPY.js` — `CbvWebAppVi_getWebAppLinks()`.
+Dictionary và link máy: `05_GAS_RUNTIME/998F_WEBAPP_VI_UX_COPY.js` — `CbvWebAppVi_getWebAppLinks()` (khi có `998H`, link dùng URL tuyệt đối `…/exec?route=`).  
+Helper route URL: `05_GAS_RUNTIME/998H_WEBAPP_ROUTE_URL_HELPER.js` — `CbvWebAppRouteUrl_build`, `CbvWebAppRouteUrl_getNavItemsVi`.

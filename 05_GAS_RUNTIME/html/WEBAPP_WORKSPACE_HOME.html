@@ -5,27 +5,28 @@
   <? var q = (MODEL && MODEL.data && MODEL.data.myQueue) ? MODEL.data.myQueue : null; ?>
   <? var sla = (MODEL && MODEL.data && MODEL.data.sla) ? MODEL.data.sla : null; ?>
   <? var rt = (MODEL && MODEL.data && MODEL.data.runtime) ? MODEL.data.runtime : null; ?>
+  <? var ru = (MODEL && MODEL.routeUrls) ? MODEL.routeUrls : {}; ?>
 
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:12px">
     <div style="border:1px solid #233256;border-radius:12px;padding:12px">
       <div style="font-weight:700">My Queue</div>
       <div class="muted">count: <?= q && q.count !== undefined ? q.count : 0 ?></div>
-      <div style="margin-top:8px"><a href="/home-alert/my-queue">Open</a></div>
+      <div style="margin-top:8px"><a href="<?= ru.myQueue || '#' ?>">Open</a></div>
     </div>
     <div style="border:1px solid #233256;border-radius:12px;padding:12px">
       <div style="font-weight:700">SLA Watch</div>
       <div class="muted">sample: <?= sla && sla.sampleSize ? sla.sampleSize : 0 ?></div>
-      <div style="margin-top:8px"><a href="/home-alert/sla">Open</a></div>
+      <div style="margin-top:8px"><a href="<?= ru.sla || '#' ?>">Open</a></div>
     </div>
     <div style="border:1px solid #233256;border-radius:12px;padding:12px">
       <div style="font-weight:700">Runtime</div>
       <div class="muted">latest: <?= rt && rt.latest ? (rt.latest.systemHealth || 'N/A') : 'N/A' ?></div>
-      <div style="margin-top:8px"><a href="/runtime/health">Open</a></div>
+      <div style="margin-top:8px"><a href="<?= ru.runtimeHealth || '#' ?>">Open</a></div>
     </div>
   </div>
 
   <div style="margin-top:14px" class="muted">
-    Placeholders: <a href="/home-alert/timeline">Timeline</a> · <a href="/home-alert/kanban">Kanban</a> · <a href="/reports">Reports</a>
+    Placeholders: <a href="<?= ru.timeline || '#' ?>">Timeline</a> · <a href="<?= ru.kanban || '#' ?>">Kanban</a> · <a href="<?= ru.reports || '#' ?>">Reports</a>
   </div>
 </div>
 

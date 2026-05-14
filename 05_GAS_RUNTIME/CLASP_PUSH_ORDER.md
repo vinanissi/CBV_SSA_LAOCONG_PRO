@@ -172,6 +172,13 @@ The sequence in `.clasp.json` filePushOrder is the deployment order. **HOME_ALER
 - `998G_WEBAPP_VI_UX_TEST_CONSOLE.js` provides `CbvWebAppViUx_TestConsole_*` for menu under `🧪 CBV Test Console → Phase 96 — Vietnamese UX`. Emits CBV_TCS_V1 envelope; persists last report under `CBV_WEBAPP_VI_UX_TC_LAST_REPORT_JSON`.
 - Renderers (`98`, `992`, `995`, `998`) and shell HTML consume `998F` when loaded (graceful English fallback if absent). `998D` exposes `CbvWebAppUat_getUserFlowViPointers()` for bilingual runbook pointers (advisory `PropertiesService`-free).
 
+### Phase 96.1 — WebApp canonical route URL (absolute `/exec?route=` links)
+
+- `998H_WEBAPP_ROUTE_URL_HELPER.js` defines `CbvWebAppRouteUrl_getBaseUrl` (default `https://script.google.com/macros/s/…/exec`, override `CBV_WEBAPP_BASE_URL` script property), `CbvWebAppRouteUrl_normalizeRoute`, `CbvWebAppRouteUrl_build`, `CbvWebAppRouteUrl_getRouteMap`, `CbvWebAppRouteUrl_getNavItemsVi`, `CbvWebAppRouteUrl_validate`. Read-only; **no** route path changes.
+- `998I_WEBAPP_ROUTE_URL_TEST_CONSOLE.js` provides `CbvWebAppRouteUrl_TestConsole_*` for menu under `🧪 CBV Test Console → Phase 96.1 — Route URL Fix`. Emits CBV_TCS_V1 envelope; persists last report under `CBV_WEBAPP_ROUTE_URL_TC_LAST_REPORT_JSON`.
+- `998F` / `94` / `98` / pilot + legacy home HTML use `CbvWebAppRouteUrl_build` when loaded so in-app links stay on `script.google.com/macros/.../exec` instead of resolving under `googleusercontent.com`.
+- Load order: **`998H` then `998I` immediately before `96_WEBAPP_DOGET_DISPATCHER.js`** so dispatchers and HTML templates see the helper. `999_WEBAPP_DOGET_DISPATCHER_FINAL.js` **MUST remain absolute last**.
+
 SHARED layer excerpt (matches push order after file helper):
 
 ```

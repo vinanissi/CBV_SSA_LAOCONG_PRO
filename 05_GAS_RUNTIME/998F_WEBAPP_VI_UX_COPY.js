@@ -3,14 +3,16 @@
  *
  * Centralized UI strings for internal operators. Route paths are NOT translated.
  * No mutation. No write actions. No production claim.
+ *
+ * Phase 96.1 — nav and doc links use CbvWebAppRouteUrl_build (998H) for absolute ?route= URLs.
  */
 
 var CBV_WEBAPP_VI_PHASE_ID = 'PHASE_96_WEBAPP_VIETNAMESE_UX_REFACTOR_USER_FLOW_GUIDE';
 var CBV_WEBAPP_VI_CONTRACT_VERSION = 'CBV_TCS_V1';
 
-/** Canonical WebApp deployment URL (exec), not googleusercontent echo. */
+/** Canonical WebApp URL (/exec). Runtime: prefer CbvWebAppRouteUrl_getBaseUrl() when 998H is loaded. */
 var CBV_WEBAPP_VI_CANONICAL_EXEC_URL =
-  'https://script.google.com/a/macros/htxdientu.com/s/AKfycbxJNx9Vw6NBRmSZx0ds7-sNAeyGo6VKTfO8PUDpcz8e7kq1o3W0eUWRP78zPfRlKXBUPA/exec';
+  'https://script.google.com/macros/s/AKfycbxJNx9Vw6NBRmSZx0ds7-sNAeyGo6VKTfO8PUDpcz8e7kq1o3W0eUWRP78zPfRlKXBUPA/exec';
 
 var CBV_WEBAPP_VI_LABELS = {
   nav_workspace: 'Trang chủ',
@@ -199,16 +201,30 @@ function CbvWebAppVi_getRouteLabel(route) {
 }
 
 function CbvWebAppVi_getNavItems() {
-  return [
-    { href: '/workspace', label: CbvWebAppVi_getLabel('nav_workspace') },
-    { href: '/home-alert/my-queue', label: CbvWebAppVi_getLabel('nav_my_queue') },
-    { href: '/home-alert/sla', label: CbvWebAppVi_getLabel('nav_sla') },
-    { href: '/home-alert/timeline', label: CbvWebAppVi_getLabel('nav_timeline') },
-    { href: '/home-alert/kanban', label: CbvWebAppVi_getLabel('nav_kanban') },
-    { href: '/runtime/health', label: CbvWebAppVi_getLabel('nav_runtime') },
-    { href: '/reports', label: CbvWebAppVi_getLabel('nav_reports') },
-    { href: '/admin/reference', label: CbvWebAppVi_getLabel('nav_admin_ref') }
+  var pairs = [
+    { route: '/workspace', key: 'nav_workspace' },
+    { route: '/home-alert/my-queue', key: 'nav_my_queue' },
+    { route: '/home-alert/sla', key: 'nav_sla' },
+    { route: '/home-alert/timeline', key: 'nav_timeline' },
+    { route: '/home-alert/kanban', key: 'nav_kanban' },
+    { route: '/runtime/health', key: 'nav_runtime' },
+    { route: '/reports', key: 'nav_reports' },
+    { route: '/admin/reference', key: 'nav_admin_ref' }
   ];
+  var out = [];
+  for (var i = 0; i < pairs.length; i++) {
+    var p = pairs[i];
+    var href = p.route;
+    if (typeof CbvWebAppRouteUrl_build === 'function') {
+      try {
+        href = CbvWebAppRouteUrl_build(p.route);
+      } catch (eB) {
+        href = p.route;
+      }
+    }
+    out.push({ href: href, label: CbvWebAppVi_getLabel(p.key), route: p.route });
+  }
+  return out;
 }
 
 /**
@@ -295,22 +311,30 @@ function CbvWebAppVi_getPilotPageI18n_(page) {
 }
 
 function CbvWebAppVi_getWebAppLinks() {
-  var base = CBV_WEBAPP_VI_CANONICAL_EXEC_URL;
+  var base = (typeof CbvWebAppRouteUrl_getBaseUrl === 'function') ? CbvWebAppRouteUrl_getBaseUrl() : CBV_WEBAPP_VI_CANONICAL_EXEC_URL;
+  function h(route) {
+    if (typeof CbvWebAppRouteUrl_build === 'function') {
+      try {
+        return CbvWebAppRouteUrl_build(route);
+      } catch (e1) { /* fall through */ }
+    }
+    return base + '?route=' + encodeURIComponent(route);
+  }
   var routes = [
-    { route: '/workspace', purpose: 'Trang vận hành tổng quan', owner: 'WebApp', href: base + '?route=/workspace' },
-    { route: '/home-alert/my-queue', purpose: 'Danh sách việc cá nhân', owner: 'WebApp + AppSheet', href: base + '?route=/home-alert/my-queue' },
-    { route: '/home-alert/sla', purpose: 'Theo dõi SLA / quá hạn', owner: 'WebApp', href: base + '?route=/home-alert/sla' },
-    { route: '/home-alert/timeline', purpose: 'Diễn biến theo thời gian', owner: 'WebApp', href: base + '?route=/home-alert/timeline' },
-    { route: '/home-alert/kanban', purpose: 'Phân bổ theo trạng thái', owner: 'WebApp', href: base + '?route=/home-alert/kanban' },
-    { route: '/runtime/health', purpose: 'Sức khỏe runtime & test console', owner: 'WebApp (ADMIN)', href: base + '?route=/runtime/health' },
-    { route: '/reports', purpose: 'Xem báo cáo kiểm thử', owner: 'WebApp (ADMIN)', href: base + '?route=/reports' },
-    { route: '/admin/reference', purpose: 'Tham chiếu cấu hình & quản trị', owner: 'WebApp (ADMIN)', href: base + '?route=/admin/reference' }
+    { route: '/workspace', purpose: 'Trang vận hành tổng quan', owner: 'WebApp', href: h('/workspace') },
+    { route: '/home-alert/my-queue', purpose: 'Danh sách việc cá nhân', owner: 'WebApp + AppSheet', href: h('/home-alert/my-queue') },
+    { route: '/home-alert/sla', purpose: 'Theo dõi SLA / quá hạn', owner: 'WebApp', href: h('/home-alert/sla') },
+    { route: '/home-alert/timeline', purpose: 'Diễn biến theo thời gian', owner: 'WebApp', href: h('/home-alert/timeline') },
+    { route: '/home-alert/kanban', purpose: 'Phân bổ theo trạng thái', owner: 'WebApp', href: h('/home-alert/kanban') },
+    { route: '/runtime/health', purpose: 'Sức khỏe runtime & test console', owner: 'WebApp (ADMIN)', href: h('/runtime/health') },
+    { route: '/reports', purpose: 'Xem báo cáo kiểm thử', owner: 'WebApp (ADMIN)', href: h('/reports') },
+    { route: '/admin/reference', purpose: 'Tham chiếu cấu hình & quản trị', owner: 'WebApp (ADMIN)', href: h('/admin/reference') }
   ];
   return {
     canonicalExecUrl: base,
     routes: routes,
     pingUrl: base + '?action=ping',
-    note: 'Không dùng URL googleusercontent.com làm link chính thức — luôn dùng URL /exec ở trên.'
+    note: 'Không dùng URL googleusercontent.com làm link chính thức — luôn dùng URL /exec + ?route= (encodeURIComponent) từ 998H.'
   };
 }
 
@@ -382,13 +406,17 @@ function CbvWebAppVi_validate() {
     mutationAllowlist: []
   };
 
-  if (CBV_WEBAPP_VI_CANONICAL_EXEC_URL.indexOf('googleusercontent.com') >= 0) {
+  var canonRef = (typeof CbvWebAppRouteUrl_getBaseUrl === 'function') ? CbvWebAppRouteUrl_getBaseUrl() : CBV_WEBAPP_VI_CANONICAL_EXEC_URL;
+  if (canonRef.indexOf('googleusercontent.com') >= 0) {
     errors.push('Canonical WebApp URL must not use googleusercontent.com');
   } else {
     detail.canonicalOk = true;
   }
-  if (CBV_WEBAPP_VI_CANONICAL_EXEC_URL.indexOf('/exec') < 0) {
+  if (canonRef.indexOf('/exec') < 0) {
     warnings.push('Canonical URL should normally end with /exec');
+  }
+  if (canonRef.indexOf('https://script.google.com/macros/s/') !== 0) {
+    warnings.push('Canonical URL should start with https://script.google.com/macros/s/ (Phase 96.1)');
   }
 
   var frozen = ['/workspace', '/home-alert/my-queue', '/home-alert/sla', '/home-alert/timeline', '/home-alert/kanban', '/runtime/health', '/reports', '/admin/reference'];

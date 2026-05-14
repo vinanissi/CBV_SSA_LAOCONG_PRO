@@ -31,6 +31,13 @@ var CBV_WEBAPP_WS_SHEETS = {
   SYSTEM_HEALTH_LOG: 'SYSTEM_HEALTH_LOG'
 };
 
+/**
+ * Canonical WebApp deployment URL (must end with /exec).
+ * Override at runtime: Script Properties `CBV_WEBAPP_BASE_URL` (see 998H_WEBAPP_ROUTE_URL_HELPER.js).
+ */
+var CBV_WEBAPP_CANONICAL_EXEC_URL_DEFAULT =
+  'https://script.google.com/macros/s/AKfycbxJNx9Vw6NBRmSZx0ds7-sNAeyGo6VKTfO8PUDpcz8e7kq1o3W0eUWRP78zPfRlKXBUPA/exec';
+
 function CbvWebAppWorkspace__actor_() {
   return (typeof cbvUser === 'function') ? cbvUser() : '';
 }

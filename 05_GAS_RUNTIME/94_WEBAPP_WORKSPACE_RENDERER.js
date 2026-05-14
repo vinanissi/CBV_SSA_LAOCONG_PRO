@@ -77,6 +77,31 @@ function CbvWebAppWorkspace_render(route, params) {
   return CbvWebAppWorkspace_renderShell_(page);
 }
 
+/** Pilot-style absolute links for legacy HOME template (98 may load after 94 in push order). */
+function CbvWebAppWorkspace__routeUrlsForHome_() {
+  if (typeof CbvWebAppPilotRenderer__routeUrls_ === 'function') {
+    try {
+      return CbvWebAppPilotRenderer__routeUrls_();
+    } catch (eP) { /* fall through */ }
+  }
+  function b(route) {
+    if (typeof CbvWebAppRouteUrl_build === 'function') {
+      try {
+        return CbvWebAppRouteUrl_build(route);
+      } catch (e1) { /* ignore */ }
+    }
+    return '#';
+  }
+  return {
+    myQueue: b('/home-alert/my-queue'),
+    sla: b('/home-alert/sla'),
+    timeline: b('/home-alert/timeline'),
+    kanban: b('/home-alert/kanban'),
+    runtimeHealth: b('/runtime/health'),
+    reports: b('/reports')
+  };
+}
+
 function CbvWebAppWorkspace_renderShell_(page) {
   var model = page || {};
   model.navHtml = CbvWebAppWorkspace__navHtml_();
@@ -133,6 +158,7 @@ function CbvWebAppWorkspace_renderHome_() {
   }
 
   var model = { warnings: warn, data: data || {} };
+  model.routeUrls = CbvWebAppWorkspace__routeUrlsForHome_();
   try {
     var t = HtmlService.createTemplateFromFile('html/WEBAPP_WORKSPACE_HOME');
     t.MODEL = model;
@@ -206,19 +232,28 @@ function CbvWebAppWorkspace__navHtml_() {
   }
   if (!links || !links.length) {
     links = [
-      { href: '/workspace', label: 'Workspace' },
-      { href: '/home-alert/my-queue', label: 'My Queue' },
-      { href: '/home-alert/sla', label: 'SLA' },
-      { href: '/home-alert/timeline', label: 'Timeline' },
-      { href: '/home-alert/kanban', label: 'Kanban' },
-      { href: '/runtime/health', label: 'Runtime' },
-      { href: '/reports', label: 'Reports' },
-      { href: '/admin/reference', label: 'Admin Reference' }
+      { route: '/workspace', label: 'Workspace' },
+      { route: '/home-alert/my-queue', label: 'My Queue' },
+      { route: '/home-alert/sla', label: 'SLA' },
+      { route: '/home-alert/timeline', label: 'Timeline' },
+      { route: '/home-alert/kanban', label: 'Kanban' },
+      { route: '/runtime/health', label: 'Runtime' },
+      { route: '/reports', label: 'Reports' },
+      { route: '/admin/reference', label: 'Admin Reference' }
     ];
   }
   var out = '<div style="display:flex;flex-wrap:wrap;gap:8px">';
   links.forEach(function(l) {
-    out += '<a href="' + l.href + '" style="padding:6px 10px;border:1px solid #ddd;border-radius:8px;text-decoration:none;color:#111;background:#fafafa">' + l.label + '</a>';
+    var href = l.href;
+    if (!href && l.route && typeof CbvWebAppRouteUrl_build === 'function') {
+      try {
+        href = CbvWebAppRouteUrl_build(l.route);
+      } catch (eL) {
+        href = l.route;
+      }
+    }
+    if (!href) href = l.href || l.route || '#';
+    out += '<a href="' + href + '" style="padding:6px 10px;border:1px solid #ddd;border-radius:8px;text-decoration:none;color:#111;background:#fafafa">' + l.label + '</a>';
   });
   out += '</div>';
   return out;

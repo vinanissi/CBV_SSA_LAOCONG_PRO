@@ -5,6 +5,37 @@
  * Phase 96 — optional Vietnamese copy via CbvWebAppVi_* helpers (route paths unchanged).
  */
 
+/** Absolute ?route= URLs for pilot home links (Phase 96.1). */
+function CbvWebAppPilotRenderer__routeUrls_() {
+  function b(route) {
+    if (typeof CbvWebAppRouteUrl_build === 'function') {
+      try {
+        return CbvWebAppRouteUrl_build(route);
+      } catch (e1) { /* ignore */ }
+    }
+    return '#missing-route-url-helper';
+  }
+  var m = (typeof CbvWebAppRouteUrl_getRouteMap === 'function') ? CbvWebAppRouteUrl_getRouteMap() : null;
+  if (!m) {
+    return {
+      myQueue: b('/home-alert/my-queue'),
+      sla: b('/home-alert/sla'),
+      timeline: b('/home-alert/timeline'),
+      kanban: b('/home-alert/kanban'),
+      runtimeHealth: b('/runtime/health'),
+      reports: b('/reports')
+    };
+  }
+  return {
+    myQueue: b(m.myQueue),
+    sla: b(m.sla),
+    timeline: b(m.timeline),
+    kanban: b(m.kanban),
+    runtimeHealth: b(m.runtimeHealth),
+    reports: b(m.reports)
+  };
+}
+
 function CbvWebAppPilotRenderer__viText_(key, fallbackEn) {
   if (typeof CbvWebAppVi_getLabel === 'function') {
     try {
@@ -52,7 +83,12 @@ function CbvWebAppPilotRenderer_renderHome() {
 
   var t = HtmlService.createTemplateFromFile('html/WEBAPP_WORKSPACE_HOME_PILOT');
   t.COMPONENTS = CbvWebAppPilotRenderer__includeComponents_();
-  t.MODEL = { state: state, result: res, i18n: (typeof CbvWebAppVi_getPilotPageI18n_ === 'function') ? CbvWebAppVi_getPilotPageI18n_('home') : null };
+  t.MODEL = {
+    state: state,
+    result: res,
+    i18n: (typeof CbvWebAppVi_getPilotPageI18n_ === 'function') ? CbvWebAppVi_getPilotPageI18n_('home') : null,
+    routeUrls: CbvWebAppPilotRenderer__routeUrls_()
+  };
   return { bodyHtml: t.evaluate().getContent(), warnings: (res && res.warnings) ? res.warnings : [] };
 }
 

@@ -15,12 +15,13 @@
   <? var r = MODEL && MODEL.result ? MODEL.result : null; ?>
   <? var d = r && r.data ? r.data : null; ?>
   <? var t = d && d.totals ? d.totals : {}; ?>
+  <? var ru = (MODEL && MODEL.routeUrls) ? MODEL.routeUrls : {}; ?>
 
   <div style="margin-top:12px" class="cbv-row">
     <div class="cbv-card" style="flex:1;min-width:190px">
       <div class="cbv-muted">My Queue</div>
       <div style="font-size:22px;font-weight:800"><?= t.myQueue || 0 ?></div>
-      <div style="margin-top:8px"><a class="cbv-link" href="/home-alert/my-queue">Open My Queue</a></div>
+      <div style="margin-top:8px"><a class="cbv-link" href="<?= ru.myQueue || '#' ?>">Open My Queue</a></div>
     </div>
     <div class="cbv-card" style="flex:1;min-width:190px">
       <div class="cbv-muted">Unassigned</div>
@@ -30,7 +31,7 @@
     <div class="cbv-card" style="flex:1;min-width:190px">
       <div class="cbv-muted">Breached</div>
       <div style="font-size:22px;font-weight:800"><?= t.breached || 0 ?></div>
-      <div style="margin-top:8px"><a class="cbv-link" href="/home-alert/sla">Open SLA</a></div>
+      <div style="margin-top:8px"><a class="cbv-link" href="<?= ru.sla || '#' ?>">Open SLA</a></div>
     </div>
   </div>
 
@@ -50,9 +51,9 @@
   </div>
 
   <div style="margin-top:14px" class="cbv-row">
-    <a class="cbv-link" href="/home-alert/timeline">Timeline (placeholder)</a>
-    <a class="cbv-link" href="/home-alert/kanban">Kanban (placeholder)</a>
-    <a class="cbv-link" href="/runtime/health">Runtime (placeholder)</a>
+    <a class="cbv-link" href="<?= ru.timeline || '#' ?>">Timeline (placeholder)</a>
+    <a class="cbv-link" href="<?= ru.kanban || '#' ?>">Kanban (placeholder)</a>
+    <a class="cbv-link" href="<?= ru.runtimeHealth || '#' ?>">Runtime (placeholder)</a>
   </div>
 </div>
 

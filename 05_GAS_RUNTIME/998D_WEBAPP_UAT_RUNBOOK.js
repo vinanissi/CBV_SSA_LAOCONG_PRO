@@ -89,9 +89,13 @@ function CbvWebAppUat_getUserFlowViPointers() {
   var data = {
     phase: 'PHASE_96_WEBAPP_VIETNAMESE_UX_REFACTOR_USER_FLOW_GUIDE',
     noteVi: 'Nhãn WebApp pilot đã Việt hóa (Phase 96). Script UAT tiếng Anh (A1–A10 / S1–S9 / O1–O9) giữ nguyên — dùng các tài liệu tiếng Việt dưới đây khi hướng dẫn nhân sự; kiểm tra footer an toàn tiếng Việt trên mọi route.',
-    canonicalWebAppUrl: (typeof CBV_WEBAPP_VI_CANONICAL_EXEC_URL === 'string')
-      ? CBV_WEBAPP_VI_CANONICAL_EXEC_URL
-      : '(định nghĩa trong 998F_WEBAPP_VI_UX_COPY.js — xem docs/webapp/WEBAPP_LINKS_AND_ROUTES_VI.md)',
+    canonicalWebAppUrl: (function () {
+      try {
+        if (typeof CbvWebAppRouteUrl_getBaseUrl === 'function') return CbvWebAppRouteUrl_getBaseUrl();
+        if (typeof CBV_WEBAPP_VI_CANONICAL_EXEC_URL === 'string') return CBV_WEBAPP_VI_CANONICAL_EXEC_URL;
+      } catch (e) { /* ignore */ }
+      return '(998H_WEBAPP_ROUTE_URL_HELPER.js — xem docs/webapp/WEBAPP_LINKS_AND_ROUTES_VI.md)';
+    })(),
     operatorFlow: (function () {
       try { return (typeof CbvWebAppVi_getUserFlowGuide === 'function') ? CbvWebAppVi_getUserFlowGuide('operator') : null; }
       catch (e) { return null; }

@@ -19,8 +19,8 @@ var CBV_WEBAPP_VI_UX_HANDOFF_PROMPT = [
   '  Không tự động leo thang · Chưa xác nhận production',
   '  (Dòng thời gian / Bảng trạng thái thêm: Không kéo-thả để lưu thay đổi)',
   '',
-  'URL chính thức (exec, không dùng googleusercontent):',
-  '  https://script.google.com/a/macros/htxdientu.com/s/AKfycbxJNx9Vw6NBRmSZx0ds7-sNAeyGo6VKTfO8PUDpcz8e7kq1o3W0eUWRP78zPfRlKXBUPA/exec',
+  'URL chính thức (exec + ?route=, không dùng googleusercontent):',
+  '  https://script.google.com/macros/s/AKfycbxJNx9Vw6NBRmSZx0ds7-sNAeyGo6VKTfO8PUDpcz8e7kq1o3W0eUWRP78zPfRlKXBUPA/exec',
   '',
   'Next: Phase 97 — Staff Trial Execution / Feedback Capture',
   '  (hoặc Phase 96.1 nếu audit copy thất bại).'
@@ -92,6 +92,10 @@ function CbvWebAppViUx_TestConsole_run() {
     var navOk = Array.isArray(nav) && nav.length === 8 && nav[0].label === 'Trang chủ';
     addCheck('NAV_VI', navOk, navOk ? 'OK' : 'ERROR',
       'Vietnamese nav labels present (8 items, first = Trang chủ).', { first: nav && nav[0] ? nav[0].label : '' });
+    var h0 = nav && nav[0] ? String(nav[0].href || '') : '';
+    var absNav = h0.indexOf('https://') === 0 && h0.indexOf('?route=') >= 0 && h0.indexOf('googleusercontent.com') < 0;
+    addCheck('NAV_HREF_ABSOLUTE', absNav, absNav ? 'OK' : 'WARNING',
+      'Nav hrefs use canonical /exec?route= URLs (Phase 96.1).', { firstHref: h0.substring(0, 120) });
   } catch (eN) {
     addCheck('NAV_VI', false, 'WARNING', String(eN), {});
   }
