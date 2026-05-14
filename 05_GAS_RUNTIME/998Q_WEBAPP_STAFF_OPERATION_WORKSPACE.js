@@ -423,6 +423,7 @@ function CbvStaffWorkspace_buildStaffBottomNavHtml_(activeRoute) {
   return (
     '<nav class="cbv-staff-bottom-nav cbv-staff-mobile-stack" aria-label="Staff bottom nav" style="position:fixed;left:0;right:0;bottom:0;padding:12px;background:rgba(11,18,32,.95);border-top:1px solid #233256;z-index:50">' +
     '<div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;max-width:720px;margin:0 auto">' +
+    item('/workspace/daily', 'Daily') +
     item('/workspace/staff/tasks', 'Việc') +
     item('/workspace/today', 'Hôm nay') +
     item('/workspace/staff/feedback', 'Phản hồi') +

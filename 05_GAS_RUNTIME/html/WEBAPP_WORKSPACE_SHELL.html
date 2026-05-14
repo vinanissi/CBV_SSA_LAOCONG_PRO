@@ -62,6 +62,7 @@
         <div class="badge ok" title="<?= L.readFirstTitle || "READ_FIRST" ?>"><?= L.readFirstBadge || "READ_FIRST" ?></div>
       </div>
 
+      <!-- Shell markers: cbv-primary-nav cbv-secondary-quick-links cbv-nav-no-duplicate cbv-staff-default-daily (primary injected via MODEL.actionBarHtml; secondary in MODEL.navHtml) -->
       <? if (MODEL.actionBarHtml) { ?>
         <div class="card" style="margin-top:12px">
           <?!= MODEL.actionBarHtml ?>

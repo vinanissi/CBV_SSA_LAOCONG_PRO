@@ -1424,6 +1424,20 @@ function menuCbvTestConsoleMilestone02_copyReport() {
   });
 }
 
+/** Milestone 03 — daily operation flow test + Drive bundle. */
+function menuCbvTestConsoleMilestone03_runFull() {
+  runSafeMenuStep_('CbvTcsMilestone03DailyOp_TestConsole_runFull', 'Milestone 03 Daily Operation Flow Test', function (r) {
+    if (!r) return 'No result';
+    return (r.status || '') + '\n' + (r.summary || '') + '\nEnvelope OK: ' + (r.envelopeOk ? 'yes' : 'no');
+  });
+}
+
+function menuCbvTestConsoleMilestone03_copyReport() {
+  runSafeMenuStep_('CbvTcsMilestone03DailyOp_TestConsole_copyLatestReport', 'Copy Milestone 03 report', function (r) {
+    return r && r.ok ? 'Dialog opened — select JSON and copy.' : (r && r.message) || 'Done';
+  });
+}
+
 /** CBV Test Console — HOME_ALERT Phase 82 SLA & escalation QA. */
 function menuCbvTestConsoleHomeAlertSla82() {
   runSafeMenuStep_('HomeAlertSlaEscalation_TestConsole_run', 'HOME_ALERT SLA/Escalation test', function (r) {

@@ -27,6 +27,7 @@ var CBV_WEBAPP_VI_LABELS = {
   nav_today_ops: 'Hôm nay',
   nav_guided: 'Hướng dẫn',
   nav_staff_tasks: 'Việc NV',
+  nav_daily: 'Daily',
   nav_staff_feedback: 'Phản hồi',
   read_first_badge: 'READ_FIRST',
   read_first_explain: 'Chỉ xem / Không ghi dữ liệu',
@@ -195,14 +196,19 @@ var CBV_WEBAPP_VI_LABELS = {
   staff_read_first_note: 'READ_FIRST — WebApp chỉ xem; ghi dữ liệu trên AppSheet theo quy trình.'
 };
 
-/** Single source for nav count + VI checks (Phase 208 — staff routes). */
-var CBV_WEBAPP_VI_NAV_PAIRS = [
+/** Primary staff/ops nav (Milestone 03 — no duplicate of secondary strip). */
+var CBV_WEBAPP_VI_NAV_PRIMARY_PAIRS = [
   { route: '/workspace', key: 'nav_workspace' },
+  { route: '/workspace/daily', key: 'nav_daily' },
+  { route: '/workspace/staff/tasks', key: 'nav_staff_tasks' },
   { route: '/workspace/today', key: 'nav_today_ops' },
+  { route: '/workspace/staff/feedback', key: 'nav_staff_feedback' }
+];
+
+/** Secondary quick links (admin/ops tools — distinct from primary). */
+var CBV_WEBAPP_VI_NAV_SECONDARY_PAIRS = [
   { route: '/workspace/role-home', key: 'nav_role_home' },
   { route: '/workspace/guided', key: 'nav_guided' },
-  { route: '/workspace/staff/tasks', key: 'nav_staff_tasks' },
-  { route: '/workspace/staff/feedback', key: 'nav_staff_feedback' },
   { route: '/home-alert/my-queue', key: 'nav_my_queue' },
   { route: '/home-alert/sla', key: 'nav_sla' },
   { route: '/home-alert/timeline', key: 'nav_timeline' },
@@ -212,8 +218,13 @@ var CBV_WEBAPP_VI_NAV_PAIRS = [
   { route: '/admin/reference', key: 'nav_admin_ref' }
 ];
 
+/** Single source for nav count + VI checks (Milestone 03 — primary + secondary). */
+var CBV_WEBAPP_VI_NAV_PAIRS = CBV_WEBAPP_VI_NAV_PRIMARY_PAIRS.concat(CBV_WEBAPP_VI_NAV_SECONDARY_PAIRS);
+
 var CBV_WEBAPP_VI_ROUTE_PAGE_TITLE = {
   '/workspace': 'Trang vận hành hôm nay',
+  '/workspace/daily': 'Daily — Cần làm ngay',
+  '/daily': 'Daily — Cần làm ngay',
   '/workspace/role-home': 'Workspace — Theo vai trò',
   '/workspace/today': 'Workspace — Tổng quan hôm nay',
   '/workspace/guided': 'Workspace — Hướng dẫn',
@@ -259,6 +270,57 @@ function CbvWebAppVi_getNavItems() {
     }
     out.push({ href: href, label: CbvWebAppVi_getLabel(p.key), route: p.route });
   }
+  return out;
+}
+
+function CbvWebAppVi__navBtn_(route, label, activeRoute, extraClass) {
+  var href = route;
+  if (typeof CbvWebAppRouteUrl_build === 'function') {
+    try {
+      href = CbvWebAppRouteUrl_build(route);
+    } catch (eB) {
+      href = route;
+    }
+  }
+  var ar = String(activeRoute || '');
+  var active = ar === route ? ' cbv-action-active' : '';
+  var x = String(extraClass || '').trim();
+  return '<a class="cbv-btn-operational cbv-busy-link' + active + (x ? ' ' + x : '') + '" href="' +
+    String(href).replace(/"/g, '&quot;') + '">' + String(label).replace(/</g, '&lt;') + '</a>';
+}
+
+function CbvWebAppVi_buildPrimaryNavHtml_(activeRoute) {
+  var out = '<nav class="cbv-primary-nav cbv-nav-no-duplicate" aria-label="Primary navigation"><div class="cbv-global-action-bar cbv-mobile-stack" style="display:flex;flex-wrap:wrap;gap:10px;align-items:stretch">';
+  for (var i = 0; i < CBV_WEBAPP_VI_NAV_PRIMARY_PAIRS.length; i++) {
+    var p = CBV_WEBAPP_VI_NAV_PRIMARY_PAIRS[i];
+    var lbl = CbvWebAppVi_getLabel(p.key);
+    var extra = p.route === '/workspace/daily' ? 'cbv-staff-default-daily' : '';
+    out += CbvWebAppVi__navBtn_(p.route, lbl || p.route, activeRoute, extra);
+  }
+  out += '</div></nav>';
+  return out;
+}
+
+function CbvWebAppVi_buildSecondaryNavHtml_(activeRoute) {
+  var out = '<div class="cbv-secondary-quick-links cbv-nav-no-duplicate" aria-label="Secondary quick links">' +
+    '<div class="cbv-muted" style="font-size:12px;margin-bottom:6px">Liên kết phụ (không trùng menu chính)</div>' +
+    '<div style="display:flex;flex-wrap:wrap;gap:8px">';
+  for (var j = 0; j < CBV_WEBAPP_VI_NAV_SECONDARY_PAIRS.length; j++) {
+    var q = CBV_WEBAPP_VI_NAV_SECONDARY_PAIRS[j];
+    var href = q.route;
+    if (typeof CbvWebAppRouteUrl_build === 'function') {
+      try {
+        href = CbvWebAppRouteUrl_build(q.route);
+      } catch (e2) {
+        href = q.route;
+      }
+    }
+    var ar = String(activeRoute || '');
+    var act = ar === q.route ? ' cbv-action-active' : '';
+    out += '<a class="cbv-link' + act + '" href="' + String(href).replace(/"/g, '&quot;') + '">' +
+      String(CbvWebAppVi_getLabel(q.key) || q.route).replace(/</g, '&lt;') + '</a>';
+  }
+  out += '</div></div>';
   return out;
 }
 
@@ -358,6 +420,8 @@ function CbvWebAppVi_getWebAppLinks() {
   var routes = [
     { route: '/workspace', purpose: 'Trang vận hành tổng quan', owner: 'WebApp', href: h('/workspace') },
     { route: '/workspace/today', purpose: 'Tổng quan hôm nay (ưu tiên / SLA)', owner: 'WebApp', href: h('/workspace/today') },
+    { route: '/workspace/daily', purpose: 'Daily — cần làm ngay (task-first)', owner: 'WebApp', href: h('/workspace/daily') },
+    { route: '/daily', purpose: 'Alias Daily (cùng màn hình /workspace/daily)', owner: 'WebApp', href: h('/daily') },
     { route: '/workspace/role-home', purpose: 'Trang chủ theo vai trò', owner: 'WebApp', href: h('/workspace/role-home') },
     { route: '/workspace/guided', purpose: 'SOP inline / bước tiếp theo', owner: 'WebApp', href: h('/workspace/guided') },
     { route: '/home-alert/my-queue', purpose: 'Danh sách việc cá nhân', owner: 'WebApp + AppSheet', href: h('/home-alert/my-queue') },
@@ -465,6 +529,8 @@ function CbvWebAppVi_validate() {
 
   var frozen = [
     '/workspace',
+    '/workspace/daily',
+    '/daily',
     '/workspace/role-home',
     '/workspace/today',
     '/workspace/guided',

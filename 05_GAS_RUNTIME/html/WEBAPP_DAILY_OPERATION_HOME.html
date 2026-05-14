@@ -1,0 +1,48 @@
+<?!= COMPONENTS ?>
+<style>
+  .cbv-daily-page { padding-bottom: 120px; }
+  .cbv-daily-hero { font-size: 20px; font-weight: 800; margin: 0 0 8px 0; }
+  .cbv-daily-section { margin-top: 14px; }
+  .cbv-daily-section h3 { margin: 0 0 8px 0; font-size: 15px; color: #a7b4d6; }
+  .cbv-daily-filter-chip { display: inline-block; padding: 8px 14px; border-radius: 999px; border: 1px solid #233256; background: #0f1930; color: #9dd5ff; text-decoration: none; font-size: 14px; font-weight: 600; }
+  .cbv-daily-filter-chip.cbv-action-active { outline: 2px solid #2dd4bf; outline-offset: 2px; }
+  .cbv-action-xl { min-height: 52px; font-size: 16px; }
+</style>
+<div class="cbv-daily-page cbv-daily-mobile-stack">
+  <?!= MODEL.stickyPrimaryHtml ?>
+
+  <div class="cbv-daily-section cbv-card">
+    <div class="cbv-daily-hero">🔥 Cần làm ngay</div>
+    <p class="cbv-muted" style="margin:0 0 8px 0">Quá hạn · kẹt · ưu tiên · thiếu dữ liệu (read-first).</p>
+    <?!= MODEL.urgentCardsHtml ?>
+  </div>
+
+  <div class="cbv-daily-section cbv-card">
+    <h3>📋 Việc của tôi (theo bộ lọc)</h3>
+    <?!= MODEL.filterChipsHtml ?>
+    <div style="margin-top:10px">
+      <?!= MODEL.listBodyHtml ?>
+    </div>
+  </div>
+
+  <div class="cbv-daily-section cbv-card">
+    <h3>⚠ Đang kẹt / thiếu dữ liệu</h3>
+    <?!= MODEL.blockedCardsHtml ?>
+  </div>
+
+  <div class="cbv-daily-section cbv-card">
+    <h3>📋 Việc gán cho tôi (adapter)</h3>
+    <?!= MODEL.mineCardsHtml ?>
+  </div>
+
+  <div class="cbv-daily-section cbv-card">
+    <h3>➡ Bước tiếp theo (gợi ý)</h3>
+    <ol style="margin:0;padding-left:18px"><?!= MODEL.nextActionsHtml ?></ol>
+  </div>
+
+  <div class="cbv-daily-section cbv-muted" style="font-size:12px">
+    trace: <code><?= MODEL.traceHint ?></code>
+  </div>
+</div>
+<?!= MODEL.bottomNavHtml ?>
+<!-- Static probe markers: cbv-daily-task-card cbv-daily-primary-action cbv-daily-secondary-action cbv-daily-priority-badge cbv-daily-sla-badge cbv-daily-next-action cbv-daily-empty-state cbv-daily-bottom-nav cbv-daily-sticky-action cbv-daily-filter-chip cbv-daily-mobile-stack cbv-thumb-zone cbv-action-xl -->

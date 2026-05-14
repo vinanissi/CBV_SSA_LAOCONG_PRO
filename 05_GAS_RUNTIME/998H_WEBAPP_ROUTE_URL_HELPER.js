@@ -22,6 +22,8 @@ var CBV_WEBAPP_ROUTE_URL_FROZEN = [
   '/workspace/role-home',
   '/workspace/today',
   '/workspace/guided',
+  '/workspace/daily',
+  '/daily',
   '/home-alert/my-queue',
   '/home-alert/sla',
   '/home-alert/timeline',
@@ -82,6 +84,8 @@ function CbvWebAppRouteUrl_getRouteMap() {
     roleHome: '/workspace/role-home',
     todayOps: '/workspace/today',
     guidedOps: '/workspace/guided',
+    dailyHome: '/workspace/daily',
+    dailyAlias: '/daily',
     myQueue: '/home-alert/my-queue',
     sla: '/home-alert/sla',
     timeline: '/home-alert/timeline',
@@ -96,6 +100,7 @@ function CbvWebAppRouteUrl_getNavItemsVi() {
   var m = CbvWebAppRouteUrl_getRouteMap();
   var rows = [
     { label: 'Trang chủ', route: m.workspace },
+    { label: 'Daily', route: m.dailyHome },
     { label: 'Hôm nay', route: m.todayOps },
     { label: 'Theo vai trò', route: m.roleHome },
     { label: 'Hướng dẫn', route: m.guidedOps },
@@ -149,7 +154,7 @@ function CbvWebAppRouteUrl_validate() {
   }
 
   var m = CbvWebAppRouteUrl_getRouteMap();
-  var keys = ['workspace', 'roleHome', 'todayOps', 'guidedOps', 'myQueue', 'sla', 'timeline', 'kanban', 'runtimeHealth', 'reports', 'adminReference'];
+  var keys = ['workspace', 'roleHome', 'todayOps', 'guidedOps', 'dailyHome', 'dailyAlias', 'myQueue', 'sla', 'timeline', 'kanban', 'runtimeHealth', 'reports', 'adminReference'];
   for (var i = 0; i < keys.length; i++) {
     if (!m[keys[i]]) errors.push('Route map missing key: ' + keys[i]);
   }

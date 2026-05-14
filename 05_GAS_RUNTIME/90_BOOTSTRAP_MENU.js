@@ -296,6 +296,8 @@ function buildCbvTestConsoleMenu_() {
     .addItem('Copy Milestone 01 Latest Test Report', 'menuCbvTestConsoleMilestone01_copyReport')
     .addItem('Run Milestone 02 Staff Workspace Test', 'menuCbvTestConsoleMilestone02_runFull')
     .addItem('Copy Milestone 02 Latest Test Report', 'menuCbvTestConsoleMilestone02_copyReport')
+    .addItem('Run Milestone 03 Daily Operation Flow Test', 'menuCbvTestConsoleMilestone03_runFull')
+    .addItem('Copy Milestone 03 Latest Test Report', 'menuCbvTestConsoleMilestone03_copyReport')
     .addItem('HOME_ALERT Phase 82 — SLA & Escalation', 'menuCbvTestConsoleHomeAlertSla82')
     .addItem('HOME_ALERT Phase 83 — SLA Policy Registry', 'menuCbvTestConsoleHomeAlertSla83')
     .addItem('HOME_ALERT Phase 84 — Safe Automation Runtime', 'menuCbvTestConsoleHomeAlertSafeAutomation84')

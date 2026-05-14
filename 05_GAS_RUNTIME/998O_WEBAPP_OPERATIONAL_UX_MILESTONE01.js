@@ -234,7 +234,9 @@ function CbvWebAppOpUx_buildGlobalActionBarHtml_(activeRoute) {
 function CbvWebAppOpUx_augmentPageForShell_(page, route) {
   page = page || {};
   page.currentRoute = route;
-  page.actionBarHtml = CbvWebAppOpUx_buildGlobalActionBarHtml_(route);
+  page.actionBarHtml = (typeof CbvWebAppVi_buildPrimaryNavHtml_ === 'function')
+    ? CbvWebAppVi_buildPrimaryNavHtml_(route)
+    : CbvWebAppOpUx_buildGlobalActionBarHtml_(route);
   return page;
 }
 

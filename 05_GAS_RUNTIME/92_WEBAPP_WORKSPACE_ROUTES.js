@@ -54,6 +54,30 @@ function CbvWebAppWorkspace_routeRegistry() {
       notes: 'Milestone 01 — guided SOP inline (read-first).'
     },
     {
+      route: '/workspace/daily',
+      screenCode: 'DAILY_OPERATION_HOME',
+      title: 'Workspace — Daily',
+      pageType: CBV_WEBAPP_WS_PAGE_TYPES.DAILY_OPERATION_HOME,
+      requiredRole: '*',
+      dataSourceSheet: CBV_WEBAPP_WS_SHEETS.HOME_ALERT,
+      mode: CBV_WEBAPP_WS_MODES.READ_FIRST,
+      isEnabled: true,
+      isPilotReady: true,
+      notes: 'Milestone 03 — task-first daily home (HOME_ALERT adapter; read-first).'
+    },
+    {
+      route: '/daily',
+      screenCode: 'DAILY_OPERATION_HOME_ALIAS',
+      title: 'Daily',
+      pageType: CBV_WEBAPP_WS_PAGE_TYPES.DAILY_OPERATION_HOME,
+      requiredRole: '*',
+      dataSourceSheet: CBV_WEBAPP_WS_SHEETS.HOME_ALERT,
+      mode: CBV_WEBAPP_WS_MODES.READ_FIRST,
+      isEnabled: true,
+      isPilotReady: true,
+      notes: 'Alias route for Milestone 03 daily home.'
+    },
+    {
       route: '/workspace/staff/tasks',
       screenCode: 'STAFF_TASK_INBOX',
       title: 'Workspace — Staff tasks',
