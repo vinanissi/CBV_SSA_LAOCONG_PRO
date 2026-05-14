@@ -205,7 +205,14 @@ function CbvTcsMilestone05GuidedSop_TestConsole_runFull() {
     var fm0 = CbvGuidedSop_buildStepFlowModel_({ taskId: 'X', title: 'Y', status: 'OPEN', priority: 'N', slaState: '', assignedTo: 'a', sourceModule: 'Z' });
     var html0 = CbvGuidedSop_buildStepperHtml_(fm0);
     var missM = markers.filter(function (mk) { return html0.indexOf(mk) < 0; });
-    addCheck('UI_MARKERS_STEPPER', missM.length === 0, missM.length === 0 ? 'OK' : 'ERROR', 'Stepper markers', { missing: missM });
+    addCheck('UI_MARKERS_STEPPER', missM.length === 0, missM.length === 0 ? 'OK' : 'ERROR', 'Stepper markers', {
+      missing: missM,
+      htmlLen: String(html0 || '').length,
+      templateId: fm0.template && fm0.template.templateId,
+      currentStepId: fm0.currentStep && fm0.currentStep.stepId,
+      nextStepId: fm0.nextStep && fm0.nextStep.stepId,
+      markerSource: 'CbvGuidedSop_buildStepperHtml_'
+    });
   } catch (eUi) {
     addCheck('UI_MARKERS_STEPPER', false, 'ERROR', String(eUi), {});
   }

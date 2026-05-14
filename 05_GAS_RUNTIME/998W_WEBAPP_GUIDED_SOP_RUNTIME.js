@@ -460,6 +460,22 @@ function CbvGuidedSop_buildStepperHtml_(flowModel) {
   var tpl = fm.template || CbvGuidedSop_getDefaultTemplate_();
   var steps = CbvGuidedSop__sortSteps_(tpl.steps || []);
   var stateMap = fm.stepStates || CbvGuidedSop_getStepState_(fm.task, tpl);
+  var cur = fm.currentStep || null;
+  var nxt = fm.nextStep || null;
+
+  var curTitle = cur && String(cur.title || '').trim() ? String(cur.title) : '';
+  var curInstr = cur && String(cur.instruction || '').trim() ? String(cur.instruction) : '';
+  var curBody =
+    curTitle || curInstr
+      ? '<div style="font-size:16px;font-weight:700">' + CbvGuidedSop__escapeHtml_(curTitle) + '</div>' +
+        '<p class="cbv-muted" style="font-size:13px;margin:6px 0">' + CbvGuidedSop__escapeHtml_(curInstr) + '</p>'
+      : '<p class="cbv-muted" style="font-size:14px;margin:0">Chưa xác định bước hiện tại</p>';
+
+  var nxtTitle = nxt && String(nxt.title || '').trim() ? String(nxt.title) : '';
+  var nxtBody = nxtTitle
+    ? '<p class="cbv-muted" style="font-size:14px;margin:0">' + CbvGuidedSop__escapeHtml_(nxtTitle) + '</p>'
+    : '<p class="cbv-muted" style="font-size:14px;margin:0">Chưa có bước tiếp theo</p>';
+
   var cards = steps.map(function (st) {
     return CbvGuidedSop_buildStepCardHtml_(st, fm.task, stateMap);
   }).join('');
@@ -468,6 +484,14 @@ function CbvGuidedSop_buildStepperHtml_(flowModel) {
     '<div class="cbv-sop-stepper" data-cbv-sop-template-id="' + tid + '">' +
     '<div class="cbv-sop-template-id cbv-muted" style="font-size:12px;margin-bottom:6px">SOP áp dụng: <code>' + tid + '</code> — ' +
     CbvGuidedSop__escapeHtml_(tpl.title || '') + '</div>' +
+    '<div class="cbv-sop-current-step cbv-card" style="margin-bottom:10px">' +
+    '<strong>Bước hiện tại</strong>' +
+    curBody +
+    '</div>' +
+    '<div class="cbv-sop-next-step cbv-card cbv-muted" style="margin-bottom:10px">' +
+    '<strong>Bước tiếp theo</strong>' +
+    nxtBody +
+    '</div>' +
     cards +
     '</div>'
   );
@@ -553,7 +577,12 @@ function CbvGuidedSop_renderGuidedSopPage_(params) {
     return { bodyHtml: tpl.evaluate().getContent(), warnings: [].concat(flow.warnings || []) };
   } catch (e2) {
     return {
-      bodyHtml: '<section class="cbv-sop-stepper" data-cbv-sop-template-id="FALLBACK"><p>Guided SOP template missing.</p></section>',
+      bodyHtml:
+        '<div class="cbv-sop-stepper" data-cbv-sop-template-id="FALLBACK">' +
+        '<div class="cbv-sop-template-id">FALLBACK</div>' +
+        '<div class="cbv-sop-current-step"><p>Guided SOP template missing.</p></div>' +
+        '<div class="cbv-sop-next-step"><p class="cbv-muted">Chưa có bước tiếp theo</p></div>' +
+        '</div>',
       warnings: [String(e2 && e2.message ? e2.message : e2)]
     };
   }
