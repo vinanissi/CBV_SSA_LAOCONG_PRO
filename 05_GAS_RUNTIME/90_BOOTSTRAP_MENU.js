@@ -292,6 +292,8 @@ function buildCbvTestConsoleMenu_() {
         .addItem('Copy Latest Artifact Registry Report', 'menuCbvTestConsoleArtifact972_copyReport')
         .addItem('Copy AI Handoff Prompt', 'menuCbvTestConsoleArtifact972_handoff')
     )
+    .addItem('Run Milestone 01 Full Operational Workspace Test', 'menuCbvTestConsoleMilestone01_runFull')
+    .addItem('Copy Milestone 01 Latest Test Report', 'menuCbvTestConsoleMilestone01_copyReport')
     .addItem('HOME_ALERT Phase 82 — SLA & Escalation', 'menuCbvTestConsoleHomeAlertSla82')
     .addItem('HOME_ALERT Phase 83 — SLA Policy Registry', 'menuCbvTestConsoleHomeAlertSla83')
     .addItem('HOME_ALERT Phase 84 — Safe Automation Runtime', 'menuCbvTestConsoleHomeAlertSafeAutomation84')

@@ -55,6 +55,12 @@ function CbvWebAppWorkspace_render(route, params) {
     page = (typeof CbvWebAppPilotRenderer_renderQueue === 'function') ? CbvWebAppPilotRenderer_renderQueue() : CbvWebAppWorkspace_renderQueue_();
   } else if (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.SLA) {
     page = (typeof CbvWebAppPilotRenderer_renderSla === 'function') ? CbvWebAppPilotRenderer_renderSla() : CbvWebAppWorkspace_renderSla_();
+  } else if (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.ROLE_HOME && typeof CbvWebAppOpUx_renderRoleHomePage_ === 'function') {
+    page = CbvWebAppOpUx_renderRoleHomePage_();
+  } else if (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.TODAY_OPS && typeof CbvWebAppOpUx_renderTodayPage_ === 'function') {
+    page = CbvWebAppOpUx_renderTodayPage_();
+  } else if (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.GUIDED_OPS && typeof CbvWebAppOpUx_renderGuidedPage_ === 'function') {
+    page = CbvWebAppOpUx_renderGuidedPage_();
   } else if (reg.route === '/home-alert/timeline' && typeof CbvWebAppPilotRenderer_renderTimelinePlaceholder === 'function') {
     page = CbvWebAppPilotRenderer_renderTimelinePlaceholder();
   } else if (reg.route === '/home-alert/kanban' && typeof CbvWebAppPilotRenderer_renderKanbanPlaceholder === 'function') {
@@ -74,6 +80,9 @@ function CbvWebAppWorkspace_render(route, params) {
     : reg.title;
   page.route = reg.route;
   page.status = 'READ_FIRST';
+  if (typeof CbvWebAppOpUx_augmentPageForShell_ === 'function') {
+    page = CbvWebAppOpUx_augmentPageForShell_(page, reg.route);
+  }
   return CbvWebAppWorkspace_renderShell_(page);
 }
 

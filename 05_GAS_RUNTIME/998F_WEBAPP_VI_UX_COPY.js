@@ -23,6 +23,9 @@ var CBV_WEBAPP_VI_LABELS = {
   nav_runtime: 'Sức khỏe hệ thống',
   nav_reports: 'Báo cáo',
   nav_admin_ref: 'Quản trị tham chiếu',
+  nav_role_home: 'Theo vai trò',
+  nav_today_ops: 'Hôm nay',
+  nav_guided: 'Hướng dẫn',
   read_first_badge: 'READ_FIRST',
   read_first_explain: 'Chỉ xem / Không ghi dữ liệu',
   read_only_short: 'Chỉ đọc',
@@ -179,6 +182,9 @@ var CBV_WEBAPP_VI_LABELS = {
 
 var CBV_WEBAPP_VI_ROUTE_PAGE_TITLE = {
   '/workspace': 'Trang vận hành hôm nay',
+  '/workspace/role-home': 'Workspace — Theo vai trò',
+  '/workspace/today': 'Workspace — Tổng quan hôm nay',
+  '/workspace/guided': 'Workspace — Hướng dẫn',
   '/home-alert/my-queue': 'Việc cần xử lý của tôi',
   '/home-alert/sla': 'Theo dõi SLA / Quá hạn',
   '/home-alert/timeline': 'Dòng thời gian xử lý',
@@ -203,6 +209,9 @@ function CbvWebAppVi_getRouteLabel(route) {
 function CbvWebAppVi_getNavItems() {
   var pairs = [
     { route: '/workspace', key: 'nav_workspace' },
+    { route: '/workspace/today', key: 'nav_today_ops' },
+    { route: '/workspace/role-home', key: 'nav_role_home' },
+    { route: '/workspace/guided', key: 'nav_guided' },
     { route: '/home-alert/my-queue', key: 'nav_my_queue' },
     { route: '/home-alert/sla', key: 'nav_sla' },
     { route: '/home-alert/timeline', key: 'nav_timeline' },
@@ -322,6 +331,9 @@ function CbvWebAppVi_getWebAppLinks() {
   }
   var routes = [
     { route: '/workspace', purpose: 'Trang vận hành tổng quan', owner: 'WebApp', href: h('/workspace') },
+    { route: '/workspace/today', purpose: 'Tổng quan hôm nay (ưu tiên / SLA)', owner: 'WebApp', href: h('/workspace/today') },
+    { route: '/workspace/role-home', purpose: 'Trang chủ theo vai trò', owner: 'WebApp', href: h('/workspace/role-home') },
+    { route: '/workspace/guided', purpose: 'SOP inline / bước tiếp theo', owner: 'WebApp', href: h('/workspace/guided') },
     { route: '/home-alert/my-queue', purpose: 'Danh sách việc cá nhân', owner: 'WebApp + AppSheet', href: h('/home-alert/my-queue') },
     { route: '/home-alert/sla', purpose: 'Theo dõi SLA / quá hạn', owner: 'WebApp', href: h('/home-alert/sla') },
     { route: '/home-alert/timeline', purpose: 'Diễn biến theo thời gian', owner: 'WebApp', href: h('/home-alert/timeline') },
@@ -419,15 +431,15 @@ function CbvWebAppVi_validate() {
     warnings.push('Canonical URL should start with https://script.google.com/macros/s/ (Phase 96.1)');
   }
 
-  var frozen = ['/workspace', '/home-alert/my-queue', '/home-alert/sla', '/home-alert/timeline', '/home-alert/kanban', '/runtime/health', '/reports', '/admin/reference'];
+  var frozen = ['/workspace', '/workspace/role-home', '/workspace/today', '/workspace/guided', '/home-alert/my-queue', '/home-alert/sla', '/home-alert/timeline', '/home-alert/kanban', '/runtime/health', '/reports', '/admin/reference'];
   for (var i = 0; i < frozen.length; i++) {
     if (!CBV_WEBAPP_VI_ROUTE_PAGE_TITLE[frozen[i]]) {
       errors.push('Missing Vietnamese page title for route: ' + frozen[i]);
     }
   }
 
-  if (CbvWebAppVi_getNavItems().length !== 8) {
-    errors.push('Nav must expose exactly 8 items');
+  if (CbvWebAppVi_getNavItems().length !== 11) {
+    errors.push('Nav must expose exactly 11 items');
   }
 
   var baseFooter = CbvWebAppVi_getSafetyFooter('/workspace');

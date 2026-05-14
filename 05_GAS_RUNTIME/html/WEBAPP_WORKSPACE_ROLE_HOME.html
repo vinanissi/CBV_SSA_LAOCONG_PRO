@@ -1,0 +1,72 @@
+<?!= COMPONENTS ?>
+
+<? var rp = MODEL && MODEL.rolePack ? MODEL.rolePack : { workspaceRole: 'UNKNOWN', source: '', flags: {} }; ?>
+<? var ru = MODEL && MODEL.routeUrls ? MODEL.routeUrls : {}; ?>
+<? var todayUrl = MODEL && MODEL.todayUrl ? MODEL.todayUrl : '#'; ?>
+<? var guidedUrl = MODEL && MODEL.guidedUrl ? MODEL.guidedUrl : '#'; ?>
+<div class="cbv-card">
+  <h3>Trang theo vai trò</h3>
+  <p class="cbv-muted">Chỉ xem — phân luồng hiển thị theo USER_DIRECTORY / whitelist admin (không thay thế AppSheet security).</p>
+  <div class="cbv-kv" style="margin-top:10px">
+    <div class="cbv-muted">Vai trò workspace</div>
+    <div><span class="cbv-badge ok"><?= rp.workspaceRole ?></span></div>
+    <div class="cbv-muted">Nguồn</div>
+    <div><?= rp.source ?></div>
+  </div>
+</div>
+
+<? if (rp.workspaceRole === 'UNKNOWN') { ?>
+  <div id="cbv-empty-state" class="cbv-empty-state cbv-card" style="margin-top:12px">
+    <h4>Chưa xác định vai trò</h4>
+    <p class="cbv-muted">Không tìm thấy email trong USER_DIRECTORY. Bạn vẫn dùng được các trang chỉ xem; hãy liên hệ admin để gán hồ sơ người dùng.</p>
+    <a class="cbv-btn-operational cbv-busy-link" href="<?= ru.myQueue || '#' ?>">Mở My Queue</a>
+    <a class="cbv-btn-operational cbv-busy-link" style="margin-left:8px" href="<?= ru.sla || '#' ?>">Mở SLA</a>
+  </div>
+<? } ?>
+
+<? if (rp.workspaceRole === 'ADMIN' || rp.workspaceRole === 'OWNER') { ?>
+  <div class="cbv-card" style="margin-top:12px">
+    <h4>Admin / Owner</h4>
+    <p class="cbv-muted">Tóm tắt sức khỏe runtime, cảnh báo, lối tắt Test Console (trên Google Sheet).</p>
+    <div class="cbv-row" style="margin-top:10px">
+      <a class="cbv-btn-operational cbv-busy-link" href="<?= ru.runtimeHealth || '#' ?>">Runtime health</a>
+      <a class="cbv-btn-operational cbv-busy-link" href="<?= ru.reports || '#' ?>">Reports</a>
+      <a class="cbv-btn-operational cbv-busy-link" href="<?= ru.sla || '#' ?>">SLA</a>
+    </div>
+  </div>
+<? } ?>
+
+<? if (rp.workspaceRole === 'SUPERVISOR') { ?>
+  <div class="cbv-card" style="margin-top:12px">
+    <h4>Supervisor</h4>
+    <p class="cbv-muted">Ưu tiên duyệt, mục bị chặn, SLA — mở Hôm nay hoặc SLA.</p>
+    <div class="cbv-row" style="margin-top:10px">
+      <a class="cbv-btn-operational cbv-busy-link" href="<?= todayUrl ?>">Today dashboard</a>
+      <a class="cbv-btn-operational cbv-busy-link" href="<?= ru.myQueue || '#' ?>">My Queue</a>
+      <a class="cbv-btn-operational cbv-busy-link" href="<?= ru.sla || '#' ?>">SLA</a>
+    </div>
+  </div>
+<? } ?>
+
+<? if (rp.workspaceRole === 'TECHNICAL') { ?>
+  <div class="cbv-card" style="margin-top:12px">
+    <h4>Kỹ thuật</h4>
+    <p class="cbv-muted">Runtime, queue đọc trước, Test Console trên Sheet.</p>
+    <div class="cbv-row" style="margin-top:10px">
+      <a class="cbv-btn-operational cbv-busy-link" href="<?= ru.runtimeHealth || '#' ?>">Runtime</a>
+      <a class="cbv-btn-operational cbv-busy-link" href="<?= ru.myQueue || '#' ?>">Queue</a>
+      <a class="cbv-btn-operational cbv-busy-link" href="<?= ru.reports || '#' ?>">Reports</a>
+    </div>
+  </div>
+<? } ?>
+
+<? if (rp.workspaceRole === 'STAFF') { ?>
+  <div class="cbv-card" style="margin-top:12px">
+    <h4>Nhân viên vận hành</h4>
+    <p class="cbv-muted">Việc hôm nay và bước tiếp theo trên queue; không hiển thị chi tiết kỹ thuật.</p>
+    <div class="cbv-row" style="margin-top:10px">
+      <a class="cbv-btn-operational cbv-busy-link" href="<?= ru.myQueue || '#' ?>">My Queue</a>
+      <a class="cbv-btn-operational cbv-busy-link" href="<?= guidedUrl ?>">Hướng dẫn</a>
+    </div>
+  </div>
+<? } ?>

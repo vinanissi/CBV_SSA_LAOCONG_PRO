@@ -18,6 +18,42 @@ function CbvWebAppWorkspace_routeRegistry() {
       notes: 'Home operational workspace (read-first).'
     },
     {
+      route: '/workspace/role-home',
+      screenCode: 'WORKSPACE_ROLE_HOME',
+      title: 'Workspace — Role home',
+      pageType: CBV_WEBAPP_WS_PAGE_TYPES.ROLE_HOME,
+      requiredRole: '*',
+      dataSourceSheet: '',
+      mode: CBV_WEBAPP_WS_MODES.READ_FIRST,
+      isEnabled: true,
+      isPilotReady: true,
+      notes: 'Milestone 01 — role-based landing (read-first).'
+    },
+    {
+      route: '/workspace/today',
+      screenCode: 'WORKSPACE_TODAY_OPS',
+      title: 'Workspace — Today',
+      pageType: CBV_WEBAPP_WS_PAGE_TYPES.TODAY_OPS,
+      requiredRole: '*',
+      dataSourceSheet: CBV_WEBAPP_WS_SHEETS.HOME_ALERT,
+      mode: CBV_WEBAPP_WS_MODES.READ_FIRST,
+      isEnabled: true,
+      isPilotReady: true,
+      notes: 'Milestone 01 — today operations dashboard (read-first aggregates).'
+    },
+    {
+      route: '/workspace/guided',
+      screenCode: 'WORKSPACE_GUIDED_FLOW',
+      title: 'Workspace — Guided',
+      pageType: CBV_WEBAPP_WS_PAGE_TYPES.GUIDED_OPS,
+      requiredRole: '*',
+      dataSourceSheet: '',
+      mode: CBV_WEBAPP_WS_MODES.READ_FIRST,
+      isEnabled: true,
+      isPilotReady: true,
+      notes: 'Milestone 01 — guided SOP inline (read-first).'
+    },
+    {
       route: '/home-alert/my-queue',
       screenCode: 'HOME_ALERT_MY_QUEUE',
       title: 'HOME_ALERT — My Queue',

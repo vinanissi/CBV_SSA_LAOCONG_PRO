@@ -89,9 +89,9 @@ function CbvWebAppViUx_TestConsole_run() {
 
   try {
     var nav = CbvWebAppVi_getNavItems();
-    var navOk = Array.isArray(nav) && nav.length === 8 && nav[0].label === 'Trang chủ';
+    var navOk = Array.isArray(nav) && nav.length === 11 && nav[0].label === 'Trang chủ';
     addCheck('NAV_VI', navOk, navOk ? 'OK' : 'ERROR',
-      'Vietnamese nav labels present (8 items, first = Trang chủ).', { first: nav && nav[0] ? nav[0].label : '' });
+      'Vietnamese nav labels present (11 items, first = Trang chủ).', { first: nav && nav[0] ? nav[0].label : '' });
     var h0 = nav && nav[0] ? String(nav[0].href || '') : '';
     var absNav = h0.indexOf('https://') === 0 && h0.indexOf('?route=') >= 0 && h0.indexOf('googleusercontent.com') < 0;
     addCheck('NAV_HREF_ABSOLUTE', absNav, absNav ? 'OK' : 'WARNING',
@@ -120,8 +120,8 @@ function CbvWebAppViUx_TestConsole_run() {
       noGu ? 'Canonical URL does not use googleusercontent.com.' : 'Forbidden: googleusercontent in canonical URL.', { url: canon });
     addCheck('CANONICAL_EXEC', hasExec, hasExec ? 'OK' : 'WARNING',
       hasExec ? 'Canonical URL contains /exec.' : 'Canonical URL may be missing /exec suffix.', {});
-    addCheck('ROUTE_LINKS_COUNT', (links.routes || []).length === 8, (links.routes || []).length === 8 ? 'OK' : 'ERROR',
-      'Eight frozen route links documented.', { count: (links.routes || []).length });
+    addCheck('ROUTE_LINKS_COUNT', (links.routes || []).length === 11, (links.routes || []).length === 11 ? 'OK' : 'ERROR',
+      'Eleven frozen route links documented.', { count: (links.routes || []).length });
   } catch (eL) {
     addCheck('CANONICAL_NO_GOOGLEUSERCONTENT', false, 'WARNING', String(eL), {});
   }
@@ -130,7 +130,7 @@ function CbvWebAppViUx_TestConsole_run() {
     if (typeof CbvWebAppWorkspace_routeRegistry === 'function') {
       var reg = CbvWebAppWorkspace_routeRegistry();
       var paths = (reg || []).map(function(r) { return r.route; }).sort().join('|');
-      var expected = '/admin/reference|/home-alert/kanban|/home-alert/my-queue|/home-alert/sla|/home-alert/timeline|/reports|/runtime/health|/workspace';
+      var expected = '/admin/reference|/home-alert/kanban|/home-alert/my-queue|/home-alert/sla|/home-alert/timeline|/reports|/runtime/health|/workspace|/workspace/guided|/workspace/role-home|/workspace/today';
       addCheck('ROUTE_PATHS_UNCHANGED', paths === expected, paths === expected ? 'OK' : 'WARNING',
         paths === expected ? 'Route paths match frozen set.' : 'Route registry paths drifted from expected freeze — verify Phase 94.',
         { paths: paths });

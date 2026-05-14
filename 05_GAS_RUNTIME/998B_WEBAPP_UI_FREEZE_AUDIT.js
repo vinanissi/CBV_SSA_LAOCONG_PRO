@@ -27,6 +27,33 @@ var CBV_WEBAPP_UI_FREEZE_ROUTES = [
     requiredRole: '*'
   },
   {
+    route: '/workspace/role-home',
+    owner: 'WebApp',
+    mode: 'READ_FIRST',
+    status: 'PILOT',
+    page: 'Role-based home',
+    expectedRenderer: 'CbvWebAppOpUx_renderRoleHomePage_',
+    requiredRole: '*'
+  },
+  {
+    route: '/workspace/today',
+    owner: 'WebApp',
+    mode: 'READ_FIRST',
+    status: 'PILOT',
+    page: 'Today operations',
+    expectedRenderer: 'CbvWebAppOpUx_renderTodayPage_',
+    requiredRole: '*'
+  },
+  {
+    route: '/workspace/guided',
+    owner: 'WebApp',
+    mode: 'READ_FIRST',
+    status: 'PILOT',
+    page: 'Guided SOP',
+    expectedRenderer: 'CbvWebAppOpUx_renderGuidedPage_',
+    requiredRole: '*'
+  },
+  {
     route: '/home-alert/my-queue',
     owner: 'WebApp + AppSheet lightweight shell',
     mode: 'READ_FIRST',

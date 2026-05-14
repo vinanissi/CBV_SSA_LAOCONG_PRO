@@ -73,6 +73,9 @@ var CBV_WEBAPP_STAFF_TRIAL_DECISIONS = [
 
 var CBV_WEBAPP_STAFF_TRIAL_FROZEN_ROUTES = [
   '/workspace',
+  '/workspace/role-home',
+  '/workspace/today',
+  '/workspace/guided',
   '/home-alert/my-queue',
   '/home-alert/sla',
   '/home-alert/timeline',

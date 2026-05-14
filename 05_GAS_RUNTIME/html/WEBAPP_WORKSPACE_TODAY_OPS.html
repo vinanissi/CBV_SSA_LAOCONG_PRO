@@ -1,0 +1,65 @@
+<?!= COMPONENTS ?>
+
+<? var t = MODEL && MODEL.today ? MODEL.today : { summary: {}, items: [], runtimeAlerts: [] }; ?>
+<? var ru = MODEL && MODEL.routeUrls ? MODEL.routeUrls : {}; ?>
+<? var s = t.summary || {}; ?>
+
+<div class="cbv-card">
+  <h3>Tổng quan hôm nay (read-first)</h3>
+  <p class="cbv-muted">Gom từ pilot totals + queue; không bịa dữ liệu production.</p>
+</div>
+
+<div class="cbv-row" style="margin-top:12px">
+  <div class="cbv-card" style="flex:1;min-width:140px">
+    <div class="cbv-muted">My queue (bạn)</div>
+    <div style="font-size:22px;font-weight:800"><?= s.pendingQueue !== undefined ? s.pendingQueue : 0 ?></div>
+  </div>
+  <div class="cbv-card" style="flex:1;min-width:140px">
+    <div class="cbv-muted">Blocked</div>
+    <div style="font-size:22px;font-weight:800"><?= s.blocked !== undefined ? s.blocked : 0 ?></div>
+  </div>
+  <div class="cbv-card" style="flex:1;min-width:140px">
+    <div class="cbv-muted">Breached</div>
+    <div style="font-size:22px;font-weight:800"><?= s.breached !== undefined ? s.breached : 0 ?></div>
+  </div>
+  <div class="cbv-card" style="flex:1;min-width:140px">
+    <div class="cbv-muted">Escalated</div>
+    <div style="font-size:22px;font-weight:800"><?= s.escalated !== undefined ? s.escalated : 0 ?></div>
+  </div>
+</div>
+
+<? if (!t.items || !t.items.length) { ?>
+  <div id="cbv-empty-state" class="cbv-empty-state cbv-card" style="margin-top:12px">
+    <h4>Không có mục ưu tiên tự động</h4>
+    <p class="cbv-muted">Dữ liệu trống hoặc không đủ cột — mở queue/SLA để rà thủ công.</p>
+    <a class="cbv-btn-operational cbv-busy-link" href="<?= ru.myQueue || '#' ?>">Mở My Queue</a>
+    <a class="cbv-btn-operational cbv-busy-link" style="margin-left:8px" href="<?= ru.sla || '#' ?>">Mở SLA</a>
+  </div>
+<? } else { ?>
+  <div class="cbv-card" style="margin-top:12px">
+    <h4>Cần xử lý / SLA</h4>
+    <div class="cbv-muted" style="margin-bottom:8px">Phân loại: CRITICAL / HIGH / NORMAL — SLA_WARNING / SLA_OVERDUE / BLOCKED_TOO_LONG</div>
+    <? for (var i = 0; i < t.items.length; i++) { ?>
+      <? var it = t.items[i]; ?>
+      <div class="cbv-card" style="margin-top:8px;border-style:dashed">
+        <div><span class="cbv-badge warn"><?= it.priority ?></span> <span class="cbv-badge"><?= it.slaType ?></span></div>
+        <div style="font-weight:700;margin-top:6px"><?= it.title ?></div>
+        <div class="cbv-muted"><?= it.detail ?></div>
+        <div style="margin-top:8px">
+          <a class="cbv-btn-operational cbv-busy-link" href="<?= it.ctaHref || '#' ?>"><?= it.ctaLabel ?></a>
+        </div>
+      </div>
+    <? } ?>
+  </div>
+<? } ?>
+
+<? if (t.runtimeAlerts && t.runtimeAlerts.length) { ?>
+  <div class="cbv-card" style="margin-top:12px">
+    <h4>Runtime alerts</h4>
+    <ul>
+      <? for (var j = 0; j < t.runtimeAlerts.length; j++) { ?>
+        <li class="cbv-muted"><?= t.runtimeAlerts[j].text ?></li>
+      <? } ?>
+    </ul>
+  </div>
+<? } ?>

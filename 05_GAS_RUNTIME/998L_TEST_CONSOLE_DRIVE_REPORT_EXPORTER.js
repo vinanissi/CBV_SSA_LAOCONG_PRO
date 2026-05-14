@@ -467,6 +467,82 @@ function CbvTcsDriveReport_exportLatestPhase97ToDrive() {
   return ex;
 }
 
+/**
+ * Milestone 01 — append-only six-file evidence set (same numeric prefix).
+ * Filenames: {NNN}_{tagStem}_REPORT.md|.json|.txt, _EVIDENCE.html, _AI_HANDOFF.md, _MANIFEST.json
+ */
+function CbvTcsDriveReport_exportMilestoneFullTestBundle(mainReport, options) {
+  var warnings = [];
+  var errors = [];
+  var files = [];
+  var folderId = CBV_TCS_DRIVE_REPORT_FOLDER_ID;
+  var opt = options || {};
+  var tagStem = CbvTcsDriveReport__sanitizePart_(opt.tagStem || 'MILESTONE_01_FULL_TEST', 60);
+
+  if (!mainReport || typeof mainReport !== 'object') {
+    return CbvTcsDriveReport__out_(false, folderId, files, warnings, ['mainReport must be an object']);
+  }
+
+  try {
+    if (typeof DriveApp === 'undefined') {
+      return CbvTcsDriveReport__out_(false, folderId, files, warnings, ['DriveApp unavailable']);
+    }
+    var folder = DriveApp.getFolderById(folderId);
+    var scan = CbvTcsDriveReport__scanMaxSeq_(folder);
+    if (scan.error) warnings.push('BUNDLE_FOLDER_SCAN: ' + scan.error);
+    var nextSeq = scan.max + 1;
+    if (nextSeq < 0) nextSeq = 0;
+    if (nextSeq > 999) {
+      warnings.push('BUNDLE_SEQ_WRAP');
+      nextSeq = 0;
+    }
+    var seq3 = ('000' + nextSeq).slice(-3);
+
+    function writeFile(suffix, ext, body, mime) {
+      var name = CbvTcsDriveReport__uniqueName_(folder, seq3 + '_' + tagStem + '_' + suffix + '.' + ext);
+      var blob = Utilities.newBlob(String(body || ''), mime || 'text/plain', name);
+      var f = folder.createFile(blob);
+      files.push({ name: f.getName(), fileId: f.getId(), url: f.getUrl(), mimeType: f.getMimeType(), role: suffix + '.' + ext });
+    }
+
+    var mdBody = (typeof CbvTcsArtifactRegistry_buildMarkdownMirror === 'function')
+      ? CbvTcsArtifactRegistry_buildMarkdownMirror(mainReport, { folderId: folderId, allFiles: [], exporterVersion: 'MILESTONE_01_BUNDLE' })
+      : CbvTcsDriveReport__toMarkdown_(mainReport);
+    var reportTxt = (typeof CbvTcsArtifactRegistry_buildPlainTextMirror === 'function')
+      ? CbvTcsArtifactRegistry_buildPlainTextMirror(mainReport)
+      : JSON.stringify(mainReport, null, 2);
+
+    writeFile('REPORT', 'md', mdBody, 'text/plain');
+    writeFile('REPORT', 'json', JSON.stringify(mainReport, null, 2), 'application/json');
+    writeFile('REPORT', 'txt', reportTxt, 'text/plain');
+
+    var handoffMd = String(opt.aiHandoffMarkdown || ('# AI Handoff — Milestone 01\n\n- traceId: `' + String(mainReport.traceId || '') + '`\n- status: `' + String(mainReport.status || '') + '`\n- nextStep: ' + String(mainReport.nextStep || '') + '\n'));
+    writeFile('AI_HANDOFF', 'md', handoffMd, 'text/plain');
+
+    var chk = JSON.stringify(mainReport.checks || [], null, 2);
+    var evidenceHtml = String(opt.evidenceHtml || ('<!DOCTYPE html><html><head><meta charset="utf-8"><title>MILESTONE_01 Evidence</title></head><body><h1>Checks</h1><pre>' +
+      chk.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</pre></body></html>'));
+    writeFile('EVIDENCE', 'html', evidenceHtml, 'text/html');
+
+    var manifest = {
+      contractVersion: 'CBV_TCS_V1',
+      tagStem: tagStem,
+      seq: seq3,
+      traceId: String(mainReport.traceId || ''),
+      createdAt: new Date().toISOString(),
+      files: files.map(function (f) { return { name: f.name, id: f.fileId, url: f.url }; }),
+      testSuite: String(mainReport.testSuite || ''),
+      status: String(mainReport.status || '')
+    };
+    writeFile('MANIFEST', 'json', JSON.stringify(manifest, null, 2), 'application/json');
+
+    return CbvTcsDriveReport__out_(true, folderId, files, warnings, errors);
+  } catch (e) {
+    errors.push(e && e.message ? e.message : String(e));
+    return CbvTcsDriveReport__out_(false, folderId, files, warnings, errors);
+  }
+}
+
 function CbvTcsDriveReport_TestConsole_copyLatestResult() {
   if (typeof SpreadsheetApp === 'undefined' || !SpreadsheetApp.getUi) {
     return { ok: false, message: 'UI unavailable.' };

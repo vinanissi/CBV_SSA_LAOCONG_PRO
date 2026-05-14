@@ -1,0 +1,27 @@
+<?!= COMPONENTS ?>
+
+<? var rp = MODEL && MODEL.rolePack ? MODEL.rolePack : { workspaceRole: 'UNKNOWN' }; ?>
+<? var steps = MODEL && MODEL.steps ? MODEL.steps : []; ?>
+
+<div class="cbv-card">
+  <h3>Hướng dẫn vận hành (SOP inline)</h3>
+  <p class="cbv-muted">Vai trò: <strong><?= rp.workspaceRole ?></strong> — các bước gợi ý; thao tác ghi qua AppSheet.</p>
+</div>
+
+<? if (!steps.length) { ?>
+  <div id="cbv-empty-state" class="cbv-empty-state cbv-card" style="margin-top:12px">
+    <p class="cbv-muted">Chưa có bước gợi ý.</p>
+  </div>
+<? } else { ?>
+  <? for (var i = 0; i < steps.length; i++) { ?>
+    <? var st = steps[i]; ?>
+    <div class="cbv-card" style="margin-top:10px">
+      <div class="cbv-badge ok">Bước <?= st.step ?></div>
+      <h4 style="margin:8px 0 4px 0"><?= st.title ?></h4>
+      <p class="cbv-muted"><?= st.body ?></p>
+      <div style="margin-top:8px">
+        <a class="cbv-btn-operational cbv-busy-link" href="<?= st.ctaHref || '#' ?>"><?= st.ctaLabel ?></a>
+      </div>
+    </div>
+  <? } ?>
+<? } ?>

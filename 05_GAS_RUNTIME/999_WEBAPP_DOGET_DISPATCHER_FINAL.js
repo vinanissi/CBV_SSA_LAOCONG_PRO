@@ -32,7 +32,7 @@ function doGet(e) {
       ok: false,
       code: 'GET_NOT_SUPPORTED',
       handler: '999_WEBAPP_DOGET_DISPATCHER_FINAL',
-      supported: ['?route=/workspace', '?route=workspace', '?route=/home-alert/my-queue', '?route=/home-alert/sla', '?path=/workspace', '?action=ping']
+      supported: ['?route=/workspace', '?route=workspace', '?route=/workspace/role-home', '?route=/workspace/today', '?route=/workspace/guided', '?route=/home-alert/my-queue', '?route=/home-alert/sla', '?path=/workspace', '?action=ping']
     }))
     .setMimeType(ContentService.MimeType.JSON);
 }
