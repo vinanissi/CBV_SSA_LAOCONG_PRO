@@ -106,6 +106,41 @@ function CbvTcsMilestone03DailyOp__viValidateDetail_(vu) {
   };
 }
 
+function CbvTcsMilestone03__snippetSafe_(s, maxLen) {
+  var t = String(s || '');
+  var m = typeof maxLen === 'number' ? maxLen : 300;
+  if (t.length <= m) return t;
+  return t.substring(0, m) + '…';
+}
+
+/**
+ * Detect canonical route in nav HTML: data-route (preferred), encoded ?route= value, or raw path substring.
+ */
+function CbvTcsMilestone03__htmlSignalsRoute_(html, routePath) {
+  var h = String(html || '');
+  var r = String(routePath || '');
+  var out = { ok: false, mode: 'none', encodedSample: '' };
+  if (!r) return out;
+  if (h.indexOf('data-route="' + r + '"') >= 0) {
+    out.ok = true;
+    out.mode = 'data-route';
+    return out;
+  }
+  var enc = encodeURIComponent(r);
+  out.encodedSample = enc;
+  if (h.indexOf(enc) >= 0) {
+    out.ok = true;
+    out.mode = 'encoded-url';
+    return out;
+  }
+  if (h.indexOf(r) >= 0) {
+    out.ok = true;
+    out.mode = 'raw-route';
+    return out;
+  }
+  return out;
+}
+
 /**
  * One-click Milestone 03 daily operation verification + Drive 6-file bundle.
  */
@@ -165,13 +200,25 @@ function CbvTcsMilestone03DailyOp_TestConsole_runFull() {
     sourceModule: 'HOME_ALERT',
     dueAt: ''
   };
+  var cardHtml = '';
   try {
-    var cardHtml = CbvDailyOp_buildTaskCardV2Html_(probeTask);
+    cardHtml = CbvDailyOp_buildTaskCardV2Html_(probeTask);
     var mk = ['cbv-daily-task-card', 'cbv-daily-primary-action', 'cbv-daily-secondary-action', 'cbv-daily-priority-badge', 'cbv-daily-sla-badge', 'cbv-daily-next-action'];
     var miss = mk.filter(function (x) { return cardHtml.indexOf(x) < 0; });
-    addCheck('TASK_CARD_MARKERS', miss.length === 0, miss.length ? 'ERROR' : 'OK', 'Task card V2 markers', { missing: miss });
+    var cardOk = miss.length === 0;
+    addCheck('TASK_CARD_MARKERS', cardOk, cardOk ? 'OK' : 'ERROR', 'Task card V2 markers', {
+      missing: miss,
+      htmlLen: cardHtml.length,
+      exception: '',
+      probeTaskId: probeTask.taskId
+    });
   } catch (eC) {
-    addCheck('TASK_CARD_MARKERS', false, 'ERROR', String(eC), {});
+    addCheck('TASK_CARD_MARKERS', false, 'ERROR', 'Task card V2 markers', {
+      missing: ['(exception)'],
+      htmlLen: String(cardHtml || '').length,
+      exception: eC && eC.message ? eC.message : String(eC),
+      probeTaskId: probeTask.taskId
+    });
   }
 
   try {
@@ -185,16 +232,37 @@ function CbvTcsMilestone03DailyOp_TestConsole_runFull() {
   try {
     var pri = (typeof CbvWebAppVi_buildPrimaryNavHtml_ === 'function') ? CbvWebAppVi_buildPrimaryNavHtml_('/workspace/daily') : '';
     var sec = (typeof CbvWebAppVi_buildSecondaryNavHtml_ === 'function') ? CbvWebAppVi_buildSecondaryNavHtml_('/workspace/daily') : '';
-    var hasPri = pri.indexOf('cbv-primary-nav') >= 0 && pri.indexOf('/workspace/daily') >= 0;
-    var hasSec = sec.indexOf('cbv-secondary-quick-links') >= 0 && sec.indexOf('/home-alert/sla') >= 0;
-    var noDup = pri.indexOf('/home-alert/sla') < 0;
-    addCheck('NAV_PRIMARY', hasPri, hasPri ? 'OK' : 'ERROR', 'Primary nav contains Daily', { len: pri.length });
-    addCheck('NAV_SECONDARY', hasSec, hasSec ? 'OK' : 'ERROR', 'Secondary quick links include SLA', { len: sec.length });
-    addCheck('NAV_NO_DUP_SLA', noDup, noDup ? 'OK' : 'ERROR', 'SLA not duplicated in primary strip', {});
+    var dailySig = CbvTcsMilestone03__htmlSignalsRoute_(pri, '/workspace/daily');
+    var slaSig = CbvTcsMilestone03__htmlSignalsRoute_(sec, '/home-alert/sla');
+    var hasPrimaryNav = pri.indexOf('cbv-primary-nav') >= 0;
+    var hasSecondaryNav = sec.indexOf('cbv-secondary-quick-links') >= 0;
+    var hasPriOk = hasPrimaryNav && dailySig.ok;
+    var hasSecOk = hasSecondaryNav && slaSig.ok;
+    var noDup = pri.indexOf('/home-alert/sla') < 0 && pri.indexOf(encodeURIComponent('/home-alert/sla')) < 0 && pri.indexOf('data-route="/home-alert/sla"') < 0;
     var staffMark = pri.indexOf('cbv-staff-default-daily') >= 0;
+    var priFailDetail = {
+      primaryLen: pri.length,
+      hasPrimaryNav: hasPrimaryNav,
+      hasDailyRoute: dailySig.ok,
+      hasDailyMarker: staffMark,
+      acceptedMode: dailySig.mode,
+      encodedSample: dailySig.encodedSample || encodeURIComponent('/workspace/daily')
+    };
+    if (!hasPriOk) priFailDetail.snippetSafe = CbvTcsMilestone03__snippetSafe_(pri, 300);
+    addCheck('NAV_PRIMARY', hasPriOk, hasPriOk ? 'OK' : 'ERROR', 'Primary nav exposes Daily route (data-route | encoded | raw)', priFailDetail);
+    var secFailDetail = {
+      secondaryLen: sec.length,
+      hasSecondaryNav: hasSecondaryNav,
+      hasSlaRoute: slaSig.ok,
+      acceptedMode: slaSig.mode,
+      encodedSample: slaSig.encodedSample || encodeURIComponent('/home-alert/sla')
+    };
+    if (!hasSecOk) secFailDetail.snippetSafe = CbvTcsMilestone03__snippetSafe_(sec, 300);
+    addCheck('NAV_SECONDARY', hasSecOk, hasSecOk ? 'OK' : 'ERROR', 'Secondary quick links expose SLA route (data-route | encoded | raw)', secFailDetail);
+    addCheck('NAV_NO_DUP_SLA', noDup, noDup ? 'OK' : 'ERROR', 'SLA not duplicated in primary strip', {});
     addCheck('NAV_STAFF_DEFAULT_DAILY', staffMark, staffMark ? 'OK' : 'WARNING', 'Daily link carries staff default marker', {});
   } catch (eNav) {
-    addCheck('NAV_PRIMARY', false, 'ERROR', String(eNav), {});
+    addCheck('NAV_PRIMARY', false, 'ERROR', String(eNav), { exception: String(eNav) });
   }
 
   var probe = (typeof CbvDailyOp_probeDailyMarkersInProject_ === 'function') ? CbvDailyOp_probeDailyMarkersInProject_() : { ok: false, missing: ['probe_fn'] };
@@ -352,7 +420,7 @@ function CbvTcsMilestone03DailyOp_TestConsole_runFull() {
 
       var handoffMd = CbvTcsMilestone03DailyOp__buildAiHandoffMd_(exportDraft, traceId);
       bundleEx = CbvTcsDriveReport_exportMilestoneFullTestBundle(exportDraft, {
-        tagStem: '105_MILESTONE_03_DAILY_OPERATION_FLOW',
+        tagStem: 'MILESTONE_03_DAILY_OPERATION_FLOW',
         aiHandoffMarkdown: handoffMd,
         evidenceHtml: CbvTcsMilestone03DailyOp__buildEvidenceHtml_(exportDraft.checks)
       });

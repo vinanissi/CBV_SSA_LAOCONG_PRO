@@ -285,7 +285,8 @@ function CbvWebAppVi__navBtn_(route, label, activeRoute, extraClass) {
   var ar = String(activeRoute || '');
   var active = ar === route ? ' cbv-action-active' : '';
   var x = String(extraClass || '').trim();
-  return '<a class="cbv-btn-operational cbv-busy-link' + active + (x ? ' ' + x : '') + '" href="' +
+  var dr = String(route || '').replace(/"/g, '&quot;');
+  return '<a class="cbv-btn-operational cbv-busy-link' + active + (x ? ' ' + x : '') + '" data-route="' + dr + '" href="' +
     String(href).replace(/"/g, '&quot;') + '">' + String(label).replace(/</g, '&lt;') + '</a>';
 }
 
@@ -317,7 +318,8 @@ function CbvWebAppVi_buildSecondaryNavHtml_(activeRoute) {
     }
     var ar = String(activeRoute || '');
     var act = ar === q.route ? ' cbv-action-active' : '';
-    out += '<a class="cbv-link' + act + '" href="' + String(href).replace(/"/g, '&quot;') + '">' +
+    var drQ = String(q.route || '').replace(/"/g, '&quot;');
+    out += '<a class="cbv-link' + act + '" data-route="' + drQ + '" href="' + String(href).replace(/"/g, '&quot;') + '">' +
       String(CbvWebAppVi_getLabel(q.key) || q.route).replace(/</g, '&lt;') + '</a>';
   }
   out += '</div></div>';

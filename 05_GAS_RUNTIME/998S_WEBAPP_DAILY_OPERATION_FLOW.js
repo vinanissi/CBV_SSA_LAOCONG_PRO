@@ -170,10 +170,11 @@ function CbvDailyOp_getPrimaryActionForTask_(task) {
 
 function CbvDailyOp_getSecondaryActionsForTask_(task) {
   var t = task || {};
+  var id = String(t.taskId || '').trim();
   var sop = (typeof CbvWebAppOpUx_buildRouteUrl_ === 'function') ? CbvWebAppOpUx_buildRouteUrl_('/workspace/guided') : '/workspace/guided';
   var fb = (typeof CbvWebAppOpUx_buildRouteUrl_ === 'function') ? CbvWebAppOpUx_buildRouteUrl_('/workspace/staff/feedback') : '/workspace/staff/feedback';
-  var stuck = fb + (id ? '?type=STUCK&taskId=' + encodeURIComponent(t.taskId) : '?type=STUCK');
-  var help = fb + (id ? '?type=SUPERVISOR_HELP&taskId=' + encodeURIComponent(t.taskId) : '?type=SUPERVISOR_HELP');
+  var stuck = fb + (id ? '?type=STUCK&taskId=' + encodeURIComponent(id) : '?type=STUCK');
+  var help = fb + (id ? '?type=SUPERVISOR_HELP&taskId=' + encodeURIComponent(id) : '?type=SUPERVISOR_HELP');
   return [
     { key: 'sop', label: 'Xem SOP', href: sop },
     { key: 'stuck', label: 'Báo kẹt', href: stuck },
