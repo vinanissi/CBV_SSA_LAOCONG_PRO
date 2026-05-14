@@ -89,7 +89,8 @@ clasp push --force
 
 ## 15. Commit hash
 
-`da30f19` — `feat(webapp): localize workspace UX to Vietnamese`
+- `da30f19` — `feat(webapp): localize workspace UX to Vietnamese`  
+- `fe7e7fb` — `docs(brain): backfill Phase 96 report commit hash`
 
 ## 16–18. Push / clasp / deploy
 
