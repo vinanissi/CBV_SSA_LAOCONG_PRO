@@ -67,3 +67,43 @@ Two acceptable storage modes:
 2. **Structured doc** (Markdown / Google Doc) — one table per session, columns from this schema.
 
 Whichever storage is chosen, an export to JSON is recommended so that future phases can index past UAT decisions.
+
+---
+
+## 7. Phase 97 — Operational capture sheet `CBV_WEBAPP_UAT_FEEDBACK`
+
+**Source of truth (runtime):** `CbvWebAppStaffTrial_getFeedbackSchema()` trong `05_GAS_RUNTIME/998J_WEBAPP_STAFF_TRIAL_RUNTIME.js`.
+
+Phase **95** (mục 1–6 trên) mô tả **bộ trường scripted UAT** (17 cột, ví dụ `UAT_ID`, `RESULT`, …) dùng cho bảng/log tùy chọn như `WEBAPP_UAT_RESULTS`.  
+Phase **97** thêm **một sheet Google riêng** tên cố định **`CBV_WEBAPP_UAT_FEEDBACK`** với **23 cột** dưới đây — dùng cho staff trial, ghi qua menu/API `CbvWebAppStaffTrial_createFeedback` (chỉ append dòng feedback, **không** ghi TASK_MAIN).
+
+| # | Column | Required (API) | Type / enum | Description |
+|---|--------|----------------|-------------|---------------|
+| 1 | `FEEDBACK_ID` | auto | string | Id duy nhất (sinh tự động, ví dụ `FB-…`). |
+| 2 | `CREATED_AT` | auto | timestamp | Thời điểm tạo dòng. |
+| 3 | `CREATED_BY` | auto nếu có Session | email / id | Người ghi; có thể truyền trong payload. |
+| 4 | `ROLE` | **Yes** | `Admin` · `Supervisor` · `Operator` | Vai trò trial. |
+| 5 | `TRIAL_SESSION_ID` | No | string | Nhóm phiên (ví dụ `S-2026-05-14-OP`). |
+| 6 | `ROUTE` | **Yes** | frozen route hoặc `?action=ping` | Route đang thử. |
+| 7 | `DEVICE_TYPE` | No | string | e.g. Desktop / Tablet / Mobile. |
+| 8 | `SCREEN_SIZE` | No | string | Ghi chú viewport nếu cần. |
+| 9 | `TASK_CONTEXT` | No | string | Ngữ cảnh tác vụ (không bắt buộc mã task). |
+| 10 | `FEEDBACK_TYPE` | **Yes** | `NAVIGATION` · `MOBILE_UI` · `COPY_CONFUSION` · `DATA_CONFUSION` · `PERFORMANCE` · `ACCESS` · `SAFETY` · `OTHER` | Phân loại. |
+| 11 | `SEVERITY` | **Yes** | `LOW` · `MEDIUM` · `HIGH` · `CRITICAL` | Mức độ. |
+| 12 | `TITLE` | **Yes** | string | Tiêu đề ngắn. |
+| 13 | `DESCRIPTION` | No | text | Mô tả chi tiết. |
+| 14 | `EXPECTED_BEHAVIOR` | No | text | Kỳ vọng. |
+| 15 | `ACTUAL_BEHAVIOR` | No | text | Quan sát thực tế. |
+| 16 | `REPRO_STEPS` | No | text | Bước tái hiện. |
+| 17 | `SCREENSHOT_URL` | No | url | Link ảnh minh họa (không nhúng PII nhạy cảm). |
+| 18 | `STATUS` | default `NEW` | `NEW` · `TRIAGED` · `ACCEPTED` · `DEFERRED` · `REJECTED` · `RESOLVED_MANUAL` | Trạng thái xử lý (Phase 97 ưu tiên ghi tay sau này). |
+| 19 | `TRIAGE_OWNER` | No | string | Người nhận xử lý. |
+| 20 | `TRIAGE_NOTE` | No | text | Ghi chú triage. |
+| 21 | `DECISION` | No | `GO` · `GO_WITH_WARNINGS` · `NO_GO` · `NEEDS_FIX` · `NEEDS_MORE_TRIAL` | Quyết định pilot (điền sau review). |
+| 22 | `RELATED_TRACE_ID` | No | string | Trace / report id nếu có. |
+| 23 | `IS_DELETED` | default `FALSE` | `TRUE` / `FALSE` | **Không** xóa vật lý dòng; cờ chỉ mang tính lọc sau này (append-only vật lý). |
+
+**Append-only:** không xóa dòng lịch sử; không cập nhật bảng nghiệp vụ. Cập nhật trạng thái sau này (nếu có) phải có phase/guard riêng — Phase 97 chỉ **capture + đọc + validate**.
+
+**Triage:** `WEBAPP_STAFF_TRIAL_TRIAGE_MATRIX.md`.
+

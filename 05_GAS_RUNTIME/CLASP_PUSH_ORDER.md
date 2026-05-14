@@ -179,6 +179,12 @@ The sequence in `.clasp.json` filePushOrder is the deployment order. **HOME_ALER
 - `998F` / `94` / `98` / pilot + legacy home HTML use `CbvWebAppRouteUrl_build` when loaded so in-app links stay on `script.google.com/macros/.../exec` instead of resolving under `googleusercontent.com`.
 - Load order: **`998H` then `998I` immediately before `96_WEBAPP_DOGET_DISPATCHER.js`** so dispatchers and HTML templates see the helper. `999_WEBAPP_DOGET_DISPATCHER_FINAL.js` **MUST remain absolute last**.
 
+### Phase 97 — Staff Trial execution / feedback capture
+
+- `998J_WEBAPP_STAFF_TRIAL_RUNTIME.js` defines `CbvWebAppStaffTrial_ensureSchema`, `CbvWebAppStaffTrial_getRunbook`, `CbvWebAppStaffTrial_getFeedbackSchema`, `CbvWebAppStaffTrial_getTriageMatrix`, `CbvWebAppStaffTrial_createFeedback` (feedback sheet only), `CbvWebAppStaffTrial_listRecentFeedback`, `CbvWebAppStaffTrial_buildHandoffPrompt`, `CbvWebAppStaffTrial_validate`. Depends on Phase 96.1 (`998H`). **No** TASK_MAIN / business writes.
+- `998K_WEBAPP_STAFF_TRIAL_TEST_CONSOLE.js` provides `CbvWebAppStaffTrial_TestConsole_*` under `🧪 CBV Test Console → Phase 97 — Staff Trial`. CBV_TCS_V1 envelope; persists last report under `CBV_WEBAPP_STAFF_TRIAL_TC_LAST_REPORT_JSON`.
+- Push order: **`998J` then `998K` immediately after `998I`**, before `96_WEBAPP_DOGET_DISPATCHER.js`. `999` stays last.
+
 SHARED layer excerpt (matches push order after file helper):
 
 ```

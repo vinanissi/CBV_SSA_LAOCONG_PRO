@@ -330,7 +330,30 @@ Sau đó nếu cần hiểu sâu: `APPSHEET_HOME_ALERT_INSTALL_GUIDE.md` và `AP
 
 **Routes affected:** none (chỉ cách dựng URL; `?route=` giữ nguyên path).  
 **Artifacts:** `036_*` trong `00_SYSTEM_BRAIN/`.  
-**Next:** Phase 97 — Staff trial execution / feedback capture.
+**Next:** Phase 97 — Staff trial execution / feedback capture (sheet `CBV_WEBAPP_UAT_FEEDBACK` + Test Console `998J`/`998K`).
+
+---
+
+## PHASE 97 — WebApp staff trial execution / feedback capture
+
+**Trạng thái:** Pilot tier — chạy trial nhân sự, ghi feedback append-only, ma trận phân loại, GO / GO_WITH_WARNINGS / NO_GO; **không** mutation nghiệp vụ từ WebApp; **không** xác nhận production.
+
+| Tài liệu / công cụ | Ghi chú |
+|--------------------|--------|
+| `docs/webapp/WEBAPP_STAFF_TRIAL_RUNBOOK_VI.md` | Runbook tiếng Việt (mục tiêu, vai trò, checklist, GO/NO-GO) |
+| `docs/webapp/WEBAPP_UAT_FEEDBACK_SCHEMA.md` | Phase 95 scripted UAT + Phase 97 sheet schema |
+| `docs/webapp/WEBAPP_STAFF_TRIAL_TRIAGE_MATRIX.md` | Ma trận Severity × FEEDBACK_TYPE |
+| `docs/webapp/WEBAPP_PHASE_97_AI_HANDOFF.md` | Prompt AI sau trial |
+| `05_GAS_RUNTIME/998J_WEBAPP_STAFF_TRIAL_RUNTIME.js` | Runtime staff trial + sheet `CBV_WEBAPP_UAT_FEEDBACK` |
+| `05_GAS_RUNTIME/998K_WEBAPP_STAFF_TRIAL_TEST_CONSOLE.js` | Test Console Phase 97 (CBV_TCS_V1) |
+| `00_SYSTEM_BRAIN/000_PROMPTS/097_PHASE_97_STAFF_TRIAL_FEEDBACK_CAPTURE_PROMPT.md` | Prompt archive |
+| `00_SYSTEM_BRAIN/000_REPORTS/097_PHASE_97_STAFF_TRIAL_FEEDBACK_CAPTURE_REPORT.md` | Report |
+| `00_SYSTEM_BRAIN/001_HANDOFF/097_PHASE_97_STAFF_TRIAL_FEEDBACK_CAPTURE_HANDOFF.md` | Handoff |
+| `00_SYSTEM_BRAIN/002_DECISIONS/097_PHASE_97_DECISION_LOG.md` | Decision log (pilot) |
+
+**Routes affected:** none (Phase 94 freeze).  
+**Artifacts:** `097_*` trong `00_SYSTEM_BRAIN/`.  
+**Next:** Triage feedback; optional copy fixes Phase 96 (`998F`); successor phase khi có quyết định governance.
 
 ---
 
