@@ -1,0 +1,32 @@
+<?!= COMPONENTS ?>
+<style>
+  .cbv-exec-focus-shell { max-width: 720px; margin: 0 auto; padding-bottom: 120px; }
+</style>
+<div class="cbv-exec-focus-mode cbv-exec-focus-shell">
+  <div class="cbv-card" style="margin-bottom:12px">
+    <h2 style="margin:0 0 6px 0">Focus</h2>
+    <p class="cbv-muted" style="margin:0;font-size:13px">Chế độ tập trung 1 task · READ_FIRST · không claim / không hoàn tất tự động.</p>
+    <p style="margin-top:10px"><a class="cbv-btn-operational cbv-busy-link cbv-exec-return-daily" href="<?= MODEL.dailyHref ?>">← Quay lại Daily</a></p>
+  </div>
+
+  <? if (!MODEL.focus.hasTask) { ?>
+    <div class="cbv-exec-focus-empty cbv-card cbv-empty-state">
+      <p><strong>Không có task cần focus</strong></p>
+      <p class="cbv-muted">Thêm <code>?taskId=</code> hoặc bổ sung queue HOME_ALERT. Không tạo dữ liệu giả.</p>
+      <p><a class="cbv-btn-operational cbv-busy-link" href="<?= MODEL.dailyHref ?>">Mở Daily</a></p>
+    </div>
+  <? } else { ?>
+    <div class="cbv-exec-focus-task cbv-card">
+      <div class="cbv-exec-focus-reason cbv-muted" style="font-size:13px;margin-bottom:8px">
+        <strong>Vì sao gấp:</strong> <?= MODEL.focus.execution.urgencyExplanation ?>
+      </div>
+      <div class="cbv-exec-focus-next-step" style="font-size:15px;font-weight:700;margin-bottom:10px">
+        Bước tiếp: <?= MODEL.focus.execution.nextAction ?>
+      </div>
+      <div class="cbv-exec-focus-action-stack">
+        <?!= MODEL.cockpitHtml ?>
+      </div>
+    </div>
+  <? } ?>
+</div>
+<!-- Static probe: cbv-exec-focus-mode cbv-exec-focus-task cbv-exec-focus-reason cbv-exec-focus-next-step cbv-exec-focus-action-stack cbv-exec-focus-empty cbv-exec-return-daily -->

@@ -63,6 +63,8 @@ function CbvWebAppWorkspace_render(route, params) {
     page = CbvWebAppOpUx_renderGuidedPage_();
   } else if (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.DAILY_OPERATION_HOME && typeof CbvDailyOp_renderDailyPage_ === 'function') {
     page = CbvDailyOp_renderDailyPage_(params || {});
+  } else if (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.FOCUS_MODE && typeof CbvExecFlow_renderFocusPage_ === 'function') {
+    page = CbvExecFlow_renderFocusPage_(params || {});
   } else if (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.STAFF_TASKS && typeof CbvStaffWorkspace_renderTasksPage_ === 'function') {
     page = CbvStaffWorkspace_renderTasksPage_();
   } else if (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.STAFF_TASK_DETAIL && typeof CbvStaffWorkspace_renderTaskDetailPage_ === 'function') {

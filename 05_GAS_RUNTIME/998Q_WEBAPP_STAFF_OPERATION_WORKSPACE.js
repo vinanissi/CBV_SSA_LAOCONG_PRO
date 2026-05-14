@@ -486,9 +486,22 @@ function CbvStaffWorkspace_renderTaskDetailPage_(params) {
   var taskId = String(p.taskId || p.taskid || '').trim();
   var detail = CbvStaffWorkspace_getTaskDetailModel_(taskId);
   var warnings = [].concat(detail.warnings || []);
+  var bodyInner = '';
+  try {
+    if (typeof CbvExecFlow_renderTaskExecutionBodyHtml_ === 'function') {
+      var ex = CbvExecFlow_renderTaskExecutionBodyHtml_({ taskId: taskId });
+      bodyInner = String((ex && ex.html) || '');
+      warnings = warnings.concat((ex && ex.warnings) || []);
+    } else {
+      bodyInner = CbvStaffWorkspace_buildTaskDetailHtml_(detail);
+    }
+  } catch (eEx) {
+    bodyInner = CbvStaffWorkspace_buildTaskDetailHtml_(detail);
+    warnings.push('EXEC_COCKPIT_FALLBACK: ' + (eEx && eEx.message ? eEx.message : String(eEx)));
+  }
   var model = {
     detail: detail,
-    bodyInner: CbvStaffWorkspace_buildTaskDetailHtml_(detail),
+    bodyInner: bodyInner,
     staffBottomNav: CbvStaffWorkspace_buildStaffBottomNavHtml_('/workspace/staff/task-detail'),
     stickyBar: CbvStaffWorkspace_buildStickyActionBarHtml_('/workspace/staff/task-detail')
   };

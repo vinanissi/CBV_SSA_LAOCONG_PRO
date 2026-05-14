@@ -126,6 +126,54 @@ function CbvWebAppWorkspace_routeRegistry() {
       notes: 'Alias route for task detail.'
     },
     {
+      route: '/workspace/focus',
+      screenCode: 'OPERATION_FOCUS_MODE',
+      title: 'Workspace — Focus',
+      pageType: CBV_WEBAPP_WS_PAGE_TYPES.FOCUS_MODE,
+      requiredRole: '*',
+      dataSourceSheet: CBV_WEBAPP_WS_SHEETS.HOME_ALERT,
+      mode: CBV_WEBAPP_WS_MODES.READ_FIRST,
+      isEnabled: true,
+      isPilotReady: true,
+      notes: 'Milestone 04 — focus execution mode (read-first; optional taskId).'
+    },
+    {
+      route: '/focus',
+      screenCode: 'OPERATION_FOCUS_MODE_ALIAS',
+      title: 'Focus',
+      pageType: CBV_WEBAPP_WS_PAGE_TYPES.FOCUS_MODE,
+      requiredRole: '*',
+      dataSourceSheet: CBV_WEBAPP_WS_SHEETS.HOME_ALERT,
+      mode: CBV_WEBAPP_WS_MODES.READ_FIRST,
+      isEnabled: true,
+      isPilotReady: true,
+      notes: 'Alias for Milestone 04 focus mode.'
+    },
+    {
+      route: '/workspace/execution/task',
+      screenCode: 'EXECUTION_TASK_DETAIL_WS',
+      title: 'Workspace — Execution task',
+      pageType: CBV_WEBAPP_WS_PAGE_TYPES.STAFF_TASK_DETAIL,
+      requiredRole: '*',
+      dataSourceSheet: CBV_WEBAPP_WS_SHEETS.HOME_ALERT,
+      mode: CBV_WEBAPP_WS_MODES.READ_FIRST,
+      isEnabled: true,
+      isPilotReady: true,
+      notes: 'Milestone 04 — alias to task detail execution cockpit (query taskId).'
+    },
+    {
+      route: '/execution/task',
+      screenCode: 'EXECUTION_TASK_DETAIL_ALIAS',
+      title: 'Execution — Task',
+      pageType: CBV_WEBAPP_WS_PAGE_TYPES.STAFF_TASK_DETAIL,
+      requiredRole: '*',
+      dataSourceSheet: CBV_WEBAPP_WS_SHEETS.HOME_ALERT,
+      mode: CBV_WEBAPP_WS_MODES.READ_FIRST,
+      isEnabled: true,
+      isPilotReady: true,
+      notes: 'Alias for execution task detail cockpit.'
+    },
+    {
       route: '/workspace/staff/feedback',
       screenCode: 'STAFF_FEEDBACK',
       title: 'Workspace — Staff feedback',

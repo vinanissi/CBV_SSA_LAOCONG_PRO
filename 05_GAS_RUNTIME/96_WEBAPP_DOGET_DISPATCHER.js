@@ -40,7 +40,7 @@ function CbvWebAppWorkspace__doGetDispatcher96_(e) {
     .createTextOutput(JSON.stringify({
       ok: false,
       code: 'GET_NOT_SUPPORTED',
-      supported: ['?route=/workspace', '?route=workspace', '?route=/workspace/role-home', '?route=/workspace/today', '?route=/workspace/guided', '?route=/workspace/daily', '?route=/daily', '?route=/workspace/staff/tasks', '?route=/staff/tasks', '?route=/workspace/staff/task-detail', '?route=/staff/task-detail', '?route=/workspace/staff/feedback', '?route=/staff/feedback', '?route=/home-alert/my-queue', '?route=/home-alert/sla', '?path=/workspace', '?action=ping']
+      supported: ['?route=/workspace', '?route=workspace', '?route=/workspace/role-home', '?route=/workspace/today', '?route=/workspace/guided', '?route=/workspace/daily', '?route=/daily', '?route=/workspace/focus', '?route=/focus', '?route=/workspace/execution/task', '?route=/execution/task', '?route=/workspace/staff/tasks', '?route=/staff/tasks', '?route=/workspace/staff/task-detail', '?route=/staff/task-detail', '?route=/workspace/staff/feedback', '?route=/staff/feedback', '?route=/home-alert/my-queue', '?route=/home-alert/sla', '?path=/workspace', '?action=ping']
     }))
     .setMimeType(ContentService.MimeType.JSON);
 }
