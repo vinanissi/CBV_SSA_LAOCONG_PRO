@@ -91,6 +91,26 @@ function CbvTcsMilestone04__htmlSignalsRoute_(html, routePath) {
   return out;
 }
 
+function CbvTcsMilestone04__unsafeHitsInHtml_(html, banned) {
+  var lower = String(html || '').toLowerCase();
+  var hits = [];
+  for (var bi = 0; bi < banned.length; bi++) {
+    var tok = String(banned[bi] || '');
+    if (tok && lower.indexOf(tok.toLowerCase()) >= 0) hits.push(tok);
+  }
+  return hits;
+}
+
+function CbvTcsMilestone04__snippetAroundHit_(html, needle) {
+  var h = String(html || '');
+  var n = String(needle || '');
+  if (!n) return '';
+  var idx = h.toLowerCase().indexOf(n.toLowerCase());
+  if (idx < 0) return '';
+  var s = Math.max(0, idx - 80);
+  return h.substring(s, Math.min(h.length, s + 300)).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 function CbvTcsMilestone04__viValidateDetail_(vu) {
   if (!vu) {
     return {
@@ -205,14 +225,31 @@ function CbvTcsMilestone04ExecFlow_TestConsole_runFull() {
   addCheck('EXEC_MARKER_PROBE', probe.ok === true, probe.ok ? 'OK' : 'ERROR', 'Execution/focus HTML marker probe', probe);
 
   try {
+    var banned = ['Hoàn tất', 'Nhận việc', 'Claim task', 'claim task', 'auto-assign', 'auto assign', 'auto resolve', 'auto escalate'];
     var probeT = { taskId: 'TC_SAFE', title: 'Safe probe', status: 'OPEN', priority: 'NORMAL', slaState: '', assignedTo: 'u@test', nextAction: '', sourceModule: 'HOME_ALERT' };
     var stackH = CbvExecFlow_buildActionStackHtml_(probeT);
     var rb = CbvExecFlow_renderTaskExecutionBodyHtml_({ taskId: '' });
-    var joined = String(stackH || '') + String((rb && rb.html) || '');
-    var banned = ['Hoàn tất', 'Nhận việc', 'Claim task', 'claim task', 'auto-assign', 'auto assign', 'auto resolve', 'auto escalate'];
-    var lower = joined.toLowerCase();
-    var hit = banned.filter(function (b) { return lower.indexOf(b.toLowerCase()) >= 0; });
-    addCheck('ACTION_STACK_SAFETY', hit.length === 0, hit.length === 0 ? 'OK' : 'ERROR', 'No complete/claim/auto-mutation CTA copy in stack + cockpit', { hit: hit, len: joined.length });
+    var cockpitHtml = String((rb && rb.html) || '');
+    var fpSafe = CbvExecFlow_renderFocusPage_({});
+    var focusHtml = String((fpSafe && fpSafe.bodyHtml) || '');
+    var zStack = { zone: 'actionStack', hits: CbvTcsMilestone04__unsafeHitsInHtml_(stackH, banned), len: String(stackH || '').length };
+    var zCockpit = { zone: 'cockpit', hits: CbvTcsMilestone04__unsafeHitsInHtml_(cockpitHtml, banned), len: cockpitHtml.length };
+    var zFocus = { zone: 'focus', hits: CbvTcsMilestone04__unsafeHitsInHtml_(focusHtml, banned), len: focusHtml.length };
+    var union = {};
+    var zi;
+    for (zi = 0; zi < zStack.hits.length; zi++) union[zStack.hits[zi]] = true;
+    for (zi = 0; zi < zCockpit.hits.length; zi++) union[zCockpit.hits[zi]] = true;
+    for (zi = 0; zi < zFocus.hits.length; zi++) union[zFocus.hits[zi]] = true;
+    var unsafeHits = Object.keys(union);
+    var pool = String(stackH || '') + '\n---\n' + cockpitHtml + '\n---\n' + focusHtml;
+    var snippetSafe = unsafeHits.length ? CbvTcsMilestone04__snippetAroundHit_(pool, unsafeHits[0]) : '';
+    var safetyOk = unsafeHits.length === 0;
+    addCheck('ACTION_STACK_SAFETY', safetyOk, safetyOk ? 'OK' : 'ERROR', 'No unsafe complete/claim/auto-mutation CTA copy in stack, cockpit, focus', {
+      unsafeHits: unsafeHits,
+      scannedZones: [zStack, zCockpit, zFocus],
+      snippetSafe: snippetSafe,
+      scannedLen: zStack.len + zCockpit.len + zFocus.len
+    });
   } catch (eS) {
     addCheck('ACTION_STACK_SAFETY', false, 'ERROR', String(eS), {});
   }

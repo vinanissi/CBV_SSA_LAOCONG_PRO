@@ -89,7 +89,7 @@ function CbvExecFlow_getOperatorPrompt_(task) {
   return [
     'Bây giờ: ' + na,
     'Nếu kẹt: dùng Báo kẹt / Cần hỗ trợ (chỉ điều hướng, không ghi TASK_MAIN từ WebApp).',
-    'Không tự động giao / hoàn tất / leo thang — thao tác ghi trên AppSheet theo quy trình.'
+    'Không tự động giao việc / kết thúc task / leo thang — thao tác ghi trên AppSheet theo quy trình.'
   ].join(' ');
 }
 
@@ -102,7 +102,7 @@ function CbvExecFlow_buildCognitionGuideHtml_(model) {
     '<h3 class="cbv-exec-why-urgent">Vì sao việc này gấp?</h3><p class="cbv-muted">' + u + '</p>' +
     '<h3 class="cbv-exec-now-do">Bây giờ làm gì?</h3><p class="cbv-muted">' + String(m.nextAction || '—').replace(/</g, '&lt;') + '</p>' +
     '<h3 class="cbv-exec-if-blocked">Nếu không làm được thì bấm gì?</h3><p class="cbv-muted">Báo kẹt hoặc Cần hỗ trợ → form phản hồi an toàn.</p>' +
-    '<h3 class="cbv-exec-safety-note">Không được tự động làm gì?</h3><p class="cbv-exec-safety-note cbv-muted">Không tự giao việc · không tự hoàn tất · không tự leo thang · không claim từ WebApp pilot.</p>' +
+    '<h3 class="cbv-exec-safety-note">Không được tự động làm gì?</h3><p class="cbv-exec-safety-note cbv-muted">Không tự giao việc · không tự kết thúc task · không tự leo thang · không claim từ WebApp pilot.</p>' +
     '<p class="cbv-muted" style="font-size:12px;margin-top:8px">' + p + '</p></aside>'
   );
 }

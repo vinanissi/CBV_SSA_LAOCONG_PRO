@@ -274,7 +274,7 @@ function CbvDailyOp_buildStickyPrimaryHtml_(model) {
     '<div class="cbv-daily-sticky-action" style="position:sticky;top:0;z-index:40;padding:10px 0;background:linear-gradient(180deg,rgba(11,18,32,1),rgba(11,18,32,.88));border-bottom:1px solid #233256">' +
     '<a class="cbv-daily-primary-action cbv-btn-operational cbv-busy-link cbv-action-xl" style="width:100%;box-sizing:border-box;text-align:center" href="' +
     String(href).replace(/"/g, '&quot;') + '">' + String(label).replace(/</g, '&lt;') + '</a>' +
-    '<div class="cbv-muted" style="font-size:12px;margin-top:6px">READ_FIRST · không tự giao / tự hoàn tất / tự leo thang</div></div>'
+    '<div class="cbv-muted" style="font-size:12px;margin-top:6px">READ_FIRST · không tự giao / tự kết thúc task / tự leo thang</div></div>'
   );
 }
 
