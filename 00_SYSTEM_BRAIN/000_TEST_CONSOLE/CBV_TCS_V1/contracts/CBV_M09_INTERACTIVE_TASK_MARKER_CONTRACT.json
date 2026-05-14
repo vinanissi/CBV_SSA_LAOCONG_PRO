@@ -1,0 +1,37 @@
+{
+  "contractId": "CBV_M09_INTERACTIVE_TASK_MARKER_CONTRACT_V1",
+  "description": "Milestone 09 interactive task runtime markers: HTML probe (WEBAPP_STAFF_WORKBOARD) + Test Console 999H + pre-commit must stay aligned.",
+  "probeSelectors": {
+    "htmlAttribute": "data-cbv-marker-probe",
+    "htmlAttributeValue": "1",
+    "probeClass": "cbv-marker-probe"
+  },
+  "requiredMarkers": [
+    "cbv-m09-interactive-task-root",
+    "cbv-m09-clickable-task-card",
+    "cbv-m09-active-task-session",
+    "cbv-m09-task-context-panel",
+    "cbv-m09-task-context-empty",
+    "cbv-m09-task-title-click",
+    "cbv-m09-open-task-action",
+    "cbv-m09-appsheet-detail-action",
+    "cbv-m09-appsheet-form-action",
+    "cbv-m09-appsheet-list-action",
+    "cbv-m09-sop-action",
+    "cbv-m09-quick-note-preview",
+    "cbv-m09-quick-update-safe-disabled",
+    "cbv-m09-action-confirmation",
+    "cbv-m09-task-timeline-preview",
+    "cbv-m09-checklist-preview",
+    "cbv-m09-evidence-placeholder",
+    "cbv-m09-taskid-missing-fallback",
+    "cbv-m09-rowkey-missing-fallback",
+    "cbv-m09-route-query-param-safe",
+    "cbv-m09-empty-state",
+    "cbv-m09-report-envelope"
+  ],
+  "files": {
+    "htmlProbeTemplate": "05_GAS_RUNTIME/html/WEBAPP_STAFF_WORKBOARD.html",
+    "testConsole": "05_GAS_RUNTIME/999H_MILESTONE_09_INTERACTIVE_TASK_TEST_CONSOLE.js"
+  }
+}

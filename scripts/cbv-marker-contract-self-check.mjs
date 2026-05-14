@@ -55,6 +55,19 @@ const CONTRACTS = [
     ),
     htmlRel: path.join('05_GAS_RUNTIME', 'html', 'WEBAPP_STAFF_WORKBOARD.html'),
     zRel: path.join('05_GAS_RUNTIME', '999E_MILESTONE_08_OPERATIONAL_STATE_TEST_CONSOLE.js')
+  },
+  {
+    id: 'M09_INTERACTIVE_TASK',
+    json: path.join(
+      ROOT,
+      '00_SYSTEM_BRAIN',
+      '000_TEST_CONSOLE',
+      'CBV_TCS_V1',
+      'contracts',
+      'CBV_M09_INTERACTIVE_TASK_MARKER_CONTRACT.json'
+    ),
+    htmlRel: path.join('05_GAS_RUNTIME', 'html', 'WEBAPP_STAFF_WORKBOARD.html'),
+    zRel: path.join('05_GAS_RUNTIME', '999H_MILESTONE_09_INTERACTIVE_TASK_TEST_CONSOLE.js')
   }
 ];
 

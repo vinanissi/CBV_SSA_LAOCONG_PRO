@@ -88,6 +88,8 @@ function CbvWebAppWorkspace_render(route, params) {
     page = CbvStaffWorkspace_renderTasksPage_();
   } else if (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.STAFF_WORKBOARD && typeof CbvStaffWorkboard_renderPage_ === 'function') {
     page = CbvStaffWorkboard_renderPage_(params || {});
+  } else if (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.INTERACTIVE_TASK_RUNTIME && typeof CbvInteractiveTaskRuntime_renderPage_ === 'function') {
+    page = CbvInteractiveTaskRuntime_renderPage_(params || {});
   } else if (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.STAFF_TASK_DETAIL && typeof CbvStaffWorkspace_renderTaskDetailPage_ === 'function') {
     page = CbvStaffWorkspace_renderTaskDetailPage_(params || {});
   } else if (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.STAFF_FEEDBACK && typeof CbvStaffWorkspace_renderFeedbackPage_ === 'function') {

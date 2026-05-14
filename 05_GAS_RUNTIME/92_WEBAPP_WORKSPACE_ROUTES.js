@@ -66,6 +66,18 @@ function CbvWebAppWorkspace_routeRegistry() {
       notes: 'Alias for Milestone 06 staff workboard.'
     },
     {
+      route: '/workspace/task-runtime',
+      screenCode: 'INTERACTIVE_TASK_RUNTIME_WS',
+      title: 'Workspace — Task runtime',
+      pageType: CBV_WEBAPP_WS_PAGE_TYPES.INTERACTIVE_TASK_RUNTIME,
+      requiredRole: '*',
+      dataSourceSheet: CBV_WEBAPP_WS_SHEETS.HOME_ALERT,
+      mode: CBV_WEBAPP_WS_MODES.READ_FIRST,
+      isEnabled: true,
+      isPilotReady: true,
+      notes: 'Milestone 09 — interactive task runtime (read-first; query taskId/rowKey/source/mode).'
+    },
+    {
       route: '/workspace/guided',
       screenCode: 'WORKSPACE_GUIDED_FLOW',
       title: 'Workspace — Guided',

@@ -38,7 +38,8 @@ var CBV_WEBAPP_ROUTE_URL_FROZEN = [
   '/workspace/sop',
   '/workspace/today',
   '/workspace/workboard',
-  '/workboard'
+  '/workboard',
+  '/workspace/task-runtime'
 ];
 
 function CbvWebAppRouteUrl__trimExec_(base) {
