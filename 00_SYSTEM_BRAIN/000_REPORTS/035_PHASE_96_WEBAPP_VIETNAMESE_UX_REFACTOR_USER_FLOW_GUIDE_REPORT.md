@@ -89,7 +89,7 @@ clasp push --force
 
 ## 15. Commit hash
 
-`GIT_COMMIT_HASH_PLACEHOLDER` — replace after commit.
+`da30f19` — `feat(webapp): localize workspace UX to Vietnamese`
 
 ## 16–18. Push / clasp / deploy
 
