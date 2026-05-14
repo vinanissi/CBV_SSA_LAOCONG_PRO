@@ -2,7 +2,7 @@
 
 **Date:** 2026-05-14  
 **Phase:** `PHASE_97_2_TEST_ARTIFACT_REGISTRY_MARKDOWN_MIRROR`  
-**Git:** (set after commit)
+**Git:** `b48a645` (`phase 97.2 test artifact registry markdown mirror`)
 
 ## Delivered
 
