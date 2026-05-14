@@ -1,10 +1,20 @@
 <?!= COMPONENTS ?>
 <style>
   .cbv-staff-page { padding-bottom: 110px; }
+  /* Marker probe: visually hidden; must list every class in CBV_WORKBOARD_MARKER_CONTRACT.json */
+  .cbv-marker-probe { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 </style>
 <div class="cbv-staff-page">
   <?!= MODEL.stickyBar ?>
   <?!= MODEL.bodyInner ?>
 </div>
 <?!= MODEL.staffBottomNav ?>
-<div class="cbv-workboard-task-card cbv-workboard-primary-cta cbv-workboard-secondary-cta cbv-workboard-sla-badge cbv-workboard-next-action cbv-workboard-empty-state" style="display:none" aria-hidden="true"></div>
+<!--
+  MARKER CONTRACT: Test Console + pre-commit (scripts/cbv-marker-contract-self-check.mjs) require
+  every marker below on every render (empty queue, no taskId, AppSheet off, route+query).
+  Sync with: 00_SYSTEM_BRAIN/000_TEST_CONSOLE/CBV_TCS_V1/contracts/CBV_WORKBOARD_MARKER_CONTRACT.json
+-->
+<div id="cbv-marker-probe-contract"
+  class="cbv-marker-probe cbv-workboard cbv-workboard-summary cbv-workboard-section cbv-workboard-task-card cbv-workboard-primary-cta cbv-workboard-secondary-cta cbv-workboard-empty-state cbv-workboard-sla-badge cbv-workboard-next-action cbv-workboard-safe-disabled cbv-workboard-mobile-stack cbv-workboard-bottom-nav cbv-workboard-filter-chip cbv-workboard-sticky-urgent cbv-action-xl cbv-thumb-zone cbv-appsheet-link cbv-appsheet-safe-disabled cbv-appsheet-config-status"
+  data-cbv-marker-probe="1"
+  aria-hidden="true"></div>

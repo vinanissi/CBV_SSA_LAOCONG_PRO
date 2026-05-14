@@ -1,0 +1,35 @@
+{
+  "contractId": "CBV_WORKBOARD_MARKER_CONTRACT_V1",
+  "description": "Single source for Milestone 06 workboard markers: HTML probe + Test Console + pre-commit must stay aligned.",
+  "probeSelectors": {
+    "htmlAttribute": "data-cbv-marker-probe",
+    "htmlAttributeValue": "1",
+    "probeClass": "cbv-marker-probe"
+  },
+  "requiredMarkers": [
+    "cbv-workboard",
+    "cbv-workboard-summary",
+    "cbv-workboard-section",
+    "cbv-workboard-task-card",
+    "cbv-workboard-primary-cta",
+    "cbv-workboard-secondary-cta",
+    "cbv-workboard-empty-state",
+    "cbv-workboard-sla-badge",
+    "cbv-workboard-next-action",
+    "cbv-workboard-safe-disabled",
+    "cbv-workboard-mobile-stack",
+    "cbv-workboard-bottom-nav",
+    "cbv-workboard-filter-chip",
+    "cbv-workboard-sticky-urgent",
+    "cbv-action-xl",
+    "cbv-thumb-zone",
+    "cbv-appsheet-link",
+    "cbv-appsheet-safe-disabled",
+    "cbv-appsheet-config-status",
+    "cbv-marker-probe"
+  ],
+  "files": {
+    "htmlProbeTemplate": "05_GAS_RUNTIME/html/WEBAPP_STAFF_WORKBOARD.html",
+    "testConsole": "05_GAS_RUNTIME/998Z_MILESTONE_06_STAFF_WORKBOARD_TEST_CONSOLE.js"
+  }
+}

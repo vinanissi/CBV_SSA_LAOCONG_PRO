@@ -244,9 +244,43 @@ function CbvStaffWorkboard_getSummary_(groups) {
 function CbvStaffWorkboard_getModel_(params) {
   var warnings = [];
   var user = CbvStaffWorkboard__emailLower_();
+  var p = params || {};
+  var ps = String(p.__preflightState || '').toUpperCase();
   var read = CbvStaffWorkboard_readTasks_();
   warnings = warnings.concat(read.warnings || []);
-  var groups = CbvStaffWorkboard_groupTasks_(read.tasks || []);
+  var tasks = (read.tasks || []).slice();
+  if (ps === 'EMPTY_DATA') {
+    tasks = [];
+  } else if (ps === 'HAS_DATA') {
+    tasks.push({
+      taskId: 'PROBE_M06_HAS',
+      title: 'Preflight HAS_DATA',
+      status: 'OPEN',
+      priority: 'HIGH',
+      slaState: 'OK',
+      assignedTo: '',
+      nextAction: '—',
+      sourceModule: 'HOME_ALERT',
+      dueAt: '',
+      correlationHint: 'PROBE_M06_HAS',
+      raw: {}
+    });
+  } else if (ps === 'MISSING_TASKID') {
+    tasks.push({
+      taskId: '',
+      title: 'Preflight MISSING_TASKID',
+      status: 'OPEN',
+      priority: 'NORMAL',
+      slaState: '',
+      assignedTo: '',
+      nextAction: '',
+      sourceModule: 'HOME_ALERT',
+      dueAt: '',
+      correlationHint: '',
+      raw: {}
+    });
+  }
+  var groups = CbvStaffWorkboard_groupTasks_(tasks);
   var counts = CbvStaffWorkboard_getSummary_(groups);
   var ds = (typeof CbvStaffWorkspace_getDataSourceStatus_ === 'function') ? CbvStaffWorkspace_getDataSourceStatus_() : { sources: [], warnings: [] };
   warnings = warnings.concat(ds.warnings || []);
@@ -258,7 +292,8 @@ function CbvStaffWorkboard_getModel_(params) {
     groups: groups,
     warnings: warnings,
     dataSourceStatus: ds,
-    filter: String((params && params.filter) || '').trim()
+    filter: String((params && params.filter) || '').trim(),
+    __preflightState: ps || undefined
   };
 }
 
@@ -306,6 +341,22 @@ function CbvStaffWorkboard__feedbackStuckHref_(taskId) {
     : '/workspace/staff/feedback?taskId=' + encodeURIComponent(id) + '&type=STUCK';
 }
 
+function CbvStaffWorkboard__bodyInnerMarkerFallback_() {
+  return (
+    '<div data-cbv-workboard-marker-fallback="1" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">' +
+    '<article class="cbv-workboard-task-card cbv-card">' +
+    '<div class="cbv-workboard-summary"></div>' +
+    '<section class="cbv-workboard-section">' +
+    '<p class="cbv-workboard-empty-state"></p>' +
+    '<div class="cbv-workboard-sla-badge"></div>' +
+    '<p class="cbv-workboard-next-action"></p>' +
+    '<span class="cbv-workboard-safe-disabled"></span>' +
+    '<a class="cbv-workboard-primary-cta cbv-action-xl" href="#cbv-marker-fallback-noop">.</a>' +
+    '<a class="cbv-workboard-secondary-cta" href="#cbv-marker-fallback-noop">.</a>' +
+    '</section></article></div>'
+  );
+}
+
 function CbvStaffWorkboard_buildProductionTaskCardHtml_(task) {
   var t = task || {};
   var tid = String(t.taskId || '').trim();
@@ -325,11 +376,13 @@ function CbvStaffWorkboard_buildProductionTaskCardHtml_(task) {
   var asLine =
     '<div class="cbv-appsheet-config-status cbv-muted" style="margin-top:8px">' +
     (CbvAppSheetBridge_isConfigured_()
-      ? CbvAppSheetBridge_buildSafeActionHtml_('AppSheet (chi tiết)', appsheetDetail, 'Chưa cấu hình AppSheet link')
+      ? CbvAppSheetBridge_buildSafeActionHtml_('AppSheet (chi tiết)', appsheetDetail, 'Chưa cấu hình AppSheet link') +
+        '<span class="cbv-workboard-safe-disabled" data-cbv-safe-disabled-probe="configured-shell" aria-hidden="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)"></span>'
       : '<span class="cbv-appsheet-safe-disabled">Chưa cấu hình AppSheet link</span>') +
     '</div>';
   return (
     '<article class="cbv-workboard-task-card cbv-card cbv-workboard-mobile-stack" data-task-id="' + tid.replace(/"/g, '&quot;') + '">' +
+    '<span class="cbv-workboard-safe-disabled" data-cbv-safe-disabled-probe="always" aria-hidden="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)"></span>' +
     '<div class="cbv-workboard-sla-badge"><span class="cbv-badge crit">' + sla + '</span> <span class="cbv-badge">' + st + '</span></div>' +
     '<h3 style="margin:8px 0 4px">' + title + '</h3>' +
     '<p class="cbv-workboard-next-action cbv-muted"><strong>Bước tiếp:</strong> ' + nx + '</p>' +
@@ -363,10 +416,12 @@ function CbvStaffWorkboard__sectionHtml_(id, title, tasks, emptyMsg) {
 }
 
 function CbvStaffWorkboard_renderPage_(params) {
-  var model = CbvStaffWorkboard_getModel_(params || {});
+  var p = params || {};
+  var model = CbvStaffWorkboard_getModel_(p);
   var g = model.groups || {};
   var c = model.counts || {};
   var wbBase = (typeof CbvWebAppRouteUrl_build === 'function') ? CbvWebAppRouteUrl_build('/workspace/workboard') : '#';
+  var qProbe = String(p.__preflightState || '').toUpperCase() === 'QUERY_PARAM_ROUTE' ? 'data-cbv-query-param-route-probe="1" ' : '';
   var chips =
     '<div class="cbv-workboard-filter-chip-row" style="display:flex;flex-wrap:wrap;gap:8px;margin:12px 0">' +
     '<a class="cbv-workboard-filter-chip cbv-busy-link" href="' + String(wbBase).replace(/"/g, '&quot;') + '">Tất cả</a>' +
@@ -391,7 +446,8 @@ function CbvStaffWorkboard_renderPage_(params) {
     '</div>';
   var urgentBlock = stickyOpen + CbvStaffWorkboard__sectionHtml_('cbv-wb-urgent', 'Việc cần làm ngay', g.urgent, 'Chưa có việc gấp trong phạm vi queue — kiểm tra nguồn dữ liệu hoặc AppSheet.');
   var bodyInner =
-    '<div class="cbv-workboard cbv-workboard-mobile-stack">' +
+    '<div ' + qProbe + 'class="cbv-workboard cbv-workboard-mobile-stack">' +
+    CbvStaffWorkboard__bodyInnerMarkerFallback_() +
     chips +
     summary +
     urgentBlock +

@@ -1,0 +1,11 @@
+#!/bin/sh
+# CBV marker contract — block commit if probe / Test Console drift.
+# Enable once: git config core.hooksPath .githooks
+ROOT=$(git rev-parse --show-toplevel)
+cd "$ROOT" || exit 1
+if command -v node >/dev/null 2>&1; then
+  node scripts/cbv-marker-contract-self-check.mjs || exit 1
+else
+  echo "cbv-marker-contract: ERROR — node is required for pre-commit self-check." >&2
+  exit 1
+fi

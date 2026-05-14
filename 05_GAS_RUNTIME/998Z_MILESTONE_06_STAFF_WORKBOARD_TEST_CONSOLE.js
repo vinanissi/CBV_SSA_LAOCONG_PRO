@@ -3,8 +3,28 @@
  *
  * Menu: 🧪 CBV Test Console → Run Milestone 06 Staff Workboard Production MVP Test
  *
- * Depends: 998Y, 998L, 998P, 998H, 998F, 998Q, 998W, 998U, 998S, 998O
+ * Depends: 998Y, 999A, 998L, 998P, 998H, 998F, 998Q, 998W, 998U, 998S, 998O
  */
+
+/** M06 — CBV UI Marker Contract (workboard shell + card + mobile); preflight + default page checks. Pre-commit: strings must stay findable in this file for scripts/cbv-marker-contract-self-check.mjs (see also cbv-marker-probe in HTML template). */
+var CBV_TCS_M06_WORKBOARD_UI_MARKERS = [
+  'cbv-workboard',
+  'cbv-workboard-summary',
+  'cbv-workboard-section',
+  'cbv-workboard-task-card',
+  'cbv-workboard-primary-cta',
+  'cbv-workboard-secondary-cta',
+  'cbv-workboard-empty-state',
+  'cbv-workboard-sla-badge',
+  'cbv-workboard-next-action',
+  'cbv-workboard-safe-disabled',
+  'cbv-workboard-mobile-stack',
+  'cbv-workboard-bottom-nav',
+  'cbv-workboard-filter-chip',
+  'cbv-workboard-sticky-urgent',
+  'cbv-action-xl',
+  'cbv-thumb-zone'
+];
 
 var __CBV_TCS_MILESTONE06_TC_LAST_REPORT = null;
 var __CBV_TCS_MILESTONE06_TC_LAST_PROP_KEY = 'CBV_TCS_MILESTONE06_TC_LAST_REPORT_JSON';
@@ -155,6 +175,41 @@ function CbvTcsMilestone06StaffWorkboard_TestConsole_runFull() {
   addCheck('FN_CbvStaffWorkboard_rankTasks_', typeof CbvStaffWorkboard_rankTasks_ === 'function', 'OK', 'CbvStaffWorkboard_rankTasks_', {});
   addCheck('FN_CbvStaffWorkboard_renderPage_', typeof CbvStaffWorkboard_renderPage_ === 'function', 'OK', 'CbvStaffWorkboard_renderPage_', {});
 
+  addCheck('UI_MARKER_PREFLIGHT_RUNTIME', typeof CbvUiMarkerPreflight_runContract_ === 'function', 'OK', 'CbvUiMarkerPreflight_runContract_', {});
+
+  try {
+    var pfStates = ['HAS_DATA', 'EMPTY_DATA', 'APPSHEET_UNCONFIGURED', 'MISSING_TASKID', 'QUERY_PARAM_ROUTE'];
+    var pfRes = CbvUiMarkerPreflight_runContract_({
+      requiredMarkers: CBV_TCS_M06_WORKBOARD_UI_MARKERS,
+      states: pfStates,
+      renderer: function (st) {
+        var pr = { __preflightState: String(st || '') };
+        var pg = CbvStaffWorkboard_renderPage_(pr);
+        return String((pg && pg.bodyHtml) || '');
+      }
+    });
+    var pfOk = pfRes && pfRes.ok === true;
+    addCheck(
+      'WORKBOARD_MARKER_PREFLIGHT',
+      pfOk,
+      pfOk ? 'OK' : 'ERROR',
+      'M06 workboard UI markers in HTML for every probe state (CBV UI Marker Contract Preflight V1)',
+      {
+        requiredMarkers: pfRes.requiredMarkers,
+        foundMarkers: pfRes.foundMarkers,
+        missingMarkers: pfRes.missingMarkers,
+        statesChecked: pfRes.statesChecked,
+        htmlLens: pfRes.htmlLens,
+        htmlLen: pfRes.htmlLen,
+        missingMarkersUnion: pfRes.missingMarkersUnion,
+        warnings: pfRes.warnings || [],
+        errors: pfRes.errors || []
+      }
+    );
+  } catch (ePf) {
+    addCheck('WORKBOARD_MARKER_PREFLIGHT', false, 'ERROR', String(ePf), {});
+  }
+
   try {
     var m0 = CbvStaffWorkboard_getModel_({});
     var g0 = m0.groups || {};
@@ -167,26 +222,8 @@ function CbvTcsMilestone06StaffWorkboard_TestConsole_runFull() {
     addCheck('WORKBOARD_MODEL_GROUPS', false, 'ERROR', String(eM), {});
   }
 
-  var markers = [
-    'cbv-workboard',
-    'cbv-workboard-summary',
-    'cbv-workboard-section',
-    'cbv-workboard-task-card',
-    'cbv-workboard-primary-cta',
-    'cbv-workboard-secondary-cta',
-    'cbv-workboard-empty-state',
-    'cbv-workboard-sla-badge',
-    'cbv-workboard-next-action',
-    'cbv-workboard-safe-disabled'
-  ];
-  var mobileMarkers = [
-    'cbv-workboard-mobile-stack',
-    'cbv-workboard-bottom-nav',
-    'cbv-workboard-filter-chip',
-    'cbv-workboard-sticky-urgent',
-    'cbv-action-xl',
-    'cbv-thumb-zone'
-  ];
+  var markers = CBV_TCS_M06_WORKBOARD_UI_MARKERS.slice(0, 10);
+  var mobileMarkers = CBV_TCS_M06_WORKBOARD_UI_MARKERS.slice(10);
   try {
     var pg = CbvStaffWorkboard_renderPage_({});
     var html = String((pg && pg.bodyHtml) || '');
