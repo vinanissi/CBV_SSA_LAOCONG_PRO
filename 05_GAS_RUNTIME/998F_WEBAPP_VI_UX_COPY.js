@@ -30,6 +30,7 @@ var CBV_WEBAPP_VI_LABELS = {
   nav_daily: 'Daily',
   nav_focus: 'Focus',
   nav_sop: 'SOP dẫn bước',
+  nav_workboard: 'Báo việc',
   nav_staff_feedback: 'Phản hồi',
   read_first_badge: 'READ_FIRST',
   read_first_explain: 'Chỉ xem / Không ghi dữ liệu',
@@ -201,6 +202,7 @@ var CBV_WEBAPP_VI_LABELS = {
 /** Primary staff/ops nav (Milestone 03 — no duplicate of secondary strip). */
 var CBV_WEBAPP_VI_NAV_PRIMARY_PAIRS = [
   { route: '/workspace', key: 'nav_workspace' },
+  { route: '/workspace/workboard', key: 'nav_workboard' },
   { route: '/workspace/daily', key: 'nav_daily' },
   { route: '/workspace/focus', key: 'nav_focus' },
   { route: '/workspace/staff/tasks', key: 'nav_staff_tasks' },
@@ -235,6 +237,8 @@ var CBV_WEBAPP_VI_ROUTE_PAGE_TITLE = {
   '/execution/task': 'Thực thi task',
   '/workspace/role-home': 'Workspace — Theo vai trò',
   '/workspace/today': 'Workspace — Tổng quan hôm nay',
+  '/workspace/workboard': 'Workspace — Báo việc',
+  '/workboard': 'Báo việc',
   '/workspace/guided': 'Workspace — Hướng dẫn',
   '/workspace/sop': 'Workspace — SOP dẫn bước',
   '/sop': 'SOP dẫn bước',
@@ -432,6 +436,8 @@ function CbvWebAppVi_getWebAppLinks() {
   var routes = [
     { route: '/workspace', purpose: 'Trang vận hành tổng quan', owner: 'WebApp', href: h('/workspace') },
     { route: '/workspace/today', purpose: 'Tổng quan hôm nay (ưu tiên / SLA)', owner: 'WebApp', href: h('/workspace/today') },
+    { route: '/workspace/workboard', purpose: 'Báo việc nhân viên (Mốc 06)', owner: 'WebApp', href: h('/workspace/workboard') },
+    { route: '/workboard', purpose: 'Alias báo việc', owner: 'WebApp', href: h('/workboard') },
     { route: '/workspace/daily', purpose: 'Daily — cần làm ngay (task-first)', owner: 'WebApp', href: h('/workspace/daily') },
     { route: '/daily', purpose: 'Alias Daily (cùng màn hình /workspace/daily)', owner: 'WebApp', href: h('/daily') },
     { route: '/workspace/focus', purpose: 'Focus — xử lý tập trung 1 task (Mốc 04)', owner: 'WebApp', href: h('/workspace/focus') },
@@ -553,6 +559,8 @@ function CbvWebAppVi_validate() {
     '/execution/task',
     '/workspace/role-home',
     '/workspace/today',
+    '/workspace/workboard',
+    '/workboard',
     '/workspace/guided',
     '/workspace/sop',
     '/workspace/staff/tasks',

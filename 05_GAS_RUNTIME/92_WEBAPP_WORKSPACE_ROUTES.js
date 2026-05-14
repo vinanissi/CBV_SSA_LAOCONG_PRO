@@ -42,6 +42,30 @@ function CbvWebAppWorkspace_routeRegistry() {
       notes: 'Milestone 01 — today operations dashboard (read-first aggregates).'
     },
     {
+      route: '/workspace/workboard',
+      screenCode: 'STAFF_WORKBOARD_WS',
+      title: 'Workspace — Workboard',
+      pageType: CBV_WEBAPP_WS_PAGE_TYPES.STAFF_WORKBOARD,
+      requiredRole: '*',
+      dataSourceSheet: CBV_WEBAPP_WS_SHEETS.HOME_ALERT,
+      mode: CBV_WEBAPP_WS_MODES.READ_FIRST,
+      isEnabled: true,
+      isPilotReady: true,
+      notes: 'Milestone 06 — staff production workboard (read-first).'
+    },
+    {
+      route: '/workboard',
+      screenCode: 'STAFF_WORKBOARD_ALIAS',
+      title: 'Workboard',
+      pageType: CBV_WEBAPP_WS_PAGE_TYPES.STAFF_WORKBOARD,
+      requiredRole: '*',
+      dataSourceSheet: CBV_WEBAPP_WS_SHEETS.HOME_ALERT,
+      mode: CBV_WEBAPP_WS_MODES.READ_FIRST,
+      isEnabled: true,
+      isPilotReady: true,
+      notes: 'Alias for Milestone 06 staff workboard.'
+    },
+    {
       route: '/workspace/guided',
       screenCode: 'WORKSPACE_GUIDED_FLOW',
       title: 'Workspace — Guided',

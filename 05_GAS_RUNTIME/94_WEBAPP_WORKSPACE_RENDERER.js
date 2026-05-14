@@ -16,20 +16,37 @@ function CbvWebAppWorkspace_doGet(e) {
     return ContentService.createTextOutput(JSON.stringify(payload)).setMimeType(ContentService.MimeType.JSON);
   }
 
-  var route = CbvWebAppWorkspace__resolveRoute_(e);
-  return CbvWebAppWorkspace_render(route, p);
+  var parsed = CbvWebAppWorkspace__parseDoGetRoute_(e);
+  return CbvWebAppWorkspace_render(parsed.route, parsed.params);
+}
+
+/**
+ * Resolve route path + merged query params (M06: `route` may contain inner `?taskId=`).
+ */
+function CbvWebAppWorkspace__parseDoGetRoute_(e) {
+  e = e || {};
+  var p = e.parameter || {};
+  var raw = String(p.route || p.path || '').trim();
+  if (raw && typeof CbvWebAppRoute_parseRouteAndParams_ === 'function') {
+    return CbvWebAppRoute_parseRouteAndParams_(raw, e);
+  }
+  var pi = String(e.pathInfo || '').trim();
+  if (pi) {
+    var rawPi = pi.charAt(0) === '/' ? pi : '/' + pi;
+    if (typeof CbvWebAppRoute_parseRouteAndParams_ === 'function') {
+      return CbvWebAppRoute_parseRouteAndParams_(rawPi, e);
+    }
+    return { route: CbvWebAppRoute_normalizePath_(rawPi), params: {} };
+  }
+  if (typeof CbvWebAppRoute_mergeParams_ === 'function') {
+    return CbvWebAppRoute_mergeParams_(e, { route: '/workspace', params: {} });
+  }
+  return { route: '/workspace', params: {} };
 }
 
 function CbvWebAppWorkspace__resolveRoute_(e) {
-  e = e || {};
-  var p = e.parameter || {};
-  var rt = String(p.route || p.path || '').trim();
-  if (rt) return rt.charAt(0) === '/' ? rt : '/' + rt;
-
-  var pi = String(e.pathInfo || '').trim();
-  if (pi) return pi.charAt(0) === '/' ? pi : '/' + pi;
-
-  return '/workspace';
+  var pr = CbvWebAppWorkspace__parseDoGetRoute_(e);
+  return pr.route;
 }
 
 function CbvWebAppWorkspace_render(route, params) {
@@ -69,6 +86,8 @@ function CbvWebAppWorkspace_render(route, params) {
     page = CbvExecFlow_renderFocusPage_(params || {});
   } else if (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.STAFF_TASKS && typeof CbvStaffWorkspace_renderTasksPage_ === 'function') {
     page = CbvStaffWorkspace_renderTasksPage_();
+  } else if (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.STAFF_WORKBOARD && typeof CbvStaffWorkboard_renderPage_ === 'function') {
+    page = CbvStaffWorkboard_renderPage_(params || {});
   } else if (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.STAFF_TASK_DETAIL && typeof CbvStaffWorkspace_renderTaskDetailPage_ === 'function') {
     page = CbvStaffWorkspace_renderTaskDetailPage_(params || {});
   } else if (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.STAFF_FEEDBACK && typeof CbvStaffWorkspace_renderFeedbackPage_ === 'function') {

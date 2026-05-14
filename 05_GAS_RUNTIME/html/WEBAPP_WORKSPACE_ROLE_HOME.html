@@ -4,6 +4,7 @@
 <? var ru = MODEL && MODEL.routeUrls ? MODEL.routeUrls : {}; ?>
 <? var todayUrl = MODEL && MODEL.todayUrl ? MODEL.todayUrl : '#'; ?>
 <? var guidedUrl = MODEL && MODEL.guidedUrl ? MODEL.guidedUrl : '#'; ?>
+<? var workboardUrl = MODEL && MODEL.workboardUrl ? MODEL.workboardUrl : '#'; ?>
 <div class="cbv-card">
   <h3>Trang theo vai trò</h3>
   <p class="cbv-muted">Chỉ xem — phân luồng hiển thị theo USER_DIRECTORY / whitelist admin (không thay thế AppSheet security).</p>
@@ -65,6 +66,7 @@
     <h4>Nhân viên vận hành</h4>
     <p class="cbv-muted">Việc hôm nay và bước tiếp theo trên queue; không hiển thị chi tiết kỹ thuật.</p>
     <div class="cbv-row" style="margin-top:10px">
+      <a class="cbv-btn-operational cbv-busy-link" href="<?= workboardUrl ?>">Báo việc</a>
       <a class="cbv-btn-operational cbv-busy-link" href="<?= ru.myQueue || '#' ?>">My Queue</a>
       <a class="cbv-btn-operational cbv-busy-link" href="<?= guidedUrl ?>">Hướng dẫn</a>
     </div>

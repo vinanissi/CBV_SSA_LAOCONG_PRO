@@ -28,15 +28,17 @@ var CBV_WEBAPP_ROUTE_URL_FROZEN = [
   '/home-alert/timeline',
   '/reports',
   '/runtime/health',
+  '/sop',
   '/workspace',
   '/workspace/daily',
   '/workspace/execution/task',
   '/workspace/focus',
   '/workspace/guided',
-  '/workspace/sop',
   '/workspace/role-home',
+  '/workspace/sop',
   '/workspace/today',
-  '/sop'
+  '/workspace/workboard',
+  '/workboard'
 ];
 
 function CbvWebAppRouteUrl__trimExec_(base) {
@@ -98,6 +100,8 @@ function CbvWebAppRouteUrl_getRouteMap() {
     focusAlias: '/focus',
     execTaskWs: '/workspace/execution/task',
     execTaskAlias: '/execution/task',
+    workboardWs: '/workspace/workboard',
+    workboardAlias: '/workboard',
     myQueue: '/home-alert/my-queue',
     sla: '/home-alert/sla',
     timeline: '/home-alert/timeline',
@@ -114,6 +118,7 @@ function CbvWebAppRouteUrl_getNavItemsVi() {
     { label: 'Trang chủ', route: m.workspace },
     { label: 'Daily', route: m.dailyHome },
     { label: 'Hôm nay', route: m.todayOps },
+    { label: 'Báo việc', route: m.workboardWs },
     { label: 'Theo vai trò', route: m.roleHome },
     { label: 'Hướng dẫn', route: m.guidedOps },
     { label: 'Việc của tôi', route: m.myQueue },
@@ -166,7 +171,7 @@ function CbvWebAppRouteUrl_validate() {
   }
 
   var m = CbvWebAppRouteUrl_getRouteMap();
-  var keys = ['workspace', 'roleHome', 'todayOps', 'guidedOps', 'guidedSopWs', 'guidedSopAlias', 'dailyHome', 'dailyAlias', 'focusHome', 'focusAlias', 'execTaskWs', 'execTaskAlias', 'myQueue', 'sla', 'timeline', 'kanban', 'runtimeHealth', 'reports', 'adminReference'];
+  var keys = ['workspace', 'roleHome', 'todayOps', 'guidedOps', 'guidedSopWs', 'guidedSopAlias', 'dailyHome', 'dailyAlias', 'focusHome', 'focusAlias', 'execTaskWs', 'execTaskAlias', 'workboardWs', 'workboardAlias', 'myQueue', 'sla', 'timeline', 'kanban', 'runtimeHealth', 'reports', 'adminReference'];
   for (var i = 0; i < keys.length; i++) {
     if (!m[keys[i]]) errors.push('Route map missing key: ' + keys[i]);
   }
@@ -202,4 +207,99 @@ function CbvWebAppRouteUrl_validate() {
   }
 
   return CbvWebAppRouteUrl__out_(errors.length === 0, detail, warnings, errors);
+}
+
+/**
+ * MILESTONE_06 — Parse `route` query value that may embed `?taskId=...` (WebApp READ_FIRST).
+ * Preserves legacy routes when `route` is a plain path (no inner `?`).
+ */
+function CbvWebAppRoute__parseQueryString_(qs) {
+  var out = {};
+  var s = String(qs || '').trim();
+  if (!s) return out;
+  var parts = s.split('&');
+  for (var i = 0; i < parts.length; i++) {
+    var seg = parts[i];
+    if (!seg) continue;
+    var eq = seg.indexOf('=');
+    var k = eq >= 0 ? seg.substring(0, eq) : seg;
+    var v = eq >= 0 ? seg.substring(eq + 1) : '';
+    try {
+      k = decodeURIComponent(k.replace(/\+/g, ' '));
+    } catch (e0) { /* keep */ }
+    try {
+      v = decodeURIComponent(v.replace(/\+/g, ' '));
+    } catch (e1) { /* keep */ }
+    if (k) out[k] = v;
+  }
+  return out;
+}
+
+function CbvWebAppRoute_normalizePath_(route) {
+  return CbvWebAppRouteUrl_normalizeRoute(route);
+}
+
+/**
+ * Merge inner query from `route` string with top-level `e.parameter` (excluding route/path keys).
+ * Top-level wins on duplicate keys.
+ */
+function CbvWebAppRoute_mergeParams_(e, parsed) {
+  e = e || {};
+  var p = e.parameter || {};
+  var inner = (parsed && parsed.params) ? parsed.params : {};
+  var out = {};
+  var k;
+  for (k in inner) {
+    if (Object.prototype.hasOwnProperty.call(inner, k)) {
+      out[k] = inner[k];
+    }
+  }
+  for (var k2 in p) {
+    if (!Object.prototype.hasOwnProperty.call(p, k2)) continue;
+    var lk = String(k2).toLowerCase();
+    if (lk === 'route' || lk === 'path') continue;
+    out[k2] = p[k2];
+  }
+  var rt = CbvWebAppRoute_normalizePath_((parsed && parsed.route) != null ? parsed.route : '');
+  return { route: rt, params: out };
+}
+
+function CbvWebAppRoute_parseRouteAndParams_(rawRoute, e) {
+  var raw = String(rawRoute != null ? rawRoute : '').trim();
+  var guard = 0;
+  while (guard < 5 && raw.indexOf('%') >= 0) {
+    try {
+      var dec = decodeURIComponent(raw);
+      if (dec === raw) break;
+      raw = dec;
+    } catch (ex) {
+      break;
+    }
+    guard++;
+  }
+  var path = raw;
+  var qp = {};
+  var qi = path.indexOf('?');
+  if (qi >= 0) {
+    qp = CbvWebAppRoute__parseQueryString_(path.substring(qi + 1));
+    path = path.substring(0, qi);
+  }
+  path = CbvWebAppRoute_normalizePath_(path);
+  return CbvWebAppRoute_mergeParams_(e, { route: path, params: qp });
+}
+
+/**
+ * Canonical exec URL with `?route=` plus extra top-level query pairs (e.g. `&taskId=`).
+ */
+function CbvWebAppRouteUrl_buildWithQuery(routePath, extraParams) {
+  var base = CbvWebAppRouteUrl_getBaseUrl();
+  var nr = CbvWebAppRouteUrl_normalizeRoute(routePath);
+  var u = base + '?route=' + encodeURIComponent(nr);
+  var q = extraParams || {};
+  for (var k in q) {
+    if (!Object.prototype.hasOwnProperty.call(q, k)) continue;
+    if (q[k] == null || q[k] === '') continue;
+    u += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(String(q[k]));
+  }
+  return u;
 }

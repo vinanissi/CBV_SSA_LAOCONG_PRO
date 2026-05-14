@@ -100,8 +100,8 @@ function CbvWebAppRouteUrl_TestConsole_run() {
 
   try {
     var navVi = CbvWebAppRouteUrl_getNavItemsVi();
-    var okVi = Array.isArray(navVi) && navVi.length === 11 && navVi[0].url && navVi[0].url.indexOf('https://') === 0;
-    addCheck('NAV_VI_ABSOLUTE', okVi, okVi ? 'OK' : 'ERROR', 'Vietnamese nav has 11 absolute https URLs.', { first: navVi && navVi[0] ? navVi[0].url : '' });
+    var okVi = Array.isArray(navVi) && navVi.length === 13 && navVi[0].url && navVi[0].url.indexOf('https://') === 0;
+    addCheck('NAV_VI_ABSOLUTE', okVi, okVi ? 'OK' : 'ERROR', 'Vietnamese nav has 13 absolute https URLs.', { first: navVi && navVi[0] ? navVi[0].url : '' });
   } catch (eN) {
     addCheck('NAV_VI_ABSOLUTE', false, 'WARNING', String(eN), {});
   }
@@ -120,7 +120,7 @@ function CbvWebAppRouteUrl_TestConsole_run() {
     if (typeof CbvWebAppWorkspace_routeRegistry === 'function') {
       var reg = CbvWebAppWorkspace_routeRegistry();
       var paths = (reg || []).map(function (r) { return r.route; }).sort().join('|');
-      var expected = '/admin/reference|/home-alert/kanban|/home-alert/my-queue|/home-alert/sla|/home-alert/timeline|/reports|/runtime/health|/workspace|/workspace/guided|/workspace/role-home|/workspace/today';
+      var expected = '/admin/reference|/daily|/execution/task|/focus|/home-alert/kanban|/home-alert/my-queue|/home-alert/sla|/home-alert/timeline|/reports|/runtime/health|/sop|/staff/feedback|/staff/task-detail|/staff/tasks|/workboard|/workspace|/workspace/daily|/workspace/execution/task|/workspace/focus|/workspace/guided|/workspace/role-home|/workspace/sop|/workspace/staff/feedback|/workspace/staff/task-detail|/workspace/staff/tasks|/workspace/today|/workspace/workboard';
       addCheck('ROUTE_PATHS_UNCHANGED', paths === expected, paths === expected ? 'OK' : 'WARNING',
         paths === expected ? 'Route paths match frozen set.' : 'Route registry drift', { paths: paths });
     } else {

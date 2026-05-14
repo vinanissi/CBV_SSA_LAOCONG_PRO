@@ -161,17 +161,39 @@ function CbvStaffWorkspace_buildTaskCardHtml_(task, detailRoute) {
   var t = task || {};
   var id = String(t.taskId || '').replace(/"/g, '&quot;');
   var path = '/workspace/staff/task-detail';
-  if (t.taskId) path += '?taskId=' + encodeURIComponent(t.taskId);
   var detailHref = path;
+  if (t.taskId && typeof CbvWebAppRouteUrl_buildWithQuery === 'function') {
+    try {
+      detailHref = CbvWebAppRouteUrl_buildWithQuery(path, { taskId: t.taskId });
+    } catch (e0) {
+      detailHref = path + '?taskId=' + encodeURIComponent(t.taskId);
+    }
+  } else if (t.taskId) {
+    detailHref = path + '?taskId=' + encodeURIComponent(t.taskId);
+  }
   if (typeof CbvWebAppOpUx_buildRouteUrl_ === 'function') {
     try {
-      detailHref = CbvWebAppOpUx_buildRouteUrl_(path);
+      if (!t.taskId) detailHref = CbvWebAppOpUx_buildRouteUrl_(path);
     } catch (e1) { /* keep path */ }
   }
-  var sopHref = (typeof CbvWebAppOpUx_buildRouteUrl_ === 'function') ? CbvWebAppOpUx_buildRouteUrl_('/workspace/guided') : '/workspace/guided';
-  var fbBase = (typeof CbvWebAppOpUx_buildRouteUrl_ === 'function') ? CbvWebAppOpUx_buildRouteUrl_('/workspace/staff/feedback') : '/workspace/staff/feedback';
-  var stuckHref = fbBase + (id ? '?type=STUCK&taskId=' + encodeURIComponent(t.taskId) : '?type=STUCK');
-  var helpHref = fbBase + (id ? '?type=SUPERVISOR_HELP&taskId=' + encodeURIComponent(t.taskId) : '?type=SUPERVISOR_HELP');
+  var sopHref = (typeof CbvWebAppRouteUrl_build === 'function') ? CbvWebAppRouteUrl_build('/workspace/sop') : '/workspace/sop';
+  if (t.taskId && typeof CbvWebAppRouteUrl_buildWithQuery === 'function') {
+    try {
+      sopHref = CbvWebAppRouteUrl_buildWithQuery('/workspace/sop', { taskId: t.taskId });
+    } catch (eS) { /* keep */ }
+  }
+  var fbBase = (typeof CbvWebAppRouteUrl_build === 'function') ? CbvWebAppRouteUrl_build('/workspace/staff/feedback') : '/workspace/staff/feedback';
+  var stuckHref = fbBase;
+  var helpHref = fbBase;
+  if (t.taskId && typeof CbvWebAppRouteUrl_buildWithQuery === 'function') {
+    try {
+      stuckHref = CbvWebAppRouteUrl_buildWithQuery('/workspace/staff/feedback', { taskId: t.taskId, type: 'STUCK' });
+      helpHref = CbvWebAppRouteUrl_buildWithQuery('/workspace/staff/feedback', { taskId: t.taskId, type: 'SUPERVISOR_HELP' });
+    } catch (eF) { /* keep base */ }
+  } else if (t.taskId) {
+    stuckHref = fbBase + (fbBase.indexOf('?') >= 0 ? '&' : '?') + 'type=STUCK&taskId=' + encodeURIComponent(t.taskId);
+    helpHref = fbBase + (fbBase.indexOf('?') >= 0 ? '&' : '?') + 'type=SUPERVISOR_HELP&taskId=' + encodeURIComponent(t.taskId);
+  }
   var queueHref = (typeof CbvWebAppOpUx_buildRouteUrl_ === 'function') ? CbvWebAppOpUx_buildRouteUrl_('/home-alert/my-queue') : '/home-alert/my-queue';
 
   var pri = String(t.priority || '—').replace(/</g, '&lt;');
@@ -420,9 +442,17 @@ function CbvStaffWorkspace_buildStaffBottomNavHtml_(activeRoute) {
     var active = ar === route ? ' cbv-action-active' : '';
     return '<a class="cbv-btn-operational cbv-busy-link' + active + '" href="' + String(href).replace(/"/g, '&quot;') + '">' + String(label).replace(/</g, '&lt;') + '</a>';
   }
+  var wbLbl = 'Workboard';
+  if (typeof CbvWebAppVi_getLabel === 'function') {
+    try {
+      var t = CbvWebAppVi_getLabel('nav_workboard');
+      if (t) wbLbl = t;
+    } catch (eL) { /* */ }
+  }
   return (
     '<nav class="cbv-staff-bottom-nav cbv-staff-mobile-stack" aria-label="Staff bottom nav" style="position:fixed;left:0;right:0;bottom:0;padding:12px;background:rgba(11,18,32,.95);border-top:1px solid #233256;z-index:50">' +
     '<div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;max-width:720px;margin:0 auto">' +
+    item('/workspace/workboard', wbLbl) +
     item('/workspace/daily', 'Daily') +
     item('/workspace/staff/tasks', 'Việc') +
     item('/workspace/today', 'Hôm nay') +

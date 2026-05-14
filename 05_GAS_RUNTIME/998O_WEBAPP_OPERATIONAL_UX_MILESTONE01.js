@@ -253,7 +253,8 @@ function CbvWebAppOpUx_renderRoleHomePage_() {
     rolePack: rolePack,
     routeUrls: (typeof CbvWebAppPilotRenderer__routeUrls_ === 'function') ? CbvWebAppPilotRenderer__routeUrls_() : {},
     todayUrl: CbvWebAppOpUx_buildRouteUrl_('/workspace/today'),
-    guidedUrl: CbvWebAppOpUx_buildRouteUrl_('/workspace/guided')
+    guidedUrl: CbvWebAppOpUx_buildRouteUrl_('/workspace/guided'),
+    workboardUrl: CbvWebAppOpUx_buildRouteUrl_('/workspace/workboard')
   };
   try {
     var t = HtmlService.createTemplateFromFile('html/WEBAPP_WORKSPACE_ROLE_HOME');
