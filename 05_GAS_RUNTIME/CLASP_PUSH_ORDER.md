@@ -192,6 +192,13 @@ The sequence in `.clasp.json` filePushOrder is the deployment order. **HOME_ALER
 - Menu: **🧪 CBV Test Console → Phase 97.1 — Drive Report Export**.
 - Push order: **`998L` immediately after `998K`**, before `96_WEBAPP_DOGET_DISPATCHER.js`. `999` stays last.
 
+### Phase 97.2 — Test artifact registry & Markdown mirror
+
+- `998M_TEST_ARTIFACT_REGISTRY_RUNTIME.js` defines append-only sheet `CBV_TEST_ARTIFACT_REGISTRY`, `CbvTcsArtifactRegistry_*` (register per Drive file, find by trace/phase, markdown/plain mirrors, validate).
+- `998N_TEST_ARTIFACT_REGISTRY_TEST_CONSOLE.js` provides Phase 97.2 Test Console (CBV_TCS_V1); menu **Phase 97.2 — Artifact Registry**.
+- `998L` always writes **.json** (`application/json`) + **.md** (`text/plain`); optional `.txt` when `txtFallback: true`; calls `CbvTcsArtifactRegistry_registerExportResult` when `998M` is loaded (registry failures → `ARTIFACT_REGISTRY_WRITE_FAILED` warning only).
+- Push order: **`998M` then `998N` immediately after `998L`**, before `96_WEBAPP_DOGET_DISPATCHER.js`. `999` stays last.
+
 SHARED layer excerpt (matches push order after file helper):
 
 ```

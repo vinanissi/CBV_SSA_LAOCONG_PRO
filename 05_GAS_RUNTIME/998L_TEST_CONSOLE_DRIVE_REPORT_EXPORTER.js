@@ -150,7 +150,7 @@ function CbvTcsDriveReport__toMarkdown_(report) {
  * Export a CBV_TCS_V1 report to Drive (append-only; never overwrites).
  *
  * @param {Object} report - envelope-shaped report
- * @param {Object} options - { phase, testSuite, prefix: '097_1', format: 'json'|'md'|'both' }
+ * @param {Object} options - { phase, testSuite, prefix: '097_1', format: 'json'|'md'|'both' (minimum always writes .json+.md), txtFallback: boolean }
  */
 function CbvTcsDriveReport_export(report, options) {
   var warnings = [];
@@ -163,11 +163,21 @@ function CbvTcsDriveReport_export(report, options) {
   }
 
   var opt = options || {};
-  var format = String(opt.format || 'both').toLowerCase();
+  var format = String(opt.format != null ? opt.format : 'both').toLowerCase();
   if (format !== 'json' && format !== 'md' && format !== 'both') {
-    warnings.push('Unknown format "' + format + '"; using both.');
+    warnings.push('Unknown format "' + format + '"; enforcing minimum .json + .md (both).');
     format = 'both';
   }
+  if (format === 'json') {
+    warnings.push('FORMAT_JSON_FORCES_MD_MIRROR: CBV_TCS requires .json + .md for every export; .md will be created.');
+  }
+  if (format === 'md') {
+    warnings.push('FORMAT_MD_FORCES_JSON_MIRROR: CBV_TCS requires .json + .md for every export; .json will be created.');
+  }
+
+  var wantJson = true;
+  var wantMd = true;
+  var wantTxt = opt.txtFallback === true;
 
   var phase = opt.phase || String(report.phase || 'UNKNOWN_PHASE');
   var testSuite = opt.testSuite || String(report.testSuite || 'UNKNOWN_SUITE');
@@ -198,8 +208,7 @@ function CbvTcsDriveReport_export(report, options) {
 
     var baseStem = seq3 + '_' + sub + '_' + phaseSlug + '_' + stamp + '_' + trace;
 
-    var wantJson = format === 'json' || format === 'both';
-    var wantMd = format === 'md' || format === 'both';
+    var fileRecords = [];
 
     if (wantJson) {
       var jName = CbvTcsDriveReport__uniqueName_(folder, baseStem + '.json');
@@ -207,17 +216,56 @@ function CbvTcsDriveReport_export(report, options) {
       var jBlob = Utilities.newBlob(jBody, 'application/json', jName);
       var jf = folder.createFile(jBlob);
       files.push({ name: jf.getName(), fileId: jf.getId(), url: jf.getUrl(), mimeType: jf.getMimeType() });
+      fileRecords.push({ name: jf.getName(), fileId: jf.getId(), url: jf.getUrl(), mimeType: jf.getMimeType() });
     }
 
     if (wantMd) {
       var mName = CbvTcsDriveReport__uniqueName_(folder, baseStem + '.md');
-      var mdBody = CbvTcsDriveReport__toMarkdown_(report);
+      var mdCtx = {
+        folderId: folderId,
+        allFiles: fileRecords.slice(),
+        exporterVersion: (typeof CBV_TCS_ARTIFACT_REGISTRY_EXPORTER_VERSION === 'string')
+          ? CBV_TCS_ARTIFACT_REGISTRY_EXPORTER_VERSION
+          : 'CBV_TCS_EXPORT_97.2'
+      };
+      var mdBody;
+      if (typeof CbvTcsArtifactRegistry_buildMarkdownMirror === 'function') {
+        mdBody = CbvTcsArtifactRegistry_buildMarkdownMirror(report, mdCtx);
+      } else {
+        mdBody = CbvTcsDriveReport__toMarkdown_(report);
+        warnings.push('MARKDOWN_MIRROR_FALLBACK: load 998M for CBV_TCS markdown mirror standard.');
+      }
       var mBlob = Utilities.newBlob(mdBody, 'text/plain', mName);
       var mf = folder.createFile(mBlob);
       files.push({ name: mf.getName(), fileId: mf.getId(), url: mf.getUrl(), mimeType: mf.getMimeType() });
+      fileRecords.push({ name: mf.getName(), fileId: mf.getId(), url: mf.getUrl(), mimeType: mf.getMimeType() });
+    }
+
+    if (wantTxt) {
+      var tName = CbvTcsDriveReport__uniqueName_(folder, baseStem + '.txt');
+      var tBody = (typeof CbvTcsArtifactRegistry_buildPlainTextMirror === 'function')
+        ? CbvTcsArtifactRegistry_buildPlainTextMirror(report)
+        : (JSON.stringify(report, null, 2));
+      var tBlob = Utilities.newBlob(tBody, 'text/plain', tName);
+      var tf = folder.createFile(tBlob);
+      files.push({ name: tf.getName(), fileId: tf.getId(), url: tf.getUrl(), mimeType: tf.getMimeType() });
+      fileRecords.push({ name: tf.getName(), fileId: tf.getId(), url: tf.getUrl(), mimeType: tf.getMimeType() });
     }
 
     var out = CbvTcsDriveReport__out_(true, folderId, files, warnings, errors);
+
+    if (typeof CbvTcsArtifactRegistry_registerExportResult === 'function') {
+      try {
+        var reg = CbvTcsArtifactRegistry_registerExportResult(out, report);
+        if (reg && reg.warnings && reg.warnings.length) out.warnings = (out.warnings || []).concat(reg.warnings);
+        if (reg && !reg.ok && reg.errors && reg.errors.length) {
+          out.warnings.push('ARTIFACT_REGISTRY_WRITE_FAILED: ' + reg.errors.join(' | '));
+        }
+      } catch (eReg) {
+        out.warnings.push('ARTIFACT_REGISTRY_WRITE_FAILED: ' + (eReg && eReg.message ? eReg.message : String(eReg)));
+      }
+    }
+
     try {
       if (typeof PropertiesService !== 'undefined' && PropertiesService.getDocumentProperties) {
         PropertiesService.getDocumentProperties().setProperty(__CBV_TCS_DRIVE_EXPORT_LAST_RESULT_PROP_KEY, JSON.stringify(out));

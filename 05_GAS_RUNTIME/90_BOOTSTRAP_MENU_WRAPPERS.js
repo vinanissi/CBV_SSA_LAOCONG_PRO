@@ -1364,6 +1364,38 @@ function menuCbvTestConsoleDrive971_copyResult() {
   });
 }
 
+/** CBV Test Console — Phase 97.2 Artifact Registry / markdown mirror. */
+function menuCbvTestConsoleArtifact972_run() {
+  runSafeMenuStep_('CbvTcsArtifactRegistry_TestConsole_run', 'Artifact Registry Health Check', function (r) {
+    if (!r) return 'No result';
+    return (r.status || '') + '\n' + (r.summary || '') + '\nEnvelope OK: ' + (r.envelopeOk ? 'yes' : 'no');
+  });
+}
+
+function menuCbvTestConsoleArtifact972_recent() {
+  runSafeMenuStep_('CbvTcsArtifactRegistry_TestConsole_showRecent', 'Recent Artifacts', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleArtifact972_byTrace() {
+  runSafeMenuStep_('CbvTcsArtifactRegistry_TestConsole_showByTraceId', 'Find By TraceId', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : (r && r.message) || 'Done';
+  });
+}
+
+function menuCbvTestConsoleArtifact972_copyReport() {
+  runSafeMenuStep_('CbvTcsArtifactRegistry_TestConsole_copyLatestReport', 'Copy Latest Report', function (r) {
+    return r && r.ok ? 'Dialog opened — select JSON and copy.' : (r && r.message) || 'Done';
+  });
+}
+
+function menuCbvTestConsoleArtifact972_handoff() {
+  runSafeMenuStep_('CbvTcsArtifactRegistry_TestConsole_copyAiHandoffPrompt', 'AI Handoff Prompt', function (r) {
+    return r && r.ok ? 'Dialog opened — select text and copy.' : (r && r.message) || 'Done';
+  });
+}
+
 /** CBV Test Console — HOME_ALERT Phase 82 SLA & escalation QA. */
 function menuCbvTestConsoleHomeAlertSla82() {
   runSafeMenuStep_('HomeAlertSlaEscalation_TestConsole_run', 'HOME_ALERT SLA/Escalation test', function (r) {
