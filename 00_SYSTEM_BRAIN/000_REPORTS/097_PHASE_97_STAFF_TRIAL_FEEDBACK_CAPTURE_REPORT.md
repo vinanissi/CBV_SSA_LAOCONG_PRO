@@ -2,6 +2,7 @@
 
 **Date:** 2026-05-14  
 **Phase ID:** `PHASE_97_STAFF_TRIAL_FEEDBACK_CAPTURE`  
+**Git:** `f6fc925` on `phase/from-v2.4.1-TASK-FIN`  
 **Standard:** CBV_TCS_V1 (`00_SYSTEM_BRAIN/000_TEST_CONSOLE/CBV_TCS_V1/docs/CBV_TCS_V1_STANDARD.md`)
 
 ## Delivered
