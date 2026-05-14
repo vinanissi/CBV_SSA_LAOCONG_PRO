@@ -1,0 +1,22 @@
+<?!= COMPONENTS ?>
+<style>
+  .cbv-guided-sop-page { max-width: 760px; margin: 0 auto; padding-bottom: 96px; }
+</style>
+<div class="cbv-guided-sop-page cbv-daily-mobile-stack">
+  <div class="cbv-card" style="margin-bottom:12px">
+    <h2 style="margin:0 0 6px 0">SOP dẫn bước (read-first)</h2>
+    <p class="cbv-muted" style="margin:0;font-size:13px">
+      Không tự chuyển bước · không tự kết thúc task · chỉ điều hướng an toàn.
+      <? if (MODEL.taskId) { ?>
+        <span> · taskId query: <code><?= MODEL.taskId ?></code></span>
+      <? } ?>
+    </p>
+    <p style="margin-top:10px">
+      <a class="cbv-btn-operational cbv-busy-link" href="<?= MODEL.dailyHref ?>">← Mở Daily</a>
+    </p>
+  </div>
+  <?!= MODEL.bannerHtml ?>
+  <?!= MODEL.validationHtml ?>
+  <?!= MODEL.stepperHtml ?>
+</div>
+<!-- Static probe: cbv-sop-stepper cbv-sop-current-step cbv-sop-next-step cbv-sop-step-card cbv-sop-step-state cbv-sop-step-cta cbv-sop-manual-only cbv-sop-warning cbv-sop-template-id -->

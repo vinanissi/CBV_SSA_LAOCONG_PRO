@@ -29,6 +29,7 @@ var CBV_WEBAPP_VI_LABELS = {
   nav_staff_tasks: 'Việc NV',
   nav_daily: 'Daily',
   nav_focus: 'Focus',
+  nav_sop: 'SOP dẫn bước',
   nav_staff_feedback: 'Phản hồi',
   read_first_badge: 'READ_FIRST',
   read_first_explain: 'Chỉ xem / Không ghi dữ liệu',
@@ -211,6 +212,7 @@ var CBV_WEBAPP_VI_NAV_PRIMARY_PAIRS = [
 var CBV_WEBAPP_VI_NAV_SECONDARY_PAIRS = [
   { route: '/workspace/role-home', key: 'nav_role_home' },
   { route: '/workspace/guided', key: 'nav_guided' },
+  { route: '/workspace/sop', key: 'nav_sop' },
   { route: '/home-alert/my-queue', key: 'nav_my_queue' },
   { route: '/home-alert/sla', key: 'nav_sla' },
   { route: '/home-alert/timeline', key: 'nav_timeline' },
@@ -234,6 +236,8 @@ var CBV_WEBAPP_VI_ROUTE_PAGE_TITLE = {
   '/workspace/role-home': 'Workspace — Theo vai trò',
   '/workspace/today': 'Workspace — Tổng quan hôm nay',
   '/workspace/guided': 'Workspace — Hướng dẫn',
+  '/workspace/sop': 'Workspace — SOP dẫn bước',
+  '/sop': 'SOP dẫn bước',
   '/workspace/staff/tasks': 'Workspace — Việc nhân viên',
   '/staff/tasks': 'Nhân viên — Việc cần làm',
   '/workspace/staff/task-detail': 'Workspace — Chi tiết việc',
@@ -550,6 +554,7 @@ function CbvWebAppVi_validate() {
     '/workspace/role-home',
     '/workspace/today',
     '/workspace/guided',
+    '/workspace/sop',
     '/workspace/staff/tasks',
     '/staff/tasks',
     '/workspace/staff/task-detail',
@@ -562,7 +567,8 @@ function CbvWebAppVi_validate() {
     '/home-alert/kanban',
     '/runtime/health',
     '/reports',
-    '/admin/reference'
+    '/admin/reference',
+    '/sop'
   ];
   for (var i = 0; i < frozen.length; i++) {
     if (!CBV_WEBAPP_VI_ROUTE_PAGE_TITLE[frozen[i]]) {

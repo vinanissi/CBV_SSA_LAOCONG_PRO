@@ -174,6 +174,30 @@ function CbvWebAppWorkspace_routeRegistry() {
       notes: 'Alias for execution task detail cockpit.'
     },
     {
+      route: '/workspace/sop',
+      screenCode: 'GUIDED_SOP_RUNTIME_WS',
+      title: 'Workspace — Guided SOP',
+      pageType: CBV_WEBAPP_WS_PAGE_TYPES.GUIDED_SOP_RUNTIME,
+      requiredRole: '*',
+      dataSourceSheet: '',
+      mode: CBV_WEBAPP_WS_MODES.READ_FIRST,
+      isEnabled: true,
+      isPilotReady: true,
+      notes: 'Milestone 05 — guided SOP runtime (read-first; optional taskId).'
+    },
+    {
+      route: '/sop',
+      screenCode: 'GUIDED_SOP_RUNTIME_ALIAS',
+      title: 'Guided SOP',
+      pageType: CBV_WEBAPP_WS_PAGE_TYPES.GUIDED_SOP_RUNTIME,
+      requiredRole: '*',
+      dataSourceSheet: '',
+      mode: CBV_WEBAPP_WS_MODES.READ_FIRST,
+      isEnabled: true,
+      isPilotReady: true,
+      notes: 'Alias for guided SOP runtime page.'
+    },
+    {
       route: '/workspace/staff/feedback',
       screenCode: 'STAFF_FEEDBACK',
       title: 'Workspace — Staff feedback',

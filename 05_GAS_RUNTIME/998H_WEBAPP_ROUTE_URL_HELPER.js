@@ -33,8 +33,10 @@ var CBV_WEBAPP_ROUTE_URL_FROZEN = [
   '/workspace/execution/task',
   '/workspace/focus',
   '/workspace/guided',
+  '/workspace/sop',
   '/workspace/role-home',
-  '/workspace/today'
+  '/workspace/today',
+  '/sop'
 ];
 
 function CbvWebAppRouteUrl__trimExec_(base) {
@@ -88,6 +90,8 @@ function CbvWebAppRouteUrl_getRouteMap() {
     roleHome: '/workspace/role-home',
     todayOps: '/workspace/today',
     guidedOps: '/workspace/guided',
+    guidedSopWs: '/workspace/sop',
+    guidedSopAlias: '/sop',
     dailyHome: '/workspace/daily',
     dailyAlias: '/daily',
     focusHome: '/workspace/focus',
@@ -162,7 +166,7 @@ function CbvWebAppRouteUrl_validate() {
   }
 
   var m = CbvWebAppRouteUrl_getRouteMap();
-  var keys = ['workspace', 'roleHome', 'todayOps', 'guidedOps', 'dailyHome', 'dailyAlias', 'focusHome', 'focusAlias', 'execTaskWs', 'execTaskAlias', 'myQueue', 'sla', 'timeline', 'kanban', 'runtimeHealth', 'reports', 'adminReference'];
+  var keys = ['workspace', 'roleHome', 'todayOps', 'guidedOps', 'guidedSopWs', 'guidedSopAlias', 'dailyHome', 'dailyAlias', 'focusHome', 'focusAlias', 'execTaskWs', 'execTaskAlias', 'myQueue', 'sla', 'timeline', 'kanban', 'runtimeHealth', 'reports', 'adminReference'];
   for (var i = 0; i < keys.length; i++) {
     if (!m[keys[i]]) errors.push('Route map missing key: ' + keys[i]);
   }

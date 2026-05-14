@@ -97,8 +97,23 @@ function CbvExecFlow_buildCognitionGuideHtml_(model) {
   var m = model || {};
   var u = String(m.urgencyExplanation || '').replace(/</g, '&lt;');
   var p = String(m.operatorPrompt || '').replace(/</g, '&lt;');
+  var prefix = '';
+  try {
+    if (typeof CbvGuidedSop_buildStepFlowModel_ === 'function') {
+      var fm = CbvGuidedSop_buildStepFlowModel_(m.task || null);
+      if (typeof CbvGuidedSop_buildCurrentStepBannerHtml_ === 'function') {
+        prefix += '<div class="cbv-sop-m05-cognition-banner">' + CbvGuidedSop_buildCurrentStepBannerHtml_(fm) + '</div>';
+      }
+      if (typeof CbvGuidedSop_buildStepValidationHtml_ === 'function') {
+        prefix += '<div class="cbv-sop-m05-cognition-validation">' + CbvGuidedSop_buildStepValidationHtml_(fm) + '</div>';
+      }
+    }
+  } catch (eC) {
+    prefix = '';
+  }
   return (
     '<aside class="cbv-exec-cognition-guide cbv-card" style="margin-top:12px;border-style:dashed">' +
+    prefix +
     '<h3 class="cbv-exec-why-urgent">Vì sao việc này gấp?</h3><p class="cbv-muted">' + u + '</p>' +
     '<h3 class="cbv-exec-now-do">Bây giờ làm gì?</h3><p class="cbv-muted">' + String(m.nextAction || '—').replace(/</g, '&lt;') + '</p>' +
     '<h3 class="cbv-exec-if-blocked">Nếu không làm được thì bấm gì?</h3><p class="cbv-muted">Báo kẹt hoặc Cần hỗ trợ → form phản hồi an toàn.</p>' +
@@ -165,7 +180,7 @@ function CbvExecFlow_buildExecutionActionZoneHtml_(model) {
   );
 }
 
-function CbvExecFlow_buildInlineSopHtml_(model) {
+function CbvExecFlow__buildInlineSopLegacyHtml_(model) {
   var m = model || {};
   var tid = String(m.taskId || '').replace(/</g, '&lt;');
   return (
@@ -179,6 +194,24 @@ function CbvExecFlow_buildInlineSopHtml_(model) {
     '<p class="cbv-muted" style="font-size:13px;margin-top:8px">Khi nào báo kẹt: không có quyền / thiếu dữ liệu / không rõ bước tiếp. Khi nào cần supervisor: cần phân công / gỡ chặn / xác nhận ngoài phạm vi hiện tại.</p>' +
     '<p class="cbv-muted" style="font-size:12px">taskId: <code>' + tid + '</code></p></section>'
   );
+}
+
+function CbvExecFlow_buildInlineSopHtml_(model) {
+  try {
+    if (typeof CbvGuidedSop_buildStepFlowModel_ === 'function' && typeof CbvGuidedSop_buildStepperHtml_ === 'function') {
+      var m = model || {};
+      var fm = CbvGuidedSop_buildStepFlowModel_(m.task || null);
+      var stepper = CbvGuidedSop_buildStepperHtml_(fm);
+      return (
+        '<section class="cbv-exec-inline-sop cbv-card cbv-exec-m05-guided-sop">' +
+        stepper +
+        '</section>'
+      );
+    }
+  } catch (eG) {
+    /* fall back */
+  }
+  return CbvExecFlow__buildInlineSopLegacyHtml_(model);
 }
 
 function CbvExecFlow_buildMiniTimelineHtml_(model) {
@@ -398,7 +431,8 @@ function CbvExecFlow_probeExecutionMarkersInProject_() {
     'cbv-exec-why-urgent',
     'cbv-exec-now-do',
     'cbv-exec-if-blocked',
-    'cbv-exec-safety-note'
+    'cbv-exec-safety-note',
+    'cbv-sop-stepper'
   ];
   var files = [
     'html/WEBAPP_OPERATION_EXECUTION_TASK',
