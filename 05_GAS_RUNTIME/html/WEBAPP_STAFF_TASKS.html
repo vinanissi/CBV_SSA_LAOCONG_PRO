@@ -1,0 +1,45 @@
+<?!= COMPONENTS ?>
+<style>
+  .cbv-staff-page { padding-bottom: 96px; }
+  .cbv-staff-band { margin-top: 12px; }
+  .cbv-staff-h2 { margin: 0 0 8px 0; font-size: 18px; }
+</style>
+<div class="cbv-staff-page cbv-staff-mobile-stack">
+  <?!= MODEL.stickyBar ?>
+  <div class="cbv-staff-band cbv-card">
+    <h2 class="cbv-staff-h2">Việc của nhân viên</h2>
+    <p class="cbv-muted">READ_FIRST — dữ liệu từ queue vận hành (HOME_ALERT) khi có.</p>
+    <p class="cbv-muted">Tổng inbox: <strong><?= MODEL.inbox.counts.inbox ?></strong> · Hôm nay: <strong><?= MODEL.inbox.counts.today ?></strong> · Đang xử lý: <strong><?= MODEL.inbox.counts.pending ?></strong> · Bị chặn: <strong><?= MODEL.inbox.counts.blocked ?></strong></p>
+  </div>
+
+  <? if (!MODEL.inbox.counts.inbox) { ?>
+    <div class="cbv-staff-empty-state cbv-state cbv-empty-state">
+      <p><strong>Chưa có việc trong queue</strong></p>
+      <p class="cbv-muted">Kiểm tra HOME_ALERT hoặc phân công trên AppSheet. Không tự tạo dữ liệu.</p>
+    </div>
+  <? } ?>
+
+  <div class="cbv-staff-band">
+    <h3 class="cbv-muted">Ưu tiên hôm nay</h3>
+    <? var todayTasks = MODEL.inbox.today || []; ?>
+    <? for (var i = 0; i < todayTasks.length; i++) { ?>
+      <? var task = todayTasks[i]; ?>
+      <? var cardHtml = (typeof CbvStaffWorkspace_buildTaskCardHtml_ === 'function') ? CbvStaffWorkspace_buildTaskCardHtml_(task, '') : ''; ?>
+      <?!= cardHtml ?>
+    <? } ?>
+  </div>
+
+  <div class="cbv-staff-band">
+    <h3 class="cbv-muted">Các việc khác (inbox)</h3>
+    <? var rest = MODEL.inbox.inboxRest || []; ?>
+    <? if (!rest.length) { ?>
+      <p class="cbv-muted">Không còn thẻ ngoài nhóm ưu tiên hôm nay.</p>
+    <? } ?>
+    <? for (var j = 0; j < rest.length; j++) { ?>
+      <? var task2 = rest[j]; ?>
+      <?!= (typeof CbvStaffWorkspace_buildTaskCardHtml_ === 'function') ? CbvStaffWorkspace_buildTaskCardHtml_(task2, '') : '' ?>
+    <? } ?>
+  </div>
+</div>
+<?!= MODEL.staffBottomNav ?>
+<div class="cbv-staff-task-card cbv-staff-quick-action cbv-staff-empty-state cbv-staff-detail-section cbv-staff-bottom-nav cbv-staff-mobile-stack" style="display:none" aria-hidden="true"></div>

@@ -54,6 +54,78 @@ function CbvWebAppWorkspace_routeRegistry() {
       notes: 'Milestone 01 — guided SOP inline (read-first).'
     },
     {
+      route: '/workspace/staff/tasks',
+      screenCode: 'STAFF_TASK_INBOX',
+      title: 'Workspace — Staff tasks',
+      pageType: CBV_WEBAPP_WS_PAGE_TYPES.STAFF_TASKS,
+      requiredRole: '*',
+      dataSourceSheet: CBV_WEBAPP_WS_SHEETS.HOME_ALERT,
+      mode: CBV_WEBAPP_WS_MODES.READ_FIRST,
+      isEnabled: true,
+      isPilotReady: true,
+      notes: 'Milestone 02 — staff task workspace (HOME_ALERT adapter; read-first).'
+    },
+    {
+      route: '/staff/tasks',
+      screenCode: 'STAFF_TASK_INBOX_ALIAS',
+      title: 'Staff — Tasks',
+      pageType: CBV_WEBAPP_WS_PAGE_TYPES.STAFF_TASKS,
+      requiredRole: '*',
+      dataSourceSheet: CBV_WEBAPP_WS_SHEETS.HOME_ALERT,
+      mode: CBV_WEBAPP_WS_MODES.READ_FIRST,
+      isEnabled: true,
+      isPilotReady: true,
+      notes: 'Alias route for staff inbox (same renderer as /workspace/staff/tasks).'
+    },
+    {
+      route: '/workspace/staff/task-detail',
+      screenCode: 'STAFF_TASK_DETAIL',
+      title: 'Workspace — Task detail',
+      pageType: CBV_WEBAPP_WS_PAGE_TYPES.STAFF_TASK_DETAIL,
+      requiredRole: '*',
+      dataSourceSheet: CBV_WEBAPP_WS_SHEETS.HOME_ALERT,
+      mode: CBV_WEBAPP_WS_MODES.READ_FIRST,
+      isEnabled: true,
+      isPilotReady: true,
+      notes: 'Milestone 02 — task detail + timeline (query taskId).'
+    },
+    {
+      route: '/staff/task-detail',
+      screenCode: 'STAFF_TASK_DETAIL_ALIAS',
+      title: 'Staff — Task detail',
+      pageType: CBV_WEBAPP_WS_PAGE_TYPES.STAFF_TASK_DETAIL,
+      requiredRole: '*',
+      dataSourceSheet: CBV_WEBAPP_WS_SHEETS.HOME_ALERT,
+      mode: CBV_WEBAPP_WS_MODES.READ_FIRST,
+      isEnabled: true,
+      isPilotReady: true,
+      notes: 'Alias route for task detail.'
+    },
+    {
+      route: '/workspace/staff/feedback',
+      screenCode: 'STAFF_FEEDBACK',
+      title: 'Workspace — Staff feedback',
+      pageType: CBV_WEBAPP_WS_PAGE_TYPES.STAFF_FEEDBACK,
+      requiredRole: '*',
+      dataSourceSheet: '',
+      mode: CBV_WEBAPP_WS_MODES.READ_FIRST,
+      isEnabled: true,
+      isPilotReady: true,
+      notes: 'Milestone 02 — staff feedback (safe sink when sheet exists).'
+    },
+    {
+      route: '/staff/feedback',
+      screenCode: 'STAFF_FEEDBACK_ALIAS',
+      title: 'Staff — Feedback',
+      pageType: CBV_WEBAPP_WS_PAGE_TYPES.STAFF_FEEDBACK,
+      requiredRole: '*',
+      dataSourceSheet: '',
+      mode: CBV_WEBAPP_WS_MODES.READ_FIRST,
+      isEnabled: true,
+      isPilotReady: true,
+      notes: 'Alias route for staff feedback.'
+    },
+    {
       route: '/home-alert/my-queue',
       screenCode: 'HOME_ALERT_MY_QUEUE',
       title: 'HOME_ALERT — My Queue',

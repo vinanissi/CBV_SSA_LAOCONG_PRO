@@ -61,6 +61,12 @@ function CbvWebAppWorkspace_render(route, params) {
     page = CbvWebAppOpUx_renderTodayPage_();
   } else if (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.GUIDED_OPS && typeof CbvWebAppOpUx_renderGuidedPage_ === 'function') {
     page = CbvWebAppOpUx_renderGuidedPage_();
+  } else if (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.STAFF_TASKS && typeof CbvStaffWorkspace_renderTasksPage_ === 'function') {
+    page = CbvStaffWorkspace_renderTasksPage_();
+  } else if (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.STAFF_TASK_DETAIL && typeof CbvStaffWorkspace_renderTaskDetailPage_ === 'function') {
+    page = CbvStaffWorkspace_renderTaskDetailPage_(params || {});
+  } else if (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.STAFF_FEEDBACK && typeof CbvStaffWorkspace_renderFeedbackPage_ === 'function') {
+    page = CbvStaffWorkspace_renderFeedbackPage_(params || {});
   } else if (reg.route === '/home-alert/timeline' && typeof CbvWebAppPilotRenderer_renderTimelinePlaceholder === 'function') {
     page = CbvWebAppPilotRenderer_renderTimelinePlaceholder();
   } else if (reg.route === '/home-alert/kanban' && typeof CbvWebAppPilotRenderer_renderKanbanPlaceholder === 'function') {
