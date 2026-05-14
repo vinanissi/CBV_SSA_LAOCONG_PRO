@@ -3,7 +3,7 @@
  *
  * Menu: 🧪 CBV Test Console → M08 — Run Operational State Runtime Test
  *
- * Depends: 999D, 999A, 998P, 998L, 998Y, 999B, 999C patterns
+ * Depends: 999D, 999F, 999A, 998P, 998L, 998Y, 999B, 999C patterns
  */
 
 /** M08 markers — pre-commit: strings must stay findable in this file (scripts/cbv-marker-contract-self-check.mjs). */
@@ -71,27 +71,6 @@ function CbvTcsMilestone08__buildAiHandoffMd_(draft, traceId) {
     '## Next',
     String(draft.nextStep || '')
   ].join('\n');
-}
-
-function CbvTcsMilestone08__tryAppendTestReportSheet_(draft) {
-  try {
-    if (typeof SpreadsheetApp === 'undefined' || !SpreadsheetApp.getActiveSpreadsheet) return { ok: false, skipped: 'no_runtime' };
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    if (!ss) return { ok: false, skipped: 'no_ss' };
-    var sh = ss.getSheetByName('CBV_TEST_REPORTS');
-    if (!sh) return { ok: false, skipped: 'sheet_missing' };
-    sh.appendRow([
-      new Date(),
-      String(draft.traceId || ''),
-      String(draft.phase || ''),
-      String(draft.status || ''),
-      String(draft.envelopeOk),
-      String(draft.summary || '').substring(0, 4000)
-    ]);
-    return { ok: true };
-  } catch (e) {
-    return { ok: false, error: e && e.message ? e.message : String(e) };
-  }
 }
 
 function CbvTcsMilestone08__viValidateDetail_(vu) {
@@ -290,21 +269,19 @@ function CbvTcsMilestone08OperationalState_TestConsole_runFull() {
 
   addCheck('UI_MARKER_PREFLIGHT_RUNTIME', typeof CbvUiMarkerPreflight_runContract_ === 'function', 'OK', 'CbvUiMarkerPreflight_runContract_', {});
 
-  var sheetProbe = { present: false };
-  try {
-    if (typeof SpreadsheetApp !== 'undefined' && SpreadsheetApp.getActiveSpreadsheet) {
-      var ssP = SpreadsheetApp.getActiveSpreadsheet();
-      sheetProbe.present = !!(ssP && ssP.getSheetByName('CBV_TEST_REPORTS'));
-    }
-  } catch (eSh) {
-    sheetProbe.error = eSh && eSh.message ? eSh.message : String(eSh);
-  }
+  var trBootstrap = (typeof CbvTcsReports_ensureSheet_ === 'function')
+    ? CbvTcsReports_ensureSheet_()
+    : { ok: false, error: 'CbvTcsReports_ensureSheet_ not loaded (999F_TEST_REPORTS_BOOTSTRAP_RUNTIME)' };
+  var errLow = String(trBootstrap.error || '').toLowerCase();
+  var bootSev = trBootstrap.ok ? 'OK' : (errLow.indexOf('permission') >= 0 || errLow.indexOf('denied') >= 0 ? 'ERROR' : 'WARNING');
   addCheck(
     'M08_TEST_REPORTS_BOOTSTRAP',
-    sheetProbe.present === true,
-    sheetProbe.present ? 'OK' : 'WARNING',
-    sheetProbe.present ? 'CBV_TEST_REPORTS sheet present (append-only row written after finalize).' : 'CBV_TEST_REPORTS missing — sheet bootstrap optional; Drive bundle still primary evidence.',
-    sheetProbe
+    trBootstrap.ok === true,
+    bootSev,
+    trBootstrap.ok
+      ? 'CBV_TEST_REPORTS ensured (idempotent); missing headers appended on row 1 only.'
+      : ('CBV_TEST_REPORTS bootstrap failed: ' + String(trBootstrap.error || 'unknown')),
+    trBootstrap
   );
 
   var vu = null;
@@ -456,7 +433,12 @@ function CbvTcsMilestone08OperationalState_TestConsole_runFull() {
     if (draft.errors.indexOf('CONSISTENCY_GUARD') < 0) draft.errors.push('CONSISTENCY_GUARD');
   }
 
-  CbvTcsMilestone08__tryAppendTestReportSheet_(draft);
+  var appendRes = (typeof CbvTcsReports_appendReport_ === 'function') ? CbvTcsReports_appendReport_(draft) : { ok: false, error: 'CbvTcsReports_appendReport_ not loaded' };
+  if (draft.reportJson && typeof draft.reportJson === 'object') {
+    draft.reportJson.cbvTestReportsAppendOk = appendRes.ok === true;
+    if (!appendRes.ok) draft.reportJson.cbvTestReportsAppendError = appendRes.error || 'append_failed';
+    if (appendRes.rowWritten) draft.reportJson.cbvTestReportsRow = appendRes.rowWritten;
+  }
   CbvTcsMilestone08OperationalState_TestConsole__storeLatest_(draft);
   try { Logger.log(draft.reportText); } catch (eL) { /* ignore */ }
   return draft;
