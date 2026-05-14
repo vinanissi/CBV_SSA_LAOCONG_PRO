@@ -83,14 +83,13 @@ function CbvAppSheetLiveBridge__encodeHandoff_(ctx) {
 /**
  * @param {{ taskId?: string, route?: string, role?: string, source?: string, returnRoute?: string, mode?: string }} opt
  * @returns {{ ok: boolean, url: string, reason: string, mode: string, returnWebAppUrl: string, safeDisabled: boolean, handoff?: Object }}
- * mode: detail|form|upload|feedback|view (view aliases to detail)
+ * mode: detail|form|upload|feedback|list|view (view aliases to detail)
  */
 function CbvAppSheetLiveBridge_buildDeepLink_(opt) {
   var o = opt || {};
   var mode = String(o.mode || 'detail').toLowerCase();
   if (mode === 'view') mode = 'detail';
   var taskId = String(o.taskId || '').trim();
-  var task = { taskId: taskId };
   var retPath = String(o.returnRoute || o.route || '/workspace/workboard').trim() || '/workspace/workboard';
   if (retPath.charAt(0) !== '/') retPath = '/' + retPath;
   var retUrl = CbvAppSheetLiveBridge_buildWebAppReturnUrl_(retPath, taskId);
@@ -114,9 +113,29 @@ function CbvAppSheetLiveBridge_buildDeepLink_(opt) {
     return baseResult;
   }
 
+  if (mode === 'list') {
+    var lr =
+      typeof CbvAppSheetBridge_buildTaskMainUrl_ === 'function' ? CbvAppSheetBridge_buildTaskMainUrl_() : { ok: false, reason: 'FN_MISSING' };
+    if (!lr || lr.ok !== true || !lr.url) {
+      return {
+        ok: false,
+        url: '',
+        reason: (lr && lr.reason) ? lr.reason : 'NOT_CONFIGURED',
+        mode: mode,
+        returnWebAppUrl: retUrl,
+        safeDisabled: true
+      };
+    }
+    var sepL = String(lr.url).indexOf('?') >= 0 ? '&' : '?';
+    var uL = String(lr.url) + sepL + 'cbvHandoff=' + encodeURIComponent(handoff) + '&cbvReturn=' + encodeURIComponent(retUrl);
+    return { ok: true, url: uL, reason: '', mode: mode, returnWebAppUrl: retUrl, safeDisabled: false, handoff: ctx };
+  }
+
   if (!taskId) {
     return { ok: false, url: '', reason: 'NO_TASK_ID', mode: mode, returnWebAppUrl: retUrl, safeDisabled: true };
   }
+
+  var task = { taskId: taskId, raw: o.raw && typeof o.raw === 'object' ? o.raw : {} };
 
   var r = null;
   if (mode === 'form' && typeof CbvAppSheetBridge_buildTaskEditLink_ === 'function') {
@@ -174,12 +193,13 @@ function CbvAppSheetLiveBridge_renderWorkboardRibbon_(params) {
   }
 
   if (!cfg || cfg.configured !== true || appsheetOff) {
-    row += '<div class="cbv-m07-appsheet-safe-disabled cbv-appsheet-live-bridge-safe-disabled cbv-muted">AppSheet chưa cấu hình — liên hệ quản trị để cấu hình Script Properties (CBV_APPSHEET_TASK_MAIN_URL, CBV_APPSHEET_TASK_MAIN_DETAIL_URL, CBV_APPSHEET_TASK_MAIN_FORM_URL) hoặc cấu hình legacy (BASE_URL, APP_ID, views).</div>';
+    row += '<div class="cbv-m07-appsheet-safe-disabled cbv-appsheet-live-bridge-safe-disabled cbv-muted">AppSheet chưa cấu hình — liên hệ quản trị để cấu hình Script Properties (CBV_APPSHEET_TASK_MAIN_URL, CBV_APPSHEET_TASK_MAIN_DETAIL_URL_TEMPLATE, CBV_APPSHEET_TASK_MAIN_FORM_URL_TEMPLATE; hoặc tên legacy không _TEMPLATE) hoặc cấu hình legacy (BASE_URL, APP_ID, views).</div>';
   }
 
   var modes = [
-    { label: 'AppSheet (chi tiết)', m: 'detail' },
-    { label: 'AppSheet (biểu mẫu)', m: 'form' },
+    { label: 'Mở AppSheet', m: 'list' },
+    { label: 'Mở chi tiết', m: 'detail' },
+    { label: 'Xử lý ngay', m: 'form' },
     { label: 'Tải bằng chứng / chứng từ / hình ảnh', m: 'upload' },
     { label: 'Gửi phản hồi / báo kẹt', m: 'feedback' }
   ];
@@ -242,10 +262,13 @@ function CbvAppSheetLiveBridge_runHealth_() {
     cfg.TASK_MAIN !== undefined &&
     cfg.TASK_MAIN_DETAIL !== undefined &&
     cfg.TASK_MAIN_FORM !== undefined &&
+    cfg.taskMainUrl !== undefined &&
+    cfg.taskMainDetailUrlTemplate !== undefined &&
+    cfg.taskMainFormUrlTemplate !== undefined &&
     typeof cfg.configured === 'boolean' &&
     typeof cfg.safeDisabled === 'boolean' &&
     typeof cfg.source === 'string';
-  add('M07_APP_SHEET_RUNTIME', contractOk, contractOk ? 'OK' : 'ERROR', 'CbvAppSheetBridge_getConfig_ resolver contract (TASK_MAIN*, safeDisabled, source)', {
+  add('M07_APP_SHEET_RUNTIME', contractOk, contractOk ? 'OK' : 'ERROR', 'CbvAppSheetBridge_getConfig_ resolver contract (TASK_MAIN*, template aliases, safeDisabled, source)', {
     source: cfg ? cfg.source : null,
     safeDisabled: cfg ? cfg.safeDisabled : null
   });

@@ -7,16 +7,19 @@
  * AppSheet runtime (official): Script Properties → GAS runtime fallback → safe-disabled.
  * Do not hardcode AppSheet URLs in HTML; resolve only via CbvAppSheetBridge_getConfig_().
  *
- * Script Properties (canonical):
- * - CBV_APPSHEET_TASK_MAIN_URL
- * - CBV_APPSHEET_TASK_MAIN_DETAIL_URL
- * - CBV_APPSHEET_TASK_MAIN_FORM_URL
+ * Script Properties (canonical — M07.2 record-level TASK_MAIN):
+ * - CBV_APPSHEET_TASK_MAIN_URL (runtime list; /start/…)
+ * - CBV_APPSHEET_TASK_MAIN_DETAIL_URL_TEMPLATE ({{TASK_ROW_KEY}} → TASK_MAIN row key)
+ * - CBV_APPSHEET_TASK_MAIN_FORM_URL_TEMPLATE
+ * Legacy property names (detail/form without _TEMPLATE) are still read if new keys are empty.
  *
  * Legacy (optional, upload/feedback / old start URL pattern):
  * - CBV_APPSHEET_APP_ID, CBV_APPSHEET_BASE_URL, CBV_APPSHEET_TASK_DETAIL_VIEW, …
  */
 
 var CBV_APPSHEET_PROP_TASK_MAIN_URL = 'CBV_APPSHEET_TASK_MAIN_URL';
+var CBV_APPSHEET_PROP_TASK_MAIN_DETAIL_URL_TEMPLATE = 'CBV_APPSHEET_TASK_MAIN_DETAIL_URL_TEMPLATE';
+var CBV_APPSHEET_PROP_TASK_MAIN_FORM_URL_TEMPLATE = 'CBV_APPSHEET_TASK_MAIN_FORM_URL_TEMPLATE';
 var CBV_APPSHEET_PROP_TASK_MAIN_DETAIL_URL = 'CBV_APPSHEET_TASK_MAIN_DETAIL_URL';
 var CBV_APPSHEET_PROP_TASK_MAIN_FORM_URL = 'CBV_APPSHEET_TASK_MAIN_FORM_URL';
 
@@ -27,14 +30,15 @@ var CBV_APPSHEET_BRIDGE_PROP_TASK_FORM_VIEW = 'CBV_APPSHEET_TASK_FORM_VIEW';
 var CBV_APPSHEET_BRIDGE_PROP_UPLOAD_VIEW = 'CBV_APPSHEET_UPLOAD_VIEW';
 var CBV_APPSHEET_BRIDGE_PROP_FEEDBACK_VIEW = 'CBV_APPSHEET_FEEDBACK_VIEW';
 
-/** Tier-2 resolver only (never emit from HTML templates). */
+/** Tier-2 resolver only (never emit from HTML templates). Official TASK_MAIN runtime + templates. */
 function CbvAppSheetBridge__runtimeFallbackUrls_() {
   return {
-    TASK_MAIN: 'https://www.appsheet.com/start/62ec023c-7587-432b-bf88-9106e3b23971',
+    TASK_MAIN:
+      'https://www.appsheet.com/start/62ec023c-7587-432b-bf88-9106e3b23971?platform=desktop#appName=CBV_SSA_LAOCONG_V21-61865967&vss=H4sIAAAAAAAAA6WOyw6CMBRE_2XW_YLuiHFBCGwgbqwxlV6SRmiJLSpp-u8Wn2t1eefmnJmAs6ZL7WV7BN-Gz1XQDI4g0MwjCXCBlTX-ZHsBJlDJ4RE2WV3syyyvBCLijr0Enhx4-JLnf_YzaEXG607TaZEtaJI8wfResBS8IUSGYfLy0NN9c4JiTFln28mR2qQxv4xwuVlfR2lUaVVydrJ3FG98mmJDagEAAA==&view=TASK_MAIN',
     TASK_MAIN_DETAIL:
-      'https://www.appsheet.com/template/appdef?appId=CBV_SSA_LAOCONG_V21-61865967&isCopiedApp=true&appName=CBV_SSA_LAOCONG_V21-61865967#UX.Views.TASK_MAIN_DETAIL_PRO',
+      'https://www.appsheet.com/start/62ec023c-7587-432b-bf88-9106e3b23971?platform=desktop#appName=CBV_SSA_LAOCONG_V21-61865967&vss=H4sIAAAAAAAAA6VSTWuDQBD9K2VOLXhp6MnbNitF0mhYt4ESg5g4FqnuBnWbBvG_dzT9CG0CSb3tzr735r2daeAtw21Qx-tXsBfNz22CO7ChCUHuNhiCHcJYq7rUeQhWCF5c7IuSBZNoylwvhBZaa4BAxB3J3MdoJvxea2l9adVYgd1c6MUemMWCLEFVZ2mGZSfWUUnkk0jPHY0K3yRKD4Wp41WOvWcitVT69wcMCfBL6uIsB_wjsUDo7d4RjpI7HN2uSOKh1GZzT8UFDS7QZd2fG2qSm0IR1g2iQDIhHE5ov0w6K8CxWqNKMvXSL88heOZ63lnYwBeSnLq-cOXz1bVnihWWNwdEdpw3Fg6TDo-YPKPJ04z_BZ8Q5r7nnFal7-GYxiav53FuutVeLNtuU1K9NhUmcxr6wGFXrnLeN7FKpjqhgaVxXmH7Ad4MhbnqAwAA&row={{TASK_ROW_KEY}}&view=TASK_MAIN_DETAIL_PRO',
     TASK_MAIN_FORM:
-      'https://www.appsheet.com/template/appdef?appId=CBV_SSA_LAOCONG_V21-61865967&isCopiedApp=true&appName=CBV_SSA_LAOCONG_V21-61865967#UX.Views.TASK_MAIN_FORM_PRO'
+      'https://www.appsheet.com/start/62ec023c-7587-432b-bf88-9106e3b23971?platform=desktop#appName=CBV_SSA_LAOCONG_V21-61865967&vss=H4sIAAAAAAAAA6WTYW-bMBCG_8rkT5sEEyDaUr6xwibUBSJglbpQIYOPCQ3sCMy6CvHfeyRth9pEasY3-3zP67vz64H8qeA-lrT4TezN8G93DQ_EJkNKkoctpMROyZXgshV1SpSUBLTZBxMnvs5Wjh-kZCSjskAgc73E8b9n6yhcrvU1jFYvSnfKs5KEjtjDiV3ZC6eikIoBl1VZQTuJTSiKPIF4PGEYeIGwd9L0kuY17GpGaMTQf49ySQOvpE7uZcYfaItE4n5fERjMBEPPUeJbK_rtFwxu8OFi0crdesBL6r7hmOvHWZw4UeS5mB22bCqFuNAVwFnFf-2sM09e-0Hwrtw4jBKs1A8jP7n98DHomxzaTzPQOcxdRZ6TeG7mJO-45MfafZt8RNgNA--4Ko7HhZL2tbyhdT9Ze3N3olHm_2SRTeZCp5vkmT5kkSfsOKOgi4TEs1K0De5cKinSzRZDhmacq9qZqpuJfm5rmn2mfdZNw7QuzJ878K39qs7nHqvkSjC8ULY9KES2lHe0kJXgPsN0S6NgMchV84IWqgmWpeYl1VWDaswoLrXCvDTIOL1FKYq-A3aDg13476ay_m4pZ_vCSlp3MD4C91eQ-b8FAAA=&row={{TASK_ROW_KEY}}&view=TASK_MAIN_FORM_PRO'
   };
 }
 
@@ -49,10 +53,43 @@ function CbvAppSheetBridge__isHttpsTriple_(a, b, c) {
   );
 }
 
+/** True for operator AppSheet runtime /start/… URLs (not editor template/appdef). */
+function CbvAppSheetBridge__isAppsheetStartUserUrl_(u) {
+  var s = String(u || '');
+  return /^https:\/\/www\.appsheet\.com\/start\//i.test(s) && s.toLowerCase().indexOf('/template/appdef') < 0;
+}
+
+function CbvAppSheetBridge__isTaskMainDetailTemplateString_(s) {
+  var t = String(s || '');
+  return CbvAppSheetBridge__isAppsheetStartUserUrl_(t) && t.indexOf('{{TASK_ROW_KEY}}') >= 0 && t.indexOf('TASK_MAIN_DETAIL_PRO') >= 0;
+}
+
+function CbvAppSheetBridge__isTaskMainFormTemplateString_(s) {
+  var t = String(s || '');
+  return CbvAppSheetBridge__isAppsheetStartUserUrl_(t) && t.indexOf('{{TASK_ROW_KEY}}') >= 0 && t.indexOf('TASK_MAIN_FORM_PRO') >= 0;
+}
+
+/** M07.2 triple: list runtime + two row templates (placeholders intact). */
+function CbvAppSheetBridge__isTaskMainRuntimeTriple_(mainUrl, detailTpl, formTpl) {
+  return (
+    CbvAppSheetBridge__isAppsheetStartUserUrl_(mainUrl) &&
+    CbvAppSheetBridge__isTaskMainDetailTemplateString_(detailTpl) &&
+    CbvAppSheetBridge__isTaskMainFormTemplateString_(formTpl)
+  );
+}
+
 /** UX view slug from AppSheet template URL hash, e.g. #UX.Views.TASK_MAIN_DETAIL_PRO */
 function CbvAppSheetBridge__viewSlugFromTemplateUrl_(url) {
   var m = /#UX\.Views\.([A-Za-z0-9_]+)/.exec(String(url || ''));
   return m ? m[1] : '';
+}
+
+/** View slug from /start/… URL hash/query (best-effort). */
+function CbvAppSheetBridge__viewSlugFromStartUrl_(url) {
+  var t = String(url || '');
+  var m1 = /(?:^|[?&#])view=([A-Za-z0-9_]+)/.exec(t);
+  if (m1) return m1[1];
+  return CbvAppSheetBridge__viewSlugFromTemplateUrl_(t);
 }
 
 function CbvAppSheetBridge_getConfig_() {
@@ -65,16 +102,27 @@ function CbvAppSheetBridge_getConfig_() {
     if (typeof PropertiesService !== 'undefined' && PropertiesService.getScriptProperties) {
       var sp0 = PropertiesService.getScriptProperties();
       TASK_MAIN = String(sp0.getProperty(CBV_APPSHEET_PROP_TASK_MAIN_URL) || '').trim();
-      TASK_MAIN_DETAIL = String(sp0.getProperty(CBV_APPSHEET_PROP_TASK_MAIN_DETAIL_URL) || '').trim();
-      TASK_MAIN_FORM = String(sp0.getProperty(CBV_APPSHEET_PROP_TASK_MAIN_FORM_URL) || '').trim();
+      TASK_MAIN_DETAIL = String(
+        sp0.getProperty(CBV_APPSHEET_PROP_TASK_MAIN_DETAIL_URL_TEMPLATE) ||
+          sp0.getProperty(CBV_APPSHEET_PROP_TASK_MAIN_DETAIL_URL) ||
+          ''
+      ).trim();
+      TASK_MAIN_FORM = String(
+        sp0.getProperty(CBV_APPSHEET_PROP_TASK_MAIN_FORM_URL_TEMPLATE) || sp0.getProperty(CBV_APPSHEET_PROP_TASK_MAIN_FORM_URL) || ''
+      ).trim();
     }
   } catch (e0) {
     warnings.push('SCRIPT_PROPERTIES: ' + (e0 && e0.message ? e0.message : String(e0)));
   }
 
-  var fromScript = CbvAppSheetBridge__isHttpsTriple_(TASK_MAIN, TASK_MAIN_DETAIL, TASK_MAIN_FORM);
+  var scriptMain = TASK_MAIN;
+  var scriptDet = TASK_MAIN_DETAIL;
+  var scriptForm = TASK_MAIN_FORM;
+  var fromScriptM07 = CbvAppSheetBridge__isTaskMainRuntimeTriple_(scriptMain, scriptDet, scriptForm);
+  var fromScriptLegacyHttps =
+    !fromScriptM07 && CbvAppSheetBridge__isHttpsTriple_(scriptMain, scriptDet, scriptForm);
 
-  if (!fromScript) {
+  if (!fromScriptM07) {
     var fb = CbvAppSheetBridge__runtimeFallbackUrls_();
     if (!TASK_MAIN) TASK_MAIN = fb.TASK_MAIN;
     if (!TASK_MAIN_DETAIL) TASK_MAIN_DETAIL = fb.TASK_MAIN_DETAIL;
@@ -85,6 +133,9 @@ function CbvAppSheetBridge_getConfig_() {
     TASK_MAIN: TASK_MAIN,
     TASK_MAIN_DETAIL: TASK_MAIN_DETAIL,
     TASK_MAIN_FORM: TASK_MAIN_FORM,
+    taskMainUrl: TASK_MAIN,
+    taskMainDetailUrlTemplate: TASK_MAIN_DETAIL,
+    taskMainFormUrlTemplate: TASK_MAIN_FORM,
     configured: false,
     safeDisabled: true,
     source: 'safe_disabled',
@@ -118,17 +169,28 @@ function CbvAppSheetBridge_getConfig_() {
     var mx = /\/start\/([^/?#]+)/i.exec(TASK_MAIN);
     if (mx) out.appId = mx[1];
   }
-  if (!out.taskDetailView) out.taskDetailView = CbvAppSheetBridge__viewSlugFromTemplateUrl_(TASK_MAIN_DETAIL);
-  if (!out.taskFormView) out.taskFormView = CbvAppSheetBridge__viewSlugFromTemplateUrl_(TASK_MAIN_FORM);
+  if (!out.taskDetailView) {
+    out.taskDetailView =
+      CbvAppSheetBridge__viewSlugFromStartUrl_(TASK_MAIN_DETAIL) || CbvAppSheetBridge__viewSlugFromTemplateUrl_(TASK_MAIN_DETAIL);
+  }
+  if (!out.taskFormView) {
+    out.taskFormView =
+      CbvAppSheetBridge__viewSlugFromStartUrl_(TASK_MAIN_FORM) || CbvAppSheetBridge__viewSlugFromTemplateUrl_(TASK_MAIN_FORM);
+  }
 
-  var tripleOk = CbvAppSheetBridge__isHttpsTriple_(TASK_MAIN, TASK_MAIN_DETAIL, TASK_MAIN_FORM);
+  var tripleOk = CbvAppSheetBridge__isTaskMainRuntimeTriple_(TASK_MAIN, TASK_MAIN_DETAIL, TASK_MAIN_FORM);
+  var legacyTriple = !tripleOk && CbvAppSheetBridge__isHttpsTriple_(TASK_MAIN, TASK_MAIN_DETAIL, TASK_MAIN_FORM);
   var legacyStart =
     !!(out.appId && out.baseUrl && /^https:\/\//i.test(out.baseUrl) && out.taskDetailView);
 
   if (tripleOk) {
     out.configured = true;
     out.safeDisabled = false;
-    out.source = fromScript ? 'script_properties' : 'runtime_fallback';
+    out.source = fromScriptM07 ? 'script_properties' : 'runtime_fallback';
+  } else if (legacyTriple) {
+    out.configured = true;
+    out.safeDisabled = false;
+    out.source = fromScriptLegacyHttps ? 'script_properties' : 'runtime_fallback';
   } else if (legacyStart) {
     out.configured = true;
     out.safeDisabled = false;
@@ -150,7 +212,48 @@ function CbvAppSheetBridge__trimSlash_(u) {
   return String(u || '').replace(/\/+$/, '');
 }
 
-/** Build AppSheet `/start/...` deep link with view + row (resolver output; not for HTML literals). */
+/**
+ * Resolve TASK_MAIN / AppSheet row key from task + raw adapter fields (read-only; does not mutate task).
+ * Priority: row / _RowNumber → TASK_ROW_KEY → TASK_MAIN_ID → TASK_ID → id (taskId / raw.id).
+ */
+function CbvAppSheetBridge_resolveTaskRowKey_(task) {
+  var t = task || {};
+  var r = t.raw || {};
+  function z(v) {
+    return String(v != null ? v : '').trim();
+  }
+  var seq = [
+    z(r.row),
+    z(r.ROW),
+    z(r._RowNumber),
+    z(r._rowNumber),
+    z(r.TASK_ROW_KEY),
+    z(r.taskRowKey),
+    z(t.taskRowKey),
+    z(r.TASK_MAIN_ID),
+    z(r.taskMainId),
+    z(t.TASK_MAIN_ID),
+    z(t.taskMainId),
+    z(r.TASK_ID),
+    z(t.taskId),
+    z(r.id),
+    z(r.ALERT_ID),
+    z(r.HOME_ALERT_ID)
+  ];
+  for (var i = 0; i < seq.length; i++) {
+    if (seq[i]) return { ok: true, rowKey: seq[i] };
+  }
+  return { ok: false, rowKey: '', reason: 'TASK_ROW_KEY_MISSING' };
+}
+
+function CbvAppSheetBridge__substituteTaskRowKeyInTemplate_(tpl, rowKey) {
+  var k = String(rowKey || '').trim();
+  var t = String(tpl || '');
+  if (!k || t.indexOf('{{TASK_ROW_KEY}}') < 0) return '';
+  return t.split('{{TASK_ROW_KEY}}').join(encodeURIComponent(k));
+}
+
+/** Build AppSheet `/start/...` deep link with view + row (legacy resolver path; not for HTML literals). */
 function CbvAppSheetBridge__buildStartUrlWithViewRow_(startUrl, viewSlug, rowId) {
   var s = CbvAppSheetBridge__trimSlash_(String(startUrl || ''));
   var v = String(viewSlug || '').trim();
@@ -160,58 +263,94 @@ function CbvAppSheetBridge__buildStartUrlWithViewRow_(startUrl, viewSlug, rowId)
   return s + sep + 'view=' + encodeURIComponent(v) + '&row=' + encodeURIComponent(r);
 }
 
+function CbvAppSheetBridge_buildTaskMainUrl_() {
+  var cfg = CbvAppSheetBridge_getConfig_();
+  if (!cfg.configured || !CbvAppSheetBridge__isAppsheetStartUserUrl_(cfg.TASK_MAIN)) {
+    return { ok: false, url: '', reason: 'NOT_CONFIGURED', safeDisabled: true };
+  }
+  return { ok: true, url: String(cfg.TASK_MAIN).trim(), reason: '', safeDisabled: false };
+}
+
+function CbvAppSheetBridge_buildTaskMainDetailUrl_(task) {
+  return CbvAppSheetBridge_buildTaskDetailLink_(task);
+}
+
+function CbvAppSheetBridge_buildTaskMainFormUrl_(task) {
+  return CbvAppSheetBridge_buildTaskEditLink_(task);
+}
+
 function CbvAppSheetBridge_buildTaskDetailLink_(task) {
   var cfg = CbvAppSheetBridge_getConfig_();
-  var id = String((task && task.taskId) || '').trim();
-  if (!id) return { ok: false, url: '', reason: 'NO_TASK_ID' };
-  if (!cfg.configured) return { ok: false, url: '', reason: 'NOT_CONFIGURED' };
+  if (!cfg.configured) return { ok: false, url: '', reason: 'NOT_CONFIGURED', safeDisabled: true };
+  var rk = CbvAppSheetBridge_resolveTaskRowKey_(task);
+  if (!rk.ok) return { ok: false, url: '', reason: 'TASK_ROW_KEY_MISSING', safeDisabled: true };
 
+  var detailTpl = String(cfg.TASK_MAIN_DETAIL || '');
+  if (detailTpl.indexOf('{{TASK_ROW_KEY}}') >= 0 && CbvAppSheetBridge__isAppsheetStartUserUrl_(detailTpl)) {
+    var uSub = CbvAppSheetBridge__substituteTaskRowKeyInTemplate_(detailTpl, rk.rowKey);
+    if (!uSub || uSub.indexOf('{{TASK_ROW_KEY}}') >= 0) {
+      return { ok: false, url: '', reason: 'TASK_ROW_KEY_TEMPLATE_FAIL', safeDisabled: true };
+    }
+    return { ok: true, url: uSub, reason: '', safeDisabled: false };
+  }
+
+  var id = rk.rowKey;
   var uNew = CbvAppSheetBridge__buildStartUrlWithViewRow_(cfg.TASK_MAIN, cfg.taskDetailView, id);
-  if (uNew) return { ok: true, url: uNew, reason: '' };
+  if (uNew) return { ok: true, url: uNew, reason: '', safeDisabled: false };
 
   if (cfg.baseUrl && cfg.appId && cfg.taskDetailView) {
     var base = CbvAppSheetBridge__trimSlash_(cfg.baseUrl);
     var u = base + '/start?appId=' + encodeURIComponent(cfg.appId) + '&view=' + encodeURIComponent(cfg.taskDetailView) + '&row=' + encodeURIComponent(id);
-    return { ok: true, url: u, reason: '' };
+    return { ok: true, url: u, reason: '', safeDisabled: false };
   }
-  return { ok: false, url: '', reason: 'NOT_CONFIGURED' };
+  return { ok: false, url: '', reason: 'NOT_CONFIGURED', safeDisabled: true };
 }
 
 function CbvAppSheetBridge_buildTaskEditLink_(task) {
   var cfg = CbvAppSheetBridge_getConfig_();
-  var id = String((task && task.taskId) || '').trim();
-  if (!id) return { ok: false, url: '', reason: 'NO_TASK_ID' };
-  if (!cfg.configured) return { ok: false, url: '', reason: 'NOT_CONFIGURED' };
+  if (!cfg.configured) return { ok: false, url: '', reason: 'NOT_CONFIGURED', safeDisabled: true };
+  var rk = CbvAppSheetBridge_resolveTaskRowKey_(task);
+  if (!rk.ok) return { ok: false, url: '', reason: 'TASK_ROW_KEY_MISSING', safeDisabled: true };
 
+  var formTpl = String(cfg.TASK_MAIN_FORM || '');
+  if (formTpl.indexOf('{{TASK_ROW_KEY}}') >= 0 && CbvAppSheetBridge__isAppsheetStartUserUrl_(formTpl)) {
+    var uSub = CbvAppSheetBridge__substituteTaskRowKeyInTemplate_(formTpl, rk.rowKey);
+    if (!uSub || uSub.indexOf('{{TASK_ROW_KEY}}') >= 0) {
+      return { ok: false, url: '', reason: 'TASK_ROW_KEY_TEMPLATE_FAIL', safeDisabled: true };
+    }
+    return { ok: true, url: uSub, reason: '', safeDisabled: false };
+  }
+
+  var id = rk.rowKey;
   var uNew = CbvAppSheetBridge__buildStartUrlWithViewRow_(cfg.TASK_MAIN, cfg.taskFormView, id);
-  if (uNew) return { ok: true, url: uNew, reason: '' };
+  if (uNew) return { ok: true, url: uNew, reason: '', safeDisabled: false };
 
   if (cfg.baseUrl && cfg.appId && cfg.taskFormView) {
     var base = CbvAppSheetBridge__trimSlash_(cfg.baseUrl);
     var u = base + '/start?appId=' + encodeURIComponent(cfg.appId) + '&view=' + encodeURIComponent(cfg.taskFormView) + '&row=' + encodeURIComponent(id);
-    return { ok: true, url: u, reason: '' };
+    return { ok: true, url: u, reason: '', safeDisabled: false };
   }
-  return { ok: false, url: '', reason: 'NOT_CONFIGURED' };
+  return { ok: false, url: '', reason: 'NOT_CONFIGURED', safeDisabled: true };
 }
 
 function CbvAppSheetBridge_buildUploadLink_(task) {
   var cfg = CbvAppSheetBridge_getConfig_();
-  if (!cfg.configured || !cfg.uploadView) return { ok: false, url: '', reason: 'NOT_CONFIGURED' };
-  var id = String((task && task.taskId) || '').trim();
-  if (!id) return { ok: false, url: '', reason: 'NO_TASK_ID' };
+  if (!cfg.configured || !cfg.uploadView) return { ok: false, url: '', reason: 'NOT_CONFIGURED', safeDisabled: true };
+  var rk = CbvAppSheetBridge_resolveTaskRowKey_(task);
+  if (!rk.ok) return { ok: false, url: '', reason: 'TASK_ROW_KEY_MISSING', safeDisabled: true };
   var base = CbvAppSheetBridge__trimSlash_(cfg.baseUrl);
-  var u = base + '/start?appId=' + encodeURIComponent(cfg.appId) + '&view=' + encodeURIComponent(cfg.uploadView) + '&row=' + encodeURIComponent(id);
-  return { ok: true, url: u, reason: '' };
+  var u = base + '/start?appId=' + encodeURIComponent(cfg.appId) + '&view=' + encodeURIComponent(cfg.uploadView) + '&row=' + encodeURIComponent(rk.rowKey);
+  return { ok: true, url: u, reason: '', safeDisabled: false };
 }
 
 function CbvAppSheetBridge_buildFeedbackLink_(task) {
   var cfg = CbvAppSheetBridge_getConfig_();
-  if (!cfg.configured || !cfg.feedbackView) return { ok: false, url: '', reason: 'NOT_CONFIGURED' };
-  var id = String((task && task.taskId) || '').trim();
-  if (!id) return { ok: false, url: '', reason: 'NO_TASK_ID' };
+  if (!cfg.configured || !cfg.feedbackView) return { ok: false, url: '', reason: 'NOT_CONFIGURED', safeDisabled: true };
+  var rk = CbvAppSheetBridge_resolveTaskRowKey_(task);
+  if (!rk.ok) return { ok: false, url: '', reason: 'TASK_ROW_KEY_MISSING', safeDisabled: true };
   var base = CbvAppSheetBridge__trimSlash_(cfg.baseUrl);
-  var u = base + '/start?appId=' + encodeURIComponent(cfg.appId) + '&view=' + encodeURIComponent(cfg.feedbackView) + '&row=' + encodeURIComponent(id);
-  return { ok: true, url: u, reason: '' };
+  var u = base + '/start?appId=' + encodeURIComponent(cfg.appId) + '&view=' + encodeURIComponent(cfg.feedbackView) + '&row=' + encodeURIComponent(rk.rowKey);
+  return { ok: true, url: u, reason: '', safeDisabled: false };
 }
 
 function CbvAppSheetBridge_buildSafeActionHtml_(label, linkResult, fallbackVi) {
@@ -497,12 +636,26 @@ function CbvStaffWorkboard_buildProductionTaskCardHtml_(task) {
   var primary = CbvStaffWorkboard__taskDetailHref_(tid);
   var sop = CbvStaffWorkboard__sopHref_(tid);
   var stuck = CbvStaffWorkboard__feedbackStuckHref_(tid);
-  var cfg = CbvAppSheetBridge_getConfig_();
-  var appsheetDetail = CbvAppSheetBridge_buildTaskDetailLink_(t);
+  var appsheetDetail = typeof CbvAppSheetBridge_buildTaskMainDetailUrl_ === 'function' ? CbvAppSheetBridge_buildTaskMainDetailUrl_(t) : { ok: false };
+  var appsheetForm = typeof CbvAppSheetBridge_buildTaskMainFormUrl_ === 'function' ? CbvAppSheetBridge_buildTaskMainFormUrl_(t) : { ok: false };
+  var appsheetList = typeof CbvAppSheetBridge_buildTaskMainUrl_ === 'function' ? CbvAppSheetBridge_buildTaskMainUrl_() : { ok: false };
+  var titleHtml = title;
+  if (CbvAppSheetBridge_isConfigured_() && appsheetDetail && appsheetDetail.ok && appsheetDetail.url) {
+    titleHtml =
+      '<a class="cbv-appsheet-link cbv-workboard-card-title-link" href="' +
+      String(appsheetDetail.url).replace(/"/g, '&quot;') +
+      '" rel="noopener noreferrer" target="_blank">' +
+      title +
+      '</a>';
+  }
   var asLine =
-    '<div class="cbv-appsheet-config-status cbv-muted" style="margin-top:8px">' +
+    '<div class="cbv-appsheet-config-status cbv-muted" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;align-items:center">' +
     (CbvAppSheetBridge_isConfigured_()
-      ? CbvAppSheetBridge_buildSafeActionHtml_('AppSheet (chi tiết)', appsheetDetail, 'Chưa cấu hình AppSheet link') +
+      ? (typeof CbvAppSheetBridge_buildSafeActionHtml_ === 'function'
+          ? CbvAppSheetBridge_buildSafeActionHtml_('Mở chi tiết', appsheetDetail, 'Thiếu khóa bản ghi TASK_MAIN') +
+            CbvAppSheetBridge_buildSafeActionHtml_('Xử lý ngay', appsheetForm, 'Thiếu khóa bản ghi TASK_MAIN') +
+            CbvAppSheetBridge_buildSafeActionHtml_('Mở AppSheet', appsheetList, 'Chưa cấu hình AppSheet link')
+          : '') +
         '<span class="cbv-workboard-safe-disabled" data-cbv-safe-disabled-probe="configured-shell" aria-hidden="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)"></span>'
       : '<span class="cbv-appsheet-safe-disabled">Chưa cấu hình AppSheet link</span>') +
     '</div>';
@@ -510,7 +663,7 @@ function CbvStaffWorkboard_buildProductionTaskCardHtml_(task) {
     '<article class="cbv-workboard-task-card cbv-card cbv-workboard-mobile-stack" data-task-id="' + tid.replace(/"/g, '&quot;') + '">' +
     '<span class="cbv-workboard-safe-disabled" data-cbv-safe-disabled-probe="always" aria-hidden="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)"></span>' +
     '<div class="cbv-workboard-sla-badge"><span class="cbv-badge crit">' + sla + '</span> <span class="cbv-badge">' + st + '</span></div>' +
-    '<h3 style="margin:8px 0 4px">' + title + '</h3>' +
+    '<h3 style="margin:8px 0 4px">' + titleHtml + '</h3>' +
     '<p class="cbv-workboard-next-action cbv-muted"><strong>Bước tiếp:</strong> ' + nx + '</p>' +
     '<div class="cbv-kv" style="margin-top:8px">' +
     '<div class="cbv-muted">Mã</div><div><code>' + (tid || '—') + '</code></div>' +

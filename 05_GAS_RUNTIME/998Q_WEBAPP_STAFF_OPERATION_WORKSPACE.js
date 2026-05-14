@@ -78,8 +78,21 @@ function CbvStaffWorkspace_readTasksAdapter_(userEmail) {
 
 function CbvStaffWorkspace_normalizeTaskRow_(card) {
   var c = card || {};
+  function z(v) {
+    return String(v != null ? v : '').trim();
+  }
+  var taskRowKey =
+    z(c.taskRowKey) ||
+    z(c.TASK_ROW_KEY) ||
+    z(c.taskMainId) ||
+    z(c.TASK_MAIN_ID) ||
+    z(c.TASK_ID) ||
+    z(c._RowNumber) ||
+    z(c.row) ||
+    '';
   return {
     taskId: String(c.id || '').trim(),
+    taskRowKey: taskRowKey,
     title: String(c.title || c.operatorPrimaryText || '').trim() || '(Không tiêu đề)',
     status: String(c.status || '').trim(),
     priority: c.priority != null ? String(c.priority) : '',

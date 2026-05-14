@@ -98,6 +98,9 @@ function CbvWebAppPilotData_getQueueCards(userEmail) {
   var iOp2 = CbvWebAppPilotData__pickIdx_(idx, ['OPERATOR_SECONDARY_TEXT']);
   var iOpMeta = CbvWebAppPilotData__pickIdx_(idx, ['OPERATOR_META_TEXT']);
   var iOpNext = CbvWebAppPilotData__pickIdx_(idx, ['OPERATOR_NEXT_ACTION']);
+  var iTaskRowKey = CbvWebAppPilotData__pickIdx_(idx, ['TASK_ROW_KEY', 'ROW_KEY']);
+  var iTaskMainId = CbvWebAppPilotData__pickIdx_(idx, ['TASK_MAIN_ID']);
+  var iTaskIdCol = CbvWebAppPilotData__pickIdx_(idx, ['TASK_ID']);
 
   if (iStatus === undefined || iAssigned === undefined) {
     warnings.push('HOME_ALERT missing STATUS/ASSIGNED_TO columns; queue cards limited.');
@@ -135,7 +138,10 @@ function CbvWebAppPilotData_getQueueCards(userEmail) {
       operatorSecondaryText: op2,
       operatorMetaText: opm,
       operatorNextAction: opn,
-      updatedAt: updatedAt
+      updatedAt: updatedAt,
+      taskRowKey: iTaskRowKey !== undefined ? String(row[iTaskRowKey] || '').trim() : '',
+      TASK_MAIN_ID: iTaskMainId !== undefined ? String(row[iTaskMainId] || '').trim() : '',
+      TASK_ID: iTaskIdCol !== undefined ? String(row[iTaskIdCol] || '').trim() : ''
     });
   }
 

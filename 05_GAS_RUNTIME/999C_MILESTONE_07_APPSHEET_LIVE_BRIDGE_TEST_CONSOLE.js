@@ -139,6 +139,96 @@ function CbvTcsMilestone07AppSheetLiveBridge_TestConsole_runFull() {
   addCheck('FN_APPSHEET_getConfig', typeof CbvAppSheetBridge_getConfig_ === 'function', 'OK', 'CbvAppSheetBridge_getConfig_', {});
   addCheck('FN_APPSHEET_buildUploadLink', typeof CbvAppSheetBridge_buildUploadLink_ === 'function', 'OK', 'CbvAppSheetBridge_buildUploadLink_', {});
   addCheck('FN_APPSHEET_buildFeedbackLink', typeof CbvAppSheetBridge_buildFeedbackLink_ === 'function', 'OK', 'CbvAppSheetBridge_buildFeedbackLink_', {});
+  addCheck('FN_APPSHEET_resolveTaskRowKey', typeof CbvAppSheetBridge_resolveTaskRowKey_ === 'function', 'OK', 'CbvAppSheetBridge_resolveTaskRowKey_', {});
+  addCheck('FN_APPSHEET_buildTaskMainUrl', typeof CbvAppSheetBridge_buildTaskMainUrl_ === 'function', 'OK', 'CbvAppSheetBridge_buildTaskMainUrl_', {});
+  addCheck('FN_APPSHEET_buildTaskMainDetailUrl', typeof CbvAppSheetBridge_buildTaskMainDetailUrl_ === 'function', 'OK', 'CbvAppSheetBridge_buildTaskMainDetailUrl_', {});
+  addCheck('FN_APPSHEET_buildTaskMainFormUrl', typeof CbvAppSheetBridge_buildTaskMainFormUrl_ === 'function', 'OK', 'CbvAppSheetBridge_buildTaskMainFormUrl_', {});
+
+  try {
+    var cfgM = (typeof CbvAppSheetBridge_getConfig_ === 'function') ? CbvAppSheetBridge_getConfig_() : null;
+    var cfgOn = !!(cfgM && cfgM.configured === true);
+
+    var m07TplContract =
+      !!cfgM &&
+      cfgM.TASK_MAIN !== undefined &&
+      cfgM.TASK_MAIN_DETAIL !== undefined &&
+      cfgM.TASK_MAIN_FORM !== undefined &&
+      cfgM.taskMainUrl !== undefined &&
+      cfgM.taskMainDetailUrlTemplate !== undefined &&
+      cfgM.taskMainFormUrlTemplate !== undefined &&
+      typeof cfgM.safeDisabled === 'boolean' &&
+      typeof cfgM.source === 'string';
+    addCheck('M07_APP_SHEET_RUNTIME_CONTRACT', m07TplContract, m07TplContract ? 'OK' : 'ERROR', 'Resolver exposes TASK_MAIN*, template aliases, safeDisabled, source', {
+      source: cfgM ? cfgM.source : null
+    });
+
+    var urlMainOk =
+      !cfgOn ||
+      (/^https:\/\/www\.appsheet\.com\/start\//i.test(String(cfgM.TASK_MAIN || '')) &&
+        String(cfgM.TASK_MAIN || '').toLowerCase().indexOf('/template/appdef') < 0);
+    addCheck('M07_TASK_MAIN_URL_CONFIGURED', urlMainOk, urlMainOk ? 'OK' : 'ERROR', 'TASK_MAIN is https AppSheet /start/ runtime (not editor appdef)', {});
+
+    var detS = String(cfgM && cfgM.TASK_MAIN_DETAIL ? cfgM.TASK_MAIN_DETAIL : '');
+    var detTplOk =
+      !cfgOn ||
+      (detS.indexOf('{{TASK_ROW_KEY}}') >= 0 &&
+        detS.indexOf('TASK_MAIN_DETAIL_PRO') >= 0 &&
+        detS.indexOf('e2d4e21b') < 0);
+    addCheck('M07_TASK_MAIN_DETAIL_TEMPLATE', detTplOk, detTplOk ? 'OK' : 'ERROR', 'Detail template has placeholder + TASK_MAIN_DETAIL_PRO; no sample row id', {});
+
+    var formS = String(cfgM && cfgM.TASK_MAIN_FORM ? cfgM.TASK_MAIN_FORM : '');
+    var formTplOk =
+      !cfgOn ||
+      (formS.indexOf('{{TASK_ROW_KEY}}') >= 0 &&
+        formS.indexOf('TASK_MAIN_FORM_PRO') >= 0 &&
+        formS.indexOf('e2d4e21b') < 0);
+    addCheck('M07_TASK_MAIN_FORM_TEMPLATE', formTplOk, formTplOk ? 'OK' : 'ERROR', 'Form template has placeholder + TASK_MAIN_FORM_PRO; no sample row id', {});
+
+    var trkA = CbvAppSheetBridge_resolveTaskRowKey_({ taskId: 'K1', raw: { TASK_ROW_KEY: 'TEST_ROW_001' } });
+    var trkB = CbvAppSheetBridge_resolveTaskRowKey_({ taskId: '', raw: {} });
+    var trkOk =
+      trkA &&
+      trkA.ok === true &&
+      trkA.rowKey === 'TEST_ROW_001' &&
+      trkB &&
+      trkB.ok === false &&
+      String(trkB.reason || '') === 'TASK_ROW_KEY_MISSING';
+    addCheck('M07_TASK_ROW_KEY_RESOLVER', trkOk, trkOk ? 'OK' : 'ERROR', 'Row key resolves from TASK_ROW_KEY; empty task fails closed', {});
+
+    var tProbe = { taskId: 'IGNORED', raw: { TASK_ROW_KEY: 'TEST_ROW_001' } };
+    var dRec = CbvAppSheetBridge_buildTaskMainDetailUrl_(tProbe);
+    var fRec = CbvAppSheetBridge_buildTaskMainFormUrl_(tProbe);
+    var dRecOk =
+      !cfgOn ||
+      (dRec &&
+        dRec.ok === true &&
+        String(dRec.url || '').indexOf('TEST_ROW_001') >= 0 &&
+        String(dRec.url || '').indexOf('{{TASK_ROW_KEY}}') < 0);
+    addCheck('M07_DETAIL_DEEPLINK_RECORD_LEVEL', dRecOk, dRecOk ? 'OK' : 'ERROR', 'Detail URL substitutes row key; no placeholder leak', { ok: dRec ? dRec.ok : null });
+
+    var fRecOk =
+      !cfgOn ||
+      (fRec &&
+        fRec.ok === true &&
+        String(fRec.url || '').indexOf('TEST_ROW_001') >= 0 &&
+        String(fRec.url || '').indexOf('{{TASK_ROW_KEY}}') < 0);
+    addCheck('M07_FORM_DEEPLINK_RECORD_LEVEL', fRecOk, fRecOk ? 'OK' : 'ERROR', 'Form URL substitutes row key; no placeholder leak', { ok: fRec ? fRec.ok : null });
+
+    var noEd =
+      !cfgOn ||
+      ([String(cfgM.TASK_MAIN || ''), detS, formS].join(' ').toLowerCase().indexOf('template/appdef') < 0 &&
+        [String(cfgM.TASK_MAIN || ''), detS, formS].join(' ').toLowerCase().indexOf('/template/appdef') < 0);
+    addCheck('M07_NO_EDITOR_URL', noEd, noEd ? 'OK' : 'ERROR', 'Runtime config avoids AppSheet editor template/appdef URLs', {});
+  } catch (eM72) {
+    addCheck('M07_APP_SHEET_RUNTIME_CONTRACT', false, 'ERROR', String(eM72), {});
+    addCheck('M07_TASK_MAIN_URL_CONFIGURED', false, 'ERROR', String(eM72), {});
+    addCheck('M07_TASK_MAIN_DETAIL_TEMPLATE', false, 'ERROR', String(eM72), {});
+    addCheck('M07_TASK_MAIN_FORM_TEMPLATE', false, 'ERROR', String(eM72), {});
+    addCheck('M07_TASK_ROW_KEY_RESOLVER', false, 'ERROR', String(eM72), {});
+    addCheck('M07_DETAIL_DEEPLINK_RECORD_LEVEL', false, 'ERROR', String(eM72), {});
+    addCheck('M07_FORM_DEEPLINK_RECORD_LEVEL', false, 'ERROR', String(eM72), {});
+    addCheck('M07_NO_EDITOR_URL', false, 'ERROR', String(eM72), {});
+  }
 
   try {
     var h = CbvAppSheetLiveBridge_runHealth_();
@@ -171,6 +261,27 @@ function CbvTcsMilestone07AppSheetLiveBridge_TestConsole_runFull() {
     );
   } catch (eBl) {
     addCheck('M07_DEEPLINK_BUILDER', false, 'ERROR', String(eBl), {});
+  }
+
+  try {
+    var cfgList = (typeof CbvAppSheetBridge_getConfig_ === 'function') ? CbvAppSheetBridge_getConfig_() : null;
+    var dlList = CbvAppSheetLiveBridge_buildDeepLink_({
+      taskId: '',
+      mode: 'list',
+      route: '/workspace/workboard',
+      source: 'test',
+      returnRoute: '/workspace/workboard'
+    });
+    var listOk =
+      !cfgList || cfgList.configured !== true
+        ? dlList && dlList.ok === false
+        : dlList && dlList.ok === true && /^https:\/\//i.test(String(dlList.url || ''));
+    addCheck('M07_LIST_DEEPLINK', listOk, listOk ? 'OK' : 'ERROR', 'list mode opens TASK_MAIN runtime without row key', {
+      ok: dlList ? dlList.ok : null,
+      urlLen: dlList ? String(dlList.url || '').length : 0
+    });
+  } catch (eLs) {
+    addCheck('M07_LIST_DEEPLINK', false, 'ERROR', String(eLs), {});
   }
 
   try {
