@@ -302,25 +302,46 @@ function CbvWebAppOpUx_renderGuidedPage_() {
   }
 }
 
-function CbvWebAppOpUx_probeUiMarkersInProject_() {
-  var out = { components: false, shell: false, detail: {} };
+/**
+ * Raw template source (Apps Script <? ?> tags break HtmlService.createHtmlOutputFromFile HTML parse).
+ * Falls back to createHtmlOutputFromFile().getContent() only if getCode is unavailable.
+ */
+function CbvWebAppOpUx__readHtmlTemplateRaw_(path) {
+  var p = String(path || '').trim();
+  if (!p) return '';
   try {
-    var c = HtmlService.createHtmlOutputFromFile('html/WEBAPP_WORKSPACE_COMPONENTS').getContent();
+    var tpl = HtmlService.createTemplateFromFile(p);
+    if (tpl && typeof tpl.getCode === 'function') return String(tpl.getCode() || '');
+  } catch (e0) { /* fall through */ }
+  try {
+    return String(HtmlService.createHtmlOutputFromFile(p).getContent() || '');
+  } catch (e1) {
+    return '';
+  }
+}
+
+function CbvWebAppOpUx_probeUiMarkersInProject_() {
+  var out = { components: false, shell: false, detail: { mode: 'raw-template-marker-check' } };
+  try {
+    var c = CbvWebAppOpUx__readHtmlTemplateRaw_('html/WEBAPP_WORKSPACE_COMPONENTS');
     var needC = ['cbv-loading-overlay', 'cbv-empty-state', 'cbv-btn-operational'];
-    out.components = needC.every(function (m) {
-      return c.indexOf(m) >= 0;
-    });
+    var missC = needC.filter(function (m) { return c.indexOf(m) < 0; });
+    out.components = missC.length === 0;
     out.detail.componentsLen = c.length;
+    out.detail.componentsMissing = missC;
+    out.detail.componentsFile = 'html/WEBAPP_WORKSPACE_COMPONENTS';
   } catch (e1) {
     out.detail.componentsErr = String(e1 && e1.message ? e1.message : e1);
   }
   try {
-    var s = HtmlService.createHtmlOutputFromFile('html/WEBAPP_WORKSPACE_SHELL').getContent();
-    var needS = ['cbv-global-action-bar', 'cbv-toast-host', 'cbv-busy-link'];
-    out.shell = needS.every(function (m) {
-      return s.indexOf(m) >= 0;
-    });
+    var s = CbvWebAppOpUx__readHtmlTemplateRaw_('html/WEBAPP_WORKSPACE_SHELL');
+    var needS = ['cbv-global-action-bar', 'cbv-toast-host', 'cbv-loading-overlay', 'cbv-busy-link', 'data-cbv-loading', 'cbv-btn-operational'];
+    var missS = needS.filter(function (m) { return s.indexOf(m) < 0; });
+    out.shell = missS.length === 0;
     out.detail.shellLen = s.length;
+    out.detail.shellMissing = missS;
+    out.detail.requiredMarkers = needS;
+    out.detail.shellFile = 'html/WEBAPP_WORKSPACE_SHELL';
   } catch (e2) {
     out.detail.shellErr = String(e2 && e2.message ? e2.message : e2);
   }

@@ -3,7 +3,7 @@
  *
  * Menu: 🧪 CBV Test Console → Run Milestone 01 Full Operational Workspace Test
  *
- * One click: run checks + append-only Drive bundle (folder CBV_TCS_DRIVE_REPORT_FOLDER_ID).
+ * Phase 107 — status/envelope cannot contradict (no GO with envelopeOk=false / ERROR checks).
  */
 
 var __CBV_TCS_MILESTONE01_TC_LAST_REPORT = null;
@@ -13,6 +13,177 @@ function CbvTcsMilestone01OpWorkspace_TestConsole__validateEnvelope_(rep) {
   var need = ['ok', 'phase', 'status', 'checkedAt', 'runBy', 'traceId', 'testSuite', 'summary', 'checks', 'warnings', 'errors', 'nextStep', 'severity', 'reportText', 'reportJson', 'contractVersion', 'envelopeOk'];
   var missing = need.filter(function (k) { return rep[k] === undefined; });
   return { ok: missing.length === 0, missing: missing };
+}
+
+/** Structural: all keys present, check rows shaped, non-empty reportText. */
+function CbvTcsMilestone01OpWorkspace__structuralEnvelopeOk_(rep) {
+  var base = CbvTcsMilestone01OpWorkspace_TestConsole__validateEnvelope_(rep);
+  if (!base.ok) return { ok: false, reasons: ['missing:' + (base.missing || []).join(',')] };
+  var ic = CbvTcsMilestone01OpWorkspace__validateAllCheckItems_(rep.checks || []);
+  if (!ic.ok) return { ok: false, reasons: ['check_contract:' + (ic.bad || []).join('|')] };
+  if (!String(rep.reportText || '').trim()) return { ok: false, reasons: ['reportText_empty'] };
+  return { ok: true, reasons: [] };
+}
+
+function CbvTcsMilestone01OpWorkspace__validateCheckItem_(c, idx) {
+  var missing = [];
+  if (!c || typeof c !== 'object') return { ok: false, missing: ['object'] };
+  if (typeof c.code !== 'string' || !String(c.code).trim()) missing.push('code');
+  if (typeof c.ok !== 'boolean') missing.push('ok');
+  if (typeof c.severity !== 'string' || !String(c.severity).trim()) missing.push('severity');
+  if (typeof c.message !== 'string') missing.push('message');
+  if (c.detail === undefined) missing.push('detail');
+  return { ok: missing.length === 0, missing: missing };
+}
+
+function CbvTcsMilestone01OpWorkspace__validateAllCheckItems_(checks) {
+  var bad = [];
+  (checks || []).forEach(function (c, i) {
+    var v = CbvTcsMilestone01OpWorkspace__validateCheckItem_(c, i);
+    if (!v.ok) bad.push('i' + i + ':' + v.missing.join(','));
+  });
+  return { ok: bad.length === 0, bad: bad };
+}
+
+/**
+ * From checks + external warnings only (no envelopeOk field semantics).
+ */
+function CbvTcsMilestone01OpWorkspace__finalizeRunStatusFromChecks_(checks, externalWarnings) {
+  var ext = externalWarnings || [];
+  var crit = (checks || []).filter(function (c) {
+    return c && c.ok === false && String(c.severity || '').toUpperCase() === 'CRITICAL';
+  });
+  if (crit.length) {
+    return {
+      ok: false,
+      status: 'FAIL',
+      severity: 'CRITICAL',
+      errors: crit.map(function (c) { return 'CRITICAL:' + (c.code || '?'); }),
+      warnings: [],
+      nextStep: 'Fix CRITICAL checks: ' + crit.map(function (c) { return c.code; }).join(', ') + '.'
+    };
+  }
+  var err = (checks || []).filter(function (c) {
+    return c && c.ok === false && String(c.severity || '').toUpperCase() === 'ERROR';
+  });
+  if (err.length) {
+    return {
+      ok: false,
+      status: 'FAIL',
+      severity: 'ERROR',
+      errors: err.map(function (c) { return 'ERROR:' + (c.code || '?') + ' — ' + (c.message || ''); }),
+      warnings: [],
+      nextStep: 'Fix ERROR checks: ' + err.map(function (c) { return c.code; }).join(', ') + '.'
+    };
+  }
+  var warnMsgs = ext.slice();
+  (checks || []).forEach(function (c) {
+    if (c && c.ok === false && String(c.severity || '').toUpperCase() === 'WARNING') {
+      warnMsgs.push('CHECK_WARN:' + (c.code || '?') + ' — ' + (c.message || ''));
+    }
+  });
+  if (warnMsgs.length) {
+    return {
+      ok: true,
+      status: 'GO_WITH_WARNINGS',
+      severity: 'WARNING',
+      errors: [],
+      warnings: warnMsgs,
+      nextStep: 'Review warnings; rerun after mitigation if needed.'
+    };
+  }
+  return {
+    ok: true,
+    status: 'GO',
+    severity: 'OK',
+    errors: [],
+    warnings: [],
+    nextStep: 'Milestone 01 test clean; keep Drive evidence append-only.'
+  };
+}
+
+function CbvTcsMilestone01OpWorkspace__selfTestAggregator_() {
+  var cases = [];
+  var f1 = CbvTcsMilestone01OpWorkspace__finalizeRunStatusFromChecks_(
+    [{ code: 'A', ok: true, severity: 'OK', message: '', detail: {} }],
+    []
+  );
+  cases.push({ id: 'run_status_all_ok', pass: f1.ok === true && f1.status === 'GO' });
+
+  var f2 = CbvTcsMilestone01OpWorkspace__finalizeRunStatusFromChecks_(
+    [{ code: 'B', ok: false, severity: 'ERROR', message: 'x', detail: {} }],
+    []
+  );
+  cases.push({ id: 'err_check', pass: f2.ok === false && f2.status === 'FAIL' });
+
+  var f3 = CbvTcsMilestone01OpWorkspace__finalizeRunStatusFromChecks_(
+    [{ code: 'C', ok: false, severity: 'WARNING', message: 'w', detail: {} }],
+    []
+  );
+  cases.push({ id: 'warn_only', pass: f3.ok === true && f3.status === 'GO_WITH_WARNINGS' });
+
+  var f4 = CbvTcsMilestone01OpWorkspace__finalizeRunStatusFromChecks_(
+    [{ code: 'D', ok: true, severity: 'OK', message: '', detail: {} }],
+    []
+  );
+  cases.push({ id: 'all_ok', pass: f4.ok === true && f4.status === 'GO' });
+
+  var comb = CbvTcsMilestone01OpWorkspace__finalizeStatusFromPayload_({
+    checks: [{ code: 'E', ok: true, severity: 'OK', message: '', detail: {} }],
+    envelopeOk: false,
+    externalWarnings: [],
+    errors: [],
+    warnings: []
+  });
+  cases.push({ id: 'envelope_false', pass: comb.ok === false && comb.status === 'FAIL' });
+
+  return { ok: cases.every(function (x) { return x.pass; }), cases: cases };
+}
+
+/**
+ * Final ok/status/severity including envelope contract (Phase 107).
+ * Rule: envelopeOk === false => FAIL + ok=false + severity ERROR.
+ */
+function CbvTcsMilestone01OpWorkspace__finalizeStatusFromPayload_(payload) {
+  var checksArr = payload.checks || [];
+  var envelopeOk = payload.envelopeOk === true;
+  var extWarn = payload.externalWarnings || [];
+  var errors = [].concat(payload.errors || []);
+  var warnings = [].concat(payload.warnings || []);
+
+  if (!envelopeOk) {
+    if (errors.indexOf('ENVELOPE_CONTRACT_FAILED') < 0) errors.push('ENVELOPE_CONTRACT_FAILED');
+    var runEnv = CbvTcsMilestone01OpWorkspace__finalizeRunStatusFromChecks_(checksArr, extWarn);
+    var mergedErr = errors.concat(runEnv.ok ? [] : (runEnv.errors || []));
+    return {
+      ok: false,
+      status: 'FAIL',
+      severity: 'ERROR',
+      errors: mergedErr,
+      warnings: warnings.concat(runEnv.warnings || []),
+      nextStep: 'Fix envelope (structural fields, envelopeOk, check rows, reportText) and failing checks; rerun.'
+    };
+  }
+
+  var run = CbvTcsMilestone01OpWorkspace__finalizeRunStatusFromChecks_(checksArr, extWarn);
+  if (!run.ok) {
+    return {
+      ok: false,
+      status: run.status,
+      severity: run.severity,
+      errors: errors.concat(run.errors || []),
+      warnings: warnings.concat(run.warnings || []),
+      nextStep: run.nextStep
+    };
+  }
+  return {
+    ok: true,
+    status: run.status,
+    severity: run.severity,
+    errors: errors,
+    warnings: warnings.concat(run.warnings || []),
+    nextStep: run.nextStep
+  };
 }
 
 function CbvTcsMilestone01OpWorkspace_TestConsole__storeLatest_(rep) {
@@ -41,17 +212,129 @@ function CbvTcsMilestone01OpWorkspace_TestConsole__getLatest_() {
   }
 }
 
+function CbvTcsMilestone01OpWorkspace__buildEvidenceHtml_(checks) {
+  var failed = (checks || []).filter(function (c) { return c && c.ok === false; });
+  var rows = failed.map(function (c) {
+    return '<tr><td>' + String(c.code || '').replace(/</g, '&lt;') + '</td><td>' + String(c.severity || '').replace(/</g, '&lt;') + '</td><td>' + String(c.message || '').replace(/</g, '&lt;') + '</td></tr>';
+  }).join('');
+  return '<!DOCTYPE html><html><head><meta charset="utf-8"><title>MILESTONE_01 Evidence</title><style>body{font-family:system-ui,sans-serif}table{border-collapse:collapse}td,th{border:1px solid #ccc;padding:6px}</style></head><body>' +
+    '<h1>Failed checks</h1>' +
+    (failed.length ? ('<table><thead><tr><th>code</th><th>severity</th><th>message</th></tr></thead><tbody>' + rows + '</tbody></table>') : '<p>No failed checks.</p>') +
+    '</body></html>';
+}
+
+function CbvTcsMilestone01OpWorkspace__cloneCheckRows_(checks) {
+  return (checks || []).map(function (c) {
+    return { code: c.code, ok: c.ok, severity: c.severity, message: c.message, detail: c.detail || {} };
+  });
+}
+
 /**
- * Full Milestone 01 operational workspace verification + Drive evidence bundle.
+ * Clone base draft + checks, append DRIVE_SIX_FILE_BUNDLE, re-sync REPORT_ENVELOPE + finalize (Phase 107).
+ * Used so Drive bundle JSON matches final status before append-only write.
  */
+function CbvTcsMilestone01OpWorkspace__draftWithOptionalDriveBundle_(baseDraft, checksSnapshot, externalWarnings, driveOk, driveDetail) {
+  var c2 = CbvTcsMilestone01OpWorkspace__cloneCheckRows_(checksSnapshot);
+  c2.push({
+    code: 'DRIVE_SIX_FILE_BUNDLE',
+    ok: driveOk === true,
+    severity: driveOk ? 'OK' : (typeof DriveApp === 'undefined' ? 'WARNING' : 'ERROR'),
+    message: 'Drive export >= 6 append-only files',
+    detail: driveDetail || {}
+  });
+  var runRow = CbvTcsMilestone01OpWorkspace__finalizeRunStatusFromChecks_(c2, externalWarnings || []);
+  var keysOk = CbvTcsMilestone01OpWorkspace_TestConsole__validateEnvelope_(baseDraft).ok;
+  var ic = CbvTcsMilestone01OpWorkspace__validateAllCheckItems_(c2);
+  var structCore = keysOk === true && ic.ok === true && String(baseDraft.reportText || '').trim().length > 0;
+  var envelopeRowOk = structCore === true && runRow.status !== 'FAIL';
+  var i;
+  for (i = 0; i < c2.length; i++) {
+    if (c2[i].code === 'REPORT_ENVELOPE') {
+      c2[i].ok = envelopeRowOk === true;
+      c2[i].severity = envelopeRowOk ? 'OK' : 'ERROR';
+      c2[i].detail = {
+        keysOk: keysOk,
+        itemContractOk: ic.ok,
+        reportTextLen: String(baseDraft.reportText || '').length,
+        runStatus: runRow.status,
+        bad: ic.bad || [],
+        mode: 'CBV_TCS_V1_PHASE107_WITH_DRIVE'
+      };
+      break;
+    }
+  }
+  var rj = {};
+  var kk;
+  if (baseDraft.reportJson && typeof baseDraft.reportJson === 'object') {
+    for (kk in baseDraft.reportJson) {
+      if (Object.prototype.hasOwnProperty.call(baseDraft.reportJson, kk)) rj[kk] = baseDraft.reportJson[kk];
+    }
+  }
+  var out = {
+    ok: baseDraft.ok,
+    phase: baseDraft.phase,
+    status: baseDraft.status,
+    checkedAt: baseDraft.checkedAt,
+    runBy: baseDraft.runBy,
+    traceId: baseDraft.traceId,
+    testSuite: baseDraft.testSuite,
+    summary: baseDraft.summary,
+    checks: c2,
+    warnings: baseDraft.warnings || [],
+    errors: baseDraft.errors || [],
+    nextStep: baseDraft.nextStep,
+    severity: baseDraft.severity,
+    reportText: baseDraft.reportText,
+    reportJson: rj,
+    contractVersion: baseDraft.contractVersion,
+    envelopeOk: false
+  };
+  out.envelopeOk = envelopeRowOk === true;
+  var finx = CbvTcsMilestone01OpWorkspace__finalizeStatusFromPayload_({
+    checks: c2,
+    envelopeOk: out.envelopeOk === true,
+    externalWarnings: [],
+    errors: runRow.errors || [],
+    warnings: runRow.warnings || []
+  });
+  out.ok = finx.ok;
+  out.status = finx.status;
+  out.severity = finx.severity;
+  out.errors = finx.errors || [];
+  out.warnings = finx.warnings || [];
+  out.nextStep = finx.nextStep;
+  out.summary = 'Milestone 01 full workspace test: ' + finx.status + ' (' + finx.severity + ')';
+  out.reportText = String(baseDraft.reportText || '') + '\ndriveBundleOk=' + String(driveOk) + '\nfinalStatus=' + out.status;
+  return out;
+}
+
+function CbvTcsMilestone01OpWorkspace__buildAiHandoffMd_(draft, traceId) {
+  return [
+    '# AI Handoff — Milestone 01',
+    '',
+    '**finalStatus:** `' + draft.status + '`',
+    '**ok:** `' + String(draft.ok) + '`',
+    '**severity:** `' + draft.severity + '`',
+    '**envelopeOk:** `' + String(draft.envelopeOk) + '`',
+    '**traceId:** `' + traceId + '`',
+    '',
+    draft.status === 'FAIL' ? '## Outcome: FAIL\nDo not claim milestone ready.\n' : '## Outcome\n',
+    (draft.checks || []).filter(function (c) { return c && c.ok === false; }).map(function (c) {
+      return '- **' + c.code + '** (' + c.severity + '): ' + c.message;
+    }).join('\n') || '- (none)',
+    '',
+    '## Next',
+    String(draft.nextStep || '')
+  ].join('\n');
+}
+
 function CbvTcsMilestone01OpWorkspace_TestConsole_runFull() {
   var traceId = (typeof CbvWebAppWorkspace__traceId_ === 'function')
     ? CbvWebAppWorkspace__traceId_().replace(/^WS\d+_/, 'WSM01_')
     : ('WSM01_' + new Date().getTime());
 
   var checks = [];
-  var warnings = [];
-  var errors = [];
+  var externalWarnings = [];
 
   function addCheck(code, ok, severity, message, detail) {
     var sev;
@@ -61,9 +344,10 @@ function CbvTcsMilestone01OpWorkspace_TestConsole_runFull() {
       else sev = 'ERROR';
     }
     checks.push({ code: code, ok: ok === true, severity: sev, message: message, detail: detail || {} });
-    if (!ok && (sev === 'ERROR' || sev === 'CRITICAL')) errors.push(message);
-    if (!ok && sev === 'WARNING') warnings.push(message);
   }
+
+  var selfT = CbvTcsMilestone01OpWorkspace__selfTestAggregator_();
+  addCheck('AGGREGATOR_SELF_TEST', selfT.ok === true, selfT.ok ? 'OK' : 'ERROR', 'finalize + envelope rules harness', { cases: selfT.cases || [] });
 
   addCheck('PAGE_TYPES', typeof CBV_WEBAPP_WS_PAGE_TYPES !== 'undefined' && !!CBV_WEBAPP_WS_PAGE_TYPES.ROLE_HOME, 'OK', 'ROLE_HOME page type registered', {});
   addCheck('ROLE_RESOLVER', typeof CbvWebAppOpUx_resolveWorkspaceRole_ === 'function', 'OK', 'CbvWebAppOpUx_resolveWorkspaceRole_', {});
@@ -73,9 +357,9 @@ function CbvTcsMilestone01OpWorkspace_TestConsole_runFull() {
   addCheck('AUGMENT_SHELL', typeof CbvWebAppOpUx_augmentPageForShell_ === 'function', 'OK', 'Shell augment hook', {});
   addCheck('DRIVE_BUNDLE_FN', typeof CbvTcsDriveReport_exportMilestoneFullTestBundle === 'function', 'OK', 'CbvTcsDriveReport_exportMilestoneFullTestBundle', {});
 
-  var probe = (typeof CbvWebAppOpUx_probeUiMarkersInProject_ === 'function') ? CbvWebAppOpUx_probeUiMarkersInProject_() : { components: false, shell: false };
-  addCheck('UX_LOADING_MARKERS', probe.components === true, probe.components ? 'OK' : 'ERROR', 'COMPONENTS contains loading/empty/button markers', probe.detail || {});
-  addCheck('UX_SHELL_MARKERS', probe.shell === true, probe.shell ? 'OK' : 'ERROR', 'SHELL contains action bar + toast + busy-link markers', probe.detail || {});
+  var probe = (typeof CbvWebAppOpUx_probeUiMarkersInProject_ === 'function') ? CbvWebAppOpUx_probeUiMarkersInProject_() : { components: false, shell: false, detail: {} };
+  addCheck('UX_LOADING_MARKERS', probe.components === true, probe.components ? 'OK' : 'ERROR', 'COMPONENTS raw template markers', probe.detail || {});
+  addCheck('UX_SHELL_MARKERS', probe.shell === true, probe.shell ? 'OK' : 'ERROR', 'SHELL raw template markers', probe.detail || {});
 
   try {
     var reg = (typeof CbvWebAppWorkspace_routeRegistry === 'function') ? CbvWebAppWorkspace_routeRegistry() : [];
@@ -120,7 +404,8 @@ function CbvTcsMilestone01OpWorkspace_TestConsole_runFull() {
   var vu = null;
   try {
     vu = (typeof CbvWebAppVi_validate === 'function') ? CbvWebAppVi_validate() : null;
-    addCheck('VI_VALIDATE', vu && vu.ok === true, vu && vu.ok ? 'OK' : 'ERROR', 'CbvWebAppVi_validate', { detail: vu });
+    addCheck('VI_VALIDATE', vu && vu.ok === true, vu && vu.ok ? 'OK' : 'ERROR', 'CbvWebAppVi_validate', {});
+    if (vu && vu.warnings) vu.warnings.forEach(function (w) { externalWarnings.push('VI_VALIDATE: ' + w); });
   } catch (eV) {
     addCheck('VI_VALIDATE', false, 'WARNING', String(eV), {});
   }
@@ -128,154 +413,149 @@ function CbvTcsMilestone01OpWorkspace_TestConsole_runFull() {
   var vr = null;
   try {
     vr = (typeof CbvWebAppRouteUrl_validate === 'function') ? CbvWebAppRouteUrl_validate() : null;
-    addCheck('ROUTE_URL_VALIDATE', vr && vr.ok === true, vr && vr.ok ? 'OK' : 'ERROR', 'CbvWebAppRouteUrl_validate', { detail: vr });
+    addCheck('ROUTE_URL_VALIDATE', vr && vr.ok === true, vr && vr.ok ? 'OK' : 'ERROR', 'CbvWebAppRouteUrl_validate', {});
+    if (vr && vr.warnings) vr.warnings.forEach(function (w) { externalWarnings.push('ROUTE_URL_VALIDATE: ' + w); });
   } catch (eH) {
     addCheck('ROUTE_URL_VALIDATE', false, 'WARNING', String(eH), {});
   }
 
-  var prelimHandoff = [
-    '# AI Handoff — Milestone 01 Internal Operational Workspace',
-    '',
-    '- traceId: `' + traceId + '`',
-    '- testSuite: `MILESTONE_01_FULL_OPERATIONAL_WORKSPACE`',
-    '',
-    '## Checks (pre-bundle)',
-    checks.map(function (c) {
-      return '- ' + c.code + ': ' + (c.ok ? 'OK' : 'FAIL') + ' — ' + c.message;
-    }).join('\n')
+  var now = (typeof CbvWebAppWorkspace__now_ === 'function') ? CbvWebAppWorkspace__now_() : new Date();
+  var runBy = (typeof CbvWebAppWorkspace__actor_ === 'function') ? CbvWebAppWorkspace__actor_() : (typeof cbvUser === 'function' ? cbvUser() : '');
+
+  var runFin = CbvTcsMilestone01OpWorkspace__finalizeRunStatusFromChecks_(checks, externalWarnings);
+
+  var reportText = [
+    '=== MILESTONE_01 — FULL OPERATIONAL WORKSPACE TEST ===',
+    'traceId=' + traceId,
+    'runStatus=' + runFin.status,
+    'runOk=' + String(runFin.ok),
+    'runSeverity=' + runFin.severity,
+    'failedChecks=' + JSON.stringify((checks || []).filter(function (c) { return c && c.ok === false; }).map(function (c) { return c.code; }))
   ].join('\n');
 
-  var bundleEx = null;
-  try {
-    if (typeof CbvTcsDriveReport_exportMilestoneFullTestBundle === 'function') {
-      var preReport = {
-        ok: true,
-        phase: 'MILESTONE_01_INTERNAL_OPERATIONAL_WORKSPACE',
-        status: 'GO',
-        checkedAt: (typeof CbvWebAppWorkspace__now_ === 'function') ? CbvWebAppWorkspace__now_() : new Date(),
-        runBy: (typeof CbvWebAppWorkspace__actor_ === 'function') ? CbvWebAppWorkspace__actor_() : (typeof cbvUser === 'function' ? cbvUser() : ''),
-        traceId: traceId,
-        testSuite: 'MILESTONE_01_FULL_OPERATIONAL_WORKSPACE',
-        summary: 'Milestone 01 full workspace test (interim payload for Drive bundle).',
-        checks: checks,
-        warnings: warnings.slice(),
-        errors: [],
-        nextStep: 'Final status computed after bundle + envelope checks.',
-        severity: 'OK',
-        reportText: '',
-        reportJson: { driveFolderId: (typeof CBV_TCS_DRIVE_REPORT_FOLDER_ID !== 'undefined') ? CBV_TCS_DRIVE_REPORT_FOLDER_ID : '' },
-        contractVersion: 'CBV_TCS_V1',
-        envelopeOk: false
-      };
-      bundleEx = CbvTcsDriveReport_exportMilestoneFullTestBundle(preReport, {
-        tagStem: 'MILESTONE_01_FULL_TEST',
-        aiHandoffMarkdown: prelimHandoff
-      });
-      var fc = bundleEx && bundleEx.files ? bundleEx.files.length : 0;
-      addCheck('DRIVE_SIX_FILE_BUNDLE', fc >= 6, fc >= 6 ? 'OK' : (typeof DriveApp === 'undefined' ? 'WARNING' : 'ERROR'),
-        'Drive export created at least 6 append-only files', { fileCount: fc, files: bundleEx ? bundleEx.files : [] });
-      if (bundleEx && bundleEx.warnings && bundleEx.warnings.length) {
-        bundleEx.warnings.forEach(function (w) { warnings.push('DRIVE: ' + w); });
-      }
-      if (bundleEx && !bundleEx.ok && bundleEx.errors && bundleEx.errors.length) {
-        warnings.push('CBV_TEST_REPORT_DRIVE_SAVE_FAILED: ' + bundleEx.errors.join(' | '));
-      }
-    }
-  } catch (eD) {
-    addCheck('DRIVE_SIX_FILE_BUNDLE', false, 'WARNING', String(eD && eD.message ? eD.message : eD), {});
-    warnings.push('DRIVE_BUNDLE_EXCEPTION: ' + (eD && eD.message ? eD.message : String(eD)));
-  }
-
-  errors = [];
-  warnings = [];
-  checks.forEach(function (c) {
-    if (!c.ok && (c.severity === 'ERROR' || c.severity === 'CRITICAL')) errors.push(c.message);
-    if (!c.ok && c.severity === 'WARNING') warnings.push(c.message);
-  });
-  if (vu && vu.warnings) {
-    vu.warnings.forEach(function (w) { warnings.push('VI_VALIDATE: ' + w); });
-  }
-  if (vr && vr.warnings) {
-    vr.warnings.forEach(function (w) { warnings.push('ROUTE_URL_VALIDATE: ' + w); });
-  }
-
-  var status = errors.length > 0 ? 'FAIL' : (warnings.length > 0 ? 'GO_WITH_WARNINGS' : 'GO');
-  var severity = errors.length > 0 ? 'CRITICAL' : (warnings.length > 0 ? 'WARNING' : 'OK');
-
-  var report = {
-    ok: status !== 'FAIL',
+  var draft = {
+    ok: runFin.ok,
     phase: 'MILESTONE_01_INTERNAL_OPERATIONAL_WORKSPACE',
-    status: status,
-    checkedAt: (typeof CbvWebAppWorkspace__now_ === 'function') ? CbvWebAppWorkspace__now_() : new Date(),
-    runBy: (typeof CbvWebAppWorkspace__actor_ === 'function') ? CbvWebAppWorkspace__actor_() : (typeof cbvUser === 'function' ? cbvUser() : ''),
+    status: runFin.status,
+    checkedAt: now,
+    runBy: runBy,
     traceId: traceId,
     testSuite: 'MILESTONE_01_FULL_OPERATIONAL_WORKSPACE',
-    summary: 'Milestone 01 full workspace test: ' + status + ' (' + severity + ')',
+    summary: 'Milestone 01 full workspace test (pre-envelope): ' + runFin.status + ' (' + runFin.severity + ')',
     checks: checks,
-    warnings: warnings,
-    errors: errors,
-    nextStep: status === 'FAIL'
-      ? 'Fix failing checks (envelope, routes, UI markers, VI/route validators, Drive bundle) and rerun.'
-      : 'Review Drive folder for new 6-file bundle; distribute AI_HANDOFF to operators.',
-    severity: severity,
-    reportText: '',
-    reportJson: {
-      driveFolderId: (typeof CBV_TCS_DRIVE_REPORT_FOLDER_ID !== 'undefined') ? CBV_TCS_DRIVE_REPORT_FOLDER_ID : '',
-      driveFileCount: bundleEx && bundleEx.files ? bundleEx.files.length : 0,
-      driveFiles: bundleEx && bundleEx.files ? bundleEx.files : []
-    },
+    warnings: runFin.warnings || [],
+    errors: runFin.errors || [],
+    nextStep: runFin.nextStep,
+    severity: runFin.severity,
+    reportText: reportText,
+    reportJson: { driveFolderId: (typeof CBV_TCS_DRIVE_REPORT_FOLDER_ID !== 'undefined') ? CBV_TCS_DRIVE_REPORT_FOLDER_ID : '', phase107: true },
     contractVersion: 'CBV_TCS_V1',
     envelopeOk: false
   };
 
-  var handoffMd = [
-    '# AI Handoff — Milestone 01 Internal Operational Workspace',
-    '',
-    '- traceId: `' + traceId + '`',
-    '- status: `' + status + '`',
-    '- testSuite: `MILESTONE_01_FULL_OPERATIONAL_WORKSPACE`',
-    '',
-    '## Checks summary',
-    checks.map(function (c) {
-      return '- ' + c.code + ': ' + (c.ok ? 'OK' : 'FAIL') + ' — ' + c.message;
-    }).join('\n'),
-    '',
-    '## Next',
-    String(report.nextStep || '')
-  ].join('\n');
-  report.reportJson.aiHandoffMarkdown = handoffMd;
+  var keysOk = CbvTcsMilestone01OpWorkspace_TestConsole__validateEnvelope_(draft).ok;
+  var ic = CbvTcsMilestone01OpWorkspace__validateAllCheckItems_(checks);
+  addCheck('CHECK_ITEM_CONTRACT', ic.ok === true, ic.ok ? 'OK' : 'ERROR', 'Each check row has code/ok/severity/message/detail', { bad: ic.bad || [] });
 
-  var env = CbvTcsMilestone01OpWorkspace_TestConsole__validateEnvelope_(report);
-  report.envelopeOk = env.ok;
-  checks.push({ code: 'REPORT_ENVELOPE', ok: env.ok, severity: env.ok ? 'OK' : 'WARNING', message: 'Final report contract', detail: env });
-  report.checks = checks;
+  var structCore = keysOk === true && ic.ok === true && String(reportText || '').trim().length > 0;
+  var envelopeRowOk = structCore === true && runFin.status !== 'FAIL';
 
-  errors = [];
-  warnings = [];
-  checks.forEach(function (c) {
-    if (!c.ok && (c.severity === 'ERROR' || c.severity === 'CRITICAL')) errors.push(c.message);
-    if (!c.ok && c.severity === 'WARNING') warnings.push(c.message);
+  checks.push({
+    code: 'REPORT_ENVELOPE',
+    ok: envelopeRowOk === true,
+    severity: envelopeRowOk ? 'OK' : 'ERROR',
+    message: 'Envelope row (top-level keys + check contract + reportText + run not FAIL)',
+    detail: {
+      keysOk: keysOk,
+      itemContractOk: ic.ok,
+      reportTextLen: String(reportText || '').length,
+      runStatus: runFin.status,
+      mode: 'CBV_TCS_V1_PHASE107'
+    }
   });
-  report.warnings = warnings;
-  report.errors = errors;
-  status = errors.length > 0 ? 'FAIL' : (warnings.length > 0 ? 'GO_WITH_WARNINGS' : 'GO');
-  severity = errors.length > 0 ? 'CRITICAL' : (warnings.length > 0 ? 'WARNING' : 'OK');
-  report.status = status;
-  report.ok = status !== 'FAIL';
-  report.severity = severity;
-  report.summary = 'Milestone 01 full workspace test: ' + status + ' (' + severity + ')';
+  draft.checks = checks;
+  draft.envelopeOk = envelopeRowOk === true;
 
-  report.reportText = [
-    '=== MILESTONE_01 — FULL OPERATIONAL WORKSPACE TEST ===',
-    'status=' + report.status,
-    'envelopeOk=' + report.envelopeOk,
-    'traceId=' + traceId,
-    'driveFiles=' + (bundleEx && bundleEx.files ? bundleEx.files.length : 0)
-  ].join('\n');
+  var fin = CbvTcsMilestone01OpWorkspace__finalizeStatusFromPayload_({
+    checks: checks,
+    envelopeOk: draft.envelopeOk === true,
+    externalWarnings: [],
+    errors: runFin.errors || [],
+    warnings: runFin.warnings || []
+  });
 
-  CbvTcsMilestone01OpWorkspace_TestConsole__storeLatest_(report);
-  try { Logger.log(report.reportText); } catch (eL) { /* ignore */ }
-  return report;
+  draft.ok = fin.ok;
+  draft.status = fin.status;
+  draft.severity = fin.severity;
+  draft.errors = fin.errors || [];
+  draft.warnings = fin.warnings || [];
+  draft.nextStep = fin.nextStep;
+  draft.summary = 'Milestone 01 full workspace test: ' + fin.status + ' (' + fin.severity + ')';
+  draft.reportText = reportText + '\nfinalStatus=' + fin.status + '\nfinalOk=' + String(fin.ok) + '\nenvelopeOk=' + String(draft.envelopeOk);
+
+  var bundleEx = null;
+  try {
+    if (typeof CbvTcsDriveReport_exportMilestoneFullTestBundle === 'function') {
+      var exportDraft = CbvTcsMilestone01OpWorkspace__draftWithOptionalDriveBundle_(draft, checks, externalWarnings, true, {
+        preWrite: true,
+        expectedMinFiles: 6,
+        note: 'Drive row optimistic; exporter asserts six files on success.'
+      });
+      exportDraft.reportJson.finalStatus = exportDraft.status;
+      exportDraft.reportJson.ok = exportDraft.ok;
+      exportDraft.reportJson.severity = exportDraft.severity;
+      exportDraft.reportJson.envelopeOk = exportDraft.envelopeOk;
+
+      var handoffMd = CbvTcsMilestone01OpWorkspace__buildAiHandoffMd_(exportDraft, traceId);
+      bundleEx = CbvTcsDriveReport_exportMilestoneFullTestBundle(exportDraft, {
+        tagStem: 'MILESTONE_01_FULL_TEST',
+        aiHandoffMarkdown: handoffMd,
+        evidenceHtml: CbvTcsMilestone01OpWorkspace__buildEvidenceHtml_(exportDraft.checks)
+      });
+      var fc = bundleEx && bundleEx.files ? bundleEx.files.length : 0;
+      var exportOk = !!(bundleEx && bundleEx.ok === true && fc >= 6);
+
+      if (bundleEx && bundleEx.warnings) {
+        bundleEx.warnings.forEach(function (w) { externalWarnings.push('DRIVE: ' + w); });
+      }
+      if (bundleEx && !bundleEx.ok && bundleEx.errors && bundleEx.errors.length) {
+        externalWarnings.push('CBV_TEST_REPORT_DRIVE_SAVE_FAILED: ' + bundleEx.errors.join(' | '));
+      }
+
+      if (exportOk) {
+        draft = exportDraft;
+        checks = draft.checks;
+        draft.reportJson.driveFileCount = fc;
+        draft.reportJson.driveFiles = bundleEx.files || [];
+      } else {
+        draft = CbvTcsMilestone01OpWorkspace__draftWithOptionalDriveBundle_(draft, checks, externalWarnings, false, {
+          fileCount: fc,
+          exportOk: !!(bundleEx && bundleEx.ok),
+          errors: bundleEx && bundleEx.errors ? bundleEx.errors : []
+        });
+        checks = draft.checks;
+        draft.reportJson.driveFileCount = fc;
+        draft.reportJson.driveFiles = bundleEx && bundleEx.files ? bundleEx.files : [];
+      }
+    }
+  } catch (eD) {
+    externalWarnings.push('DRIVE_BUNDLE_EXCEPTION: ' + (eD && eD.message ? eD.message : String(eD)));
+    draft = CbvTcsMilestone01OpWorkspace__draftWithOptionalDriveBundle_(draft, checks, externalWarnings, false, {
+      exception: eD && eD.message ? eD.message : String(eD)
+    });
+    checks = draft.checks;
+  }
+
+  if (draft.envelopeOk !== true || draft.ok !== (draft.status !== 'FAIL')) {
+    draft.ok = false;
+    if (draft.status !== 'FAIL') draft.status = 'FAIL';
+    if (draft.severity !== 'CRITICAL') draft.severity = 'ERROR';
+    if (draft.errors.indexOf('CONSISTENCY_GUARD') < 0) draft.errors.push('CONSISTENCY_GUARD');
+  }
+
+  CbvTcsMilestone01OpWorkspace_TestConsole__storeLatest_(draft);
+  try { Logger.log(draft.reportText); } catch (eL) { /* ignore */ }
+  return draft;
 }
 
 function CbvTcsMilestone01OpWorkspace_TestConsole_copyLatestReport() {

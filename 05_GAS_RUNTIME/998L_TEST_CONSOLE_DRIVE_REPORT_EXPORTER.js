@@ -532,7 +532,11 @@ function CbvTcsDriveReport_exportMilestoneFullTestBundle(mainReport, options) {
       createdAt: new Date().toISOString(),
       files: files.map(function (f) { return { name: f.name, id: f.fileId, url: f.url }; }),
       testSuite: String(mainReport.testSuite || ''),
-      status: String(mainReport.status || '')
+      finalStatus: String(mainReport.status || ''),
+      status: String(mainReport.status || ''),
+      ok: mainReport.ok === true,
+      severity: String(mainReport.severity || ''),
+      envelopeOk: mainReport.envelopeOk === true
     };
     writeFile('MANIFEST', 'json', JSON.stringify(manifest, null, 2), 'application/json');
 
