@@ -429,6 +429,7 @@ function CbvStaffWorkboard_renderPage_(params) {
     '<a class="cbv-workboard-filter-chip cbv-busy-link" href="' + String(wbBase).replace(/"/g, '&quot;') + '#cbv-wb-mine">Của tôi</a>' +
     '<a class="cbv-workboard-filter-chip cbv-busy-link" href="' + String(wbBase).replace(/"/g, '&quot;') + '#cbv-wb-overdue">Quá hạn</a>' +
     '</div>';
+  var m07Ribbon = (typeof CbvAppSheetLiveBridge_renderWorkboardRibbon_ === 'function') ? CbvAppSheetLiveBridge_renderWorkboardRibbon_(p) : '';
   var summary =
     '<div class="cbv-workboard-summary cbv-card" style="margin-bottom:12px">' +
     '<div class="cbv-kv">' +
@@ -449,6 +450,7 @@ function CbvStaffWorkboard_renderPage_(params) {
     '<div ' + qProbe + 'class="cbv-workboard cbv-workboard-mobile-stack">' +
     CbvStaffWorkboard__bodyInnerMarkerFallback_() +
     chips +
+    m07Ribbon +
     summary +
     urgentBlock +
     CbvStaffWorkboard__sectionHtml_('cbv-wb-mine', 'Việc của tôi', g.mine, 'Chưa có việc trong queue cho bạn (read-first).') +

@@ -563,11 +563,21 @@ function CbvGuidedSop_renderGuidedSopPage_(params) {
   var stepper = CbvGuidedSop_buildStepperHtml_(flow);
   var banner = CbvGuidedSop_buildCurrentStepBannerHtml_(flow);
   var val = CbvGuidedSop_buildStepValidationHtml_(flow);
+  var m07Bridge = (typeof CbvAppSheetLiveBridge_renderWorkboardRibbon_ === 'function')
+    ? CbvAppSheetLiveBridge_renderWorkboardRibbon_({
+      taskId: taskId,
+      route: '/workspace/sop',
+      source: 'sop',
+      returnRoute: '/workspace/sop',
+      __preflightState: taskId ? '' : 'MISSING_TASKID'
+    })
+    : '';
   var model = {
     taskId: taskId,
     bannerHtml: banner,
     validationHtml: val,
     stepperHtml: stepper,
+    m07BridgeHtml: m07Bridge,
     dailyHref: CbvGuidedSop__href_('/workspace/daily')
   };
   try {

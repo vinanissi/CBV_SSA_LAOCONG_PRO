@@ -1,0 +1,29 @@
+{
+  "contractId": "CBV_M07_APPSHEET_LIVE_BRIDGE_MARKER_CONTRACT_V1",
+  "description": "Milestone 07 AppSheet Live Bridge markers: HTML probe (WEBAPP_STAFF_WORKBOARD) + Test Console 999C + pre-commit must stay aligned.",
+  "probeSelectors": {
+    "htmlAttribute": "data-cbv-marker-probe",
+    "htmlAttributeValue": "1",
+    "probeClass": "cbv-marker-probe"
+  },
+  "requiredMarkers": [
+    "cbv-m07-appsheet-live-bridge-root",
+    "cbv-m07-appsheet-config-runtime",
+    "cbv-m07-appsheet-safe-disabled",
+    "cbv-m07-deeplink-builder",
+    "cbv-m07-context-handoff",
+    "cbv-m07-upload-runtime",
+    "cbv-m07-feedback-runtime",
+    "cbv-m07-return-workboard",
+    "cbv-m07-appsheet-health-runtime",
+    "cbv-m07-route-query-param-safe",
+    "cbv-m07-taskid-missing-fallback",
+    "cbv-m07-empty-state",
+    "cbv-m07-report-envelope",
+    "cbv-appsheet-live-bridge-safe-disabled"
+  ],
+  "files": {
+    "htmlProbeTemplate": "05_GAS_RUNTIME/html/WEBAPP_STAFF_WORKBOARD.html",
+    "testConsole": "05_GAS_RUNTIME/999C_MILESTONE_07_APPSHEET_LIVE_BRIDGE_TEST_CONSOLE.js"
+  }
+}

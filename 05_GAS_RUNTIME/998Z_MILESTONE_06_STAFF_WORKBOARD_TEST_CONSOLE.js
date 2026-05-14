@@ -6,7 +6,7 @@
  * Depends: 998Y, 999A, 998L, 998P, 998H, 998F, 998Q, 998W, 998U, 998S, 998O
  */
 
-/** M06 — CBV UI Marker Contract (workboard shell + card + mobile); preflight + default page checks. Pre-commit: strings must stay findable in this file for scripts/cbv-marker-contract-self-check.mjs (see also cbv-marker-probe in HTML template). */
+/** M06/M07 — CBV UI Marker Contract (workboard + AppSheet live bridge ribbon); preflight + default page checks. Pre-commit: strings must stay findable in this file for scripts/cbv-marker-contract-self-check.mjs (see also cbv-marker-probe in HTML template). */
 var CBV_TCS_M06_WORKBOARD_UI_MARKERS = [
   'cbv-workboard',
   'cbv-workboard-summary',
@@ -23,7 +23,21 @@ var CBV_TCS_M06_WORKBOARD_UI_MARKERS = [
   'cbv-workboard-filter-chip',
   'cbv-workboard-sticky-urgent',
   'cbv-action-xl',
-  'cbv-thumb-zone'
+  'cbv-thumb-zone',
+  'cbv-m07-appsheet-live-bridge-root',
+  'cbv-m07-appsheet-config-runtime',
+  'cbv-m07-appsheet-safe-disabled',
+  'cbv-m07-deeplink-builder',
+  'cbv-m07-context-handoff',
+  'cbv-m07-upload-runtime',
+  'cbv-m07-feedback-runtime',
+  'cbv-m07-return-workboard',
+  'cbv-m07-appsheet-health-runtime',
+  'cbv-m07-route-query-param-safe',
+  'cbv-m07-taskid-missing-fallback',
+  'cbv-m07-empty-state',
+  'cbv-m07-report-envelope',
+  'cbv-appsheet-live-bridge-safe-disabled'
 ];
 
 var __CBV_TCS_MILESTONE06_TC_LAST_REPORT = null;

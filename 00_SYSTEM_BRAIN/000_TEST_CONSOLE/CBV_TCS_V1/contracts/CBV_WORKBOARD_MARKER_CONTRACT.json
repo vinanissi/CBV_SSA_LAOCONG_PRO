@@ -1,6 +1,6 @@
 {
   "contractId": "CBV_WORKBOARD_MARKER_CONTRACT_V1",
-  "description": "Single source for Milestone 06 workboard markers: HTML probe + Test Console + pre-commit must stay aligned.",
+  "description": "Workboard shell + M07 live bridge markers: HTML probe + Test Consoles + pre-commit stay aligned.",
   "probeSelectors": {
     "htmlAttribute": "data-cbv-marker-probe",
     "htmlAttributeValue": "1",
@@ -26,7 +26,21 @@
     "cbv-appsheet-link",
     "cbv-appsheet-safe-disabled",
     "cbv-appsheet-config-status",
-    "cbv-marker-probe"
+    "cbv-marker-probe",
+    "cbv-m07-appsheet-live-bridge-root",
+    "cbv-m07-appsheet-config-runtime",
+    "cbv-m07-appsheet-safe-disabled",
+    "cbv-m07-deeplink-builder",
+    "cbv-m07-context-handoff",
+    "cbv-m07-upload-runtime",
+    "cbv-m07-feedback-runtime",
+    "cbv-m07-return-workboard",
+    "cbv-m07-appsheet-health-runtime",
+    "cbv-m07-route-query-param-safe",
+    "cbv-m07-taskid-missing-fallback",
+    "cbv-m07-empty-state",
+    "cbv-m07-report-envelope",
+    "cbv-appsheet-live-bridge-safe-disabled"
   ],
   "files": {
     "htmlProbeTemplate": "05_GAS_RUNTIME/html/WEBAPP_STAFF_WORKBOARD.html",

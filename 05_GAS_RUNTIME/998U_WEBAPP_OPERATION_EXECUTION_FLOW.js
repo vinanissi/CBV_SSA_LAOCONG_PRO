@@ -373,9 +373,19 @@ function CbvExecFlow_renderFocusPage_(params) {
     ? CbvExecFlow_renderTaskExecutionBodyHtml_({ taskId: fm.focusTaskId })
     : { html: '', warnings: [] };
   warnings = warnings.concat(execBody.warnings || []);
+  var m07Bridge = (typeof CbvAppSheetLiveBridge_renderWorkboardRibbon_ === 'function')
+    ? CbvAppSheetLiveBridge_renderWorkboardRibbon_({
+      taskId: fm.focusTaskId,
+      route: '/workspace/focus',
+      source: 'focus',
+      returnRoute: '/workspace/focus',
+      __preflightState: fm.focusTaskId ? '' : 'MISSING_TASKID'
+    })
+    : '';
   var model = {
     focus: fm,
     cockpitHtml: execBody.html || '',
+    m07BridgeHtml: m07Bridge,
     dailyHref: CbvExecFlow__href_('/workspace/daily'),
     focusHrefSelf: CbvExecFlow__href_('/workspace/focus' + (fm.focusTaskId ? '?taskId=' + encodeURIComponent(fm.focusTaskId) : ''))
   };
