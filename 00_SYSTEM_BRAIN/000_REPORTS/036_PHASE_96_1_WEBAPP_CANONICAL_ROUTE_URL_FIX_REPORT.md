@@ -1,7 +1,8 @@
 # Report — Phase 96.1 — WebApp canonical route URL fix
 
 **Date:** 2026-05-14  
-**Phase ID:** `PHASE_96_1_WEBAPP_CANONICAL_ROUTE_URL_FIX`
+**Phase ID:** `PHASE_96_1_WEBAPP_CANONICAL_ROUTE_URL_FIX`  
+**Git:** `19230c0` on `phase/from-v2.4.1-TASK-FIN`
 
 ## Delivered
 
