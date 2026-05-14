@@ -134,6 +134,40 @@ function CbvWebAppStaffTrial_TestConsole_run() {
     'traceId=' + report.traceId
   ].join('\n');
 
+  if (typeof CbvTcsDriveReport_export === 'function') {
+    try {
+      var ex = CbvTcsDriveReport_export(report, {
+        phase: 'PHASE_97_STAFF_TRIAL_FEEDBACK_CAPTURE',
+        testSuite: 'CBV_WEBAPP_STAFF_TRIAL_PHASE_97',
+        prefix: '097_1',
+        format: 'both'
+      });
+      checks.push({
+        code: 'DRIVE_APPEND_EXPORT',
+        ok: !!(ex && ex.ok),
+        severity: ex && ex.ok ? 'OK' : 'WARNING',
+        message: ex && ex.ok ? 'Drive export completed (append-only).' : 'Drive export did not complete (non-blocking).',
+        detail: { files: ex ? ex.files : [], folderId: ex ? ex.folderId : '' }
+      });
+      if (ex && ex.warnings && ex.warnings.length) report.warnings = report.warnings.concat(ex.warnings);
+      if (!ex || !ex.ok) {
+        var em = ex && ex.errors && ex.errors.length ? ex.errors.join(' | ') : 'ok=false or null result';
+        report.warnings.push('DRIVE_EXPORT_FAILED: ' + em);
+      }
+    } catch (eD) {
+      checks.push({
+        code: 'DRIVE_APPEND_EXPORT',
+        ok: false,
+        severity: 'WARNING',
+        message: 'Drive export threw (non-blocking).',
+        detail: { error: eD && eD.message ? eD.message : String(eD) }
+      });
+      report.warnings.push('DRIVE_EXPORT_FAILED: ' + (eD && eD.message ? eD.message : String(eD)));
+    }
+  } else {
+    checks.push({ code: 'DRIVE_APPEND_EXPORT', ok: true, severity: 'OK', message: 'CbvTcsDriveReport_export not loaded (998L); skipped.', detail: {} });
+  }
+
   CbvWebAppStaffTrial_TestConsole__storeLatestReport_(report);
   try { Logger.log(report.reportText); } catch (eLog) { /* ignore */ }
   return report;

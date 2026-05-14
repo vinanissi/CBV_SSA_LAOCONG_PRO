@@ -346,13 +346,17 @@ Sau đó nếu cần hiểu sâu: `APPSHEET_HOME_ALERT_INSTALL_GUIDE.md` và `AP
 | `docs/webapp/WEBAPP_PHASE_97_AI_HANDOFF.md` | Prompt AI sau trial |
 | `05_GAS_RUNTIME/998J_WEBAPP_STAFF_TRIAL_RUNTIME.js` | Runtime staff trial + sheet `CBV_WEBAPP_UAT_FEEDBACK` |
 | `05_GAS_RUNTIME/998K_WEBAPP_STAFF_TRIAL_TEST_CONSOLE.js` | Test Console Phase 97 (CBV_TCS_V1) |
+| `05_GAS_RUNTIME/998L_TEST_CONSOLE_DRIVE_REPORT_EXPORTER.js` | Drive append-only export (`CbvTcsDriveReport_export`) |
+| `docs/test-console/CBV_TCS_DRIVE_REPORT_EXPORT_V1.md` | Đặc tả export Drive Phase 97.1 |
 | `00_SYSTEM_BRAIN/000_PROMPTS/097_PHASE_97_STAFF_TRIAL_FEEDBACK_CAPTURE_PROMPT.md` | Prompt archive |
 | `00_SYSTEM_BRAIN/000_REPORTS/097_PHASE_97_STAFF_TRIAL_FEEDBACK_CAPTURE_REPORT.md` | Report |
 | `00_SYSTEM_BRAIN/001_HANDOFF/097_PHASE_97_STAFF_TRIAL_FEEDBACK_CAPTURE_HANDOFF.md` | Handoff |
 | `00_SYSTEM_BRAIN/002_DECISIONS/097_PHASE_97_DECISION_LOG.md` | Decision log (pilot) |
+| `00_SYSTEM_BRAIN/000_REPORTS/097_1_TEST_CONSOLE_DRIVE_REPORT_EXPORT_REPORT.md` | Report Phase 97.1 (Drive export) |
+| `00_SYSTEM_BRAIN/001_HANDOFF/097_1_TEST_CONSOLE_DRIVE_REPORT_EXPORT_HANDOFF.md` | Handoff Phase 97.1 |
 
 **Routes affected:** none (Phase 94 freeze).  
-**Artifacts:** `097_*` trong `00_SYSTEM_BRAIN/`.  
+**Artifacts:** `097_*`, `097_1_*` trong `00_SYSTEM_BRAIN/`.  
 **Next:** Triage feedback; optional copy fixes Phase 96 (`998F`); successor phase khi có quyết định governance.
 
 ---

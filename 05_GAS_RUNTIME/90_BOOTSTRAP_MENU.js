@@ -278,6 +278,12 @@ function buildCbvTestConsoleMenu_() {
         .addItem('Copy AI Handoff Prompt', 'menuCbvTestConsoleWebAppStaff97_handoff')
         .addItem('Copy Latest Report', 'menuCbvTestConsoleWebAppStaff97_copyReport')
     )
+    .addSubMenu(
+      ui.createMenu('Phase 97.1 — Drive Report Export')
+        .addItem('Run Drive Export Health Check', 'menuCbvTestConsoleDrive971_run')
+        .addItem('Export Latest Phase 97 Report to Drive', 'menuCbvTestConsoleDrive971_exportP97')
+        .addItem('Copy Latest Drive Export Result', 'menuCbvTestConsoleDrive971_copyResult')
+    )
     .addItem('HOME_ALERT Phase 82 — SLA & Escalation', 'menuCbvTestConsoleHomeAlertSla82')
     .addItem('HOME_ALERT Phase 83 — SLA Policy Registry', 'menuCbvTestConsoleHomeAlertSla83')
     .addItem('HOME_ALERT Phase 84 — Safe Automation Runtime', 'menuCbvTestConsoleHomeAlertSafeAutomation84')

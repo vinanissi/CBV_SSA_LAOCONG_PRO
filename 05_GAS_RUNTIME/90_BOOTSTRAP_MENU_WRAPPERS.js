@@ -1341,6 +1341,29 @@ function menuCbvTestConsoleWebAppStaff97_copyReport() {
   });
 }
 
+/** CBV Test Console — Phase 97.1 Drive report export (CBV_TCS_V1). */
+function menuCbvTestConsoleDrive971_run() {
+  runSafeMenuStep_('CbvTcsDriveReport_TestConsole_run', 'Drive Export Health Check', function (r) {
+    if (!r) return 'No result';
+    return (r.status || '') + '\n' + (r.summary || '') + '\nEnvelope OK: ' + (r.envelopeOk ? 'yes' : 'no');
+  });
+}
+
+function menuCbvTestConsoleDrive971_exportP97() {
+  runSafeMenuStep_('CbvTcsDriveReport_exportLatestPhase97ToDrive', 'Export Phase 97 Report to Drive', function (r) {
+    if (!r) return 'No result';
+    if (r.ok === false && r.message) return r.message;
+    var n = r && r.files ? r.files.length : 0;
+    return 'Drive export: ' + (r && r.ok ? 'ok' : 'partial/fail') + '\nFiles: ' + n;
+  });
+}
+
+function menuCbvTestConsoleDrive971_copyResult() {
+  runSafeMenuStep_('CbvTcsDriveReport_TestConsole_copyLatestResult', 'Copy Drive Export Result', function (r) {
+    return r && r.ok ? 'Dialog opened — select JSON and copy.' : (r && r.message) || 'Done';
+  });
+}
+
 /** CBV Test Console — HOME_ALERT Phase 82 SLA & escalation QA. */
 function menuCbvTestConsoleHomeAlertSla82() {
   runSafeMenuStep_('HomeAlertSlaEscalation_TestConsole_run', 'HOME_ALERT SLA/Escalation test', function (r) {

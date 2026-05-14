@@ -185,6 +185,13 @@ The sequence in `.clasp.json` filePushOrder is the deployment order. **HOME_ALER
 - `998K_WEBAPP_STAFF_TRIAL_TEST_CONSOLE.js` provides `CbvWebAppStaffTrial_TestConsole_*` under `🧪 CBV Test Console → Phase 97 — Staff Trial`. CBV_TCS_V1 envelope; persists last report under `CBV_WEBAPP_STAFF_TRIAL_TC_LAST_REPORT_JSON`.
 - Push order: **`998J` then `998K` immediately after `998I`**, before `96_WEBAPP_DOGET_DISPATCHER.js`. `999` stays last.
 
+### Phase 97.1 — Test Console Drive report export (append-only)
+
+- `998L_TEST_CONSOLE_DRIVE_REPORT_EXPORTER.js` defines `CbvTcsDriveReport_export(report, options)` (JSON and/or Markdown), `CbvTcsDriveReport_TestConsole_run`, `CbvTcsDriveReport_exportLatestPhase97ToDrive`, `CbvTcsDriveReport_TestConsole_copyLatestResult`. Target folder ID `CBV_TCS_DRIVE_REPORT_FOLDER_ID` (CBV_TCS_V1 archive). **No** delete, **no** overwrite, **no** business mutation.
+- `998K_WEBAPP_STAFF_TRIAL_TEST_CONSOLE.js` calls `CbvTcsDriveReport_export` after each Staff Trial run when `998L` is loaded; Drive failures add `DRIVE_EXPORT_FAILED` to **warnings** only (non-blocking for `status`).
+- Menu: **🧪 CBV Test Console → Phase 97.1 — Drive Report Export**.
+- Push order: **`998L` immediately after `998K`**, before `96_WEBAPP_DOGET_DISPATCHER.js`. `999` stays last.
+
 SHARED layer excerpt (matches push order after file helper):
 
 ```
