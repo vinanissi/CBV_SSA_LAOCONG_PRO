@@ -22,13 +22,14 @@
     </style>
   </head>
   <body>
+    <? var L = (MODEL && MODEL.i18n) ? MODEL.i18n : {}; ?>
     <div class="wrap">
       <div class="top">
         <div>
           <div class="title"><?= MODEL.title ?></div>
-          <div class="muted">route: <code><?= MODEL.route ?></code></div>
+          <div class="muted"><?= L.routeChip || "route" ?>: <code><?= MODEL.route ?></code></div>
         </div>
-        <div class="badge ok">READ_FIRST</div>
+        <div class="badge ok" title="<?= L.readFirstTitle || "READ_FIRST" ?>"><?= L.readFirstBadge || "READ_FIRST" ?></div>
       </div>
 
       <div class="card">
@@ -37,7 +38,7 @@
 
       <? if (MODEL.warnings && MODEL.warnings.length) { ?>
         <div class="card">
-          <div class="badge warn">WARNING</div>
+          <div class="badge warn"><?= L.warningsBadge || "WARNING" ?></div>
           <div style="margin-top:8px">
             <ul>
               <? for (var i=0; i<MODEL.warnings.length; i++) { ?>
@@ -53,10 +54,9 @@
       </div>
 
       <div class="footer">
-        checkedAt: <?= MODEL.checkedAt ?>
-        <div>Rules: No auto assign · No auto resolve · No auto escalate · No production claim</div>
+        <?= L.checkedAt || "checkedAt" ?>: <?= MODEL.checkedAt ?>
+        <div><?= MODEL.footerSafetyVi || (L.rulesLine || "Rules: No auto assign · No auto resolve · No auto escalate · No production claim") ?></div>
       </div>
     </div>
   </body>
 </html>
-

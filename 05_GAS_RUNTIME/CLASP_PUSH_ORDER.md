@@ -129,6 +129,8 @@ The sequence in `.clasp.json` filePushOrder is the deployment order. **HOME_ALER
    998C_WEBAPP_UI_FREEZE_TEST_CONSOLE.js
    998D_WEBAPP_UAT_RUNBOOK.js
    998E_WEBAPP_UAT_TEST_CONSOLE.js
+   998F_WEBAPP_VI_UX_COPY.js
+   998G_WEBAPP_VI_UX_TEST_CONSOLE.js
    96_WEBAPP_DOGET_DISPATCHER.js
    999_WEBAPP_DOGET_DISPATCHER_FINAL.js
 ```
@@ -163,6 +165,12 @@ The sequence in `.clasp.json` filePushOrder is the deployment order. **HOME_ALER
 - `998E_WEBAPP_UAT_TEST_CONSOLE.js` provides the Phase 95 Test Console (`CbvWebAppUat_TestConsole_*`) for menu under `🧪 CBV Test Console → Phase 95 — Pilot UAT`. Read-first only; emits a full CBV_TCS_V1 envelope; persists last report via `PropertiesService` under `CBV_WEBAPP_UAT_TC_LAST_REPORT_JSON`.
 - No HTML / no renderer change. Phase 95 surfaces only as documentation + Test Console menu items.
 - `999_WEBAPP_DOGET_DISPATCHER_FINAL.js` **MUST remain absolute last** in `filePushOrder`.
+
+### Phase 96 — WebApp Vietnamese UX / user-flow guides (load order rationale)
+
+- `998F_WEBAPP_VI_UX_COPY.js` defines canonical `/exec` URL, Vietnamese label map, `CbvWebAppVi_getLabel`, `_getRouteLabel`, `_getNavItems`, `_getSafetyFooter` / `_getSafetyFooterHtml`, `_getWebAppLinks`, `_getUserFlowGuide`, `_validate`. Read-only copy layer; **no** route renames; **no** mutation APIs.
+- `998G_WEBAPP_VI_UX_TEST_CONSOLE.js` provides `CbvWebAppViUx_TestConsole_*` for menu under `🧪 CBV Test Console → Phase 96 — Vietnamese UX`. Emits CBV_TCS_V1 envelope; persists last report under `CBV_WEBAPP_VI_UX_TC_LAST_REPORT_JSON`.
+- Renderers (`98`, `992`, `995`, `998`) and shell HTML consume `998F` when loaded (graceful English fallback if absent). `998D` exposes `CbvWebAppUat_getUserFlowViPointers()` for bilingual runbook pointers (advisory `PropertiesService`-free).
 
 SHARED layer excerpt (matches push order after file helper):
 

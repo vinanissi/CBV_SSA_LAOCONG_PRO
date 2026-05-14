@@ -12,7 +12,19 @@
  *   - CbvWebAppTimelineKanban_renderKanbanColumn_(column)
  *   - CbvWebAppTimelineKanban_renderKanbanCard_(card)
  *   - CbvWebAppTimelineKanban_renderState_(state)
+ *
+ * Phase 96 — optional Vietnamese labels via CbvWebAppVi_* (routes unchanged).
  */
+
+function CbvWebAppTimelineKanban__vi_(key, en) {
+  if (typeof CbvWebAppVi_getLabel !== 'function') return en;
+  try {
+    var t = CbvWebAppVi_getLabel(key);
+    return t || en;
+  } catch (e) {
+    return en;
+  }
+}
 
 /* ------------------------------------------------------------------ */
 /* Helpers                                                             */
@@ -87,16 +99,16 @@ function CbvWebAppTimelineKanban_renderTimelineRow_(row) {
   html.push('<span class="cbv-badge ' + sevClass + '">' + slaLabel + (breach > 0 ? ' · L' + breach : '') + '</span>');
   html.push('</div>');
   html.push('<div class="cbv-muted" style="margin-top:6px"><code>' + CbvWebAppTimelineKanban__esc_(r.id || '') + '</code>');
-  if (r.status) html.push(' · status: ' + CbvWebAppTimelineKanban__esc_(r.status));
-  if (r.assignedTo) html.push(' · assigned: ' + CbvWebAppTimelineKanban__esc_(r.assignedTo));
+  if (r.status) html.push(' · ' + CbvWebAppTimelineKanban__vi_('status', 'status') + ': ' + CbvWebAppTimelineKanban__esc_(r.status));
+  if (r.assignedTo) html.push(' · ' + CbvWebAppTimelineKanban__vi_('assigned_to', 'assigned') + ': ' + CbvWebAppTimelineKanban__esc_(r.assignedTo));
   if (r.moduleCode) html.push(' · module: ' + CbvWebAppTimelineKanban__esc_(r.moduleCode));
   html.push('</div>');
   if (r.operatorSecondaryText) html.push('<div class="cbv-muted" style="margin-top:6px">' + CbvWebAppTimelineKanban__esc_(r.operatorSecondaryText) + '</div>');
   if (r.operatorMetaText) html.push('<div class="cbv-muted" style="margin-top:4px">' + CbvWebAppTimelineKanban__esc_(r.operatorMetaText) + '</div>');
   if (r.operatorNextAction) {
-    html.push('<div style="margin-top:8px"><span class="cbv-badge">Next</span> <span class="cbv-muted" style="margin-left:6px">' + CbvWebAppTimelineKanban__esc_(r.operatorNextAction) + '</span></div>');
+    html.push('<div style="margin-top:8px"><span class="cbv-badge">' + CbvWebAppTimelineKanban__vi_('next_badge', 'Next') + '</span> <span class="cbv-muted" style="margin-left:6px">' + CbvWebAppTimelineKanban__esc_(r.operatorNextAction) + '</span></div>');
   }
-  html.push('<div class="cbv-muted" style="margin-top:8px">when: ' + CbvWebAppTimelineKanban__esc_(timeStr) + '</div>');
+  html.push('<div class="cbv-muted" style="margin-top:8px">' + CbvWebAppTimelineKanban__vi_('when_label', 'when') + ': ' + CbvWebAppTimelineKanban__esc_(timeStr) + '</div>');
   html.push('</div>');
   return html.join('');
 }
@@ -115,10 +127,10 @@ function CbvWebAppTimelineKanban_renderKanbanCard_(card) {
   html.push('<span class="cbv-badge ' + sevClass + '">' + CbvWebAppTimelineKanban__esc_(c.slaStatus || 'SLA') + (breach > 0 ? ' · L' + breach : '') + '</span>');
   html.push('</div>');
   html.push('<div class="cbv-muted" style="margin-top:6px"><code>' + CbvWebAppTimelineKanban__esc_(c.id || '') + '</code>');
-  if (c.assignedTo) html.push(' · ' + CbvWebAppTimelineKanban__esc_(c.assignedTo));
+  if (c.assignedTo) html.push(' · ' + CbvWebAppTimelineKanban__vi_('assigned_to', 'assigned') + ': ' + CbvWebAppTimelineKanban__esc_(c.assignedTo));
   html.push('</div>');
   if (c.operatorMetaText) html.push('<div class="cbv-muted" style="margin-top:4px">' + CbvWebAppTimelineKanban__esc_(c.operatorMetaText) + '</div>');
-  html.push('<div class="cbv-muted" style="margin-top:6px">updated: ' + CbvWebAppTimelineKanban__esc_(updated) + '</div>');
+  html.push('<div class="cbv-muted" style="margin-top:6px">' + CbvWebAppTimelineKanban__vi_('updated_label', 'updated') + ': ' + CbvWebAppTimelineKanban__esc_(updated) + '</div>');
   html.push('</div>');
   return html.join('');
 }
@@ -133,7 +145,7 @@ function CbvWebAppTimelineKanban_renderKanbanColumn_(column) {
   html.push('<span class="cbv-badge">' + CbvWebAppTimelineKanban__esc_(String(col.count || cards.length || 0)) + '</span>');
   html.push('</div>');
   if (!cards.length) {
-    html.push('<div class="cbv-state cbv-muted">No cards in this column.</div>');
+    html.push('<div class="cbv-state cbv-muted">' + CbvWebAppTimelineKanban__vi_('empty_check_warnings', 'No cards in this column.') + '</div>');
   } else {
     for (var i = 0; i < cards.length; i++) {
       html.push(CbvWebAppTimelineKanban_renderKanbanCard_(cards[i]));
@@ -158,7 +170,7 @@ function CbvWebAppTimelineKanban__mapState_(res, defaults) {
     return CbvWebAppTimelineKanban_renderState_({
       type: 'warning',
       title: defaults.title,
-      message: 'Data not available (read-first).',
+      message: CbvWebAppTimelineKanban__vi_('data_not_available', 'Data not available (read-first).'),
       detail: res
     });
   }
@@ -170,7 +182,7 @@ function CbvWebAppTimelineKanban__mapState_(res, defaults) {
     return CbvWebAppTimelineKanban_renderState_({
       type: 'empty',
       title: defaults.title,
-      message: 'No items found.',
+      message: CbvWebAppTimelineKanban__vi_('no_items', 'No items found.'),
       detail: res
     });
   }
@@ -178,14 +190,24 @@ function CbvWebAppTimelineKanban__mapState_(res, defaults) {
     return CbvWebAppTimelineKanban_renderState_({
       type: 'partial',
       title: defaults.title,
-      message: 'Showing read-first data with warnings.',
+      message: CbvWebAppTimelineKanban__vi_('showing_partial', 'Showing read-first data with warnings.'),
       detail: null
     });
   }
   return CbvWebAppTimelineKanban_renderState_({ type: 'ready', title: defaults.title, message: '', detail: null });
 }
 
-function CbvWebAppTimelineKanban__safetyFooter_() {
+function CbvWebAppTimelineKanban__safetyFooter_(route) {
+  var rt = route || '/home-alert/timeline';
+  if (typeof CbvWebAppVi_getSafetyFooterHtml === 'function') {
+    try {
+      return [
+        '<div class="cbv-card" style="margin-top:14px">',
+        CbvWebAppVi_getSafetyFooterHtml(rt),
+        '</div>'
+      ].join('');
+    } catch (e) { /* fall through */ }
+  }
   return [
     '<div class="cbv-card" style="margin-top:14px">',
     '<div class="cbv-muted">Read-first only. Safety: No auto assign · No auto resolve · No auto escalate · No production claim.</div>',
@@ -195,7 +217,7 @@ function CbvWebAppTimelineKanban__safetyFooter_() {
 
 function CbvWebAppTimelineKanban__warningsBlock_(warnings) {
   if (!warnings || !warnings.length) return '';
-  var html = ['<div class="cbv-card" style="margin-top:12px"><h3>Warnings</h3><ul>'];
+  var html = ['<div class="cbv-card" style="margin-top:12px"><h3>' + CbvWebAppTimelineKanban__vi_('warnings_title', 'Warnings') + '</h3><ul>'];
   for (var i = 0; i < warnings.length; i++) {
     html.push('<li class="cbv-muted">' + CbvWebAppTimelineKanban__esc_(String(warnings[i])) + '</li>');
   }
@@ -208,14 +230,14 @@ function CbvWebAppTimelineKanban__inlineTimeline_(state, res) {
   var html = [];
   html.push(CbvWebAppTimelineKanban__includeComponents_() || '');
   html.push('<div class="cbv-card">');
-  html.push('<h3>Timeline (read-first)</h3>');
-  html.push('<div class="cbv-muted">Sort: UPDATED_AT desc · fallback CREATED_AT desc · No edits / no mutation buttons.</div>');
+  html.push('<h3>' + CbvWebAppTimelineKanban__vi_('timeline_read_first_h3', 'Timeline (read-first)') + '</h3>');
+  html.push('<div class="cbv-muted">' + CbvWebAppTimelineKanban__vi_('timeline_sort_hint', 'Sort: UPDATED_AT desc · fallback CREATED_AT desc · No edits / no mutation buttons.') + '</div>');
   if (state && state.type !== 'ready') {
     html.push('<div class="cbv-state"><span class="cbv-badge warn">' + CbvWebAppTimelineKanban__esc_(state.type.toUpperCase()) + '</span><span style="margin-left:8px">' + CbvWebAppTimelineKanban__esc_(state.message) + '</span></div>');
   }
-  html.push('<div class="cbv-muted" style="margin-top:10px">count: ' + (d.count || 0) + '</div>');
+  html.push('<div class="cbv-muted" style="margin-top:10px">' + CbvWebAppTimelineKanban__vi_('count_label', 'count') + ': ' + (d.count || 0) + '</div>');
   if (!d.rows || !d.rows.length) {
-    html.push('<div class="cbv-state cbv-muted">Empty (or HOME_ALERT missing). Check warnings.</div>');
+    html.push('<div class="cbv-state cbv-muted">' + CbvWebAppTimelineKanban__vi_('empty_check_warnings', 'Empty (or HOME_ALERT missing). Check warnings.') + '</div>');
   } else {
     html.push('<div style="margin-top:10px">');
     for (var i = 0; i < d.rows.length; i++) {
@@ -225,7 +247,7 @@ function CbvWebAppTimelineKanban__inlineTimeline_(state, res) {
   }
   html.push('</div>');
   html.push(CbvWebAppTimelineKanban__warningsBlock_(res ? res.warnings : []));
-  html.push(CbvWebAppTimelineKanban__safetyFooter_());
+  html.push(CbvWebAppTimelineKanban__safetyFooter_('/home-alert/timeline'));
   return html.join('');
 }
 
@@ -234,14 +256,14 @@ function CbvWebAppTimelineKanban__inlineKanban_(state, res) {
   var html = [];
   html.push(CbvWebAppTimelineKanban__includeComponents_() || '');
   html.push('<div class="cbv-card">');
-  html.push('<h3>Kanban (read-first)</h3>');
-  html.push('<div class="cbv-muted">Group by: ' + CbvWebAppTimelineKanban__esc_(d.groupBy || 'STATUS') + ' · Cards read-only · No drag-drop save.</div>');
+  html.push('<h3>' + CbvWebAppTimelineKanban__vi_('kanban_read_first_h3', 'Kanban (read-first)') + '</h3>');
+  html.push('<div class="cbv-muted">' + CbvWebAppTimelineKanban__vi_('kanban_group_hint', 'Group by: STATUS · Cards read-only · No drag-drop save.') + '</div>');
   if (state && state.type !== 'ready') {
     html.push('<div class="cbv-state"><span class="cbv-badge warn">' + CbvWebAppTimelineKanban__esc_(state.type.toUpperCase()) + '</span><span style="margin-left:8px">' + CbvWebAppTimelineKanban__esc_(state.message) + '</span></div>');
   }
-  html.push('<div class="cbv-muted" style="margin-top:10px">total: ' + (d.total || 0) + ' · columns: ' + ((d.columns || []).length) + '</div>');
+  html.push('<div class="cbv-muted" style="margin-top:10px">' + CbvWebAppTimelineKanban__vi_('count_label', 'total') + ': ' + (d.total || 0) + ' · columns: ' + ((d.columns || []).length) + '</div>');
   if (!d.columns || !d.columns.length) {
-    html.push('<div class="cbv-state cbv-muted">Empty (or HOME_ALERT missing). Check warnings.</div>');
+    html.push('<div class="cbv-state cbv-muted">' + CbvWebAppTimelineKanban__vi_('empty_check_warnings', 'Empty (or HOME_ALERT missing). Check warnings.') + '</div>');
   } else {
     html.push('<div style="margin-top:10px;display:flex;gap:10px;overflow-x:auto;padding-bottom:6px">');
     for (var i = 0; i < d.columns.length; i++) {
@@ -251,7 +273,7 @@ function CbvWebAppTimelineKanban__inlineKanban_(state, res) {
   }
   html.push('</div>');
   html.push(CbvWebAppTimelineKanban__warningsBlock_(res ? res.warnings : []));
-  html.push(CbvWebAppTimelineKanban__safetyFooter_());
+  html.push(CbvWebAppTimelineKanban__safetyFooter_('/home-alert/kanban'));
   return html.join('');
 }
 
@@ -262,7 +284,10 @@ function CbvWebAppTimelineKanban_renderTimeline() {
   } catch (e) {
     res = { ok: false, data: null, warnings: [], errors: [e && e.message ? e.message : String(e)] };
   }
-  var state = CbvWebAppTimelineKanban__mapState_(res, { title: 'Timeline (read-first)', kind: 'timeline' });
+  var pageTitle = (typeof CbvWebAppVi_getRouteLabel === 'function')
+    ? CbvWebAppVi_getRouteLabel('/home-alert/timeline')
+    : 'Timeline (read-first)';
+  var state = CbvWebAppTimelineKanban__mapState_(res, { title: pageTitle, kind: 'timeline' });
 
   var bodyHtml = null;
   try {
@@ -290,7 +315,10 @@ function CbvWebAppTimelineKanban_renderKanban() {
   } catch (e) {
     res = { ok: false, data: null, warnings: [], errors: [e && e.message ? e.message : String(e)] };
   }
-  var state = CbvWebAppTimelineKanban__mapState_(res, { title: 'Kanban (read-first)', kind: 'kanban' });
+  var pageTitleK = (typeof CbvWebAppVi_getRouteLabel === 'function')
+    ? CbvWebAppVi_getRouteLabel('/home-alert/kanban')
+    : 'Kanban (read-first)';
+  var state = CbvWebAppTimelineKanban__mapState_(res, { title: pageTitleK, kind: 'kanban' });
 
   var bodyHtml = null;
   try {

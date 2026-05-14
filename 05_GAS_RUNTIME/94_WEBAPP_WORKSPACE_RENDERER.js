@@ -38,11 +38,13 @@ function CbvWebAppWorkspace_render(route, params) {
 
   var reg = (typeof CbvWebAppWorkspace_routeByPath === 'function') ? CbvWebAppWorkspace_routeByPath(rt) : null;
   if (!reg) {
+    var nfTitle = (typeof CbvWebAppVi_getLabel === 'function') ? CbvWebAppVi_getLabel('not_found_title') : 'Not found';
+    var nfBody = (typeof CbvWebAppVi_getLabel === 'function') ? CbvWebAppVi_getLabel('not_found_body') : 'Unknown route';
     return CbvWebAppWorkspace_renderShell_({
-      title: 'Not found',
+      title: nfTitle,
       status: 'NOT_FOUND',
       route: rt,
-      bodyHtml: '<p>Unknown route: <code>' + rt + '</code></p>' + CbvWebAppWorkspace__navHtml_()
+      bodyHtml: '<p>' + nfBody + ': <code>' + rt + '</code></p>' + CbvWebAppWorkspace__navHtml_()
     });
   }
 
@@ -67,7 +69,9 @@ function CbvWebAppWorkspace_render(route, params) {
     page = CbvWebAppWorkspace_renderPlaceholder_(reg.route);
   }
 
-  page.title = reg.title;
+  page.title = (typeof CbvWebAppVi_getRouteLabel === 'function')
+    ? CbvWebAppVi_getRouteLabel(reg.route)
+    : reg.title;
   page.route = reg.route;
   page.status = 'READ_FIRST';
   return CbvWebAppWorkspace_renderShell_(page);
@@ -77,6 +81,24 @@ function CbvWebAppWorkspace_renderShell_(page) {
   var model = page || {};
   model.navHtml = CbvWebAppWorkspace__navHtml_();
   model.checkedAt = CbvWebAppWorkspace__now_();
+  if (typeof CbvWebAppVi_getShellI18n_ === 'function') {
+    try {
+      model.i18n = CbvWebAppVi_getShellI18n_();
+    } catch (eI18n) {
+      model.i18n = null;
+    }
+  } else {
+    model.i18n = null;
+  }
+  if (typeof CbvWebAppVi_getSafetyFooter === 'function') {
+    try {
+      model.footerSafetyVi = CbvWebAppVi_getSafetyFooter(model.route || '');
+    } catch (eF) {
+      model.footerSafetyVi = null;
+    }
+  } else {
+    model.footerSafetyVi = null;
+  }
 
   try {
     var t = HtmlService.createTemplateFromFile('html/WEBAPP_WORKSPACE_SHELL');
@@ -174,14 +196,26 @@ function CbvWebAppWorkspace_renderPlaceholder_(route) {
 }
 
 function CbvWebAppWorkspace__navHtml_() {
-  var links = [
-    { href: '/workspace', label: 'Workspace' },
-    { href: '/home-alert/my-queue', label: 'My Queue' },
-    { href: '/home-alert/sla', label: 'SLA' },
-    { href: '/home-alert/timeline', label: 'Timeline' },
-    { href: '/home-alert/kanban', label: 'Kanban' },
-    { href: '/runtime/health', label: 'Runtime' }
-  ];
+  var links;
+  if (typeof CbvWebAppVi_getNavItems === 'function') {
+    try {
+      links = CbvWebAppVi_getNavItems();
+    } catch (eNav) {
+      links = null;
+    }
+  }
+  if (!links || !links.length) {
+    links = [
+      { href: '/workspace', label: 'Workspace' },
+      { href: '/home-alert/my-queue', label: 'My Queue' },
+      { href: '/home-alert/sla', label: 'SLA' },
+      { href: '/home-alert/timeline', label: 'Timeline' },
+      { href: '/home-alert/kanban', label: 'Kanban' },
+      { href: '/runtime/health', label: 'Runtime' },
+      { href: '/reports', label: 'Reports' },
+      { href: '/admin/reference', label: 'Admin Reference' }
+    ];
+  }
   var out = '<div style="display:flex;flex-wrap:wrap;gap:8px">';
   links.forEach(function(l) {
     out += '<a href="' + l.href + '" style="padding:6px 10px;border:1px solid #ddd;border-radius:8px;text-decoration:none;color:#111;background:#fafafa">' + l.label + '</a>';

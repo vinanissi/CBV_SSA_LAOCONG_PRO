@@ -282,7 +282,33 @@ Sau đó nếu cần hiểu sâu: `APPSHEET_HOME_ALERT_INSTALL_GUIDE.md` và `AP
 
 **Routes affected:** none added; reuses 8 frozen routes + `?action=ping`.  
 **Artifacts:** `034_*` trong `00_SYSTEM_BRAIN/` (prompt, report, handoff).  
-**Next (conditional):** Phase 96 — Controlled WebApp Action Design / Mutation Guard Blueprint (only on GO / GO_WITH_WARNINGS). On NO_GO, Phase 96 must be a UAT Fix Pack.
+**Next:** Phase 96 — WebApp Vietnamese UX / user-flow guides (nhãn tiếng Việt + tài liệu luồng; **không** đổi route, **không** mutation). Tiếp theo Phase 97 — Staff trial execution / feedback capture.
+
+---
+
+## PHASE 96 — WebApp Vietnamese UX / User Flow Guide (localization + docs)
+
+**Trạng thái:** Pilot tier — Việt hóa nhãn UI nội bộ, chuẩn URL `/exec`, hướng dẫn luồng Operator / Supervisor / Admin. **Không** thêm write action, **không** auto workflow, **không** AI runtime, **không** đổi đường dẫn route.
+
+| Tài liệu / công cụ | Ghi chú |
+|--------------------|--------|
+| `docs/webapp/PHASE_96_WEBAPP_VIETNAMESE_UX_REFACTOR_USER_FLOW_GUIDE.md` | Tổng quan phase 96 |
+| `docs/webapp/WEBAPP_VI_LABEL_DICTIONARY.md` | key ↔ EN ↔ VI + route |
+| `docs/webapp/WEBAPP_USER_FLOW_GUIDE_VI.md` | Luồng chi tiết 3 vai trò + nguyên tắc dùng |
+| `docs/webapp/WEBAPP_OPERATOR_QUICK_GUIDE_VI.md` | Hướng nhanh operator |
+| `docs/webapp/WEBAPP_SUPERVISOR_QUICK_GUIDE_VI.md` | Hướng nhanh supervisor |
+| `docs/webapp/WEBAPP_ADMIN_QUICK_GUIDE_VI.md` | Hướng nhanh admin |
+| `docs/webapp/WEBAPP_LINKS_AND_ROUTES_VI.md` | URL chính thức + `?route=` (cảnh báo googleusercontent) |
+| `docs/webapp/WEBAPP_UAT_VIETNAMESE_COPY_CHECKLIST.md` | Checklist copy tiếng Việt trước trial |
+| `05_GAS_RUNTIME/998F_WEBAPP_VI_UX_COPY.js` | `CbvWebAppVi_*` — dictionary + footer + links |
+| `05_GAS_RUNTIME/998G_WEBAPP_VI_UX_TEST_CONSOLE.js` | Test Console Phase 96 (CBV_TCS_V1) |
+| `00_SYSTEM_BRAIN/000_PROMPTS/035_PHASE_96_WEBAPP_VIETNAMESE_UX_REFACTOR_USER_FLOW_GUIDE_PROMPT.md` | Prompt archive |
+| `00_SYSTEM_BRAIN/000_REPORTS/035_PHASE_96_WEBAPP_VIETNAMESE_UX_REFACTOR_USER_FLOW_GUIDE_REPORT.md` | Report |
+| `00_SYSTEM_BRAIN/001_HANDOFF/035_PHASE_96_WEBAPP_VIETNAMESE_UX_REFACTOR_USER_FLOW_GUIDE_HANDOFF.md` | Handoff |
+
+**Routes affected:** none (đường dẫn route giữ nguyên Phase 94).  
+**Artifacts:** `035_*` trong `00_SYSTEM_BRAIN/`.  
+**Next:** Phase 97 — Staff trial execution / feedback capture (GO_WITH_WARNINGS acceptable cho copy cho đến khi có phản hồi nhân sự).
 
 ---
 

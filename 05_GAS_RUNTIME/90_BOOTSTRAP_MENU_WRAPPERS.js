@@ -1215,6 +1215,56 @@ function menuCbvTestConsoleWebAppUat95_copyReport() {
   });
 }
 
+/** CBV Test Console — Phase 96 WebApp Vietnamese UX / user-flow guides. */
+function menuCbvTestConsoleWebAppVi96_run() {
+  runSafeMenuStep_('CbvWebAppViUx_TestConsole_run', 'Vietnamese UX Health Check', function (r) {
+    if (!r) return 'No result';
+    return (r.status || '') + '\n' + (r.summary || '') + '\nEnvelope OK: ' + (r.envelopeOk ? 'yes' : 'no');
+  });
+}
+
+function menuCbvTestConsoleWebAppVi96_labels() {
+  runSafeMenuStep_('CbvWebAppViUx_TestConsole_showLabelDictionary', 'Label Dictionary', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleWebAppVi96_links() {
+  runSafeMenuStep_('CbvWebAppViUx_TestConsole_showRouteLinks', 'Route Links', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleWebAppVi96_operator() {
+  runSafeMenuStep_('CbvWebAppViUx_TestConsole_showOperatorGuide', 'Operator Guide', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleWebAppVi96_supervisor() {
+  runSafeMenuStep_('CbvWebAppViUx_TestConsole_showSupervisorGuide', 'Supervisor Guide', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleWebAppVi96_admin() {
+  runSafeMenuStep_('CbvWebAppViUx_TestConsole_showAdminGuide', 'Admin Guide', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleWebAppVi96_handoff() {
+  runSafeMenuStep_('CbvWebAppViUx_TestConsole_showHandoffPrompt', 'AI Handoff Prompt', function (r) {
+    return r && r.ok ? 'Shown in dialog.' : 'Done';
+  });
+}
+
+function menuCbvTestConsoleWebAppVi96_copyReport() {
+  runSafeMenuStep_('CbvWebAppViUx_TestConsole_copyLatestReport', 'Copy Latest Report', function (r) {
+    return r && r.ok ? 'Dialog opened — select JSON and copy.' : (r && r.message) || 'Done';
+  });
+}
+
 /** CBV Test Console — HOME_ALERT Phase 82 SLA & escalation QA. */
 function menuCbvTestConsoleHomeAlertSla82() {
   runSafeMenuStep_('HomeAlertSlaEscalation_TestConsole_run', 'HOME_ALERT SLA/Escalation test', function (r) {

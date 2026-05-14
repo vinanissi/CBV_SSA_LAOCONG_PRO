@@ -6,6 +6,10 @@
  *   issue triage matrix, and go/no-go criteria as machine-readable
  *   structures that the Phase 95 Test Console can validate.
  *
+ * Phase 96 add-on:
+ *   CbvWebAppUat_getUserFlowViPointers() — Vietnamese user-flow pointers + doc paths
+ *   (advisory; depends on 998F for live flow JSON + canonical URL when loaded).
+ *
  * Read-first only. No mutation. No write actions. No AppSheet Bot.
  * No AI runtime. No production claim.
  */
@@ -68,6 +72,42 @@ var CBV_WEBAPP_UAT_PARTICIPANT_GUIDANCE = {
   supervisor: 'At least 1 supervisor (SLA / Timeline / Kanban).',
   operator: 'At least 2 operators (My Queue / Workspace / mobile + desktop).'
 };
+
+/** Phase 96 — Vietnamese UX doc pointers (repo paths; advisory for staff briefing). */
+var CBV_WEBAPP_UAT_PHASE96_VI_DOC_PATHS = [
+  'docs/webapp/WEBAPP_USER_FLOW_GUIDE_VI.md',
+  'docs/webapp/WEBAPP_OPERATOR_QUICK_GUIDE_VI.md',
+  'docs/webapp/WEBAPP_SUPERVISOR_QUICK_GUIDE_VI.md',
+  'docs/webapp/WEBAPP_ADMIN_QUICK_GUIDE_VI.md',
+  'docs/webapp/WEBAPP_LINKS_AND_ROUTES_VI.md',
+  'docs/webapp/WEBAPP_VI_LABEL_DICTIONARY.md',
+  'docs/webapp/WEBAPP_UAT_VIETNAMESE_COPY_CHECKLIST.md',
+  'docs/webapp/PHASE_96_WEBAPP_VIETNAMESE_UX_REFACTOR_USER_FLOW_GUIDE.md'
+];
+
+function CbvWebAppUat_getUserFlowViPointers() {
+  var data = {
+    phase: 'PHASE_96_WEBAPP_VIETNAMESE_UX_REFACTOR_USER_FLOW_GUIDE',
+    noteVi: 'Nhãn WebApp pilot đã Việt hóa (Phase 96). Script UAT tiếng Anh (A1–A10 / S1–S9 / O1–O9) giữ nguyên — dùng các tài liệu tiếng Việt dưới đây khi hướng dẫn nhân sự; kiểm tra footer an toàn tiếng Việt trên mọi route.',
+    canonicalWebAppUrl: (typeof CBV_WEBAPP_VI_CANONICAL_EXEC_URL === 'string')
+      ? CBV_WEBAPP_VI_CANONICAL_EXEC_URL
+      : '(định nghĩa trong 998F_WEBAPP_VI_UX_COPY.js — xem docs/webapp/WEBAPP_LINKS_AND_ROUTES_VI.md)',
+    operatorFlow: (function () {
+      try { return (typeof CbvWebAppVi_getUserFlowGuide === 'function') ? CbvWebAppVi_getUserFlowGuide('operator') : null; }
+      catch (e) { return null; }
+    })(),
+    supervisorFlow: (function () {
+      try { return (typeof CbvWebAppVi_getUserFlowGuide === 'function') ? CbvWebAppVi_getUserFlowGuide('supervisor') : null; }
+      catch (e) { return null; }
+    })(),
+    adminFlow: (function () {
+      try { return (typeof CbvWebAppVi_getUserFlowGuide === 'function') ? CbvWebAppVi_getUserFlowGuide('admin') : null; }
+      catch (e) { return null; }
+    })(),
+    docPaths: CBV_WEBAPP_UAT_PHASE96_VI_DOC_PATHS.slice()
+  };
+  return CbvWebAppUat__out_(true, data, [], []);
+}
 
 var CBV_WEBAPP_UAT_SEVERITY_LEVELS = ['BLOCKER', 'HIGH', 'MEDIUM', 'LOW', 'OBSERVATION'];
 
@@ -291,6 +331,7 @@ function CbvWebAppUat_validate() {
     feedbackSchemaOk: false,
     triageMatrixOk: false,
     goNoGoCriteriaOk: false,
+    userFlowViPointersOk: false,
     noMutationExposed: true,
     mutationProbe: [],
     mutationAllowlist: []
@@ -311,6 +352,14 @@ function CbvWebAppUat_validate() {
   try { detail.goNoGoCriteriaOk = !!(CbvWebAppUat_getGoNoGoCriteria().data && Array.isArray(CbvWebAppUat_getGoNoGoCriteria().data.GO)); }
   catch (e7) { warnings.push('goNoGoCriteria: ' + (e7 && e7.message ? e7.message : String(e7))); }
 
+  try {
+    var ufv = CbvWebAppUat_getUserFlowViPointers();
+    detail.userFlowViPointersOk = !!(ufv && ufv.data && ufv.data.docPaths && ufv.data.docPaths.length);
+  } catch (e8) { warnings.push('userFlowViPointers: ' + (e8 && e8.message ? e8.message : String(e8))); }
+  if (!detail.userFlowViPointersOk) {
+    warnings.push('Phase 96 Vietnamese user-flow pointers unavailable — load 998F before 998D or check CbvWebAppUat_getUserFlowViPointers.');
+  }
+
   ['pilotScopeOk', 'adminScriptOk', 'supervisorScriptOk', 'operatorScriptOk', 'feedbackSchemaOk', 'triageMatrixOk', 'goNoGoCriteriaOk'].forEach(function(k) {
     if (!detail[k]) errors.push('Phase 95 artefact missing or malformed: ' + k);
   });
@@ -329,6 +378,7 @@ function CbvWebAppUat_validate() {
     'CbvWebAppUat_getFeedbackSchema',
     'CbvWebAppUat_getIssueTriageMatrix',
     'CbvWebAppUat_getGoNoGoCriteria',
+    'CbvWebAppUat_getUserFlowViPointers',
     'CbvWebAppUat_validate'
   ];
   var allowPatterns = [

@@ -7,6 +7,7 @@
  *
  * No auto-heal buttons. No delete buttons. No edit buttons. No mutation controls.
  * Safety footer preserved.
+ * Phase 96 — optional Vietnamese copy via CbvWebAppVi_* helpers.
  *
  * Public functions:
  *   - CbvWebAppObservability_renderRuntimeHealth()
@@ -15,6 +16,16 @@
  *   - CbvWebAppObservability_renderReportRow_(row)
  *   - CbvWebAppObservability_renderState_(state)
  */
+
+function CbvWebAppObservability__vi_(key, en) {
+  if (typeof CbvWebAppVi_getLabel !== 'function') return en;
+  try {
+    var t = CbvWebAppVi_getLabel(key);
+    return t || en;
+  } catch (e) {
+    return en;
+  }
+}
 
 /* ------------------------------------------------------------------ */
 /* Helpers                                                             */
@@ -96,10 +107,10 @@ function CbvWebAppObservability_renderHealthCard_(card) {
   html.push('<span class="cbv-badge ' + sevClass + '">' + CbvWebAppObservability__esc_(c.status || '?') + '</span>');
   html.push('</div>');
   html.push('<div class="cbv-muted" style="margin-top:6px"><code>' + CbvWebAppObservability__esc_(c.code || '') + '</code>');
-  if (c.severity) html.push(' · severity: ' + CbvWebAppObservability__esc_(c.severity));
+  if (c.severity) html.push(' · ' + CbvWebAppObservability__vi_('severity_label', 'severity') + ': ' + CbvWebAppObservability__esc_(c.severity));
   html.push('</div>');
   if (c.note) html.push('<div class="cbv-muted" style="margin-top:6px">' + CbvWebAppObservability__esc_(c.note) + '</div>');
-  if (c.value) html.push('<div class="cbv-muted" style="margin-top:4px">last: ' + CbvWebAppObservability__esc_(CbvWebAppObservability__formatDate_(c.value)) + '</div>');
+  if (c.value) html.push('<div class="cbv-muted" style="margin-top:4px">' + CbvWebAppObservability__vi_('last_label', 'last') + ': ' + CbvWebAppObservability__esc_(CbvWebAppObservability__formatDate_(c.value)) + '</div>');
   html.push('</div>');
   return html.join('');
 }
@@ -120,12 +131,12 @@ function CbvWebAppObservability_renderReportRow_(row) {
   html.push('</div>');
   html.push('<div class="cbv-muted" style="margin-top:6px">');
   html.push('<code>' + CbvWebAppObservability__esc_(r.reportId || '(no id)') + '</code>');
-  if (r.severity) html.push(' · <span class="cbv-badge ' + sevClass + '">' + CbvWebAppObservability__esc_(r.severity) + '</span>');
-  if (r.runBy) html.push(' · runBy: ' + CbvWebAppObservability__esc_(r.runBy));
-  if (r.traceId) html.push(' · trace: <code>' + CbvWebAppObservability__esc_(r.traceId) + '</code>');
+  if (r.severity) html.push(' · <span class="cbv-badge ' + sevClass + '">' + CbvWebAppObservability__vi_('severity_label', 'severity') + ': ' + CbvWebAppObservability__esc_(r.severity) + '</span>');
+  if (r.runBy) html.push(' · ' + CbvWebAppObservability__vi_('run_by_label', 'runBy') + ': ' + CbvWebAppObservability__esc_(r.runBy));
+  if (r.traceId) html.push(' · ' + CbvWebAppObservability__vi_('trace_label', 'trace') + ': <code>' + CbvWebAppObservability__esc_(r.traceId) + '</code>');
   html.push('</div>');
   if (summary) html.push('<div class="cbv-muted" style="margin-top:6px">' + CbvWebAppObservability__esc_(summary) + '</div>');
-  html.push('<div class="cbv-muted" style="margin-top:6px">checkedAt: ' + CbvWebAppObservability__esc_(checked) + ' · source: ' + CbvWebAppObservability__esc_(r.source || '') + '</div>');
+  html.push('<div class="cbv-muted" style="margin-top:6px">' + CbvWebAppObservability__vi_('checked_at', 'checkedAt') + ': ' + CbvWebAppObservability__esc_(checked) + ' · ' + CbvWebAppObservability__vi_('source_label', 'source') + ': ' + CbvWebAppObservability__esc_(r.source || '') + '</div>');
   html.push('</div>');
   return html.join('');
 }
@@ -144,7 +155,7 @@ function CbvWebAppObservability__mapState_(res, defaults) {
     return CbvWebAppObservability_renderState_({
       type: 'warning',
       title: defaults.title,
-      message: 'Data not available (read-first).',
+      message: CbvWebAppObservability__vi_('data_not_available', 'Data not available (read-first).'),
       detail: res
     });
   }
@@ -156,7 +167,7 @@ function CbvWebAppObservability__mapState_(res, defaults) {
     return CbvWebAppObservability_renderState_({
       type: 'empty',
       title: defaults.title,
-      message: 'No items found.',
+      message: CbvWebAppObservability__vi_('no_items', 'No items found.'),
       detail: res
     });
   }
@@ -164,14 +175,24 @@ function CbvWebAppObservability__mapState_(res, defaults) {
     return CbvWebAppObservability_renderState_({
       type: 'partial',
       title: defaults.title,
-      message: 'Showing read-first data with warnings.',
+      message: CbvWebAppObservability__vi_('showing_partial', 'Showing read-first data with warnings.'),
       detail: null
     });
   }
   return CbvWebAppObservability_renderState_({ type: 'ready', title: defaults.title, message: '', detail: null });
 }
 
-function CbvWebAppObservability__safetyFooter_() {
+function CbvWebAppObservability__safetyFooter_(route) {
+  var rt = route || '/runtime/health';
+  if (typeof CbvWebAppVi_getSafetyFooterHtml === 'function') {
+    try {
+      return [
+        '<div class="cbv-card" style="margin-top:14px">',
+        CbvWebAppVi_getSafetyFooterHtml(rt),
+        '</div>'
+      ].join('');
+    } catch (e) { /* fall through */ }
+  }
   return [
     '<div class="cbv-card" style="margin-top:14px">',
     '<div class="cbv-muted">Read-first only. Safety: No auto-heal · No auto resolve · No auto escalate · No production claim.</div>',
@@ -181,7 +202,7 @@ function CbvWebAppObservability__safetyFooter_() {
 
 function CbvWebAppObservability__warningsBlock_(warnings) {
   if (!warnings || !warnings.length) return '';
-  var html = ['<div class="cbv-card" style="margin-top:12px"><h3>Warnings</h3><ul>'];
+  var html = ['<div class="cbv-card" style="margin-top:12px"><h3>' + CbvWebAppObservability__vi_('warnings_title', 'Warnings') + '</h3><ul>'];
   for (var i = 0; i < warnings.length; i++) {
     html.push('<li class="cbv-muted">' + CbvWebAppObservability__esc_(String(warnings[i])) + '</li>');
   }
@@ -194,21 +215,21 @@ function CbvWebAppObservability__inlineRuntimeHealth_(state, res) {
   var html = [];
   html.push(CbvWebAppObservability__includeComponents_() || '');
   html.push('<div class="cbv-card">');
-  html.push('<h3>Runtime Health (read-first)</h3>');
-  html.push('<div class="cbv-muted">Operational Observability Layer · per-phase Test Console probe · No auto-heal.</div>');
+  html.push('<h3>' + CbvWebAppObservability__vi_('runtime_health_h3', 'Runtime Health (read-first)') + '</h3>');
+  html.push('<div class="cbv-muted">' + CbvWebAppObservability__vi_('runtime_health_sub', 'Operational Observability Layer · per-phase Test Console probe · No auto-heal.') + '</div>');
   if (state && state.type !== 'ready') {
     html.push('<div class="cbv-state"><span class="cbv-badge warn">' + CbvWebAppObservability__esc_(state.type.toUpperCase()) + '</span><span style="margin-left:8px">' + CbvWebAppObservability__esc_(state.message) + '</span></div>');
   }
   html.push('<div class="cbv-muted" style="margin-top:10px">');
-  html.push('overall: <span class="cbv-badge ' + CbvWebAppObservability__statusBadgeClass_(d.status) + '">' + CbvWebAppObservability__esc_(d.status || '?') + '</span> · severity: ' + CbvWebAppObservability__esc_(d.severity || '?'));
+  html.push(CbvWebAppObservability__vi_('overall_label', 'overall') + ': <span class="cbv-badge ' + CbvWebAppObservability__statusBadgeClass_(d.status) + '">' + CbvWebAppObservability__esc_(d.status || '?') + '</span> · ' + CbvWebAppObservability__vi_('severity_label', 'severity') + ': ' + CbvWebAppObservability__esc_(d.severity || '?'));
   html.push('</div>');
   html.push('</div>');
 
   // Health cards
-  html.push('<div class="cbv-card" style="margin-top:10px"><h3>Phase Health Cards</h3>');
+  html.push('<div class="cbv-card" style="margin-top:10px"><h3>' + CbvWebAppObservability__vi_('phase_health_cards_h3', 'Phase Health Cards') + '</h3>');
   var cards = d.healthCards || [];
   if (!cards.length) {
-    html.push('<div class="cbv-state cbv-muted">No phase cards available.</div>');
+    html.push('<div class="cbv-state cbv-muted">' + CbvWebAppObservability__vi_('no_phase_cards', 'No phase cards available.') + '</div>');
   } else {
     for (var i = 0; i < cards.length; i++) {
       html.push(CbvWebAppObservability_renderHealthCard_(cards[i]));
@@ -218,32 +239,32 @@ function CbvWebAppObservability__inlineRuntimeHealth_(state, res) {
 
   // Route summary
   var rs = d.routeSummary || {};
-  html.push('<div class="cbv-card" style="margin-top:10px"><h3>Route Summary</h3>');
-  html.push('<div class="cbv-muted">total: ' + (rs.total || 0) + ' · read-first: ' + (rs.readFirst || 0) + (rs.missing ? ' · <em>route registry missing</em>' : '') + '</div>');
+  html.push('<div class="cbv-card" style="margin-top:10px"><h3>' + CbvWebAppObservability__vi_('route_summary_h3', 'Route Summary') + '</h3>');
+  html.push('<div class="cbv-muted">' + CbvWebAppObservability__vi_('total_short', 'total') + ': ' + (rs.total || 0) + ' · ' + CbvWebAppObservability__vi_('read_first_short', 'read-first') + ': ' + (rs.readFirst || 0) + (rs.missing ? ' · <em>' + CbvWebAppObservability__vi_('route_registry_missing_em', 'route registry missing') + '</em>' : '') + '</div>');
   if (rs.byMode) {
-    html.push('<div class="cbv-muted" style="margin-top:4px">by mode: <code>' + CbvWebAppObservability__esc_(JSON.stringify(rs.byMode)) + '</code></div>');
+    html.push('<div class="cbv-muted" style="margin-top:4px">' + CbvWebAppObservability__vi_('by_mode_short', 'by mode') + ': <code>' + CbvWebAppObservability__esc_(JSON.stringify(rs.byMode)) + '</code></div>');
   }
   if (rs.byPageType) {
-    html.push('<div class="cbv-muted" style="margin-top:4px">by pageType: <code>' + CbvWebAppObservability__esc_(JSON.stringify(rs.byPageType)) + '</code></div>');
+    html.push('<div class="cbv-muted" style="margin-top:4px">' + CbvWebAppObservability__vi_('by_page_type_short', 'by pageType') + ': <code>' + CbvWebAppObservability__esc_(JSON.stringify(rs.byPageType)) + '</code></div>');
   }
   html.push('</div>');
 
   // Report summary
   var rp = d.reportSummary || {};
-  html.push('<div class="cbv-card" style="margin-top:10px"><h3>Report Summary</h3>');
-  html.push('<div class="cbv-muted">in-memory: ' + (rp.inMemoryCount || 0) + ' · SYSTEM_HEALTH_LOG rows: ' + (rp.systemHealthLogRows || 0) + ' · CBV_TEST_REPORTS rows: ' + (rp.cbvTestReportsRows || 0));
-  if (rp.cbvTestReportsMissing) html.push(' · <em>CBV_TEST_REPORTS missing (warning only)</em>');
+  html.push('<div class="cbv-card" style="margin-top:10px"><h3>' + CbvWebAppObservability__vi_('report_summary_h3', 'Report Summary') + '</h3>');
+  html.push('<div class="cbv-muted">' + CbvWebAppObservability__vi_('in_memory_short', 'in-memory') + ': ' + (rp.inMemoryCount || 0) + ' · SYSTEM_HEALTH_LOG ' + CbvWebAppObservability__vi_('rows_short', 'rows') + ': ' + (rp.systemHealthLogRows || 0) + ' · CBV_TEST_REPORTS ' + CbvWebAppObservability__vi_('rows_short', 'rows') + ': ' + (rp.cbvTestReportsRows || 0));
+  if (rp.cbvTestReportsMissing) html.push(' · <em>' + CbvWebAppObservability__vi_('cbv_test_reports_missing_em', 'CBV_TEST_REPORTS missing (warning only)') + '</em>');
   html.push('</div>');
   html.push('</div>');
 
   // Test console summary
   var tc = d.testConsoleSummary || {};
-  html.push('<div class="cbv-card" style="margin-top:10px"><h3>Test Console Summary</h3>');
-  html.push('<div class="cbv-muted">total: ' + (tc.total || 0) + ' · loaded: ' + (tc.loaded || 0) + ' · with stored report: ' + (tc.withReport || 0) + '</div>');
+  html.push('<div class="cbv-card" style="margin-top:10px"><h3>' + CbvWebAppObservability__vi_('test_console_summary_h3', 'Test Console Summary') + '</h3>');
+  html.push('<div class="cbv-muted">' + CbvWebAppObservability__vi_('total_short', 'total') + ': ' + (tc.total || 0) + ' · ' + CbvWebAppObservability__vi_('tc_loaded', 'loaded') + ': ' + (tc.loaded || 0) + ' · ' + CbvWebAppObservability__vi_('tc_with_report', 'with stored report') + ': ' + (tc.withReport || 0) + '</div>');
   html.push('</div>');
 
   html.push(CbvWebAppObservability__warningsBlock_(res ? res.warnings : []));
-  html.push(CbvWebAppObservability__safetyFooter_());
+  html.push(CbvWebAppObservability__safetyFooter_('/runtime/health'));
   return html.join('');
 }
 
@@ -252,14 +273,14 @@ function CbvWebAppObservability__inlineReportViewer_(state, res) {
   var html = [];
   html.push(CbvWebAppObservability__includeComponents_() || '');
   html.push('<div class="cbv-card">');
-  html.push('<h3>Report Viewer (read-first)</h3>');
-  html.push('<div class="cbv-muted">Sources: CBV_TEST_REPORTS (sheet, if present) · SYSTEM_HEALTH_LOG · in-memory PropertiesService · Read-only.</div>');
+  html.push('<h3>' + CbvWebAppObservability__vi_('reports_h3', 'Report Viewer (read-first)') + '</h3>');
+  html.push('<div class="cbv-muted">' + CbvWebAppObservability__vi_('report_viewer_sources', 'Sources: CBV_TEST_REPORTS (sheet, if present) · SYSTEM_HEALTH_LOG · in-memory PropertiesService · Read-only.') + '</div>');
   if (state && state.type !== 'ready') {
     html.push('<div class="cbv-state"><span class="cbv-badge warn">' + CbvWebAppObservability__esc_(state.type.toUpperCase()) + '</span><span style="margin-left:8px">' + CbvWebAppObservability__esc_(state.message) + '</span></div>');
   }
-  html.push('<div class="cbv-muted" style="margin-top:10px">count: ' + (d.count || 0) + '</div>');
+  html.push('<div class="cbv-muted" style="margin-top:10px">' + CbvWebAppObservability__vi_('count_label', 'count') + ': ' + (d.count || 0) + '</div>');
   if (!d.rows || !d.rows.length) {
-    html.push('<div class="cbv-state cbv-muted">No reports visible. Run a phase Test Console to populate, or wait for CBV_TEST_REPORTS to appear.</div>');
+    html.push('<div class="cbv-state cbv-muted">' + CbvWebAppObservability__vi_('no_reports_visible', 'No reports visible. Run a phase Test Console to populate, or wait for CBV_TEST_REPORTS to appear.') + '</div>');
   } else {
     html.push('<div style="margin-top:10px">');
     for (var i = 0; i < d.rows.length; i++) {
@@ -269,7 +290,7 @@ function CbvWebAppObservability__inlineReportViewer_(state, res) {
   }
   html.push('</div>');
   html.push(CbvWebAppObservability__warningsBlock_(res ? res.warnings : []));
-  html.push(CbvWebAppObservability__safetyFooter_());
+  html.push(CbvWebAppObservability__safetyFooter_('/reports'));
   return html.join('');
 }
 
@@ -284,7 +305,10 @@ function CbvWebAppObservability_renderRuntimeHealth() {
   } catch (e) {
     res = { ok: false, data: null, warnings: [], errors: [e && e.message ? e.message : String(e)] };
   }
-  var state = CbvWebAppObservability__mapState_(res, { title: 'Runtime Health (read-first)', kind: 'health' });
+  var titleH = (typeof CbvWebAppVi_getRouteLabel === 'function')
+    ? CbvWebAppVi_getRouteLabel('/runtime/health')
+    : 'Runtime Health (read-first)';
+  var state = CbvWebAppObservability__mapState_(res, { title: titleH, kind: 'health' });
 
   var bodyHtml = null;
   try {
@@ -312,7 +336,10 @@ function CbvWebAppObservability_renderReportViewer() {
   } catch (e) {
     res = { ok: false, data: null, warnings: [], errors: [e && e.message ? e.message : String(e)] };
   }
-  var state = CbvWebAppObservability__mapState_(res, { title: 'Report Viewer (read-first)', kind: 'reports' });
+  var titleR = (typeof CbvWebAppVi_getRouteLabel === 'function')
+    ? CbvWebAppVi_getRouteLabel('/reports')
+    : 'Report Viewer (read-first)';
+  var state = CbvWebAppObservability__mapState_(res, { title: titleR, kind: 'reports' });
 
   var bodyHtml = null;
   try {
