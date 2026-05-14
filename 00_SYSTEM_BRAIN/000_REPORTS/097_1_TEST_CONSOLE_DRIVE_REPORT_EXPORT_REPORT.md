@@ -2,7 +2,7 @@
 
 **Date:** 2026-05-14  
 **Phase:** `PHASE_97_1_TEST_CONSOLE_DRIVE_REPORT_EXPORT`  
-**Git:** (see commit after `phase 97.1 drive report export`)
+**Git:** `98afafa` on `phase/from-v2.4.1-TASK-FIN`
 
 ## Summary
 
