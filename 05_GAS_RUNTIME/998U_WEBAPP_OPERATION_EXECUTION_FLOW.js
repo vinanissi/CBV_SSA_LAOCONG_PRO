@@ -309,8 +309,27 @@ function CbvExecFlow_renderTaskExecutionBodyHtml_(params) {
   var p = params || {};
   var taskId = String(p.taskId || p.taskid || '').trim();
   var em = CbvExecFlow_getTaskExecutionModel_(taskId);
+  var tk = em && em.task ? em.task : null;
+  var m08Strip = '';
+  if (typeof CbvOpsState_renderTaskContextStripHtml_ === 'function') {
+    m08Strip = CbvOpsState_renderTaskContextStripHtml_({
+      taskId: taskId,
+      route: p.route || '/workspace/execution/task',
+      __preflightState: p.__preflightState,
+      traceId: (typeof CbvWebAppWorkspace__traceId_ === 'function') ? CbvWebAppWorkspace__traceId_() : '',
+      status: tk ? tk.status : '',
+      dueAt: tk ? (tk.dueAt || (tk.raw && tk.raw.dueAt)) : '',
+      createdAt: tk && tk.raw ? tk.raw.createdAt : '',
+      updatedAt: tk && tk.raw ? tk.raw.updatedAt : '',
+      blockedSince: tk && tk.raw ? tk.raw.blockedSince : '',
+      waitingSince: tk && tk.raw ? tk.raw.waitingSince : '',
+      evidenceExpected: tk && tk.evidenceExpected,
+      evidenceCount: tk && tk.evidenceCount
+    });
+  }
   var model = {
     exec: em,
+    m08OpsStripHtml: m08Strip,
     actionZone: CbvExecFlow_buildExecutionActionZoneHtml_(em),
     summaryHtml: CbvExecFlow__buildSummaryHtml_(em),
     sopHtml: CbvExecFlow_buildInlineSopHtml_(em),
@@ -382,10 +401,20 @@ function CbvExecFlow_renderFocusPage_(params) {
       __preflightState: fm.focusTaskId ? '' : 'MISSING_TASKID'
     })
     : '';
+  var m08Focus = (typeof CbvOpsState_renderTodayDashboardHtml_ === 'function')
+    ? CbvOpsState_renderTodayDashboardHtml_({
+      taskId: fm.focusTaskId,
+      route: '/workspace/focus',
+      __preflightState: fm.focusTaskId ? '' : 'MISSING_TASKID',
+      workboardCounts: {},
+      workboardGroups: {}
+    })
+    : '';
   var model = {
     focus: fm,
     cockpitHtml: execBody.html || '',
     m07BridgeHtml: m07Bridge,
+    m08FocusHtml: m08Focus,
     dailyHref: CbvExecFlow__href_('/workspace/daily'),
     focusHrefSelf: CbvExecFlow__href_('/workspace/focus' + (fm.focusTaskId ? '?taskId=' + encodeURIComponent(fm.focusTaskId) : ''))
   };

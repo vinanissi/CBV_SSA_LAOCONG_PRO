@@ -1,0 +1,32 @@
+{
+  "contractId": "CBV_M08_OPERATIONAL_STATE_MARKER_CONTRACT_V1",
+  "description": "Milestone 08 operational state markers: HTML probe (WEBAPP_STAFF_WORKBOARD) + Test Console 999E + pre-commit must stay aligned.",
+  "probeSelectors": {
+    "htmlAttribute": "data-cbv-marker-probe",
+    "htmlAttributeValue": "1",
+    "probeClass": "cbv-marker-probe"
+  },
+  "requiredMarkers": [
+    "cbv-m08-ops-state-root",
+    "cbv-m08-state-engine",
+    "cbv-m08-state-registry",
+    "cbv-m08-transition-contract",
+    "cbv-m08-transition-validator",
+    "cbv-m08-operational-timeline",
+    "cbv-m08-timeline-empty-state",
+    "cbv-m08-sla-runtime",
+    "cbv-m08-sla-warning",
+    "cbv-m08-today-state-dashboard",
+    "cbv-m08-supervisor-state-runtime",
+    "cbv-m08-event-hook-safe-disabled",
+    "cbv-m08-taskid-missing-fallback",
+    "cbv-m08-route-query-param-safe",
+    "cbv-m08-empty-state",
+    "cbv-m08-report-envelope",
+    "cbv-m08-operational-state-empty"
+  ],
+  "files": {
+    "htmlProbeTemplate": "05_GAS_RUNTIME/html/WEBAPP_STAFF_WORKBOARD.html",
+    "testConsole": "05_GAS_RUNTIME/999E_MILESTONE_08_OPERATIONAL_STATE_TEST_CONSOLE.js"
+  }
+}

@@ -274,7 +274,14 @@ function CbvWebAppOpUx_renderTodayPage_() {
     email = '';
   }
   var today = CbvWebAppOpUx_getTodayOpsModel_(email);
-  var model = { today: today, routeUrls: (typeof CbvWebAppPilotRenderer__routeUrls_ === 'function') ? CbvWebAppPilotRenderer__routeUrls_() : {} };
+  var m08Today = (typeof CbvOpsState_renderTodayDashboardHtml_ === 'function')
+    ? CbvOpsState_renderTodayDashboardHtml_({
+      route: '/workspace/today',
+      workboardCounts: {},
+      workboardGroups: {}
+    })
+    : '';
+  var model = { today: today, routeUrls: (typeof CbvWebAppPilotRenderer__routeUrls_ === 'function') ? CbvWebAppPilotRenderer__routeUrls_() : {}, m08TodayOpsHtml: m08Today };
   try {
     var t = HtmlService.createTemplateFromFile('html/WEBAPP_WORKSPACE_TODAY_OPS');
     t.COMPONENTS = HtmlService.createHtmlOutputFromFile('html/WEBAPP_WORKSPACE_COMPONENTS').getContent();
