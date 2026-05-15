@@ -28,7 +28,17 @@
     "cbv-m09-rowkey-missing-fallback",
     "cbv-m09-route-query-param-safe",
     "cbv-m09-empty-state",
-    "cbv-m09-report-envelope"
+    "cbv-m09-report-envelope",
+    "cbv-m09-focus-hero",
+    "cbv-m09-focus-action-bar",
+    "cbv-m09-focus-session-info",
+    "cbv-m09-focus-task-context",
+    "cbv-m09-focus-next-action",
+    "cbv-m09-focus-quick-log-preview",
+    "cbv-m09-focus-quick-note-form",
+    "cbv-m09-focus-workflow-continuity",
+    "cbv-m09-focus-safe-copy",
+    "cbv-m09-focus-debug-hidden"
   ],
   "files": {
     "htmlProbeTemplate": "05_GAS_RUNTIME/html/WEBAPP_STAFF_WORKBOARD.html",

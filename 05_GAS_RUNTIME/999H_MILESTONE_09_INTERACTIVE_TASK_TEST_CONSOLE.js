@@ -29,7 +29,17 @@ var CBV_TCS_M09_INTERACTIVE_TASK_UI_MARKERS = [
   'cbv-m09-rowkey-missing-fallback',
   'cbv-m09-route-query-param-safe',
   'cbv-m09-empty-state',
-  'cbv-m09-report-envelope'
+  'cbv-m09-report-envelope',
+  'cbv-m09-focus-hero',
+  'cbv-m09-focus-action-bar',
+  'cbv-m09-focus-session-info',
+  'cbv-m09-focus-task-context',
+  'cbv-m09-focus-next-action',
+  'cbv-m09-focus-quick-log-preview',
+  'cbv-m09-focus-quick-note-form',
+  'cbv-m09-focus-workflow-continuity',
+  'cbv-m09-focus-safe-copy',
+  'cbv-m09-focus-debug-hidden'
 ];
 
 var __CBV_TCS_MILESTONE09_TC_LAST_REPORT = null;
@@ -146,7 +156,7 @@ function CbvTcsMilestone09InteractiveTask_TestConsole_runFull() {
     var sess = (typeof CbvInteractiveTaskRuntime_buildSession_ === 'function')
       ? CbvInteractiveTaskRuntime_buildSession_({ taskId: 'S1', rowKey: 'RK', source: 'T', mode: 'READ_FIRST', route: '/workspace/task-runtime' })
       : null;
-    var needS = ['activeTaskId', 'activeTaskRowKey', 'openedAt', 'openedBy', 'route', 'traceId', 'source', 'mode', 'safeWriteEnabled'];
+    var needS = ['activeTaskId', 'activeTaskRowKey', 'openedAt', 'openedBy', 'route', 'traceId', 'source', 'mode', 'focusMode', 'safeWriteEnabled'];
     var missS = needS.filter(function (k) { return !sess || sess[k] === undefined; });
     var snap = sess ? JSON.stringify(sess) : '';
     addCheck('M09_ACTIVE_TASK_SESSION', missS.length === 0, missS.length === 0 ? 'OK' : 'ERROR', 'Session object fields', { missing: missS, snapLen: snap.length });
@@ -310,6 +320,140 @@ function CbvTcsMilestone09InteractiveTask_TestConsole_runFull() {
     addCheck('M09_EVIDENCE_PLACEHOLDER', evOk, evOk ? 'OK' : 'ERROR', 'Evidence placeholder', {});
   } catch (eV) {
     addCheck('M09_EVIDENCE_PLACEHOLDER', false, 'ERROR', String(eV), {});
+  }
+
+  try {
+    var fx = (typeof CbvInteractiveTaskRuntime_renderContextPanelHtml_ === 'function')
+      ? CbvInteractiveTaskRuntime_renderContextPanelHtml_({ taskId: 'FX1', rowKey: 'TEST_ROW_001', source: 'TEST', probeTitle: 'FX Title' })
+      : '';
+    var heroOk =
+      fx.indexOf('cbv-m09-focus-hero') >= 0 &&
+      (fx.indexOf('FX1') >= 0 || fx.indexOf('FX Title') >= 0) &&
+      fx.indexOf('Trạng thái') >= 0 &&
+      fx.indexOf('SLA') >= 0;
+    addCheck('M09_FOCUS_HERO_BLOCK', heroOk, heroOk ? 'OK' : 'ERROR', 'Focus hero + task fields', { len: fx.length });
+  } catch (eFx) {
+    addCheck('M09_FOCUS_HERO_BLOCK', false, 'ERROR', String(eFx), {});
+  }
+
+  try {
+    var fx2 = (typeof CbvInteractiveTaskRuntime_renderContextPanelHtml_ === 'function')
+      ? CbvInteractiveTaskRuntime_renderContextPanelHtml_({ taskId: 'FX2', rowKey: 'TEST_ROW_001' })
+      : '';
+    var barOk = fx2.indexOf('cbv-m09-focus-action-bar') >= 0 && fx2.indexOf('cbv-m09-appsheet-detail-action') >= 0;
+    addCheck('M09_FOCUS_ACTION_BAR', barOk, barOk ? 'OK' : 'ERROR', 'Action bar + AppSheet action classes', {});
+  } catch (eFb) {
+    addCheck('M09_FOCUS_ACTION_BAR', false, 'ERROR', String(eFb), {});
+  }
+
+  try {
+    var fx3 = (typeof CbvInteractiveTaskRuntime_renderContextPanelHtml_ === 'function')
+      ? CbvInteractiveTaskRuntime_renderContextPanelHtml_({ taskId: 'FX3', rowKey: 'TEST_ROW_001' })
+      : '';
+    var sessOk =
+      fx3.indexOf('cbv-m09-focus-session-info') >= 0 &&
+      fx3.indexOf('Phiên làm việc') >= 0 &&
+      fx3.indexOf('safeWriteEnabled=false') >= 0 &&
+      fx3.indexOf('traceId') >= 0;
+    addCheck('M09_FOCUS_SESSION_INFO', sessOk, sessOk ? 'OK' : 'ERROR', 'Session info visible', {});
+  } catch (eFs) {
+    addCheck('M09_FOCUS_SESSION_INFO', false, 'ERROR', String(eFs), {});
+  }
+
+  try {
+    var fx4 = (typeof CbvInteractiveTaskRuntime_renderContextPanelHtml_ === 'function')
+      ? CbvInteractiveTaskRuntime_renderContextPanelHtml_({ taskId: 'FX4', rowKey: 'TEST_ROW_001' })
+      : '';
+    var ctxOk = fx4.indexOf('cbv-m09-focus-task-context') >= 0 && fx4.indexOf('sourceModule') >= 0;
+    addCheck('M09_FOCUS_TASK_CONTEXT', ctxOk, ctxOk ? 'OK' : 'ERROR', 'Structured task context', {});
+  } catch (eFc) {
+    addCheck('M09_FOCUS_TASK_CONTEXT', false, 'ERROR', String(eFc), {});
+  }
+
+  try {
+    var fx5 = (typeof CbvInteractiveTaskRuntime_renderContextPanelHtml_ === 'function')
+      ? CbvInteractiveTaskRuntime_renderContextPanelHtml_({ taskId: 'FX5', rowKey: 'TEST_ROW_001' })
+      : '';
+    var naOk = fx5.indexOf('cbv-m09-focus-next-action') >= 0 && fx5.indexOf('Bước tiếp theo') >= 0;
+    addCheck('M09_FOCUS_NEXT_ACTION', naOk, naOk ? 'OK' : 'ERROR', 'Next action section', {});
+  } catch (eFn) {
+    addCheck('M09_FOCUS_NEXT_ACTION', false, 'ERROR', String(eFn), {});
+  }
+
+  try {
+    var fx6 = (typeof CbvInteractiveTaskRuntime_renderContextPanelHtml_ === 'function')
+      ? CbvInteractiveTaskRuntime_renderContextPanelHtml_({ taskId: 'FX6', rowKey: 'TEST_ROW_001' })
+      : '';
+    var qlOk =
+      fx6.indexOf('cbv-m09-focus-quick-log-preview') >= 0 &&
+      fx6.indexOf('Chưa có log trong phiên này') >= 0;
+    addCheck('M09_FOCUS_QUICK_LOG_PREVIEW', qlOk, qlOk ? 'OK' : 'ERROR', 'Quick log empty state (no fake history)', {});
+  } catch (eFl) {
+    addCheck('M09_FOCUS_QUICK_LOG_PREVIEW', false, 'ERROR', String(eFl), {});
+  }
+
+  try {
+    var fx7 = (typeof CbvInteractiveTaskRuntime_renderContextPanelHtml_ === 'function')
+      ? CbvInteractiveTaskRuntime_renderContextPanelHtml_({ taskId: 'FX7', rowKey: 'TEST_ROW_001' })
+      : '';
+    var qfOk =
+      fx7.indexOf('cbv-m09-focus-quick-note-form') >= 0 &&
+      fx7.indexOf('cbv-m09-quick-note-preview') >= 0 &&
+      fx7.indexOf('cbv-m09-quick-update-safe-disabled') >= 0 &&
+      fx7.indexOf('Xem trước') >= 0;
+    addCheck('M09_FOCUS_QUICK_NOTE_FORM', qfOk, qfOk ? 'OK' : 'ERROR', 'Quick note form + safe-disabled', {});
+  } catch (eFq) {
+    addCheck('M09_FOCUS_QUICK_NOTE_FORM', false, 'ERROR', String(eFq), {});
+  }
+
+  try {
+    var fx8 = (typeof CbvInteractiveTaskRuntime_renderContextPanelHtml_ === 'function')
+      ? CbvInteractiveTaskRuntime_renderContextPanelHtml_({ taskId: 'FX8', rowKey: 'TEST_ROW_001' })
+      : '';
+    var wfOk =
+      fx8.indexOf('cbv-m09-focus-workflow-continuity') >= 0 &&
+      fx8.indexOf('Quay lại Daily') >= 0 &&
+      fx8.indexOf('Về Workboard') >= 0 &&
+      fx8.indexOf('My Queue') >= 0 &&
+      fx8.indexOf('Task tiếp theo') >= 0;
+    addCheck('M09_FOCUS_WORKFLOW_CONTINUITY', wfOk, wfOk ? 'OK' : 'ERROR', 'Workflow continuity links', {});
+  } catch (eFw) {
+    addCheck('M09_FOCUS_WORKFLOW_CONTINUITY', false, 'ERROR', String(eFw), {});
+  }
+
+  try {
+    var fx9 = (typeof CbvInteractiveTaskRuntime_renderContextPanelHtml_ === 'function')
+      ? CbvInteractiveTaskRuntime_renderContextPanelHtml_({ taskId: 'FX9', rowKey: 'TEST_ROW_001', __preflightState: 'APPSHEET_UNCONFIGURED' })
+      : '';
+    var badPhrase = 'Chưa cấu hình AppSheet link';
+    var parts = fx9.split(badPhrase);
+    var copyOk = parts.length <= 1 && fx9.indexOf('cbv-m09-focus-safe-copy') >= 0;
+    addCheck('M09_FOCUS_SAFE_COPY', copyOk, copyOk ? 'OK' : 'ERROR', 'Friendly AppSheet copy; no repeated technical phrase', { repeatCount: parts.length - 1 });
+  } catch (eFy) {
+    addCheck('M09_FOCUS_SAFE_COPY', false, 'ERROR', String(eFy), {});
+  }
+
+  try {
+    var fx0 = (typeof CbvInteractiveTaskRuntime_renderContextPanelHtml_ === 'function')
+      ? CbvInteractiveTaskRuntime_renderContextPanelHtml_({ taskId: 'FX0', rowKey: 'TEST_ROW_001' })
+      : '';
+    var dbOk = fx0.indexOf('cbv-m09-focus-debug-hidden') >= 0;
+    addCheck('M09_FOCUS_DEBUG_HIDDEN', dbOk, dbOk ? 'OK' : 'ERROR', 'Debug / technical strip hidden', {});
+  } catch (eFd) {
+    addCheck('M09_FOCUS_DEBUG_HIDDEN', false, 'ERROR', String(eFd), {});
+  }
+
+  try {
+    var empFx = (typeof CbvInteractiveTaskRuntime_renderContextPanelHtml_ === 'function')
+      ? CbvInteractiveTaskRuntime_renderContextPanelHtml_({ __preflightState: 'MISSING_TASKID' })
+      : '';
+    var empFxOk =
+      empFx.indexOf('cbv-m09-focus-hero') >= 0 &&
+      empFx.indexOf('cbv-m09-focus-action-bar') >= 0 &&
+      empFx.indexOf('cbv-m09-focus-session-info') >= 0;
+    addCheck('M09_FOCUS_EMPTY_STATE_MARKERS', empFxOk, empFxOk ? 'OK' : 'ERROR', 'Focus markers present without taskId', {});
+  } catch (eFe) {
+    addCheck('M09_FOCUS_EMPTY_STATE_MARKERS', false, 'ERROR', String(eFe), {});
   }
 
   try {
