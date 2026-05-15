@@ -12,4 +12,4 @@ Operator-facing **task-runtime** HTML from `CbvInteractiveTaskRuntime_renderCont
 
 ## Verification
 
-Local marker preflight **PASS**. Commit **`865e9dc`**. Run **M09 / M07 / M08** on GAS after push before claiming GO.
+Local marker preflight **PASS**. Latest commit on branch: **`bd9b2fc`** (`feat(M09.2): focus operation hero, action bar, session, workflow UX`). Run **M09 / M07 / M08** on GAS after push before claiming GO.
