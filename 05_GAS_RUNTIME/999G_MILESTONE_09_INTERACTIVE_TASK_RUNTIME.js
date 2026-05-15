@@ -74,6 +74,67 @@ function CbvInteractiveTaskRuntime_buildTaskRuntimeUrl_(opt) {
   return base;
 }
 
+/**
+ * SOP handoff URL with task context (read-first; in-app route).
+ * @param {{ taskId?: string, source?: string, sourceModule?: string, module?: string, rowKey?: string, from?: string, returnRoute?: string }} opt
+ */
+function CbvInteractiveTaskRuntime_buildSopUrl_(opt) {
+  var o = opt || {};
+  var tid = String(o.taskId || '').trim();
+  if (!tid) {
+    return (typeof CbvWebAppRouteUrl_build === 'function') ? CbvWebAppRouteUrl_build('/workspace/sop') : '/workspace/sop';
+  }
+  var src = String(o.source || o.sourceModule || 'TASK_MAIN').trim() || 'TASK_MAIN';
+  var mod = String(o.module || 'TASK').trim() || 'TASK';
+  var q = {
+    taskId: tid,
+    source: src,
+    module: mod,
+    from: String(o.from || 'task-runtime').trim() || 'task-runtime'
+  };
+  var rk = String(o.rowKey || '').trim();
+  if (rk) q.rowKey = rk;
+  var rr = String(o.returnRoute || '').trim();
+  if (rr) q.returnRoute = rr;
+  if (typeof CbvWebAppRouteUrl_buildWithQuery === 'function') {
+    try {
+      return CbvWebAppRouteUrl_buildWithQuery('/workspace/sop', q);
+    } catch (e1) { /* */ }
+  }
+  if (typeof CbvWebAppRouteUrl_build === 'function') {
+    try {
+      var base = CbvWebAppRouteUrl_build('/workspace/sop');
+      var sep = base.indexOf('?') >= 0 ? '&' : '?';
+      return (
+        base +
+        sep +
+        'taskId=' +
+        encodeURIComponent(tid) +
+        '&source=' +
+        encodeURIComponent(src) +
+        '&module=' +
+        encodeURIComponent(mod) +
+        '&from=' +
+        encodeURIComponent(q.from) +
+        (rk ? '&rowKey=' + encodeURIComponent(rk) : '') +
+        (rr ? '&returnRoute=' + encodeURIComponent(rr) : '')
+      );
+    } catch (e2) { /* */ }
+  }
+  return (
+    '/workspace/sop?taskId=' +
+    encodeURIComponent(tid) +
+    '&source=' +
+    encodeURIComponent(src) +
+    '&module=' +
+    encodeURIComponent(mod) +
+    '&from=' +
+    encodeURIComponent(q.from) +
+    (rk ? '&rowKey=' + encodeURIComponent(rk) : '') +
+    (rr ? '&returnRoute=' + encodeURIComponent(rr) : '')
+  );
+}
+
 function CbvInteractiveTaskRuntime__traceId_() {
   return (typeof CbvWebAppWorkspace__traceId_ === 'function') ? CbvWebAppWorkspace__traceId_() : 'M09_' + new Date().getTime();
 }
@@ -97,11 +158,13 @@ function CbvInteractiveTaskRuntime_buildActiveContext_(params) {
   var pf = String(p.__preflightState || '').toUpperCase();
   var taskId = String(p.taskId || p.taskid || '').trim();
   if (pf === 'MISSING_TASKID') taskId = '';
-  var rowKey = String(p.rowKey || p.rowkey || '').trim();
+  var rowKeyParam = String(p.rowKey || p.rowkey || '').trim();
   var task = taskId ? CbvInteractiveTaskRuntime__findTaskById_(taskId) : null;
-  if (task && !rowKey) rowKey = String(task.taskRowKey || '').trim();
-  var rkRes = typeof CbvAppSheetBridge_resolveTaskRowKey_ === 'function' ? CbvAppSheetBridge_resolveTaskRowKey_(task || { taskId: taskId, raw: {} }) : { ok: false, rowKey: '' };
-  if (rkRes && rkRes.ok && rkRes.rowKey) rowKey = String(rkRes.rowKey || '').trim() || rowKey;
+  var rowKey = rowKeyParam;
+  if (!rowKey && task && typeof CbvAppSheetBridge_resolveExplicitTaskMainRowKey_ === 'function') {
+    var rkE = CbvAppSheetBridge_resolveExplicitTaskMainRowKey_(task);
+    if (rkE && rkE.ok && rkE.rowKey) rowKey = String(rkE.rowKey || '').trim();
+  }
   var src = String(p.source || (task && task.sourceModule) || 'WORKBOARD').trim() || 'WORKBOARD';
   var st = task ? String(task.status || '').trim() : '';
   var sla = task ? String(task.slaState || '').trim() : '';
@@ -234,31 +297,35 @@ function CbvInteractiveTaskRuntime_renderContextPanelHtml_(params) {
   }
 
   var title = String(t.title || '—').replace(/</g, '&lt;');
+  var rkRes = typeof CbvAppSheetBridge_resolveExplicitTaskMainRowKey_ === 'function' ? CbvAppSheetBridge_resolveExplicitTaskMainRowKey_(t) : { ok: false };
   var ctx2 = CbvInteractiveTaskRuntime_buildActiveContext_({
     taskId: taskId,
-    rowKey: rowKeyParam || t.taskRowKey,
+    rowKey: rowKeyParam || (rkRes && rkRes.ok ? String(rkRes.rowKey || '').trim() : ''),
     source: source || t.sourceModule,
     mode: mode,
     __preflightState: pf
   });
-  var rkRes = typeof CbvAppSheetBridge_resolveTaskRowKey_ === 'function' ? CbvAppSheetBridge_resolveTaskRowKey_(t) : { ok: false };
   var detail = typeof CbvAppSheetBridge_buildTaskMainDetailUrl_ === 'function' ? CbvAppSheetBridge_buildTaskMainDetailUrl_(t) : { ok: false };
   var form = typeof CbvAppSheetBridge_buildTaskMainFormUrl_ === 'function' ? CbvAppSheetBridge_buildTaskMainFormUrl_(t) : { ok: false };
   var list = typeof CbvAppSheetBridge_buildTaskMainUrl_ === 'function' ? CbvAppSheetBridge_buildTaskMainUrl_() : { ok: false };
   if (pf === 'APPSHEET_UNCONFIGURED') {
-    detail = { ok: false, reason: 'PROBE_APPSHEET_OFF' };
-    form = { ok: false, reason: 'PROBE_APPSHEET_OFF' };
-    list = { ok: false, reason: 'PROBE_APPSHEET_OFF' };
+    detail = { ok: false, reason: 'PROBE_APPSHEET_OFF', safeDisabled: true };
+    form = { ok: false, reason: 'PROBE_APPSHEET_OFF', safeDisabled: true };
+    list = { ok: false, reason: 'PROBE_APPSHEET_OFF', safeDisabled: true };
   }
 
-  var sopQ = { taskId: taskId };
-  if (String(t.sourceModule || '').trim()) sopQ.source = String(t.sourceModule || '').trim();
-  var sopHref = '#';
-  if (typeof CbvWebAppRouteUrl_buildWithQuery === 'function') {
-    try {
-      sopHref = CbvWebAppRouteUrl_buildWithQuery('/workspace/sop', sopQ);
-    } catch (eS) { /* */ }
-  }
+  var rkForSop = (rkRes && rkRes.ok && rkRes.rowKey) ? String(rkRes.rowKey).trim() : rowKeyParam;
+  var sopHref =
+    typeof CbvInteractiveTaskRuntime_buildSopUrl_ === 'function'
+      ? CbvInteractiveTaskRuntime_buildSopUrl_({
+        taskId: taskId,
+        source: String(source || t.sourceModule || 'TASK_MAIN').trim() || 'TASK_MAIN',
+        module: String((t.raw && t.raw.moduleCode) || 'TASK').trim() || 'TASK',
+        rowKey: rkForSop,
+        from: 'task-runtime',
+        returnRoute: CbvInteractiveTaskRuntime__taskRuntimePath_()
+      })
+      : '#';
 
   var stuckHref = '#';
   if (typeof CbvWebAppRouteUrl_buildWithQuery === 'function') {

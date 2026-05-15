@@ -246,6 +246,33 @@ function CbvAppSheetBridge_resolveTaskRowKey_(task) {
   return { ok: false, rowKey: '', reason: 'TASK_ROW_KEY_MISSING' };
 }
 
+/**
+ * TASK_MAIN / AppSheet record row key only (M07.2). Does not treat taskId, TASK_ID, id, ALERT_ID, or HOME_ALERT_ID as row key.
+ */
+function CbvAppSheetBridge_resolveExplicitTaskMainRowKey_(task) {
+  var t = task || {};
+  var r = t.raw || {};
+  function z(v) {
+    return String(v != null ? v : '').trim();
+  }
+  var seq = [
+    z(r.row),
+    z(r.ROW),
+    z(r._RowNumber),
+    z(r._rowNumber),
+    z(r.TASK_ROW_KEY),
+    z(r.taskRowKey),
+    z(r.TASK_MAIN_ID),
+    z(r.taskMainId),
+    z(t.TASK_MAIN_ID),
+    z(t.taskMainId)
+  ];
+  for (var i = 0; i < seq.length; i++) {
+    if (seq[i]) return { ok: true, rowKey: seq[i] };
+  }
+  return { ok: false, rowKey: '', reason: 'TASK_ROW_KEY_MISSING' };
+}
+
 function CbvAppSheetBridge__substituteTaskRowKeyInTemplate_(tpl, rowKey) {
   var k = String(rowKey || '').trim();
   var t = String(tpl || '');
@@ -271,19 +298,13 @@ function CbvAppSheetBridge_buildTaskMainUrl_() {
   return { ok: true, url: String(cfg.TASK_MAIN).trim(), reason: '', safeDisabled: false };
 }
 
-function CbvAppSheetBridge_buildTaskMainDetailUrl_(task) {
-  return CbvAppSheetBridge_buildTaskDetailLink_(task);
-}
-
-function CbvAppSheetBridge_buildTaskMainFormUrl_(task) {
-  return CbvAppSheetBridge_buildTaskEditLink_(task);
-}
-
-function CbvAppSheetBridge_buildTaskDetailLink_(task) {
+function CbvAppSheetBridge__buildTaskDetailLinkWithResolver_(task, resolveRowKeyFn) {
   var cfg = CbvAppSheetBridge_getConfig_();
   if (!cfg.configured) return { ok: false, url: '', reason: 'NOT_CONFIGURED', safeDisabled: true };
-  var rk = CbvAppSheetBridge_resolveTaskRowKey_(task);
-  if (!rk.ok) return { ok: false, url: '', reason: 'TASK_ROW_KEY_MISSING', safeDisabled: true };
+  var rk = typeof resolveRowKeyFn === 'function' ? resolveRowKeyFn(task) : { ok: false };
+  if (!rk || !rk.ok) {
+    return { ok: false, url: '', reason: (rk && rk.reason) || 'TASK_ROW_KEY_MISSING', safeDisabled: true };
+  }
 
   var detailTpl = String(cfg.TASK_MAIN_DETAIL || '');
   if (detailTpl.indexOf('{{TASK_ROW_KEY}}') >= 0 && CbvAppSheetBridge__isAppsheetStartUserUrl_(detailTpl)) {
@@ -306,11 +327,13 @@ function CbvAppSheetBridge_buildTaskDetailLink_(task) {
   return { ok: false, url: '', reason: 'NOT_CONFIGURED', safeDisabled: true };
 }
 
-function CbvAppSheetBridge_buildTaskEditLink_(task) {
+function CbvAppSheetBridge__buildTaskEditLinkWithResolver_(task, resolveRowKeyFn) {
   var cfg = CbvAppSheetBridge_getConfig_();
   if (!cfg.configured) return { ok: false, url: '', reason: 'NOT_CONFIGURED', safeDisabled: true };
-  var rk = CbvAppSheetBridge_resolveTaskRowKey_(task);
-  if (!rk.ok) return { ok: false, url: '', reason: 'TASK_ROW_KEY_MISSING', safeDisabled: true };
+  var rk = typeof resolveRowKeyFn === 'function' ? resolveRowKeyFn(task) : { ok: false };
+  if (!rk || !rk.ok) {
+    return { ok: false, url: '', reason: (rk && rk.reason) || 'TASK_ROW_KEY_MISSING', safeDisabled: true };
+  }
 
   var formTpl = String(cfg.TASK_MAIN_FORM || '');
   if (formTpl.indexOf('{{TASK_ROW_KEY}}') >= 0 && CbvAppSheetBridge__isAppsheetStartUserUrl_(formTpl)) {
@@ -331,6 +354,22 @@ function CbvAppSheetBridge_buildTaskEditLink_(task) {
     return { ok: true, url: u, reason: '', safeDisabled: false };
   }
   return { ok: false, url: '', reason: 'NOT_CONFIGURED', safeDisabled: true };
+}
+
+function CbvAppSheetBridge_buildTaskMainDetailUrl_(task) {
+  return CbvAppSheetBridge__buildTaskDetailLinkWithResolver_(task, CbvAppSheetBridge_resolveExplicitTaskMainRowKey_);
+}
+
+function CbvAppSheetBridge_buildTaskMainFormUrl_(task) {
+  return CbvAppSheetBridge__buildTaskEditLinkWithResolver_(task, CbvAppSheetBridge_resolveExplicitTaskMainRowKey_);
+}
+
+function CbvAppSheetBridge_buildTaskDetailLink_(task) {
+  return CbvAppSheetBridge__buildTaskDetailLinkWithResolver_(task, CbvAppSheetBridge_resolveTaskRowKey_);
+}
+
+function CbvAppSheetBridge_buildTaskEditLink_(task) {
+  return CbvAppSheetBridge__buildTaskEditLinkWithResolver_(task, CbvAppSheetBridge_resolveTaskRowKey_);
 }
 
 function CbvAppSheetBridge_buildUploadLink_(task) {
@@ -636,16 +675,19 @@ function CbvStaffWorkboard__sopHref_(taskId, sourceModule) {
   if (!id) {
     if (mod && typeof CbvWebAppRouteUrl_buildWithQuery === 'function') {
       try {
-        return CbvWebAppRouteUrl_buildWithQuery('/workspace/sop', { source: mod });
+        return CbvWebAppRouteUrl_buildWithQuery('/workspace/sop', { source: mod, module: 'TASK', from: 'workboard' });
       } catch (e0) { /* */ }
     }
     return (typeof CbvWebAppRouteUrl_build === 'function') ? CbvWebAppRouteUrl_build('/workspace/sop') : '/workspace/sop';
   }
   if (typeof CbvWebAppRouteUrl_buildWithQuery === 'function') {
     try {
-      return mod
-        ? CbvWebAppRouteUrl_buildWithQuery('/workspace/sop', { taskId: id, source: mod })
-        : CbvWebAppRouteUrl_buildWithQuery('/workspace/sop', { taskId: id });
+      return CbvWebAppRouteUrl_buildWithQuery('/workspace/sop', {
+        taskId: id,
+        source: mod || 'TASK_MAIN',
+        module: 'TASK',
+        from: 'workboard'
+      });
     } catch (e0) { /* */ }
   }
   return (typeof CbvWebAppRouteUrl_build === 'function') ? CbvWebAppRouteUrl_build('/workspace/sop') : '/workspace/sop';
@@ -695,11 +737,25 @@ function CbvStaffWorkboard_buildProductionTaskCardHtml_(task) {
   var nx = String(t.nextAction || '—').replace(/</g, '&lt;');
   var due = String(t.dueAt || '—').replace(/</g, '&lt;');
   var primary = CbvStaffWorkboard__taskDetailHref_(tid);
-  var rkRes = typeof CbvAppSheetBridge_resolveTaskRowKey_ === 'function' ? CbvAppSheetBridge_resolveTaskRowKey_(t) : { ok: false };
-  var rkForUrl = rkRes && rkRes.ok ? String(rkRes.rowKey || '').trim() : '';
-  var rowKeyAttr = rkForUrl ? ' data-task-row-key="' + rkForUrl.replace(/"/g, '&quot;') + '"' : '';
+  var rkExplicit =
+    typeof CbvAppSheetBridge_resolveExplicitTaskMainRowKey_ === 'function' ? CbvAppSheetBridge_resolveExplicitTaskMainRowKey_(t) : { ok: false };
+  var rowKeyAttr = '';
+  var rkForUrl = '';
+  if (rkExplicit && rkExplicit.ok && rkExplicit.rowKey) {
+    rkForUrl = String(rkExplicit.rowKey || '').trim();
+    rowKeyAttr = ' data-task-row-key="' + rkForUrl.replace(/"/g, '&quot;') + '"';
+  }
   var runtimeHref = CbvStaffWorkboard__taskRuntimeHref_(tid, rkForUrl, modRaw, '');
-  var sop = CbvStaffWorkboard__sopHref_(tid, modRaw);
+  var sop =
+    typeof CbvInteractiveTaskRuntime_buildSopUrl_ === 'function'
+      ? CbvInteractiveTaskRuntime_buildSopUrl_({
+        taskId: tid,
+        source: modRaw || 'TASK_MAIN',
+        module: String((t.raw && t.raw.moduleCode) || 'TASK').trim() || 'TASK',
+        rowKey: rkForUrl,
+        from: 'workboard'
+      })
+      : CbvStaffWorkboard__sopHref_(tid, modRaw);
   var stuck = CbvStaffWorkboard__feedbackStuckHref_(tid);
   var appsheetDetail = typeof CbvAppSheetBridge_buildTaskMainDetailUrl_ === 'function' ? CbvAppSheetBridge_buildTaskMainDetailUrl_(t) : { ok: false };
   var appsheetForm = typeof CbvAppSheetBridge_buildTaskMainFormUrl_ === 'function' ? CbvAppSheetBridge_buildTaskMainFormUrl_(t) : { ok: false };

@@ -208,11 +208,27 @@ function CbvTcsMilestone09InteractiveTask_TestConsole_runFull() {
   }
 
   try {
-    var noRk = { taskId: 'NRK', raw: {} };
+    var noRk = { taskId: 'NRK_ONLY_NO_ROW', raw: {} };
     var badD = (typeof CbvAppSheetBridge_buildTaskMainDetailUrl_ === 'function') ? CbvAppSheetBridge_buildTaskMainDetailUrl_(noRk) : { ok: true };
     var badF = (typeof CbvAppSheetBridge_buildTaskMainFormUrl_ === 'function') ? CbvAppSheetBridge_buildTaskMainFormUrl_(noRk) : { ok: true };
-    var rkSafe = badD && badD.ok === false && badF && badF.ok === false;
-    addCheck('M09_ROWKEY_MISSING_SAFE_DISABLED', rkSafe, rkSafe ? 'OK' : 'ERROR', 'No fake URLs without row key', { dOk: badD.ok, fOk: badF.ok });
+    var rkSafe =
+      badD &&
+      badD.ok === false &&
+      badF &&
+      badF.ok === false &&
+      String(badD.url || '') === '' &&
+      String(badF.url || '') === '' &&
+      badD.safeDisabled === true &&
+      badF.safeDisabled === true &&
+      String(badD.reason || '') === 'TASK_ROW_KEY_MISSING' &&
+      String(badF.reason || '') === 'TASK_ROW_KEY_MISSING';
+    addCheck('M09_ROWKEY_MISSING_SAFE_DISABLED', rkSafe, rkSafe ? 'OK' : 'ERROR', 'No fake URLs without explicit TASK_MAIN row key', {
+      dOk: badD.ok,
+      fOk: badF.ok,
+      dUrlLen: String(badD.url || '').length,
+      dReason: badD.reason,
+      dSd: badD.safeDisabled
+    });
   } catch (eRk) {
     addCheck('M09_ROWKEY_MISSING_SAFE_DISABLED', false, 'ERROR', String(eRk), {});
   }
@@ -221,8 +237,17 @@ function CbvTcsMilestone09InteractiveTask_TestConsole_runFull() {
     var sopP = (typeof CbvInteractiveTaskRuntime_renderContextPanelHtml_ === 'function')
       ? CbvInteractiveTaskRuntime_renderContextPanelHtml_({ taskId: 'SOP1', source: 'HOME_ALERT' })
       : '';
-    var sopOk = sopP.indexOf('cbv-m09-sop-action') >= 0 && sopP.indexOf('/workspace/sop') >= 0;
-    addCheck('M09_SOP_ACTION', sopOk, sopOk ? 'OK' : 'ERROR', 'SOP link carries task context', {});
+    var encTid = encodeURIComponent('SOP1');
+    var hasTid = sopP.indexOf('taskId=' + encTid) >= 0 || sopP.indexOf('taskId=SOP1') >= 0;
+    var hasCtx = sopP.indexOf('source=') >= 0 || sopP.indexOf('module=') >= 0;
+    var hasFrom = sopP.indexOf('from=') >= 0;
+    var sopOk =
+      sopP.indexOf('cbv-m09-sop-action') >= 0 &&
+      sopP.indexOf('/workspace/sop') >= 0 &&
+      hasTid &&
+      hasCtx &&
+      hasFrom;
+    addCheck('M09_SOP_ACTION', sopOk, sopOk ? 'OK' : 'ERROR', 'SOP link carries taskId + source/module + from', { hasTid: hasTid, hasCtx: hasCtx, hasFrom: hasFrom });
   } catch (eSo) {
     addCheck('M09_SOP_ACTION', false, 'ERROR', String(eSo), {});
   }
