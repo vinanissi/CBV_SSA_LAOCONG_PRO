@@ -316,6 +316,8 @@ function buildCbvTestConsoleMenu_() {
     .addItem('Copy RF_03 Latest Test Report', 'menuCbvTestConsoleRf03_copyReport')
     .addItem('Run RF_04 Observation Runtime Health Test', 'menuCbvTestConsoleRf04_runFull')
     .addItem('Copy RF_04 Latest Test Report', 'menuCbvTestConsoleRf04_copyReport')
+    .addItem('Run RF_05 Plugin Runtime Health Test', 'menuCbvTestConsoleRf05_runFull')
+    .addItem('Copy RF_05 Latest Test Report', 'menuCbvTestConsoleRf05_copyReport')
     .addItem('HOME_ALERT Phase 82 — SLA & Escalation', 'menuCbvTestConsoleHomeAlertSla82')
     .addItem('HOME_ALERT Phase 83 — SLA Policy Registry', 'menuCbvTestConsoleHomeAlertSla83')
     .addItem('HOME_ALERT Phase 84 — Safe Automation Runtime', 'menuCbvTestConsoleHomeAlertSafeAutomation84')

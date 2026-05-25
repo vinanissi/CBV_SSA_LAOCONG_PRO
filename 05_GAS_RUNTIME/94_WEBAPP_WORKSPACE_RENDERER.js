@@ -120,6 +120,16 @@ function CbvWebAppWorkspace_render(route, params) {
     typeof CbvRf04Obs_renderPageByType_ === 'function'
   ) {
     page = CbvRf04Obs_renderPageByType_(reg.pageType, params || {});
+  } else if (
+    (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.RF05_PLUGIN_HOME ||
+      reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.RF05_PLUGIN_TASK ||
+      reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.RF05_PLUGIN_FINANCE ||
+      reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.RF05_PLUGIN_HO_SO ||
+      reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.RF05_PLUGIN_DETAIL ||
+      reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.RF05_PLUGIN_HEALTH) &&
+    typeof CbvRf05Plugin_renderPageByType_ === 'function'
+  ) {
+    page = CbvRf05Plugin_renderPageByType_(reg.pageType, params || {});
   } else if (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.INTERACTIVE_TASK_RUNTIME && typeof CbvInteractiveTaskRuntime_renderPage_ === 'function') {
     page = CbvInteractiveTaskRuntime_renderPage_(params || {});
   } else if (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.STAFF_TASK_DETAIL && typeof CbvStaffWorkspace_renderTaskDetailPage_ === 'function') {
