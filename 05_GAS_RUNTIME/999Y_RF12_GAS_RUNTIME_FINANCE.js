@@ -4,7 +4,9 @@
 
 function getFinance_( ) {
   bootstrapSheets_();
-  var sheet = getSpreadsheet_().getSheetByName(RF12_CONFIG.SHEETS.FINANCE);
+  var ss = getSpreadsheet_();
+  if (!ss) return [];
+  var sheet = ss.getSheetByName(RF12_CONFIG.SHEETS.FINANCE);
   if (!sheet || sheet.getLastRow() < 2) return [];
   return [];
 }

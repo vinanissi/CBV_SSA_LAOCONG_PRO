@@ -13,3 +13,10 @@ export function getEnv(env: Env) {
       .filter(Boolean),
   };
 }
+
+/** GAS URL set + write mode gas — real Sheet runtime, no mock fallback on reads */
+export function isGasRuntimeMode(env: Env): boolean {
+  const cfg = getEnv(env);
+  const hasGasUrl = Boolean(cfg.gasBaseUrl || (cfg.taskWriteMode === 'gas' && cfg.gasWriteBaseUrl));
+  return cfg.taskWriteMode === 'gas' && hasGasUrl;
+}

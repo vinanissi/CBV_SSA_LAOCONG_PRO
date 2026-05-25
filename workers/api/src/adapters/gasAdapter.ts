@@ -11,7 +11,7 @@ import type {
 import { getEnv } from '../env';
 import type { StoredTask } from '../auth/taskPermissions';
 
-const TIMEOUT_MS = 8000;
+const TIMEOUT_MS = 15000;
 
 export interface GasEnvelope<T> {
   ok: boolean;

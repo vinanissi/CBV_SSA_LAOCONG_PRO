@@ -267,4 +267,7 @@ export interface HealthData {
   readOnly: boolean;
   writesLocked: boolean;
   taskWriteMode?: TaskWriteMode;
+  gasConfigured?: boolean;
+  gasReachable?: boolean;
+  writeAdapterStatus?: string;
 }

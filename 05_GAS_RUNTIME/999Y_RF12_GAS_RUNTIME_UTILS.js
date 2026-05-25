@@ -41,10 +41,14 @@ function getSpreadsheet_() {
   var id = resolveSpreadsheetId_();
   if (!id) {
     throw new Error(
-      'CBV_SPREADSHEET_ID chưa cấu hình — Apps Script → Project Settings → Script Properties, hoặc bind project to Spreadsheet',
+      'CBV_SPREADSHEET_ID chưa cấu hình — chạy Rf12_setupSpreadsheetId(sheetId) hoặc set Script Property',
     );
   }
-  return SpreadsheetApp.openById(id);
+  var ss = SpreadsheetApp.openById(id);
+  if (!ss) {
+    throw new Error('Không mở được Spreadsheet ID: ' + id);
+  }
+  return ss;
 }
 
 /** Run once from Apps Script editor: Rf12_setupSpreadsheetId('YOUR_SHEET_ID') */
@@ -59,6 +63,9 @@ function Rf12_setupSpreadsheetId(spreadsheetId) {
 
 function ensureSheetWithHeaders_(sheetName, headers) {
   var ss = getSpreadsheet_();
+  if (!ss) {
+    throw new Error('Spreadsheet unavailable');
+  }
   var sheet = ss.getSheetByName(sheetName);
   if (!sheet) {
     sheet = ss.insertSheet(sheetName);

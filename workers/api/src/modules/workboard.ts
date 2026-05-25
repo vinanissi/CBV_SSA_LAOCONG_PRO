@@ -4,6 +4,7 @@ import { appSheetAdapterStatus } from '../adapters/appSheetAdapter';
 import { isTaskWriteEnabled, getTaskWriteAdapterStatus } from '../adapters/taskWriteAdapter';
 import { resolveUserContext, canViewModule } from '../auth/userContext';
 import { getTodaySummary } from '../adapters/mockData';
+import { getEnv, isGasRuntimeMode } from '../env';
 import { createEnvelope } from '../utils/envelope';
 import { forbidden } from '../utils/errors';
 
@@ -11,22 +12,33 @@ export async function handleHealth(env: Env) {
   const writeEnabled = isTaskWriteEnabled(env);
   const writeStatus = getTaskWriteAdapterStatus(env);
   const gasConfigured = isGasConfigured(env);
+  const gasRuntime = isGasRuntimeMode(env);
+  let gasReachable: boolean | undefined;
+
+  if (gasConfigured) {
+    const gas = await gasHealth(env);
+    gasReachable = gas.ok;
+  }
 
   const data: HealthData = {
     service: 'cbv-api-bridge',
-    version: 'RF-12-V1',
-    mode: gasConfigured ? 'GAS_SHEET_BRIDGE' : 'READ_FIRST',
+    version: 'RF-12B-V1',
+    mode: gasRuntime ? 'GAS_SHEET_BRIDGE' : gasConfigured ? 'GAS_READ_PROBE' : 'READ_FIRST',
     adapter: `${gasConfigured ? 'gas' : 'mock'}:${gasAdapterStatus(env)}:${appSheetAdapterStatus(env)}:write=${writeStatus}`,
     readOnly: !writeEnabled,
     writesLocked: !writeEnabled,
     taskWriteMode: writeEnabled ? 'ENABLED' : 'LOCKED',
+    gasConfigured,
+    gasReachable,
+    writeAdapterStatus: writeStatus,
   };
 
   const warnings: string[] = [];
   if (gasConfigured) {
-    const gas = await gasHealth(env);
-    if (!gas.ok) warnings.push(gas.warning ?? gas.errors[0] ?? 'GAS health check failed');
-    else warnings.push('GAS Sheet bridge active — RF_12');
+    if (gasReachable) warnings.push('GAS Sheet bridge reachable — RF_12B');
+    else warnings.push('GAS configured but health check failed — redeploy Web App or check CBV_SPREADSHEET_ID');
+  } else if (getEnv(env).taskWriteMode === 'gas') {
+    warnings.push('CBV_TASK_WRITE_MODE=gas but CBV_GAS_API_BASE_URL missing');
   } else if (writeEnabled) {
     warnings.push('Task write local enabled — chưa ghi production sheet');
   } else {
@@ -42,7 +54,7 @@ export async function handleToday(request: Request, env: Env) {
     return forbidden('Không có quyền xem việc hôm nay');
   }
 
-  const warnings = isGasConfigured(env)
+  const warnings = isGasRuntimeMode(env)
     ? ['GAS bridge — today summary uses local projection until full sync']
     : ['Worker projection — demo local'];
 
