@@ -1578,6 +1578,20 @@ function menuCbvTestConsoleRf05_copyReport() {
   });
 }
 
+/** PHASE_RF_06 — Finance/HO_SO plugin activation test. */
+function menuCbvTestConsoleRf06_runFull() {
+  runSafeMenuStep_('CBV_RF06_Test_runFinanceHoSoPluginActivationHealth', 'RF_06 Finance/HO_SO Activation Test', function (r) {
+    if (!r) return 'No result';
+    return (r.status || '') + '\n' + (r.summary || '') + '\nEnvelope OK: ' + (r.envelopeOk ? 'yes' : 'no');
+  });
+}
+
+function menuCbvTestConsoleRf06_copyReport() {
+  runSafeMenuStep_('CbvTcsRf06FinanceHoSoPluginActivation_TestConsole_copyLatestReport', 'Copy RF_06 report', function (r) {
+    return r && r.ok ? 'Dialog opened — select JSON and copy.' : (r && r.message) || 'Done';
+  });
+}
+
 /** CBV Test Console — HOME_ALERT Phase 82 SLA & escalation QA. */
 function menuCbvTestConsoleHomeAlertSla82() {
   runSafeMenuStep_('HomeAlertSlaEscalation_TestConsole_run', 'HOME_ALERT SLA/Escalation test', function (r) {

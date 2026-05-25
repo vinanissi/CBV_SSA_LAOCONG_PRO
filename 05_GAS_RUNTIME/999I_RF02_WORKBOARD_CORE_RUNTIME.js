@@ -402,19 +402,27 @@ function CbvRf02Search_search_(userContext, opts) {
   }
 
   if (!moduleFilter || moduleFilter === 'finance') {
+    var financeItems = [];
+    if (typeof CBV_Rf06Finance_search_ === 'function' && CBV_Permission_can(ctx, CBV_PERMISSION_ACTIONS.FINANCE_SEARCH, null)) {
+      financeItems = CBV_Rf06Finance_search_(ctx, q);
+    }
     groups.push({
       module: 'FINANCE',
       label: 'Tài chính',
-      items: [],
-      stubNote: 'RF_02 stub — chưa bind FINANCE search'
+      items: financeItems,
+      stubNote: financeItems.length ? '' : (CBV_Permission_can(ctx, CBV_PERMISSION_ACTIONS.FINANCE_VIEW, null) ? 'RF_06 — không khớp' : 'Không có quyền FINANCE')
     });
   }
   if (!moduleFilter || moduleFilter === 'ho_so' || moduleFilter === 'hoso') {
+    var hoSoItems = [];
+    if (typeof CBV_Rf06HoSo_search_ === 'function' && CBV_Permission_can(ctx, CBV_PERMISSION_ACTIONS.HO_SO_SEARCH, null)) {
+      hoSoItems = CBV_Rf06HoSo_search_(ctx, q);
+    }
     groups.push({
       module: 'HO_SO',
       label: 'Hồ sơ',
-      items: [],
-      stubNote: 'RF_02 stub — chưa bind HO_SO search'
+      items: hoSoItems,
+      stubNote: hoSoItems.length ? '' : (CBV_Permission_can(ctx, CBV_PERMISSION_ACTIONS.HO_SO_VIEW, null) ? 'RF_06 — không khớp' : 'Không có quyền HO_SO')
     });
   }
   if (!moduleFilter || moduleFilter === 'file') {
@@ -427,6 +435,11 @@ function CbvRf02Search_search_(userContext, opts) {
   }
 
   var total = taskItems.length;
+  if (groups.length > 1) {
+    for (var gi = 0; gi < groups.length; gi++) {
+      total += (groups[gi].items || []).length;
+    }
+  }
   return CbvRf02__safeEnvelope_({
     ok: true,
     empty: total === 0,

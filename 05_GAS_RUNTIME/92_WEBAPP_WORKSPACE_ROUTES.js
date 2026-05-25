@@ -498,6 +498,78 @@ function CbvWebAppWorkspace_routeRegistry() {
       notes: 'PHASE_RF_05 HO_SO plugin stub.'
     },
     {
+      route: '/workspace/plugins/finance/items',
+      screenCode: 'RF06_FINANCE_ITEMS',
+      title: 'Finance Items',
+      pageType: CBV_WEBAPP_WS_PAGE_TYPES.RF06_FINANCE_ITEMS,
+      requiredRole: '*',
+      dataSourceSheet: CBV_WEBAPP_WS_SHEETS.HOME_ALERT,
+      mode: CBV_WEBAPP_WS_MODES.READ_FIRST,
+      isEnabled: true,
+      isPilotReady: true,
+      notes: 'PHASE_RF_06 finance read list.'
+    },
+    {
+      route: '/workspace/plugins/finance/alerts',
+      screenCode: 'RF06_FINANCE_ALERTS',
+      title: 'Finance Alerts',
+      pageType: CBV_WEBAPP_WS_PAGE_TYPES.RF06_FINANCE_ALERTS,
+      requiredRole: '*',
+      dataSourceSheet: CBV_WEBAPP_WS_SHEETS.HOME_ALERT,
+      mode: CBV_WEBAPP_WS_MODES.READ_FIRST,
+      isEnabled: true,
+      isPilotReady: true,
+      notes: 'PHASE_RF_06 finance alerts.'
+    },
+    {
+      route: '/workspace/plugins/finance/search',
+      screenCode: 'RF06_FINANCE_SEARCH',
+      title: 'Finance Search',
+      pageType: CBV_WEBAPP_WS_PAGE_TYPES.RF06_FINANCE_SEARCH,
+      requiredRole: '*',
+      dataSourceSheet: CBV_WEBAPP_WS_SHEETS.HOME_ALERT,
+      mode: CBV_WEBAPP_WS_MODES.READ_FIRST,
+      isEnabled: true,
+      isPilotReady: true,
+      notes: 'PHASE_RF_06 finance search.'
+    },
+    {
+      route: '/workspace/plugins/ho-so/items',
+      screenCode: 'RF06_HO_SO_ITEMS',
+      title: 'Hồ sơ Items',
+      pageType: CBV_WEBAPP_WS_PAGE_TYPES.RF06_HO_SO_ITEMS,
+      requiredRole: '*',
+      dataSourceSheet: CBV_WEBAPP_WS_SHEETS.HOME_ALERT,
+      mode: CBV_WEBAPP_WS_MODES.READ_FIRST,
+      isEnabled: true,
+      isPilotReady: true,
+      notes: 'PHASE_RF_06 ho-so read list.'
+    },
+    {
+      route: '/workspace/plugins/ho-so/alerts',
+      screenCode: 'RF06_HO_SO_ALERTS',
+      title: 'Hồ sơ Alerts',
+      pageType: CBV_WEBAPP_WS_PAGE_TYPES.RF06_HO_SO_ALERTS,
+      requiredRole: '*',
+      dataSourceSheet: CBV_WEBAPP_WS_SHEETS.HOME_ALERT,
+      mode: CBV_WEBAPP_WS_MODES.READ_FIRST,
+      isEnabled: true,
+      isPilotReady: true,
+      notes: 'PHASE_RF_06 ho-so alerts.'
+    },
+    {
+      route: '/workspace/plugins/ho-so/search',
+      screenCode: 'RF06_HO_SO_SEARCH',
+      title: 'Hồ sơ Search',
+      pageType: CBV_WEBAPP_WS_PAGE_TYPES.RF06_HO_SO_SEARCH,
+      requiredRole: '*',
+      dataSourceSheet: CBV_WEBAPP_WS_SHEETS.HOME_ALERT,
+      mode: CBV_WEBAPP_WS_MODES.READ_FIRST,
+      isEnabled: true,
+      isPilotReady: true,
+      notes: 'PHASE_RF_06 ho-so search.'
+    },
+    {
       route: '/workspace/plugins/health',
       screenCode: 'RF05_PLUGIN_HEALTH',
       title: 'Plugin Health',

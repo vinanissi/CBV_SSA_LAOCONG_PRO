@@ -8,7 +8,7 @@
 var CBV_RF05_PHASE_ID = 'PHASE_RF_05_PLUGIN_RUNTIME';
 var CBV_RF05_CONTRACT_VERSION = 'CBV_RF05_V1';
 
-var CBV_PLUGIN_ALLOWED_STATUS = ['ACTIVE', 'STUB', 'DISABLED', 'NOT_CONFIGURED', 'ERROR'];
+var CBV_PLUGIN_ALLOWED_STATUS = ['ACTIVE', 'ACTIVE_READONLY', 'PARTIAL', 'STUB', 'DISABLED', 'NOT_CONFIGURED', 'ERROR'];
 var CBV_PLUGIN_ALLOWED_MODULES = ['TASK', 'FINANCE', 'HO_SO', 'INVOICE', 'OCR', 'ZALO', 'CRM', 'AI', 'SYSTEM'];
 
 var CBV_PLUGIN_CAPABILITY_TYPES = [
@@ -152,13 +152,16 @@ function CBV_PluginRegistry__definitions_() {
       pluginId: 'cbv-plugin-finance',
       module: 'FINANCE',
       label: 'Finance Module',
-      version: '0.1.0',
-      status: 'STUB',
+      version: '1.0.0',
+      status: 'ACTIVE_READONLY',
       enabled: true,
       owner: 'CBV',
-      source: '30_FINANCE_SERVICE (GAS) — no WebApp read model yet',
+      source: 'FINANCE_TRANSACTION + FINANCE_ATTACHMENT (RF_06 read projection)',
       routes: [
-        CBV_Plugin__routeBind_('/workspace/plugins/finance', 'Finance plugin', 'cbv-plugin-finance', 'FINANCE', CBV_PERMISSION_ACTIONS.FINANCE_VIEW, true, 'STUB')
+        CBV_Plugin__routeBind_('/workspace/plugins/finance', 'Finance workboard', 'cbv-plugin-finance', 'FINANCE', CBV_PERMISSION_ACTIONS.FINANCE_VIEW, true, 'ACTIVE_READONLY'),
+        CBV_Plugin__routeBind_('/workspace/plugins/finance/items', 'Finance items', 'cbv-plugin-finance', 'FINANCE', CBV_PERMISSION_ACTIONS.FINANCE_VIEW, true, 'ACTIVE_READONLY'),
+        CBV_Plugin__routeBind_('/workspace/plugins/finance/alerts', 'Finance alerts', 'cbv-plugin-finance', 'FINANCE', CBV_PERMISSION_ACTIONS.FINANCE_VIEW, true, 'ACTIVE_READONLY'),
+        CBV_Plugin__routeBind_('/workspace/plugins/finance/search', 'Finance search', 'cbv-plugin-finance', 'FINANCE', CBV_PERMISSION_ACTIONS.FINANCE_SEARCH, true, 'ACTIVE_READONLY')
       ],
       permissions: [
         CBV_PERMISSION_ACTIONS.FINANCE_VIEW,
@@ -167,17 +170,20 @@ function CBV_PluginRegistry__definitions_() {
         CBV_PERMISSION_ACTIONS.FINANCE_FILE_VIEW
       ],
       capabilities: [
-        CBV_Plugin__cap_('finance-view', 'Xem tài chính', 'READ', false, 'STUB', CBV_PERMISSION_ACTIONS.FINANCE_VIEW, '/workspace/plugins/finance', '', 'Chưa có WebApp read model'),
-        CBV_Plugin__cap_('finance-search', 'Tìm kiếm TC', 'SEARCH', false, 'STUB', CBV_PERMISSION_ACTIONS.FINANCE_SEARCH, '', '', 'NOT_CONFIGURED'),
-        CBV_Plugin__cap_('finance-pending', 'Chờ thanh toán', 'FINANCE_ACTION', false, 'NOT_CONFIGURED', CBV_PERMISSION_ACTIONS.FINANCE_CONFIRM_PAYMENT, '', '', 'Không fake runtime'),
-        CBV_Plugin__cap_('finance-file', 'File TC', 'FILE', false, 'STUB', CBV_PERMISSION_ACTIONS.FINANCE_FILE_VIEW, '', '', 'NOT_CONFIGURED'),
-        CBV_Plugin__cap_('finance-observation', 'Quan sát TC', 'OBSERVATION', false, 'STUB', CBV_PERMISSION_ACTIONS.PLUGIN_OBSERVATION_VIEW, '/workspace/plugins/health', '', 'Stub observation')
+        CBV_Plugin__cap_('finance-view', 'Xem tài chính', 'READ', true, 'ACTIVE', CBV_PERMISSION_ACTIONS.FINANCE_VIEW, '/workspace/plugins/finance', '', 'RF_06 read projection'),
+        CBV_Plugin__cap_('finance-search', 'Tìm kiếm TC', 'SEARCH', true, 'ACTIVE', CBV_PERMISSION_ACTIONS.FINANCE_SEARCH, '/workspace/plugins/finance/search', '', 'RF_06 search adapter'),
+        CBV_Plugin__cap_('finance-pending', 'Chờ thanh toán', 'FINANCE_ACTION', false, 'NOT_CONFIGURED', CBV_PERMISSION_ACTIONS.FINANCE_CONFIRM_PAYMENT, '', '', 'EXECUTION_LOCKED'),
+        CBV_Plugin__cap_('finance-file', 'File TC', 'FILE', true, 'PARTIAL', CBV_PERMISSION_ACTIONS.FINANCE_FILE_VIEW, '', '', 'Read count only'),
+        CBV_Plugin__cap_('finance-alert', 'Cảnh báo TC', 'NOTIFICATION', true, 'ACTIVE', CBV_PERMISSION_ACTIONS.FINANCE_VIEW, '/workspace/plugins/finance/alerts', '', 'RF_06 alerts'),
+        CBV_Plugin__cap_('finance-timeline', 'Timeline TC', 'TIMELINE', true, 'PARTIAL', CBV_PERMISSION_ACTIONS.FINANCE_VIEW, '', '', 'FINANCE_LOG read-first'),
+        CBV_Plugin__cap_('finance-observation', 'Quan sát TC', 'OBSERVATION', true, 'ACTIVE', CBV_PERMISSION_ACTIONS.PLUGIN_OBSERVATION_VIEW, '/workspace/plugins/health', '', 'RF_06 observation')
       ],
-      projections: [],
+      projections: ['FINANCE_TRANSACTION', 'FINANCE_ATTACHMENT'],
       actions: [
-        CBV_Plugin__quickAction_('finance-view-stub', 'cbv-plugin-finance', 'FINANCE', 'Xem tài chính (stub)', 'NAVIGATE', false, CBV_PERMISSION_ACTIONS.FINANCE_VIEW, false, 'NOT_CONFIGURED', 'RF_06 activation pending', CBV_Plugin__href_('/workspace/plugins/finance'))
+        CBV_Plugin__quickAction_('finance-open', 'cbv-plugin-finance', 'FINANCE', 'Xem tài chính', 'NAVIGATE', true, CBV_PERMISSION_ACTIONS.FINANCE_VIEW, false, 'NAVIGATE', '', CBV_Plugin__href_('/workspace/plugins/finance')),
+        CBV_Plugin__quickAction_('finance-confirm-locked', 'cbv-plugin-finance', 'FINANCE', 'Xác nhận thanh toán', 'FINANCE_ACTION', true, CBV_PERMISSION_ACTIONS.FINANCE_CONFIRM_PAYMENT, true, 'EXECUTION_LOCKED', 'Không auto-confirm từ WebApp', '')
       ],
-      observation: { module: 'FINANCE', bindPhase: 'RF_05_STUB' },
+      observation: { module: 'FINANCE', bindPhase: 'RF_06' },
       coordination: {
         pluginId: 'cbv-plugin-finance',
         module: 'FINANCE',
@@ -185,24 +191,27 @@ function CBV_PluginRegistry__definitions_() {
         assignmentSupported: false,
         workloadSupported: false,
         overdueSupported: 'STUB',
-        quickActionsSupported: false,
-        status: 'STUB',
-        notes: 'No coordination binding until RF_06'
+        quickActionsSupported: true,
+        status: 'PARTIAL',
+        notes: 'Read-only activation RF_06'
       },
-      risks: ['No WebApp finance read model in RF_05'],
-      notes: 'Skeleton only — activate in RF_06'
+      risks: ['Confirm payment EXECUTION_LOCKED from WebApp'],
+      notes: 'ACTIVE_READONLY via RF_06 — no write from WebApp'
     },
     {
       pluginId: 'cbv-plugin-ho-so',
       module: 'HO_SO',
       label: 'Hồ sơ Module',
-      version: '0.1.0',
-      status: 'STUB',
+      version: '1.0.0',
+      status: 'ACTIVE_READONLY',
       enabled: true,
       owner: 'CBV',
-      source: 'HO_SO_MASTER (Sheet) — no WebApp read model yet',
+      source: 'HO_SO_MASTER + HO_SO_FILE (RF_06 read projection)',
       routes: [
-        CBV_Plugin__routeBind_('/workspace/plugins/ho-so', 'Hồ sơ plugin', 'cbv-plugin-ho-so', 'HO_SO', CBV_PERMISSION_ACTIONS.HO_SO_VIEW, true, 'STUB')
+        CBV_Plugin__routeBind_('/workspace/plugins/ho-so', 'Hồ sơ workboard', 'cbv-plugin-ho-so', 'HO_SO', CBV_PERMISSION_ACTIONS.HO_SO_VIEW, true, 'ACTIVE_READONLY'),
+        CBV_Plugin__routeBind_('/workspace/plugins/ho-so/items', 'Hồ sơ items', 'cbv-plugin-ho-so', 'HO_SO', CBV_PERMISSION_ACTIONS.HO_SO_VIEW, true, 'ACTIVE_READONLY'),
+        CBV_Plugin__routeBind_('/workspace/plugins/ho-so/alerts', 'Hồ sơ alerts', 'cbv-plugin-ho-so', 'HO_SO', CBV_PERMISSION_ACTIONS.HO_SO_VIEW, true, 'ACTIVE_READONLY'),
+        CBV_Plugin__routeBind_('/workspace/plugins/ho-so/search', 'Hồ sơ search', 'cbv-plugin-ho-so', 'HO_SO', CBV_PERMISSION_ACTIONS.HO_SO_SEARCH, true, 'ACTIVE_READONLY')
       ],
       permissions: [
         CBV_PERMISSION_ACTIONS.HO_SO_VIEW,
@@ -211,17 +220,20 @@ function CBV_PluginRegistry__definitions_() {
         CBV_PERMISSION_ACTIONS.HO_SO_APPROVAL
       ],
       capabilities: [
-        CBV_Plugin__cap_('hoso-view', 'Xem hồ sơ', 'READ', false, 'STUB', CBV_PERMISSION_ACTIONS.HO_SO_VIEW, '/workspace/plugins/ho-so', '', 'Chưa có WebApp read model'),
-        CBV_Plugin__cap_('hoso-search', 'Tìm kiếm HS', 'SEARCH', false, 'STUB', CBV_PERMISSION_ACTIONS.HO_SO_SEARCH, '', '', 'NOT_CONFIGURED'),
-        CBV_Plugin__cap_('hoso-file', 'File HS', 'FILE', false, 'STUB', CBV_PERMISSION_ACTIONS.HO_SO_FILE_VIEW, '', '', 'NOT_CONFIGURED'),
-        CBV_Plugin__cap_('hoso-approval', 'Duyệt HS', 'APPROVAL', false, 'NOT_CONFIGURED', CBV_PERMISSION_ACTIONS.HO_SO_APPROVAL, '', '', 'MANUAL_CONFIRM_REQUIRED when active'),
-        CBV_Plugin__cap_('hoso-observation', 'Quan sát HS', 'OBSERVATION', false, 'STUB', CBV_PERMISSION_ACTIONS.PLUGIN_OBSERVATION_VIEW, '/workspace/plugins/health', '', 'Stub observation')
+        CBV_Plugin__cap_('hoso-view', 'Xem hồ sơ', 'READ', true, 'ACTIVE', CBV_PERMISSION_ACTIONS.HO_SO_VIEW, '/workspace/plugins/ho-so', '', 'RF_06 read projection'),
+        CBV_Plugin__cap_('hoso-search', 'Tìm kiếm HS', 'SEARCH', true, 'ACTIVE', CBV_PERMISSION_ACTIONS.HO_SO_SEARCH, '/workspace/plugins/ho-so/search', '', 'RF_06 search adapter'),
+        CBV_Plugin__cap_('hoso-file', 'File HS', 'FILE', true, 'PARTIAL', CBV_PERMISSION_ACTIONS.HO_SO_FILE_VIEW, '', '', 'Read count + missing docs'),
+        CBV_Plugin__cap_('hoso-approval', 'Duyệt HS', 'APPROVAL', false, 'NOT_CONFIGURED', CBV_PERMISSION_ACTIONS.HO_SO_APPROVAL, '', '', 'EXECUTION_LOCKED'),
+        CBV_Plugin__cap_('hoso-alert', 'Cảnh báo HS', 'NOTIFICATION', true, 'ACTIVE', CBV_PERMISSION_ACTIONS.HO_SO_VIEW, '/workspace/plugins/ho-so/alerts', '', 'RF_06 alerts'),
+        CBV_Plugin__cap_('hoso-timeline', 'Timeline HS', 'TIMELINE', true, 'PARTIAL', CBV_PERMISSION_ACTIONS.HO_SO_VIEW, '', '', 'HO_SO_UPDATE_LOG read-first'),
+        CBV_Plugin__cap_('hoso-observation', 'Quan sát HS', 'OBSERVATION', true, 'ACTIVE', CBV_PERMISSION_ACTIONS.PLUGIN_OBSERVATION_VIEW, '/workspace/plugins/health', '', 'RF_06 observation')
       ],
-      projections: [],
+      projections: ['HO_SO_MASTER', 'HO_SO_FILE'],
       actions: [
-        CBV_Plugin__quickAction_('hoso-view-stub', 'cbv-plugin-ho-so', 'HO_SO', 'Xem hồ sơ (stub)', 'NAVIGATE', false, CBV_PERMISSION_ACTIONS.HO_SO_VIEW, false, 'NOT_CONFIGURED', 'RF_06 activation pending', CBV_Plugin__href_('/workspace/plugins/ho-so'))
+        CBV_Plugin__quickAction_('hoso-open', 'cbv-plugin-ho-so', 'HO_SO', 'Xem hồ sơ', 'NAVIGATE', true, CBV_PERMISSION_ACTIONS.HO_SO_VIEW, false, 'NAVIGATE', '', CBV_Plugin__href_('/workspace/plugins/ho-so')),
+        CBV_Plugin__quickAction_('hoso-approve-locked', 'cbv-plugin-ho-so', 'HO_SO', 'Gửi duyệt', 'APPROVAL', true, CBV_PERMISSION_ACTIONS.HO_SO_APPROVAL, true, 'EXECUTION_LOCKED', 'Không auto-approve từ WebApp', '')
       ],
-      observation: { module: 'HO_SO', bindPhase: 'RF_05_STUB' },
+      observation: { module: 'HO_SO', bindPhase: 'RF_06' },
       coordination: {
         pluginId: 'cbv-plugin-ho-so',
         module: 'HO_SO',
@@ -229,12 +241,12 @@ function CBV_PluginRegistry__definitions_() {
         assignmentSupported: 'STUB',
         workloadSupported: false,
         overdueSupported: 'STUB',
-        quickActionsSupported: false,
-        status: 'STUB',
-        notes: 'No coordination binding until RF_06'
+        quickActionsSupported: true,
+        status: 'PARTIAL',
+        notes: 'Read-only activation RF_06'
       },
-      risks: ['No WebApp hồ sơ read model in RF_05'],
-      notes: 'Skeleton only — activate in RF_06'
+      risks: ['Approval EXECUTION_LOCKED from WebApp'],
+      notes: 'ACTIVE_READONLY via RF_06 — no write from WebApp'
     }
   ];
 }
@@ -339,7 +351,10 @@ function CBV_Plugin__countWarnings_(plugin) {
 
 function CBV_Plugin__nextStep_(plugin) {
   if (plugin.status === 'ACTIVE') return 'Sử dụng capability đã bật';
-  if (plugin.module === 'FINANCE' || plugin.module === 'HO_SO') return 'Chờ RF_06 activation';
+  if (plugin.module === 'FINANCE' || plugin.module === 'HO_SO') {
+    if (plugin.status === 'ACTIVE_READONLY' || plugin.status === 'PARTIAL') return 'Sử dụng workboard read-only';
+    return 'Chờ RF_06 activation';
+  }
   return 'Kiểm tra descriptor';
 }
 
@@ -365,9 +380,10 @@ function CBV_PluginObservation_getHealth(userContext) {
     if (!CBV_Plugin__filterForRole_(ctx, p)) continue;
     var activeCaps = (p.capabilities || []).filter(function (c) { return c.enabled && c.status === 'ACTIVE'; }).length;
     var totalCaps = (p.capabilities || []).length;
-    var ok = p.status === 'ACTIVE' && activeCaps > 0;
+    var ok = p.status === 'ACTIVE' || p.status === 'ACTIVE_READONLY';
+    if (p.status === 'ACTIVE_READONLY' || p.status === 'PARTIAL') ok = activeCaps > 0;
     var severity = ok ? 'OK' : (p.status === 'STUB' ? 'WARNING' : 'ERROR');
-    var message = p.status === 'ACTIVE'
+    var message = (p.status === 'ACTIVE' || p.status === 'ACTIVE_READONLY' || p.status === 'PARTIAL')
       ? (activeCaps + '/' + totalCaps + ' capability active')
       : ('Plugin ' + p.status + ' — ' + (p.notes || ''));
     items.push({
@@ -380,6 +396,22 @@ function CBV_PluginObservation_getHealth(userContext) {
       nextStep: CBV_Plugin__nextStep_(p),
       checkedAt: new Date().toISOString()
     });
+  }
+
+  if (typeof CBV_Rf06PluginObservation_getHealth_ === 'function') {
+    try {
+      var rf06 = CBV_Rf06PluginObservation_getHealth_(ctx);
+      if (rf06.ok && rf06.data && rf06.data.plugins) {
+        rf06.data.plugins.forEach(function (r6) {
+          for (var j = 0; j < items.length; j++) {
+            if (items[j].pluginId === r6.pluginId) {
+              items[j] = r6;
+              break;
+            }
+          }
+        });
+      }
+    } catch (eRf06) { /* optional merge */ }
   }
 
   return CBV_Plugin__safeEnvelope_({

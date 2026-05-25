@@ -50,8 +50,8 @@ function CbvTcsRf05PluginRuntime_TestConsole_runFull() {
   var finP = CBV_PluginRegistry_get('cbv-plugin-finance');
   var hsP = CBV_PluginRegistry_get('cbv-plugin-ho-so');
   addCheck('TASK_PLUGIN_DESCRIPTOR', !!(taskP && taskP.status === 'ACTIVE'), 'OK', 'TASK ACTIVE', taskP || {});
-  addCheck('FINANCE_PLUGIN_DESCRIPTOR', !!(finP && finP.status === 'STUB'), finP ? 'OK' : 'ERROR', 'FINANCE STUB', finP || {});
-  addCheck('HO_SO_PLUGIN_DESCRIPTOR', !!(hsP && hsP.status === 'STUB'), hsP ? 'OK' : 'ERROR', 'HO_SO STUB', hsP || {});
+  addCheck('FINANCE_PLUGIN_DESCRIPTOR', !!(finP && (finP.status === 'ACTIVE_READONLY' || finP.status === 'PARTIAL' || finP.status === 'STUB')), finP && finP.status !== 'STUB' ? 'OK' : 'WARNING', 'FINANCE status', finP || {});
+  addCheck('HO_SO_PLUGIN_DESCRIPTOR', !!(hsP && (hsP.status === 'ACTIVE_READONLY' || hsP.status === 'PARTIAL' || hsP.status === 'STUB')), hsP && hsP.status !== 'STUB' ? 'OK' : 'WARNING', 'HO_SO status', hsP || {});
 
   [taskP, finP, hsP].forEach(function (p, idx) {
     if (!p) return;
