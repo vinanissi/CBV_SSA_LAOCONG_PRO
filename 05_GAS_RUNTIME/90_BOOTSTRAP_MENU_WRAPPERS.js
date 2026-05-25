@@ -1522,6 +1522,20 @@ function menuCbvTestConsoleMilestone09_copyReport() {
   });
 }
 
+/** PHASE_RF_02 — Workboard Core health test (CBV_TCS_V1). */
+function menuCbvTestConsoleRf02_runFull() {
+  runSafeMenuStep_('CBV_RF02_Test_runWorkboardCoreHealth', 'RF_02 Workboard Core Health Test', function (r) {
+    if (!r) return 'No result';
+    return (r.status || '') + '\n' + (r.summary || '') + '\nEnvelope OK: ' + (r.envelopeOk ? 'yes' : 'no');
+  });
+}
+
+function menuCbvTestConsoleRf02_copyReport() {
+  runSafeMenuStep_('CbvTcsRf02WorkboardCore_TestConsole_copyLatestReport', 'Copy RF_02 report', function (r) {
+    return r && r.ok ? 'Dialog opened — select JSON and copy.' : (r && r.message) || 'Done';
+  });
+}
+
 /** CBV Test Console — HOME_ALERT Phase 82 SLA & escalation QA. */
 function menuCbvTestConsoleHomeAlertSla82() {
   runSafeMenuStep_('HomeAlertSlaEscalation_TestConsole_run', 'HOME_ALERT SLA/Escalation test', function (r) {

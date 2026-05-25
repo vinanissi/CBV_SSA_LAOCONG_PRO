@@ -310,6 +310,8 @@ function buildCbvTestConsoleMenu_() {
     .addItem('Copy Milestone 08 Latest Test Report', 'menuCbvTestConsoleMilestone08_copyReport')
     .addItem('M09 — Run Interactive Task Runtime Test', 'menuCbvTestConsoleMilestone09_runFull')
     .addItem('Copy Milestone 09 Latest Test Report', 'menuCbvTestConsoleMilestone09_copyReport')
+    .addItem('Run RF_02 Workboard Core Health Test', 'menuCbvTestConsoleRf02_runFull')
+    .addItem('Copy RF_02 Latest Test Report', 'menuCbvTestConsoleRf02_copyReport')
     .addItem('HOME_ALERT Phase 82 — SLA & Escalation', 'menuCbvTestConsoleHomeAlertSla82')
     .addItem('HOME_ALERT Phase 83 — SLA Policy Registry', 'menuCbvTestConsoleHomeAlertSla83')
     .addItem('HOME_ALERT Phase 84 — Safe Automation Runtime', 'menuCbvTestConsoleHomeAlertSafeAutomation84')

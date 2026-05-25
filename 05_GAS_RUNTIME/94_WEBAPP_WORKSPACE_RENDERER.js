@@ -86,8 +86,19 @@ function CbvWebAppWorkspace_render(route, params) {
     page = CbvExecFlow_renderFocusPage_(params || {});
   } else if (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.STAFF_TASKS && typeof CbvStaffWorkspace_renderTasksPage_ === 'function') {
     page = CbvStaffWorkspace_renderTasksPage_();
+  } else if (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.STAFF_WORKBOARD && typeof CbvRf02Workboard_renderShellPage_ === 'function') {
+    page = CbvRf02Workboard_renderShellPage_(params || {});
   } else if (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.STAFF_WORKBOARD && typeof CbvStaffWorkboard_renderPage_ === 'function') {
     page = CbvStaffWorkboard_renderPage_(params || {});
+  } else if (
+    (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.RF02_WORKBOARD_TASKS ||
+      reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.RF02_WORKBOARD_TASK_DETAIL ||
+      reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.RF02_WORKBOARD_SEARCH ||
+      reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.RF02_WORKBOARD_NOTIFICATIONS ||
+      reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.RF02_WORKBOARD_FILES) &&
+    typeof CbvRf02Workboard_renderPageByType_ === 'function'
+  ) {
+    page = CbvRf02Workboard_renderPageByType_(reg.pageType, params || {});
   } else if (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.INTERACTIVE_TASK_RUNTIME && typeof CbvInteractiveTaskRuntime_renderPage_ === 'function') {
     page = CbvInteractiveTaskRuntime_renderPage_(params || {});
   } else if (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.STAFF_TASK_DETAIL && typeof CbvStaffWorkspace_renderTaskDetailPage_ === 'function') {
