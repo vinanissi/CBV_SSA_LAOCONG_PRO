@@ -42,8 +42,8 @@ export function PluginsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-semibold text-white">Mô-đun vận hành</h1>
-        <p className="text-sm text-slate-400">{data.demoLabel}</p>
+        <h1 className="text-2xl font-semibold tracking-tight text-white">Cấu hình mô-đun</h1>
+        <p className="mt-1 text-sm text-slate-400">Quyền và thao tác theo từng khu vực</p>
       </div>
 
       <div className="grid gap-4 xl:grid-cols-3">
@@ -56,7 +56,6 @@ export function PluginsPage() {
                 variant={plugin.status === 'ACTIVE_READONLY' ? 'readonly' : 'default'}
               />
             </div>
-            <p className="mt-1 text-xs text-slate-500">{plugin.module} · {plugin.version}</p>
 
             <ul className="mt-4 space-y-2">
               {plugin.capabilities.map((cap) => (

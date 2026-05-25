@@ -40,11 +40,13 @@ export function DetailPanel() {
   if (!ctx) return null;
 
   return (
-    <aside className="hidden w-80 shrink-0 flex-col border-l border-border bg-surface-raised xl:flex">
+    <aside className="hidden w-detail min-w-[360px] max-w-[420px] shrink-0 flex-col border-l border-border bg-surface-raised xl:flex">
       <div className="panel-header">{ctx.title || 'Chi tiết'}</div>
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto px-5 py-4">
         {ctx.content ?? (
-          <p className="text-sm text-slate-500">Chọn một mục để xem chi tiết, lịch sử và tệp liên quan.</p>
+          <p className="text-sm leading-relaxed text-slate-500">
+            Chọn việc hoặc hồ sơ để xem chi tiết, lịch sử và tệp liên quan.
+          </p>
         )}
       </div>
     </aside>

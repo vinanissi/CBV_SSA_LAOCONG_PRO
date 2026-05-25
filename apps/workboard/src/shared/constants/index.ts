@@ -1,8 +1,8 @@
 import type { UserRole } from '@/api/contracts';
 
-export const DEMO_LABEL = 'Dữ liệu demo — phiên bản local';
+export const SESSION_LABEL = 'Phiên làm việc local';
 
-export const NAV_ITEMS = [
+export const PRIMARY_NAV = [
   { to: '/', label: 'Hôm nay', icon: '☀' },
   { to: '/tasks', label: 'Việc của tôi', icon: '✓' },
   { to: '/tasks?filter=overdue', label: 'Quá hạn', icon: '!' },
@@ -10,8 +10,12 @@ export const NAV_ITEMS = [
   { to: '/finance', label: 'Tài chính', icon: '₫' },
   { to: '/coordination', label: 'Phối hợp', icon: '↔' },
   { to: '/observation', label: 'Thông báo', icon: '◉' },
-  { to: '/plugins', label: 'Mô-đun', icon: '▣' },
 ] as const;
+
+export const SECONDARY_NAV = [{ to: '/plugins', label: 'Cấu hình mô-đun', icon: '▣' }] as const;
+
+/** @deprecated use PRIMARY_NAV + SECONDARY_NAV */
+export const NAV_ITEMS = [...PRIMARY_NAV, ...SECONDARY_NAV];
 
 export const ROLE_LABELS: Record<UserRole, string> = {
   ADMIN: 'Quản trị',
@@ -20,6 +24,13 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   FINANCE: 'Tài chính',
   HO_SO: 'Hồ sơ',
   VIEW_ONLY: 'Chỉ xem',
+};
+
+export const PRIORITY_LABELS: Record<string, string> = {
+  URGENT: 'Khẩn',
+  HIGH: 'Cao',
+  MEDIUM: 'Bình thường',
+  LOW: 'Thấp',
 };
 
 export const TASK_FILTERS = [
@@ -70,3 +81,26 @@ export const EXECUTION_USER_LABELS: Record<string, string> = {
   READ_ONLY: 'Chỉ xem',
   NAVIGATE: '',
 };
+
+export const EMPTY_COPY = {
+  default: {
+    title: 'Chưa có việc cần xử lý',
+    message: 'Danh sách trống — thử đổi bộ lọc hoặc quay lại sau.',
+  },
+  alerts: {
+    title: 'Không có cảnh báo hôm nay',
+    message: 'Mọi thứ đang ổn — tiếp tục theo dõi.',
+  },
+  overdue: {
+    title: 'Chưa có việc quá hạn',
+    message: 'Tốt — không có việc trễ hạn.',
+  },
+  tasks: {
+    title: 'Chưa có việc trong bộ lọc này',
+    message: 'Thử chọn bộ lọc khác hoặc quay lại Hôm nay.',
+  },
+  search: {
+    title: 'Không tìm thấy kết quả',
+    message: 'Thử tên, SĐT, biển số hoặc mã khác.',
+  },
+} as const;

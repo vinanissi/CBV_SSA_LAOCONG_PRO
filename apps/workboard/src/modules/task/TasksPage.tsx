@@ -4,11 +4,11 @@ import { api } from '@/api/client';
 import type { TaskDetail, TaskFilter, TaskItem } from '@/api/contracts';
 import { TaskCard } from '@/components/ui/TaskCard';
 import { WorkQueue } from '@/components/ui/WorkQueue';
-import { TimelineList } from '@/components/ui/TimelineList';
+import { buildTaskDetailContent, buildTaskTimelineContent } from '@/components/ui/TaskDetailContent';
 import { LoadingState } from '@/components/states/LoadingState';
 import { ErrorState } from '@/components/states/ErrorState';
 import { EmptyState } from '@/components/states/EmptyState';
-import { TASK_FILTERS } from '@/shared/constants';
+import { TASK_FILTERS, EMPTY_COPY } from '@/shared/constants';
 import { useDetailPanel } from '@/components/layout/DetailPanel';
 
 export function TasksPage() {
@@ -37,30 +37,29 @@ export function TasksPage() {
       .finally(() => setLoading(false));
   }, [filter]);
 
+  function applyDetail(taskDetail: TaskDetail) {
+    setDetailState(taskDetail);
+    setDetail(taskDetail.title, buildTaskDetailContent(taskDetail));
+  }
+
   useEffect(() => {
     if (!taskId) return;
     api.getTaskDetail(taskId).then((res) => {
-      if (res.ok && res.data) {
-        setDetailState(res.data);
-        setDetail(res.data.title, (
-          <div className="space-y-4">
-            <p className="text-sm text-slate-400">{res.data.description}</p>
-            <div>
-              <h4 className="mb-2 text-xs font-semibold uppercase text-slate-500">Lịch sử</h4>
-              <TimelineList items={res.data.timeline} />
-            </div>
-            <div>
-              <h4 className="mb-2 text-xs font-semibold uppercase text-slate-500">Tệp</h4>
-              {res.data.files.map((f) => (
-                <p key={f.fileId} className="text-sm text-slate-300">{f.fileName}</p>
-              ))}
-            </div>
-            <p className="text-xs text-slate-500">Chỉ xem trong phiên bản này</p>
-          </div>
-        ));
-      }
+      if (res.ok && res.data) applyDetail(res.data);
     });
   }, [taskId, setDetail]);
+
+  function openTask(task: TaskItem) {
+    navigate(`/tasks/${task.taskId}`);
+  }
+
+  function showTimeline(task: TaskItem) {
+    api.getTaskDetail(task.taskId).then((res) => {
+      if (res.ok && res.data) {
+        setDetail(res.data.title, buildTaskTimelineContent(res.data));
+      }
+    });
+  }
 
   function selectFilter(f: TaskFilter) {
     setSearchParams({ filter: f });
@@ -70,8 +69,11 @@ export function TasksPage() {
   if (error) return <ErrorState message={error} onRetry={() => window.location.reload()} />;
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-xl font-semibold text-white">Việc vận hành</h1>
+    <div className="space-y-5">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight text-white">Việc vận hành</h1>
+        <p className="mt-1 text-sm text-slate-400">Danh sách việc theo bộ lọc</p>
+      </div>
 
       <div className="flex flex-wrap gap-2">
         {TASK_FILTERS.map((f) => (
@@ -88,16 +90,16 @@ export function TasksPage() {
 
       <WorkQueue title="Danh sách việc">
         {tasks.length === 0 ? (
-          <EmptyState title="Không có việc" message="Thử đổi bộ lọc khác." />
+          <EmptyState {...EMPTY_COPY.tasks} />
         ) : (
           tasks.map((t) => (
             <TaskCard
               key={t.taskId}
               task={t}
               selected={detail?.taskId === t.taskId || taskId === t.taskId}
-              onSelect={(task) => {
-                navigate(`/tasks/${task.taskId}`);
-              }}
+              onOpen={openTask}
+              onTimeline={showTimeline}
+              onHoSo={() => navigate('/hoso')}
             />
           ))
         )}

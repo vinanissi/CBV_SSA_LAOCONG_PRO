@@ -1,11 +1,12 @@
 import type { ReactNode } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import type { UserContext } from '@/api/contracts';
 import { TopBar } from './TopBar';
+import { TopRuntimeStrip } from './TopRuntimeStrip';
 import { Sidebar } from './Sidebar';
 import { QuickActionBar } from './QuickActionBar';
 import { DetailPanel } from './DetailPanel';
-import { NAV_ITEMS } from '@/shared/constants';
+import { FocusStrip } from '@/components/ui/FocusStrip';
 
 interface AppShellProps {
   user: UserContext;
@@ -18,13 +19,17 @@ export function AppShell({ user, children }: AppShellProps) {
   return (
     <div className="flex h-screen min-w-[1366px] flex-col bg-surface">
       <TopBar user={user} onSearchNavigate={(q) => navigate(`/search?q=${encodeURIComponent(q)}`)} />
+      <TopRuntimeStrip />
 
       <div className="flex min-h-0 flex-1">
-        <Sidebar items={NAV_ITEMS} />
+        <Sidebar />
 
-        <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-surface">
           <div className="flex min-h-0 flex-1">
-            <div className="min-w-0 flex-1 overflow-y-auto p-4">{children ?? <Outlet />}</div>
+            <div className="min-w-0 flex-1 overflow-y-auto px-5 py-4">
+              <FocusStrip />
+              <div className="main-canvas">{children}</div>
+            </div>
             <DetailPanel />
           </div>
         </main>
@@ -32,20 +37,5 @@ export function AppShell({ user, children }: AppShellProps) {
 
       <QuickActionBar user={user} />
     </div>
-  );
-}
-
-export function ShellNavLink({ to, label }: { to: string; label: string }) {
-  return (
-    <NavLink
-      to={to}
-      className={({ isActive }) =>
-        `block rounded-md px-3 py-2 text-sm transition-colors ${
-          isActive ? 'bg-accent/20 text-accent' : 'text-slate-400 hover:bg-surface-overlay hover:text-slate-200'
-        }`
-      }
-    >
-      {label}
-    </NavLink>
   );
 }

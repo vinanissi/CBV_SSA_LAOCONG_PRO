@@ -7,6 +7,12 @@ import { StatusBadge } from '@/components/ui/StatusBadge';
 import { LoadingState } from '@/components/states/LoadingState';
 import { ErrorState } from '@/components/states/ErrorState';
 
+const MODULE_LABEL: Record<string, string> = {
+  TASK: 'Việc',
+  FINANCE: 'Tài chính',
+  HO_SO: 'Hồ sơ',
+};
+
 export function ObservationPage() {
   const [data, setData] = useState<ObservationData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -37,12 +43,12 @@ export function ObservationPage() {
         <p className="text-sm text-slate-400">Không tự xử lý — cần kiểm tra thủ công</p>
       </div>
 
-      <WorkQueue title="Trạng thái mô-đun">
+      <WorkQueue title="Trạng thái khu vực">
         <div className="grid gap-3 md:grid-cols-3">
           {data.statusCards.map((card) => (
             <div key={card.module} className="panel p-4">
               <div className="flex items-center justify-between">
-                <span className="font-medium text-slate-100">{card.module}</span>
+                <span className="font-medium text-slate-100">{MODULE_LABEL[card.module] ?? card.module}</span>
                 <StatusBadge
                   status={card.ok ? 'Ổn' : 'Cần kiểm tra'}
                   variant={card.ok ? 'readonly' : 'overdue'}
@@ -65,7 +71,7 @@ export function ObservationPage() {
           ))}
         </WorkQueue>
 
-        <WorkQueue title="Chiếu dữ liệu">
+        <WorkQueue title="Nguồn dữ liệu">
           {data.projectionStatus.map((p) => (
             <div key={p.label} className="flex justify-between rounded-md bg-surface-overlay p-3 text-sm">
               <span className="text-slate-300">{p.label}</span>

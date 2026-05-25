@@ -16,15 +16,19 @@
 
 @layer components {
   .panel {
-    @apply rounded-lg border border-border bg-surface-raised;
+    @apply rounded-lg border border-border bg-surface-content shadow-sm shadow-black/20;
   }
 
   .panel-header {
-    @apply border-b border-border px-4 py-3 text-sm font-semibold text-slate-200;
+    @apply border-b border-border px-4 py-3 text-sm font-semibold tracking-wide text-slate-100;
   }
 
   .panel-body {
     @apply p-4;
+  }
+
+  .main-canvas {
+    @apply rounded-xl border border-border/80 bg-surface-content/40 p-5;
   }
 
   .btn {
@@ -41,5 +45,21 @@
 
   .btn-disabled {
     @apply btn cursor-not-allowed border border-border bg-surface-overlay text-slate-500;
+  }
+
+  .btn-card-action {
+    @apply rounded-md border border-border/80 bg-surface-raised px-3 py-1.5 text-xs font-medium text-slate-200 hover:border-border-soft hover:bg-surface-overlay;
+  }
+
+  .focus-chip {
+    @apply inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors;
+  }
+
+  .focus-chip-active {
+    @apply focus-chip border-status-warn/40 bg-priority-urgent-bg text-slate-100 hover:border-status-warn/60;
+  }
+
+  .focus-chip-muted {
+    @apply focus-chip border-border/60 bg-surface-raised/60 text-slate-500;
   }
 }
