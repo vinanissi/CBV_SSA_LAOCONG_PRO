@@ -109,6 +109,17 @@ function CbvWebAppWorkspace_render(route, params) {
     typeof CbvRf03Coord_renderPageByType_ === 'function'
   ) {
     page = CbvRf03Coord_renderPageByType_(reg.pageType, params || {});
+  } else if (
+    (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.RF04_OBSERVATION_HOME ||
+      reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.RF04_OBSERVATION_HEALTH ||
+      reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.RF04_OBSERVATION_PROJECTIONS ||
+      reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.RF04_OBSERVATION_QUEUES ||
+      reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.RF04_OBSERVATION_SYNC ||
+      reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.RF04_OBSERVATION_AUDIT ||
+      reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.RF04_OBSERVATION_ALERTS) &&
+    typeof CbvRf04Obs_renderPageByType_ === 'function'
+  ) {
+    page = CbvRf04Obs_renderPageByType_(reg.pageType, params || {});
   } else if (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.INTERACTIVE_TASK_RUNTIME && typeof CbvInteractiveTaskRuntime_renderPage_ === 'function') {
     page = CbvInteractiveTaskRuntime_renderPage_(params || {});
   } else if (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.STAFF_TASK_DETAIL && typeof CbvStaffWorkspace_renderTaskDetailPage_ === 'function') {

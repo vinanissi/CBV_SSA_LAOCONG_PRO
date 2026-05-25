@@ -1550,6 +1550,20 @@ function menuCbvTestConsoleRf03_copyReport() {
   });
 }
 
+/** PHASE_RF_04 — Observation Runtime health test. */
+function menuCbvTestConsoleRf04_runFull() {
+  runSafeMenuStep_('CBV_RF04_Test_runObservationRuntimeHealth', 'RF_04 Observation Runtime Health Test', function (r) {
+    if (!r) return 'No result';
+    return (r.status || '') + '\n' + (r.summary || '') + '\nEnvelope OK: ' + (r.envelopeOk ? 'yes' : 'no');
+  });
+}
+
+function menuCbvTestConsoleRf04_copyReport() {
+  runSafeMenuStep_('CbvTcsRf04ObservationRuntime_TestConsole_copyLatestReport', 'Copy RF_04 report', function (r) {
+    return r && r.ok ? 'Dialog opened — select JSON and copy.' : (r && r.message) || 'Done';
+  });
+}
+
 /** CBV Test Console — HOME_ALERT Phase 82 SLA & escalation QA. */
 function menuCbvTestConsoleHomeAlertSla82() {
   runSafeMenuStep_('HomeAlertSlaEscalation_TestConsole_run', 'HOME_ALERT SLA/Escalation test', function (r) {
