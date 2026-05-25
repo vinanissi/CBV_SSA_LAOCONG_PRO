@@ -1,5 +1,7 @@
 # Copy to .dev.vars for local wrangler dev (never commit .dev.vars)
 CBV_GAS_API_BASE_URL=
+CBV_GAS_WRITE_API_BASE_URL=
 CBV_APPSHEET_API_BASE_URL=
 CBV_APPSHEET_API_KEY=
 CBV_ALLOWED_ORIGINS=http://localhost:5173
+CBV_TASK_WRITE_MODE=local

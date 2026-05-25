@@ -6,6 +6,9 @@ const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
   ADMIN: [
     'ADMIN_ALL',
     'TASK_VIEW',
+    'TASK_CREATE',
+    'TASK_UPDATE',
+    'TASK_ASSIGN',
     'FINANCE_VIEW',
     'HO_SO_VIEW',
     'COORDINATION_VIEW',
@@ -18,6 +21,9 @@ const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
   ],
   MANAGER: [
     'TASK_VIEW',
+    'TASK_CREATE',
+    'TASK_UPDATE',
+    'TASK_ASSIGN',
     'FINANCE_VIEW',
     'HO_SO_VIEW',
     'COORDINATION_VIEW',
@@ -25,7 +31,7 @@ const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     'PLUGIN_VIEW',
     'SEARCH',
   ],
-  STAFF: ['TASK_VIEW', 'SEARCH'],
+  STAFF: ['TASK_VIEW', 'TASK_UPDATE_OWN', 'SEARCH'],
   FINANCE: ['TASK_VIEW', 'FINANCE_VIEW', 'SEARCH'],
   HO_SO: ['TASK_VIEW', 'HO_SO_VIEW', 'SEARCH'],
   VIEW_ONLY: ['TASK_VIEW', 'FINANCE_VIEW', 'HO_SO_VIEW', 'OBSERVATION_VIEW', 'PLUGIN_VIEW', 'SEARCH'],

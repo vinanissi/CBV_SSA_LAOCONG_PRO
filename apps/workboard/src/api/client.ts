@@ -14,9 +14,12 @@ function buildHeaders(): HeadersInit {
   return headers;
 }
 
-async function fetchEnvelope<T>(path: string): Promise<ApiEnvelope<T>> {
+async function fetchEnvelope<T>(path: string, init?: RequestInit): Promise<ApiEnvelope<T>> {
   try {
-    const res = await fetch(`${API_BASE}${path}`, { headers: buildHeaders() });
+    const res = await fetch(`${API_BASE}${path}`, {
+      ...init,
+      headers: { ...buildHeaders(), ...(init?.headers as Record<string, string>) },
+    });
     if (!res.ok) {
       const body = (await res.json().catch(() => null)) as ApiEnvelope<T> | null;
       if (body && typeof body.ok === 'boolean') return body;
@@ -85,6 +88,31 @@ export const api = {
       () => fetchEnvelope<import('./contracts').TaskDetail | null>(`/api/tasks/${taskId}`),
       () => mockApi.getTaskDetail(taskId),
     );
+  },
+
+  getTaskWriteCapability() {
+    return withFallback(
+      () => fetchEnvelope<import('./contracts').TaskWriteCapability>('/api/tasks/write-capability'),
+      () => mockApi.getTaskWriteCapability(),
+    );
+  },
+
+  createTask(body: import('./contracts').CreateTaskBody) {
+    if (useMock()) return mockApi.createTask(body);
+    return fetchEnvelope<import('./contracts').TaskWriteResult>('/api/tasks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  },
+
+  updateTask(taskId: string, body: import('./contracts').UpdateTaskBody) {
+    if (useMock()) return mockApi.updateTask(taskId, body);
+    return fetchEnvelope<import('./contracts').TaskWriteResult>(`/api/tasks/${taskId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
   },
 
   getFinanceItems() {

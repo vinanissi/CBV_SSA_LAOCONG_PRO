@@ -7,3 +7,4 @@ port = 8787
 
 [vars]
 CBV_ALLOWED_ORIGINS = "http://localhost:5173"
+CBV_TASK_WRITE_MODE = "local"

@@ -1,7 +1,7 @@
 import { getEnv } from './env';
 
 const CORS_HEADERS = {
-  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, POST, PATCH, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Accept, x-cbv-role',
   'Access-Control-Max-Age': '86400',
 };

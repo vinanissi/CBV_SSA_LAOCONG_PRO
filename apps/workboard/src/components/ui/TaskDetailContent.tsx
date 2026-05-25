@@ -1,9 +1,15 @@
 import type { TaskDetail } from '@/api/contracts';
 import { TimelineList } from '@/components/ui/TimelineList';
 import { FileList } from '@/components/ui/FileList';
+import { TaskUpdateForm } from '@/modules/task/TaskUpdateForm';
 import { extractTaskSubtitle } from '@/shared/utils/taskDisplay';
 
-export function buildTaskDetailContent(detail: TaskDetail) {
+interface TaskDetailContentProps {
+  detail: TaskDetail;
+  onUpdated?: (task: TaskDetail) => void;
+}
+
+export function TaskDetailContent({ detail, onUpdated }: TaskDetailContentProps) {
   return (
     <div className="space-y-5">
       <div>
@@ -22,9 +28,13 @@ export function buildTaskDetailContent(detail: TaskDetail) {
         <FileList files={detail.files} />
       </div>
 
-      <p className="text-xs text-slate-500">Chỉ xem trong phiên bản này</p>
+      <TaskUpdateForm task={detail} onUpdated={onUpdated} />
     </div>
   );
+}
+
+export function buildTaskDetailContent(detail: TaskDetail, onUpdated?: (task: TaskDetail) => void) {
+  return <TaskDetailContent detail={detail} onUpdated={onUpdated} />;
 }
 
 export function buildTaskTimelineContent(detail: TaskDetail) {

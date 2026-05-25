@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { api } from '@/api/client';
 import type { TaskDetail, TaskFilter, TaskItem } from '@/api/contracts';
@@ -10,6 +10,7 @@ import { ErrorState } from '@/components/states/ErrorState';
 import { EmptyState } from '@/components/states/EmptyState';
 import { TASK_FILTERS, EMPTY_COPY } from '@/shared/constants';
 import { useDetailPanel } from '@/components/layout/DetailPanel';
+import { useTaskWrite } from '@/modules/task/TaskWriteContext';
 
 export function TasksPage() {
   const navigate = useNavigate();
@@ -21,8 +22,9 @@ export function TasksPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { setDetail } = useDetailPanel();
+  const { registerTaskChanged, openCreate } = useTaskWrite();
 
-  useEffect(() => {
+  const loadTasks = useCallback(() => {
     setLoading(true);
     api
       .getTasks(filter)
@@ -31,15 +33,31 @@ export function TasksPage() {
           setError(res.errors[0] ?? 'Không tải được danh sách việc');
           return;
         }
+        setError(null);
         setTasks(res.data);
       })
       .catch(() => setError('Không kết nối được dữ liệu'))
       .finally(() => setLoading(false));
   }, [filter]);
 
+  useEffect(() => {
+    loadTasks();
+  }, [loadTasks]);
+
+  useEffect(() => {
+    registerTaskChanged(loadTasks);
+  }, [registerTaskChanged, loadTasks]);
+
   function applyDetail(taskDetail: TaskDetail) {
     setDetailState(taskDetail);
-    setDetail(taskDetail.title, buildTaskDetailContent(taskDetail));
+    setDetail(
+      taskDetail.title,
+      buildTaskDetailContent(taskDetail, (updated) => {
+        setDetailState(updated);
+        setDetail(updated.title, buildTaskDetailContent(updated, applyDetail));
+        loadTasks();
+      }),
+    );
   }
 
   useEffect(() => {
@@ -47,7 +65,7 @@ export function TasksPage() {
     api.getTaskDetail(taskId).then((res) => {
       if (res.ok && res.data) applyDetail(res.data);
     });
-  }, [taskId, setDetail]);
+  }, [taskId]);
 
   function openTask(task: TaskItem) {
     navigate(`/tasks/${task.taskId}`);
@@ -70,9 +88,14 @@ export function TasksPage() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-white">Việc vận hành</h1>
-        <p className="mt-1 text-sm text-slate-400">Danh sách việc theo bộ lọc</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-white">Việc vận hành</h1>
+          <p className="mt-1 text-sm text-slate-400">Danh sách việc theo bộ lọc</p>
+        </div>
+        <button type="button" onClick={openCreate} className="btn-primary shrink-0">
+          + Tạo việc
+        </button>
       </div>
 
       <div className="flex flex-wrap gap-2">

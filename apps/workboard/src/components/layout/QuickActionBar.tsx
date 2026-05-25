@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import type { UserContext } from '@/api/contracts';
 import { QUICK_BAR_ACTIONS, SESSION_LABEL } from '@/shared/constants';
 import { executionLabel } from '@/shared/utils';
+import { useTaskWrite } from '@/modules/task/TaskWriteContext';
 
 interface QuickActionBarProps {
   user: UserContext;
@@ -9,6 +10,7 @@ interface QuickActionBarProps {
 
 export function QuickActionBar(_props: QuickActionBarProps) {
   const navigate = useNavigate();
+  const { openCreate } = useTaskWrite();
 
   return (
     <footer className="flex h-14 shrink-0 items-center gap-3 border-t border-border bg-surface-raised px-5">
@@ -21,7 +23,12 @@ export function QuickActionBar(_props: QuickActionBarProps) {
             type="button"
             disabled={locked}
             onClick={() => {
-              if (!locked && action.href) navigate(action.href);
+              if (locked) return;
+              if (action.id === 'add-task') {
+                openCreate();
+                return;
+              }
+              if (action.href) navigate(action.href);
             }}
             className={
               locked

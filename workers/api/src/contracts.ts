@@ -201,9 +201,62 @@ export type TaskFilter = 'mine' | 'pending' | 'overdue' | 'approval';
 
 export interface Env {
   CBV_GAS_API_BASE_URL?: string;
+  CBV_GAS_WRITE_API_BASE_URL?: string;
   CBV_APPSHEET_API_BASE_URL?: string;
   CBV_APPSHEET_API_KEY?: string;
   CBV_ALLOWED_ORIGINS?: string;
+  CBV_TASK_WRITE_MODE?: string;
+}
+
+export type TaskWriteMode = 'ENABLED' | 'LOCKED';
+
+export interface TaskWriteEvent {
+  eventId: string;
+  taskId: string;
+  actor: string;
+  action: string;
+  before: Record<string, unknown> | null;
+  after: Record<string, unknown> | null;
+  note: string;
+  createdAt: string;
+  traceId: string;
+  source: 'RF_11_TASK_WRITE_RUNTIME';
+}
+
+export interface CreateTaskBody {
+  title: string;
+  description?: string;
+  assignee?: string;
+  priority?: string;
+  dueDate?: string;
+  module?: string;
+  relatedHoSoId?: string;
+  relatedFinanceId?: string;
+  files?: unknown[];
+  note?: string;
+}
+
+export interface UpdateTaskBody {
+  title?: string;
+  description?: string;
+  status?: string;
+  assignee?: string;
+  priority?: string;
+  dueDate?: string;
+  note?: string;
+}
+
+export interface TaskWriteCapability {
+  writeMode: TaskWriteMode;
+  adapterStatus: string;
+  canCreate: boolean;
+  canUpdate: boolean;
+  message: string;
+}
+
+export interface TaskWriteResult {
+  task: TaskDetail;
+  event: TaskWriteEvent;
 }
 
 export interface HealthData {
@@ -213,4 +266,5 @@ export interface HealthData {
   adapter: string;
   readOnly: boolean;
   writesLocked: boolean;
+  taskWriteMode?: TaskWriteMode;
 }

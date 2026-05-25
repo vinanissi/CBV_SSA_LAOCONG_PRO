@@ -4,6 +4,8 @@ import type { UserContext } from '@/api/contracts';
 import { AppRoutes } from './routes';
 import { AppShell } from '@/components/layout/AppShell';
 import { DetailProvider } from '@/components/layout/DetailPanel';
+import { TaskWriteProvider } from '@/modules/task/TaskWriteContext';
+import { TaskCreateModal } from '@/modules/task/TaskCreateForm';
 import { LoadingState } from '@/components/states/LoadingState';
 import { ErrorState } from '@/components/states/ErrorState';
 
@@ -53,9 +55,12 @@ export default function App() {
 
   return (
     <DetailProvider>
-      <AppShell user={user}>
-        <AppRoutes />
-      </AppShell>
+      <TaskWriteProvider>
+        <AppShell user={user}>
+          <AppRoutes />
+        </AppShell>
+        <TaskCreateModal />
+      </TaskWriteProvider>
     </DetailProvider>
   );
 }

@@ -1,6 +1,7 @@
 import type {
   ApiEnvelope,
   CoordinationData,
+  CreateTaskBody,
   FinanceItem,
   HoSoItem,
   ObservationData,
@@ -9,7 +10,11 @@ import type {
   TaskDetail,
   TaskFilter,
   TaskItem,
+  TaskWriteCapability,
+  TaskWriteEvent,
+  TaskWriteResult,
   TodaySummary,
+  UpdateTaskBody,
   UserContext,
 } from './contracts';
 import { createEnvelope, delay } from '@/shared/utils';
@@ -521,6 +526,110 @@ export async function search(query: string): Promise<ApiEnvelope<SearchResponse>
   return createEnvelope({ query, results, demoLabel: DEMO }, { warnings: [DEMO] });
 }
 
+const mockWritten = new Map<string, TaskDetail & { ownerId: string; taskModule?: string }>();
+const mockEvents: TaskWriteEvent[] = [];
+
+export async function getTaskWriteCapability(): Promise<ApiEnvelope<TaskWriteCapability>> {
+  await delay(100);
+  const canCreate = MOCK_USER.role === 'ADMIN' || MOCK_USER.role === 'MANAGER';
+  return createEnvelope({
+    writeMode: 'ENABLED',
+    adapterStatus: 'LOCAL',
+    canCreate,
+    canUpdate: true,
+    message: 'Ghi local — phiên demo',
+  }, { warnings: [DEMO] });
+}
+
+export async function createTask(body: CreateTaskBody): Promise<ApiEnvelope<TaskWriteResult>> {
+  await delay(200);
+  if (MOCK_USER.role !== 'ADMIN' && MOCK_USER.role !== 'MANAGER') {
+    return createEnvelope(null as unknown as TaskWriteResult, {
+      errors: ['Không có quyền tạo việc'],
+      ok: false,
+      status: 'FAIL',
+    });
+  }
+  if (!body.title?.trim()) {
+    return createEnvelope(null as unknown as TaskWriteResult, { errors: ['Tên việc không được để trống'], ok: false, status: 'FAIL' });
+  }
+  const taskId = `TASK-MOCK-${Date.now().toString(36)}`;
+  const traceId = `demo-${Date.now()}`;
+  const task: TaskDetail & { taskModule?: string } = {
+    taskId,
+    title: body.title.trim(),
+    description: body.description ?? '',
+    status: 'NEW',
+    priority: body.priority ?? 'MEDIUM',
+    owner: MOCK_USER.displayName,
+    ownerId: MOCK_USER.userId,
+    dueDate: body.dueDate ?? new Date().toISOString().slice(0, 10),
+    href: `/tasks/${taskId}`,
+    permissionAllowed: true,
+    isMine: true,
+    module: 'TASK',
+    source: DEMO,
+    timeline: [],
+    files: [],
+    taskModule: body.module ?? 'TASK',
+  };
+  const event: TaskWriteEvent = {
+    eventId: `EVT-${Date.now()}`,
+    taskId,
+    actor: MOCK_USER.displayName,
+    action: 'CREATE',
+    before: null,
+    after: { title: task.title },
+    note: body.note ?? 'Tạo việc mới',
+    createdAt: new Date().toISOString(),
+    traceId,
+    source: 'RF_11_TASK_WRITE_RUNTIME',
+  };
+  mockEvents.push(event);
+  task.timeline = [{ time: event.createdAt, actor: event.actor, action: event.action, message: event.note, source: DEMO, resourceId: taskId }];
+  mockWritten.set(taskId, task);
+  return createEnvelope({ task, event }, { warnings: [DEMO] });
+}
+
+export async function updateTask(taskId: string, body: UpdateTaskBody): Promise<ApiEnvelope<TaskWriteResult>> {
+  await delay(200);
+  const existing = mockWritten.get(taskId) ?? TASKS.find((t) => t.taskId === taskId);
+  if (!existing) {
+    return createEnvelope(null as unknown as TaskWriteResult, { errors: ['Không tìm thấy việc'], ok: false, status: 'FAIL' });
+  }
+  const base = mockWritten.get(taskId) ?? {
+    ...existing,
+    description: '',
+    timeline: [],
+    files: [],
+  } as TaskDetail;
+  if (MOCK_USER.role === 'STAFF' && base.ownerId !== MOCK_USER.userId) {
+    return createEnvelope(null as unknown as TaskWriteResult, { errors: ['Không có quyền cập nhật việc này'], ok: false, status: 'FAIL' });
+  }
+  const updated: TaskDetail = {
+    ...base,
+    status: body.status ?? base.status,
+    priority: body.priority ?? base.priority,
+    dueDate: body.dueDate ?? base.dueDate,
+  };
+  const event: TaskWriteEvent = {
+    eventId: `EVT-${Date.now()}`,
+    taskId,
+    actor: MOCK_USER.displayName,
+    action: 'UPDATE',
+    before: { status: base.status },
+    after: { status: updated.status },
+    note: body.note ?? 'Cập nhật việc',
+    createdAt: new Date().toISOString(),
+    traceId: `demo-${Date.now()}`,
+    source: 'RF_11_TASK_WRITE_RUNTIME',
+  };
+  mockEvents.push(event);
+  updated.timeline = [...(base.timeline ?? []), { time: event.createdAt, actor: event.actor, action: event.action, message: event.note, source: DEMO, resourceId: taskId }];
+  mockWritten.set(taskId, updated);
+  return createEnvelope({ task: updated, event }, { warnings: [DEMO] });
+}
+
 export const mockApi = {
   getCurrentUser,
   getTodaySummary,
@@ -532,4 +641,7 @@ export const mockApi = {
   getObservation,
   getPlugins,
   search,
+  getTaskWriteCapability,
+  createTask,
+  updateTask,
 };

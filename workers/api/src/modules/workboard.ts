@@ -1,6 +1,7 @@
 import type { Env, HealthData } from '../contracts';
 import { gasAdapterStatus } from '../adapters/gasAdapter';
 import { appSheetAdapterStatus } from '../adapters/appSheetAdapter';
+import { isTaskWriteEnabled, getTaskWriteAdapterStatus } from '../adapters/taskWriteAdapter';
 import { resolveUserContext, canViewModule } from '../auth/userContext';
 import { getTodaySummary } from '../adapters/mockData';
 import { fetchGasProjection } from '../adapters/gasAdapter';
@@ -8,17 +9,21 @@ import { createEnvelope } from '../utils/envelope';
 import { forbidden } from '../utils/errors';
 
 export function handleHealth(env: Env) {
+  const writeEnabled = isTaskWriteEnabled(env);
   const data: HealthData = {
     service: 'cbv-api-bridge',
-    version: 'RF-09-V1',
+    version: 'RF-11-V1',
     mode: 'READ_FIRST',
-    adapter: `mock:${gasAdapterStatus(env)}:${appSheetAdapterStatus(env)}`,
-    readOnly: true,
-    writesLocked: true,
+    adapter: `mock:${gasAdapterStatus(env)}:${appSheetAdapterStatus(env)}:write=${getTaskWriteAdapterStatus(env)}`,
+    readOnly: !writeEnabled,
+    writesLocked: !writeEnabled,
+    taskWriteMode: writeEnabled ? 'ENABLED' : 'LOCKED',
   };
 
   return createEnvelope(data, {
-    warnings: ['Worker projection — demo local', 'Write actions locked'],
+    warnings: writeEnabled
+      ? ['Task write local enabled — chưa ghi production sheet']
+      : ['Write actions locked', 'WRITE_ADAPTER_NOT_CONFIGURED'],
   });
 }
 

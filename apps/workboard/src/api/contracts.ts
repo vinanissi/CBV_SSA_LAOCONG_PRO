@@ -235,3 +235,57 @@ export interface PluginsResponse {
 }
 
 export type TaskFilter = 'mine' | 'pending' | 'overdue' | 'approval';
+
+export type TaskWriteMode = 'ENABLED' | 'LOCKED';
+
+export interface TaskWriteEvent {
+  eventId: string;
+  taskId: string;
+  actor: string;
+  action: string;
+  before: Record<string, unknown> | null;
+  after: Record<string, unknown> | null;
+  note: string;
+  createdAt: string;
+  traceId: string;
+  source: string;
+}
+
+export interface CreateTaskBody {
+  title: string;
+  description?: string;
+  assignee?: string;
+  priority?: string;
+  dueDate?: string;
+  module?: string;
+  relatedHoSoId?: string;
+  relatedFinanceId?: string;
+  files?: unknown[];
+  note?: string;
+}
+
+export interface UpdateTaskBody {
+  title?: string;
+  description?: string;
+  status?: string;
+  assignee?: string;
+  priority?: string;
+  dueDate?: string;
+  note?: string;
+}
+
+export interface TaskWriteCapability {
+  writeMode: TaskWriteMode;
+  adapterStatus: string;
+  canCreate: boolean;
+  canUpdate: boolean;
+  message: string;
+}
+
+export interface TaskWriteResult {
+  task: TaskDetail;
+  event: TaskWriteEvent;
+}
+
+export const TASK_PRIORITIES = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'] as const;
+export const TASK_STATUSES = ['NEW', 'IN_PROGRESS', 'WAITING', 'WAITING_APPROVAL', 'BLOCKED', 'DONE'] as const;
