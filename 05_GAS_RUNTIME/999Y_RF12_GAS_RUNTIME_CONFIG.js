@@ -3,8 +3,8 @@
  */
 var RF12_CONFIG = {
   TIMEZONE: 'Asia/Ho_Chi_Minh',
-  /** Optional fallback — prefer Script Property CBV_SPREADSHEET_ID for standalone Web App */
-  SPREADSHEET_ID: '',
+  /** CBV operational workbook — standalone Web App fallback (Script Property overrides) */
+  SPREADSHEET_ID: '1Jh3gQQKugazSvd24CKZremHjSmTNGrsnYczq4UzK5ZE',
   SCRIPT_PROP_SPREADSHEET_KEY: 'CBV_SPREADSHEET_ID',
   SHEETS: {
     TASKS: 'TASKS',
