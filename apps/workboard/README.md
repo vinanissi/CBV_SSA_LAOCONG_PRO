@@ -9,6 +9,20 @@ React workboard for PC operators. Runs locally with demo data; connects to Cloud
 
 ## Local development
 
+**With Worker (RF_09+):**
+
+```bash
+# Terminal 1
+cd workers/api && npm install && npm run dev
+
+# Terminal 2
+cd apps/workboard
+cp .env.example .env   # VITE_CBV_API_BASE_URL=http://localhost:8787
+npm install && npm run dev
+```
+
+**FE only (mock data):**
+
 ```bash
 cd apps/workboard
 npm install

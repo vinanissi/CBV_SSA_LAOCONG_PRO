@@ -2,80 +2,131 @@ import type { ApiEnvelope, TaskFilter } from './contracts';
 import { mockApi } from './mockApi';
 
 const API_BASE = import.meta.env.VITE_CBV_API_BASE_URL?.trim() ?? '';
+const API_ROLE = import.meta.env.VITE_CBV_ROLE?.trim() ?? '';
 
 function useMock(): boolean {
   return !API_BASE;
 }
 
+function buildHeaders(): HeadersInit {
+  const headers: Record<string, string> = { Accept: 'application/json' };
+  if (API_ROLE) headers['x-cbv-role'] = API_ROLE;
+  return headers;
+}
+
 async function fetchEnvelope<T>(path: string): Promise<ApiEnvelope<T>> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    headers: { Accept: 'application/json' },
-  });
-  if (!res.ok) {
+  try {
+    const res = await fetch(`${API_BASE}${path}`, { headers: buildHeaders() });
+    if (!res.ok) {
+      const body = (await res.json().catch(() => null)) as ApiEnvelope<T> | null;
+      if (body && typeof body.ok === 'boolean') return body;
+      return {
+        ok: false,
+        status: 'FAIL',
+        data: null as T,
+        warnings: [],
+        errors: [`Không kết nối được API (${res.status})`],
+        traceId: `http-${Date.now()}`,
+      };
+    }
+    return res.json();
+  } catch {
     return {
       ok: false,
       status: 'FAIL',
       data: null as T,
       warnings: [],
-      errors: [`Không kết nối được API (${res.status})`],
-      traceId: `http-${Date.now()}`,
+      errors: ['Không kết nối được Worker API'],
+      traceId: `net-${Date.now()}`,
     };
   }
-  return res.json();
+}
+
+async function withFallback<T>(
+  workerCall: () => Promise<ApiEnvelope<T>>,
+  mockCall: () => Promise<ApiEnvelope<T>>,
+): Promise<ApiEnvelope<T>> {
+  if (useMock()) return mockCall();
+  const result = await workerCall();
+  if (!result.ok && result.errors.some((e) => e.includes('Không kết nối'))) {
+    return mockCall();
+  }
+  return result;
 }
 
 export const api = {
   isMockMode: useMock,
+  apiBaseUrl: API_BASE,
 
   getCurrentUser() {
-    if (useMock()) return mockApi.getCurrentUser();
-    return fetchEnvelope<import('./contracts').UserContext>('/api/user/me');
+    return withFallback(
+      () => fetchEnvelope<import('./contracts').UserContext>('/api/me'),
+      () => mockApi.getCurrentUser(),
+    );
   },
 
   getTodaySummary() {
-    if (useMock()) return mockApi.getTodaySummary();
-    return fetchEnvelope<import('./contracts').TodaySummary>('/api/workboard/today');
+    return withFallback(
+      () => fetchEnvelope<import('./contracts').TodaySummary>('/api/today'),
+      () => mockApi.getTodaySummary(),
+    );
   },
 
   getTasks(filter?: TaskFilter) {
-    if (useMock()) return mockApi.getTasks(filter);
     const qs = filter ? `?filter=${filter}` : '';
-    return fetchEnvelope<import('./contracts').TaskItem[]>(`/api/tasks${qs}`);
+    return withFallback(
+      () => fetchEnvelope<import('./contracts').TaskItem[]>(`/api/tasks${qs}`),
+      () => mockApi.getTasks(filter),
+    );
   },
 
   getTaskDetail(taskId: string) {
-    if (useMock()) return mockApi.getTaskDetail(taskId);
-    return fetchEnvelope<import('./contracts').TaskDetail | null>(`/api/tasks/${taskId}`);
+    return withFallback(
+      () => fetchEnvelope<import('./contracts').TaskDetail | null>(`/api/tasks/${taskId}`),
+      () => mockApi.getTaskDetail(taskId),
+    );
   },
 
   getFinanceItems() {
-    if (useMock()) return mockApi.getFinanceItems();
-    return fetchEnvelope<import('./contracts').FinanceItem[]>('/api/finance');
+    return withFallback(
+      () => fetchEnvelope<import('./contracts').FinanceItem[]>('/api/finance'),
+      () => mockApi.getFinanceItems(),
+    );
   },
 
   getHoSoItems() {
-    if (useMock()) return mockApi.getHoSoItems();
-    return fetchEnvelope<import('./contracts').HoSoItem[]>('/api/hoso');
+    return withFallback(
+      () => fetchEnvelope<import('./contracts').HoSoItem[]>('/api/hoso'),
+      () => mockApi.getHoSoItems(),
+    );
   },
 
   getCoordination() {
-    if (useMock()) return mockApi.getCoordination();
-    return fetchEnvelope<import('./contracts').CoordinationData>('/api/coordination');
+    return withFallback(
+      () => fetchEnvelope<import('./contracts').CoordinationData>('/api/coordination'),
+      () => mockApi.getCoordination(),
+    );
   },
 
   getObservation() {
-    if (useMock()) return mockApi.getObservation();
-    return fetchEnvelope<import('./contracts').ObservationData>('/api/observation');
+    return withFallback(
+      () => fetchEnvelope<import('./contracts').ObservationData>('/api/observation'),
+      () => mockApi.getObservation(),
+    );
   },
 
   getPlugins() {
-    if (useMock()) return mockApi.getPlugins();
-    return fetchEnvelope<import('./contracts').PluginsResponse>('/api/plugins');
+    return withFallback(
+      () => fetchEnvelope<import('./contracts').PluginsResponse>('/api/plugins'),
+      () => mockApi.getPlugins(),
+    );
   },
 
   search(query: string) {
-    if (useMock()) return mockApi.search(query);
-    return fetchEnvelope<import('./contracts').SearchResponse>(`/api/search?q=${encodeURIComponent(query)}`);
+    return withFallback(
+      () => fetchEnvelope<import('./contracts').SearchResponse>(`/api/search?q=${encodeURIComponent(query)}`),
+      () => mockApi.search(query),
+    );
   },
 };
 
