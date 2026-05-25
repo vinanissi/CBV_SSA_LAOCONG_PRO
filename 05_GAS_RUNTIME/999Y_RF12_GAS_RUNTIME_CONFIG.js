@@ -1,0 +1,53 @@
+/**
+ * RF_12 — GAS Runtime API — Sheet contracts (non-destructive bootstrap).
+ */
+var RF12_CONFIG = {
+  TIMEZONE: 'Asia/Ho_Chi_Minh',
+  SHEETS: {
+    TASKS: 'TASKS',
+    TASK_TIMELINE: 'TASK_TIMELINE',
+    API_AUDIT_LOG: 'API_AUDIT_LOG',
+    FINANCE: 'FINANCE',
+    HOSO: 'HOSO',
+  },
+  TASK_HEADERS: [
+    'task_id',
+    'title',
+    'description',
+    'status',
+    'priority',
+    'assignee',
+    'due_date',
+    'related_hoso_id',
+    'related_finance_id',
+    'created_at',
+    'updated_at',
+    'created_by',
+    'updated_by',
+  ],
+  TIMELINE_HEADERS: [
+    'event_id',
+    'task_id',
+    'actor',
+    'action',
+    'before_json',
+    'after_json',
+    'note',
+    'trace_id',
+    'created_at',
+  ],
+  AUDIT_HEADERS: [
+    'log_id',
+    'trace_id',
+    'actor',
+    'action',
+    'status',
+    'source',
+    'created_at',
+    'detail_json',
+  ],
+  ALLOWED_CREATE_FIELDS: ['title', 'description', 'assignee', 'priority', 'dueDate', 'relatedHoSoId', 'relatedFinanceId', 'note'],
+  ALLOWED_UPDATE_FIELDS: ['title', 'description', 'status', 'assignee', 'priority', 'dueDate', 'note'],
+  ALLOWED_STATUS: ['NEW', 'WAITING', 'ASSIGNED', 'IN_PROGRESS', 'DONE', 'CANCELLED', 'WAITING_APPROVAL'],
+  ALLOWED_PRIORITY: ['LOW', 'MEDIUM', 'HIGH', 'URGENT'],
+};

@@ -37,6 +37,11 @@ function doPost(e) {
 
     var action = String(body.action || '').trim();
 
+    // RF_12 Worker bridge — create_task / update_task / append_timeline
+    if (typeof CbvRf12_isPostAction === 'function' && CbvRf12_isPostAction(action)) {
+      return CbvRf12GasApi_doPost(e);
+    }
+
     var isWebhook = action.indexOf('CMD:') === 0 || WEBHOOK_ACTIONS_.indexOf(action) !== -1;
 
     if (isWebhook) {

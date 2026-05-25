@@ -14,8 +14,14 @@ function doGet(e) {
     return CbvWebAppWorkspace_doGet(e);
   }
 
-  // Preserve ping in a deterministic way for Phase 89.2 validation.
   var action = String(p.action || '').toLowerCase();
+
+  // RF_12 Worker bridge JSON API (?action=health|tasks|...)
+  if (typeof CbvRf12_isGetAction === 'function' && CbvRf12_isGetAction(action)) {
+    return CbvRf12GasApi_doGet(e);
+  }
+
+  // Preserve ping in a deterministic way for Phase 89.2 validation.
   if (action === 'ping') {
     return ContentService
       .createTextOutput(JSON.stringify({
