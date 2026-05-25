@@ -74,7 +74,7 @@ export async function route(request: Request, env: Env): Promise<Response> {
 
   switch (true) {
     case path === '/api/health':
-      envelope = handleHealth(env);
+      envelope = await handleHealth(env);
       break;
     case path === '/api/me':
       envelope = handleMe(request);

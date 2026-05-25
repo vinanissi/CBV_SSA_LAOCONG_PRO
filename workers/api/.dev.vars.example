@@ -4,4 +4,9 @@ CBV_GAS_WRITE_API_BASE_URL=
 CBV_APPSHEET_API_BASE_URL=
 CBV_APPSHEET_API_KEY=
 CBV_ALLOWED_ORIGINS=http://localhost:5173
+# local | gas | locked
 CBV_TASK_WRITE_MODE=local
+
+# RF_12 — connect to real Google Sheet via GAS Web App:
+# CBV_GAS_API_BASE_URL=https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec
+# CBV_TASK_WRITE_MODE=gas

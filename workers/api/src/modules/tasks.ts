@@ -2,7 +2,7 @@ import type { Env, TaskFilter } from '../contracts';
 import { resolveUserContext, canViewModule } from '../auth/userContext';
 import { getTasks, getTaskDetail } from '../adapters/mockData';
 import { getWrittenTasks, getWrittenTask } from '../adapters/taskWriteStore';
-import { fetchGasProjection } from '../adapters/gasAdapter';
+import { gasGetTasks, gasGetTaskDetail, isGasConfigured } from '../adapters/gasAdapter';
 import { createEnvelope } from '../utils/envelope';
 import { forbidden, notFound } from '../utils/errors';
 
@@ -12,11 +12,35 @@ export async function handleTasksList(request: Request, env: Env, filter?: TaskF
     return forbidden('Không có quyền xem việc');
   }
 
-  const warnings = ['Worker projection — demo local'];
-  const gas = await fetchGasProjection(env, `/tasks${filter ? `?filter=${filter}` : ''}`);
-  if (gas.warning) warnings.push(gas.warning);
+  const warnings: string[] = [];
+
+  if (isGasConfigured(env)) {
+    const gas = await gasGetTasks(env, user, filter);
+    if (gas.ok && Array.isArray(gas.data)) {
+      if (gas.warnings.length) warnings.push(...gas.warnings);
+      warnings.push('GAS Sheet runtime — RF_12');
+      const merged = mergeWithLocalWrites(gas.data, user, filter);
+      return createEnvelope(merged, { warnings });
+    }
+    const failMsg = !gas.ok ? (gas.warning ?? gas.errors[0] ?? 'GAS read fallback — dùng projection local') : 'GAS read fallback';
+    warnings.push(failMsg);
+  } else {
+    warnings.push('Worker projection — demo local');
+  }
 
   return createEnvelope(getTasksMerged(user, filter), { warnings });
+}
+
+function mergeWithLocalWrites(gasTasks: ReturnType<typeof getTasks>, user: ReturnType<typeof resolveUserContext>, filter?: TaskFilter) {
+  const byId = new Map(gasTasks.map((t) => [t.taskId, t]));
+  for (const t of getWrittenTasks()) {
+    byId.set(t.taskId, {
+      ...t,
+      permissionAllowed: true,
+      isMine: t.ownerId === user.userId,
+    });
+  }
+  return applyFilter(Array.from(byId.values()), user, filter);
 }
 
 function getTasksMerged(user: ReturnType<typeof resolveUserContext>, filter?: TaskFilter) {
@@ -28,22 +52,22 @@ function getTasksMerged(user: ReturnType<typeof resolveUserContext>, filter?: Ta
   }));
   const byId = new Map(demoAll.map((t) => [t.taskId, t]));
   for (const t of written) byId.set(t.taskId, t);
-  let items = Array.from(byId.values());
+  return applyFilter(Array.from(byId.values()), user, filter);
+}
+
+function applyFilter(items: ReturnType<typeof getTasks>, user: ReturnType<typeof resolveUserContext>, filter?: TaskFilter) {
   switch (filter) {
     case 'mine':
-      items = items.filter((t) => t.ownerId === user.userId);
-      break;
+      return items.filter((t) => t.ownerId === user.userId);
     case 'pending':
-      items = items.filter((t) => ['NEW', 'WAITING', 'ASSIGNED', 'IN_PROGRESS'].includes(t.status));
-      break;
+      return items.filter((t) => ['NEW', 'WAITING', 'ASSIGNED', 'IN_PROGRESS'].includes(t.status));
     case 'overdue':
-      items = items.filter((t) => t.isOverdue);
-      break;
+      return items.filter((t) => t.isOverdue);
     case 'approval':
-      items = items.filter((t) => t.status === 'WAITING' || t.status === 'WAITING_APPROVAL');
-      break;
+      return items.filter((t) => t.status === 'WAITING' || t.status === 'WAITING_APPROVAL');
+    default:
+      return items;
   }
-  return items;
 }
 
 export async function handleTaskDetail(request: Request, env: Env, taskId: string) {
@@ -52,9 +76,19 @@ export async function handleTaskDetail(request: Request, env: Env, taskId: strin
     return forbidden('Không có quyền xem chi tiết việc');
   }
 
-  const warnings = ['Worker projection — demo local'];
-  const gas = await fetchGasProjection(env, `/tasks/${taskId}`);
-  if (gas.warning) warnings.push(gas.warning);
+  const warnings: string[] = [];
+
+  if (isGasConfigured(env)) {
+    const gas = await gasGetTaskDetail(env, user, taskId);
+    if (gas.ok && gas.data) {
+      if (gas.warnings.length) warnings.push(...gas.warnings);
+      warnings.push('GAS Sheet runtime — RF_12');
+      return createEnvelope(gas.data, { warnings });
+    }
+    warnings.push(!gas.ok ? (gas.warning ?? gas.errors[0] ?? 'GAS detail fallback') : 'GAS detail fallback');
+  } else {
+    warnings.push('Worker projection — demo local');
+  }
 
   const written = getWrittenTask(taskId);
   const detail = written ?? getTaskDetail(user, taskId);

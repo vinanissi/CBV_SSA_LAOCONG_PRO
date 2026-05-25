@@ -1,16 +1,17 @@
-import type { CreateTaskBody, Env, TaskWriteEvent, UpdateTaskBody, UserContext } from '../contracts';
+import type { CreateTaskBody, Env, UpdateTaskBody, UserContext } from '../contracts';
 import { getEnv } from '../env';
 import { createTaskLocal, getWrittenTask, updateTaskLocal } from './taskWriteStore';
+import { gasCreateTask, gasUpdateTask, isGasConfigured } from './gasAdapter';
 import type { StoredTask } from '../auth/taskPermissions';
-
-const TIMEOUT_MS = 8000;
+import type { TaskWriteEvent } from '../contracts';
 
 export type WriteAdapterStatus = 'LOCAL' | 'GAS' | 'NOT_CONFIGURED';
 
 export function getTaskWriteAdapterStatus(env: Env): WriteAdapterStatus {
-  const { taskWriteMode, gasWriteBaseUrl } = getEnv(env);
+  const { taskWriteMode } = getEnv(env);
   if (taskWriteMode === 'local') return 'LOCAL';
-  if (gasWriteBaseUrl) return 'GAS';
+  if (taskWriteMode === 'gas' && isGasConfigured(env)) return 'GAS';
+  if (taskWriteMode === 'gas') return 'NOT_CONFIGURED';
   return 'NOT_CONFIGURED';
 }
 
@@ -31,9 +32,9 @@ export async function writeCreateTask(
   }
 
   if (status === 'GAS') {
-    const gas = await postGasWrite(env, '/tasks', body);
+    const gas = await gasCreateTask(env, body, user, traceId);
     if (!gas.ok) return { ok: false, code: gas.code, message: gas.message };
-    return { ok: true, ...gas.result };
+    return { ok: true, task: gas.task, event: gas.event };
   }
 
   const result = createTaskLocal(body, user, traceId);
@@ -54,9 +55,9 @@ export async function writeUpdateTask(
   }
 
   if (status === 'GAS') {
-    const gas = await postGasWrite(env, `/tasks/${taskId}`, body, 'PATCH');
+    const gas = await gasUpdateTask(env, taskId, body, user, traceId);
     if (!gas.ok) return { ok: false, code: gas.code, message: gas.message };
-    return { ok: true, ...gas.result };
+    return { ok: true, task: gas.task, event: gas.event };
   }
 
   const existing = getWrittenTask(taskId);
@@ -67,43 +68,4 @@ export async function writeUpdateTask(
   const result = updateTaskLocal(taskId, body, user, traceId);
   if (!result) return { ok: false, code: 'NOT_FOUND', message: 'Không tìm thấy việc' };
   return { ok: true, ...result };
-}
-
-async function postGasWrite(
-  env: Env,
-  path: string,
-  body: unknown,
-  method = 'POST',
-): Promise<
-  | { ok: true; result: { task: StoredTask; event: TaskWriteEvent } }
-  | { ok: false; code: string; message: string }
-> {
-  const { gasWriteBaseUrl } = getEnv(env);
-  if (!gasWriteBaseUrl) {
-    return { ok: false, code: 'WRITE_ADAPTER_NOT_CONFIGURED', message: 'GAS write adapter chưa cấu hình' };
-  }
-
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
-
-  try {
-    const res = await fetch(`${gasWriteBaseUrl}${path}`, {
-      method,
-      signal: controller.signal,
-      headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    if (!res.ok) {
-      return { ok: false, code: 'GAS_WRITE_FAILED', message: `GAS write trả lỗi ${res.status}` };
-    }
-    const json = (await res.json()) as { data?: { task: StoredTask; event: TaskWriteEvent } };
-    if (!json.data?.task) {
-      return { ok: false, code: 'GAS_WRITE_INVALID', message: 'GAS write response không hợp lệ' };
-    }
-    return { ok: true, result: json.data };
-  } catch {
-    return { ok: false, code: 'GAS_WRITE_TIMEOUT', message: 'GAS write adapter không phản hồi' };
-  } finally {
-    clearTimeout(timer);
-  }
 }

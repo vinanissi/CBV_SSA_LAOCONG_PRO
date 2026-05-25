@@ -7,15 +7,22 @@ import {
   resolveWriteCapability,
 } from '../auth/taskPermissions';
 import { writeCreateTask, writeUpdateTask, isTaskWriteEnabled, getTaskWriteAdapterStatus } from '../adapters/taskWriteAdapter';
+import { gasGetTaskDetail, isGasConfigured } from '../adapters/gasAdapter';
 import { getWrittenTask, seedWrittenTaskFromDetail } from '../adapters/taskWriteStore';
 import { getTaskDetail } from '../adapters/mockData';
 import { validateCreateTask, validateUpdateTask, pickUpdateFields } from '../utils/taskValidation';
 import { createEnvelope, createTraceId } from '../utils/envelope';
 import { forbidden, notFound, badRequest } from '../utils/errors';
 
-function mergeTaskDetail(user: ReturnType<typeof resolveUserContext>, taskId: string) {
+async function mergeTaskDetail(user: ReturnType<typeof resolveUserContext>, taskId: string, env: Env) {
   const written = getWrittenTask(taskId);
   if (written) return written;
+
+  if (isGasConfigured(env)) {
+    const gas = await gasGetTaskDetail(env, user, taskId);
+    if (gas.ok && gas.data) return gas.data;
+  }
+
   return getTaskDetail(user, taskId);
 }
 
@@ -31,7 +38,9 @@ export function handleTaskWriteCapability(request: Request, env: Env) {
       canCreate: caps.canCreate,
       canUpdate: enabled && (user.role === 'ADMIN' || user.role === 'MANAGER' || user.role === 'STAFF' || user.role === 'FINANCE' || user.role === 'HO_SO'),
       message: enabled
-        ? 'Ghi việc đã bật — môi trường local an toàn'
+        ? getTaskWriteAdapterStatus(env) === 'GAS'
+          ? 'Ghi việc qua GAS Sheet bridge — RF_12'
+          : 'Ghi việc đã bật — môi trường local an toàn'
         : 'Chức năng ghi chưa được bật cho môi trường này',
     },
     {
@@ -75,17 +84,19 @@ export async function handleCreateTask(request: Request, env: Env) {
     });
   }
 
-  return createEnvelope(
-    { task: result.task, event: result.event },
-    { warnings: ['Ghi local an toàn — chưa ghi bảng production'], traceId },
-  );
+  const writeWarnings =
+    getTaskWriteAdapterStatus(env) === 'GAS'
+      ? ['Ghi Google Sheet qua GAS bridge — RF_12']
+      : ['Ghi local an toàn — chưa ghi bảng production'];
+
+  return createEnvelope({ task: result.task, event: result.event }, { warnings: writeWarnings, traceId });
 }
 
 export async function handleUpdateTask(request: Request, env: Env, taskId: string) {
   const user = resolveUserContext(request);
   const traceId = createTraceId();
 
-  const existing = mergeTaskDetail(user, taskId);
+  const existing = await mergeTaskDetail(user, taskId, env);
   if (!existing) return notFound('Không tìm thấy việc');
 
   const taskForPerm = {
@@ -116,7 +127,7 @@ export async function handleUpdateTask(request: Request, env: Env, taskId: strin
     return forbidden('Không có quyền đổi người phụ trách');
   }
 
-  if (!getWrittenTask(taskId) && existing) {
+  if (getTaskWriteAdapterStatus(env) !== 'GAS' && !getWrittenTask(taskId) && existing) {
     seedWrittenTaskFromDetail(taskForPerm as import('../auth/taskPermissions').StoredTask);
   }
 
@@ -131,8 +142,10 @@ export async function handleUpdateTask(request: Request, env: Env, taskId: strin
     });
   }
 
-  return createEnvelope(
-    { task: result.task, event: result.event },
-    { warnings: ['Ghi local an toàn — chưa ghi bảng production'], traceId },
-  );
+  const writeWarnings =
+    getTaskWriteAdapterStatus(env) === 'GAS'
+      ? ['Ghi Google Sheet qua GAS bridge — RF_12']
+      : ['Ghi local an toàn — chưa ghi bảng production'];
+
+  return createEnvelope({ task: result.task, event: result.event }, { warnings: writeWarnings, traceId });
 }
