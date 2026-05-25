@@ -5,7 +5,11 @@ Standalone Apps Script Web App bridge for Worker ↔ Google Sheet.
 ## Deploy
 
 1. Create or bind a Google Spreadsheet for workboard runtime sheets (`TASKS`, `TASK_TIMELINE`, `API_AUDIT_LOG`).
-2. `cd gas-runtime-api`
+2. **Standalone Web App (not container-bound):** set Script Property `CBV_SPREADSHEET_ID` to your workbook ID, or run once in the editor:
+   ```javascript
+   Rf12_setupSpreadsheetId('YOUR_SPREADSHEET_ID');
+   ```
+3. `cd gas-runtime-api`
 3. `clasp login` (if needed)
 4. Set `scriptId` in `.clasp.json` or `clasp create --type sheets --title "CBV RF12 Runtime API"`
 5. `clasp push`

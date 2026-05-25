@@ -12,16 +12,37 @@ function doGet(e) {
     var warnings = [];
 
     switch (action) {
-      case 'health':
+      case 'health': {
+        var sheetId = resolveSpreadsheetId_();
+        if (!sheetId) {
+          return outputJson_(
+            buildEnvelope_(
+              {
+                service: 'cbv-gas-runtime-api',
+                version: 'RF-12-V1',
+                mode: 'NOT_CONFIGURED',
+                configured: false,
+              },
+              {
+                warnings: ['Set Script Property CBV_SPREADSHEET_ID or bind project to Spreadsheet'],
+                status: 'GO_WITH_WARNINGS',
+                traceId: traceId,
+              },
+            ),
+          );
+        }
         bootstrapSheets_();
         data = {
           service: 'cbv-gas-runtime-api',
           version: 'RF-12-V1',
           mode: 'SHEET_BRIDGE',
-          spreadsheetId: getSpreadsheet_().getId(),
+          spreadsheetId: sheetId,
           sheets: RF12_CONFIG.SHEETS,
+          bound: Boolean(SpreadsheetApp.getActiveSpreadsheet()),
+          configured: true,
         };
         break;
+      }
       case 'tasks':
         data = getTasks_(e.parameter.filter || '');
         break;

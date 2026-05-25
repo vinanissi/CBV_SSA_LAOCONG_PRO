@@ -3,6 +3,9 @@
  */
 var RF12_CONFIG = {
   TIMEZONE: 'Asia/Ho_Chi_Minh',
+  /** Optional fallback — prefer Script Property CBV_SPREADSHEET_ID for standalone Web App */
+  SPREADSHEET_ID: '',
+  SCRIPT_PROP_SPREADSHEET_KEY: 'CBV_SPREADSHEET_ID',
   SHEETS: {
     TASKS: 'TASKS',
     TASK_TIMELINE: 'TASK_TIMELINE',

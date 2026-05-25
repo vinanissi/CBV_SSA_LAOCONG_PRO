@@ -23,8 +23,38 @@ function todayDate_() {
   return Utilities.formatDate(new Date(), RF12_CONFIG.TIMEZONE, 'yyyy-MM-dd');
 }
 
+function resolveSpreadsheetId_() {
+  var active = SpreadsheetApp.getActiveSpreadsheet();
+  if (active) return active.getId();
+  var key = RF12_CONFIG.SCRIPT_PROP_SPREADSHEET_KEY || 'CBV_SPREADSHEET_ID';
+  var fromProp = PropertiesService.getScriptProperties().getProperty(key);
+  if (fromProp && String(fromProp).trim()) return String(fromProp).trim();
+  if (RF12_CONFIG.SPREADSHEET_ID && String(RF12_CONFIG.SPREADSHEET_ID).trim()) {
+    return String(RF12_CONFIG.SPREADSHEET_ID).trim();
+  }
+  return null;
+}
+
 function getSpreadsheet_() {
-  return SpreadsheetApp.getActiveSpreadsheet();
+  var active = SpreadsheetApp.getActiveSpreadsheet();
+  if (active) return active;
+  var id = resolveSpreadsheetId_();
+  if (!id) {
+    throw new Error(
+      'CBV_SPREADSHEET_ID chưa cấu hình — Apps Script → Project Settings → Script Properties, hoặc bind project to Spreadsheet',
+    );
+  }
+  return SpreadsheetApp.openById(id);
+}
+
+/** Run once from Apps Script editor: Rf12_setupSpreadsheetId('YOUR_SHEET_ID') */
+function Rf12_setupSpreadsheetId(spreadsheetId) {
+  if (!spreadsheetId || !String(spreadsheetId).trim()) {
+    throw new Error('spreadsheetId is required');
+  }
+  var key = RF12_CONFIG.SCRIPT_PROP_SPREADSHEET_KEY || 'CBV_SPREADSHEET_ID';
+  PropertiesService.getScriptProperties().setProperty(key, String(spreadsheetId).trim());
+  return { ok: true, spreadsheetId: String(spreadsheetId).trim() };
 }
 
 function ensureSheetWithHeaders_(sheetName, headers) {
