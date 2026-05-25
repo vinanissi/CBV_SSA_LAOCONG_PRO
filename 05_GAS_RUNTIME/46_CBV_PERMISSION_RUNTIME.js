@@ -29,7 +29,10 @@ var CBV_PERMISSION_ACTIONS = {
   SEARCH_RUN: 'SEARCH_RUN',
   NOTIFICATION_VIEW: 'NOTIFICATION_VIEW',
   FILE_VIEW: 'FILE_VIEW',
-  FILE_UPLOAD_STUB: 'FILE_UPLOAD_STUB'
+  FILE_UPLOAD_STUB: 'FILE_UPLOAD_STUB',
+  COORDINATION_VIEW: 'COORDINATION_VIEW',
+  COORDINATION_TEAM_VIEW: 'COORDINATION_TEAM_VIEW',
+  COORDINATION_ASSIGN: 'COORDINATION_ASSIGN'
 };
 
 var CBV_PERMISSION_ROLE_MATRIX = {
@@ -44,7 +47,10 @@ var CBV_PERMISSION_ROLE_MATRIX = {
     SEARCH_RUN: true,
     NOTIFICATION_VIEW: true,
     FILE_VIEW: true,
-    FILE_UPLOAD_STUB: true
+    FILE_UPLOAD_STUB: true,
+    COORDINATION_VIEW: true,
+    COORDINATION_TEAM_VIEW: true,
+    COORDINATION_ASSIGN: true
   },
   MANAGER: {
     WORKBOARD_ACCESS: true,
@@ -57,7 +63,10 @@ var CBV_PERMISSION_ROLE_MATRIX = {
     SEARCH_RUN: true,
     NOTIFICATION_VIEW: true,
     FILE_VIEW: true,
-    FILE_UPLOAD_STUB: true
+    FILE_UPLOAD_STUB: true,
+    COORDINATION_VIEW: true,
+    COORDINATION_TEAM_VIEW: true,
+    COORDINATION_ASSIGN: true
   },
   STAFF: {
     WORKBOARD_ACCESS: true,
@@ -70,7 +79,10 @@ var CBV_PERMISSION_ROLE_MATRIX = {
     SEARCH_RUN: true,
     NOTIFICATION_VIEW: true,
     FILE_VIEW: true,
-    FILE_UPLOAD_STUB: true
+    FILE_UPLOAD_STUB: true,
+    COORDINATION_VIEW: true,
+    COORDINATION_TEAM_VIEW: false,
+    COORDINATION_ASSIGN: false
   },
   FINANCE: {
     WORKBOARD_ACCESS: true,
@@ -83,7 +95,10 @@ var CBV_PERMISSION_ROLE_MATRIX = {
     SEARCH_RUN: true,
     NOTIFICATION_VIEW: true,
     FILE_VIEW: true,
-    FILE_UPLOAD_STUB: false
+    FILE_UPLOAD_STUB: false,
+    COORDINATION_VIEW: true,
+    COORDINATION_TEAM_VIEW: false,
+    COORDINATION_ASSIGN: false
   },
   HO_SO: {
     WORKBOARD_ACCESS: true,
@@ -96,7 +111,10 @@ var CBV_PERMISSION_ROLE_MATRIX = {
     SEARCH_RUN: true,
     NOTIFICATION_VIEW: true,
     FILE_VIEW: true,
-    FILE_UPLOAD_STUB: true
+    FILE_UPLOAD_STUB: true,
+    COORDINATION_VIEW: true,
+    COORDINATION_TEAM_VIEW: false,
+    COORDINATION_ASSIGN: false
   },
   VIEW_ONLY: {
     WORKBOARD_ACCESS: true,
@@ -109,7 +127,10 @@ var CBV_PERMISSION_ROLE_MATRIX = {
     SEARCH_RUN: true,
     NOTIFICATION_VIEW: true,
     FILE_VIEW: true,
-    FILE_UPLOAD_STUB: false
+    FILE_UPLOAD_STUB: false,
+    COORDINATION_VIEW: true,
+    COORDINATION_TEAM_VIEW: false,
+    COORDINATION_ASSIGN: false
   }
 };
 
@@ -202,6 +223,9 @@ function CBV_Permission_can(userContext, action, resource) {
         return matrix[act] === true;
       }
     }
+  }
+  if (act === CBV_PERMISSION_ACTIONS.COORDINATION_ASSIGN) {
+    return matrix[act] === true && CBV_Permission_can(ctx, CBV_PERMISSION_ACTIONS.TASK_ASSIGN, resource);
   }
   return matrix[act] === true;
 }

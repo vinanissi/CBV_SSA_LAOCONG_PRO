@@ -99,6 +99,16 @@ function CbvWebAppWorkspace_render(route, params) {
     typeof CbvRf02Workboard_renderPageByType_ === 'function'
   ) {
     page = CbvRf02Workboard_renderPageByType_(reg.pageType, params || {});
+  } else if (
+    (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.RF03_COORDINATION_HOME ||
+      reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.RF03_COORDINATION_MANAGER ||
+      reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.RF03_COORDINATION_QUEUE ||
+      reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.RF03_COORDINATION_OVERDUE ||
+      reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.RF03_COORDINATION_WORKLOAD ||
+      reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.RF03_COORDINATION_ASSIGNMENT) &&
+    typeof CbvRf03Coord_renderPageByType_ === 'function'
+  ) {
+    page = CbvRf03Coord_renderPageByType_(reg.pageType, params || {});
   } else if (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.INTERACTIVE_TASK_RUNTIME && typeof CbvInteractiveTaskRuntime_renderPage_ === 'function') {
     page = CbvInteractiveTaskRuntime_renderPage_(params || {});
   } else if (reg.pageType === CBV_WEBAPP_WS_PAGE_TYPES.STAFF_TASK_DETAIL && typeof CbvStaffWorkspace_renderTaskDetailPage_ === 'function') {

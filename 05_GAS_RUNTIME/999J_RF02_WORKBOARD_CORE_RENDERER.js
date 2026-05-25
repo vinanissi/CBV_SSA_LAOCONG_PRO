@@ -54,6 +54,9 @@ function CbvRf02Workboard_buildNavHtml_(activeRoute) {
     { route: '/workspace', label: 'Tài chính', stub: true, title: 'RF_02 — Tài chính workboard ở phase sau' },
     { route: '/workspace/workboard/notifications', label: 'Thông báo' }
   ];
+  if (typeof CBV_Permission_can === 'function' && CBV_Permission_can(CBV_Permission_getCurrentUserContext(), CBV_PERMISSION_ACTIONS.COORDINATION_VIEW, null)) {
+    tabs.splice(3, 0, { route: '/workspace/coordination/manager', label: 'Điều phối' });
+  }
   var out = '<nav class="cbv-rf02-nav cbv-workboard-bottom-nav cbv-thumb-zone" aria-label="Workboard navigation" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">';
   for (var i = 0; i < tabs.length; i++) {
     var t = tabs[i];

@@ -1536,6 +1536,20 @@ function menuCbvTestConsoleRf02_copyReport() {
   });
 }
 
+/** PHASE_RF_03 — Operational Coordination health test. */
+function menuCbvTestConsoleRf03_runFull() {
+  runSafeMenuStep_('CBV_RF03_Test_runOperationalCoordinationHealth', 'RF_03 Operational Coordination Health Test', function (r) {
+    if (!r) return 'No result';
+    return (r.status || '') + '\n' + (r.summary || '') + '\nEnvelope OK: ' + (r.envelopeOk ? 'yes' : 'no');
+  });
+}
+
+function menuCbvTestConsoleRf03_copyReport() {
+  runSafeMenuStep_('CbvTcsRf03OperationalCoordination_TestConsole_copyLatestReport', 'Copy RF_03 report', function (r) {
+    return r && r.ok ? 'Dialog opened — select JSON and copy.' : (r && r.message) || 'Done';
+  });
+}
+
 /** CBV Test Console — HOME_ALERT Phase 82 SLA & escalation QA. */
 function menuCbvTestConsoleHomeAlertSla82() {
   runSafeMenuStep_('HomeAlertSlaEscalation_TestConsole_run', 'HOME_ALERT SLA/Escalation test', function (r) {
