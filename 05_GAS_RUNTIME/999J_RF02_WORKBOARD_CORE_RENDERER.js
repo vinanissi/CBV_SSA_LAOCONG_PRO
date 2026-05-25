@@ -50,12 +50,20 @@ function CbvRf02Workboard_buildNavHtml_(activeRoute) {
     { route: '/workspace', label: 'Trang chủ' },
     { route: '/workspace/workboard', label: 'Công việc' },
     { route: '/workspace/workboard/tasks', label: 'Danh sách' },
-    { route: '/workspace', label: 'Hồ sơ', stub: true, title: 'RF_02 — Hồ sơ workboard ở phase sau' },
-    { route: '/workspace', label: 'Tài chính', stub: true, title: 'RF_02 — Tài chính workboard ở phase sau' },
     { route: '/workspace/workboard/notifications', label: 'Thông báo' }
   ];
-  if (typeof CBV_Permission_can === 'function' && CBV_Permission_can(CBV_Permission_getCurrentUserContext(), CBV_PERMISSION_ACTIONS.COORDINATION_VIEW, null)) {
-    tabs.splice(3, 0, { route: '/workspace/coordination/manager', label: 'Điều phối' });
+  var ctxNav = typeof CBV_Permission_getCurrentUserContext === 'function' ? CBV_Permission_getCurrentUserContext() : {};
+  if (typeof CBV_Permission_can === 'function' && CBV_Permission_can(ctxNav, CBV_PERMISSION_ACTIONS.COORDINATION_VIEW, null)) {
+    tabs.splice(3, 0, { route: '/workspace/coordination/queue', label: 'Điều phối' });
+  }
+  if (typeof CBV_Permission_can === 'function' && CBV_Permission_can(ctxNav, CBV_PERMISSION_ACTIONS.FINANCE_VIEW, null)) {
+    tabs.splice(tabs.length - 1, 0, { route: '/workspace/plugins/finance', label: 'Tài chính' });
+  }
+  if (typeof CBV_Permission_can === 'function' && CBV_Permission_can(ctxNav, CBV_PERMISSION_ACTIONS.HO_SO_VIEW, null)) {
+    tabs.splice(tabs.length - 1, 0, { route: '/workspace/plugins/ho-so', label: 'Hồ sơ' });
+  }
+  if (typeof CBV_Permission_can === 'function' && CBV_Permission_can(ctxNav, CBV_PERMISSION_ACTIONS.OBSERVATION_VIEW, null)) {
+    tabs.splice(tabs.length - 1, 0, { route: '/workspace/observation', label: 'Quan sát' });
   }
   var out = '<nav class="cbv-rf02-nav cbv-workboard-bottom-nav cbv-thumb-zone" aria-label="Workboard navigation" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">';
   for (var i = 0; i < tabs.length; i++) {

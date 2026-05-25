@@ -1592,6 +1592,20 @@ function menuCbvTestConsoleRf06_copyReport() {
   });
 }
 
+/** PHASE_RF_07 — Runtime lock verification. */
+function menuCbvTestConsoleRf07_runFull() {
+  runSafeMenuStep_('CBV_RF07_Test_runRuntimeLockVerification', 'RF_07 Runtime Lock Verification', function (r) {
+    if (!r) return 'No result';
+    return (r.status || '') + '\n' + (r.summary || '') + '\nEnvelope OK: ' + (r.envelopeOk ? 'yes' : 'no') + '\nLock: ' + (r.runtimeLockStatus || '');
+  });
+}
+
+function menuCbvTestConsoleRf07_copyReport() {
+  runSafeMenuStep_('CbvTcsRf07RuntimeLock_TestConsole_copyLatestReport', 'Copy RF_07 report', function (r) {
+    return r && r.ok ? 'Dialog opened — select JSON and copy.' : (r && r.message) || 'Done';
+  });
+}
+
 /** CBV Test Console — HOME_ALERT Phase 82 SLA & escalation QA. */
 function menuCbvTestConsoleHomeAlertSla82() {
   runSafeMenuStep_('HomeAlertSlaEscalation_TestConsole_run', 'HOME_ALERT SLA/Escalation test', function (r) {
