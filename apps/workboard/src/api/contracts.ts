@@ -31,7 +31,107 @@ export interface UserContext {
   displayName: string;
   role: UserRole;
   permissions: string[];
+  email?: string;
+  source?: string;
   demoLabel?: string;
+  mustChangePassword?: boolean;
+}
+
+export interface DirectoryUser {
+  userId: string;
+  userCode: string;
+  displayName: string;
+  email: string;
+  role: UserRole;
+  directoryRole?: string;
+  donViId?: string;
+}
+
+export interface TaskUrgency {
+  isBlocked: boolean;
+  isOverdue: boolean;
+  isWaiting: boolean;
+  isStale: boolean;
+  noOwner?: boolean;
+  needsEscalation: boolean;
+  slaRiskLevel: 'LOW' | 'MEDIUM' | 'HIGH';
+  labels?: string[];
+  staleDays?: number;
+}
+
+export interface UserRef {
+  userCode: string;
+  displayName: string;
+  /** Internal USER_DIRECTORY.ID — not used for TASK_MAIN OWNER_ID lookup */
+  id?: string;
+}
+
+/** USER_DIRECTORY row — snapshot usersById contract (GS_09D/10) */
+export interface UserDirectoryRecord {
+  id: string;
+  userCode: string;
+  displayName: string;
+  fullName?: string;
+  role?: string;
+  directoryRole?: string;
+  email?: string;
+  status?: string;
+  mode?: RuntimeUserMode;
+  capabilities?: RuntimeUserCapabilities;
+  workload?: RuntimeUserWorkload;
+  queueDefaults?: RuntimeUserQueueDefaults;
+  relationships?: RuntimeUserRelationships;
+  flags?: RuntimeUserFlags;
+}
+
+export type RuntimeUserMode = 'operator' | 'supervisor' | 'admin' | 'viewer';
+
+export interface RuntimeUserCapabilities {
+  canAssign: boolean;
+  canApprove: boolean;
+  canEscalate: boolean;
+  canResolve: boolean;
+}
+
+export interface RuntimeUserWorkload {
+  activeQueueCount: number;
+  workloadLimit: number;
+  isOverloaded: boolean;
+}
+
+export interface RuntimeUserQueueDefaults {
+  defaultQueue: string;
+  defaultDashboard: string;
+}
+
+export interface RuntimeUserRelationships {
+  supervisorId?: string;
+  teamId?: string;
+  donViId?: string;
+}
+
+export interface RuntimeUserFlags {
+  isOperator: boolean;
+  isSupervisor: boolean;
+  isAdmin: boolean;
+}
+
+/** Operational runtime identity — normalized from USER_DIRECTORY (GS_10) */
+export interface RuntimeUser {
+  id: string;
+  userCode: string;
+  displayName: string;
+  fullName?: string;
+  email?: string;
+  role?: string;
+  directoryRole?: string;
+  status?: string;
+  mode: RuntimeUserMode;
+  capabilities: RuntimeUserCapabilities;
+  workload: RuntimeUserWorkload;
+  queueDefaults: RuntimeUserQueueDefaults;
+  relationships: RuntimeUserRelationships;
+  flags: RuntimeUserFlags;
 }
 
 export interface TaskItem {
@@ -41,6 +141,23 @@ export interface TaskItem {
   priority: string;
   owner: string;
   ownerId: string;
+  displayOwner?: string;
+  ownerUser?: UserRef | null;
+  ownerDisplayName?: string;
+  reporterId?: string;
+  displayReporter?: string;
+  reporterUser?: UserRef | null;
+  reporterDisplayName?: string;
+  /** Raw audit ids retained alongside resolved display names (additive). */
+  createdBy?: string;
+  createdByDisplayName?: string;
+  assignedTo?: string;
+  assignedToDisplayName?: string;
+  displayAssigneeName?: string;
+  /** HOME_ALERT-derived operator labels, resolved at read time (additive). */
+  assignedToLabelDisplay?: string;
+  ownerLabelDisplay?: string;
+  operatorMetaTextDisplay?: string;
   dueDate: string;
   href: string;
   permissionAllowed: boolean;
@@ -48,6 +165,13 @@ export interface TaskItem {
   isMine?: boolean;
   module: 'TASK';
   source: string;
+  updatedAt?: string;
+  pendingAction?: string;
+  blockReason?: string;
+  relatedHoSoId?: string;
+  relatedEntityType?: string;
+  relatedEntityId?: string;
+  urgency?: TaskUrgency;
 }
 
 export interface FinanceItem {
@@ -120,6 +244,7 @@ export interface AlertItem {
 export interface TimelineItem {
   time: string;
   actor: string;
+  actorId?: string;
   action: string;
   message: string;
   source: string;
@@ -183,6 +308,9 @@ export interface TaskDetail extends TaskItem {
   files: FileItem[];
   relatedFinance?: FinanceItem[];
   relatedHoSo?: HoSoItem[];
+  recentUpdates?: TimelineItem[];
+  slaStatus?: string;
+  nextStep?: string;
 }
 
 export interface CoordinationData {
@@ -232,6 +360,51 @@ export interface PluginsResponse {
   plugins: PluginDescriptor[];
   quickActions: QuickAction[];
   demoLabel: string;
+}
+
+export type ModuleRuntimeType = 'REACT' | 'APPSHEET' | 'WEBAPP' | 'GOOGLE_SHEET' | 'NOCODB' | 'EXTERNAL';
+export type ModuleOpenMode = 'INTERNAL_ROUTE' | 'NEW_TAB' | 'IFRAME' | 'EXTERNAL';
+
+export interface ModuleRegistryEntry {
+  moduleId: string;
+  moduleName: string;
+  moduleGroup: string;
+  moduleType: string;
+  runtimeType: ModuleRuntimeType;
+  icon: string;
+  description: string;
+  primaryUrl: string;
+  mobileUrl?: string;
+  adminUrl?: string;
+  openMode: ModuleOpenMode;
+  roleRequired: string[];
+  permissionRequired: string;
+  isEnabled: boolean;
+  isInternal: boolean;
+  sortOrder: number;
+  status: 'ACTIVE' | 'PARTIAL' | 'DISABLED' | 'NOT_CONFIGURED';
+  showInNav?: boolean;
+  navLabel?: string;
+  notes?: string;
+}
+
+export interface ModuleRuntimeStatus {
+  moduleId: string;
+  connected: boolean;
+  statusLabel: string;
+  degraded: boolean;
+  message?: string;
+}
+
+export interface ModulesResponse {
+  modules: ModuleRegistryEntry[];
+  demoLabel?: string;
+}
+
+export interface ModuleStatusResponse {
+  statuses: ModuleRuntimeStatus[];
+  degraded: boolean;
+  checkedAt: string;
 }
 
 export type TaskFilter = 'mine' | 'pending' | 'overdue' | 'approval';
@@ -285,6 +458,59 @@ export interface TaskWriteCapability {
 export interface TaskWriteResult {
   task: TaskDetail;
   event: TaskWriteEvent;
+}
+
+export interface TaskWorkspaceRuntime {
+  mode: string;
+  dbSheet: string;
+  sheetId: string;
+  lastSyncAt: string;
+  cacheHit: boolean;
+  connected?: boolean;
+  latencyMs?: number;
+  workerLatencyMs?: number;
+  workerCacheHit?: boolean;
+  cacheTtlSec?: number;
+  gasDurationMs?: number;
+  sheetReadMs?: number;
+  mappingMs?: number;
+  rowsScanned?: number;
+  rowsReturned?: number;
+  payloadBytesApprox?: number;
+  generatedAt?: string;
+  /** GS_10B: worker | gas | stale */
+  cacheSource?: 'worker' | 'gas' | 'stale';
+  stale?: boolean;
+}
+
+export interface TaskWorkspaceCounts {
+  total: number;
+  open: number;
+  inProgress: number;
+  blocked: number;
+  done: number;
+  dueToday: number;
+  overdue: number;
+  noOwner?: number;
+}
+
+export interface TaskWorkspaceSnapshot {
+  tasks: TaskItem[];
+  counts: TaskWorkspaceCounts;
+  blockedTasks: TaskItem[];
+  dueTasks: TaskItem[];
+  overdueTasks: TaskItem[];
+  userDisplayMap?: Record<string, string>;
+  usersById?: Record<string, UserDirectoryRecord>;
+  runtimeUsersById?: Record<string, RuntimeUser>;
+  runtime: TaskWorkspaceRuntime;
+  schemaWarnings?: string[];
+}
+
+export interface TaskDbActionResult {
+  task?: TaskDetail;
+  log?: Record<string, unknown>;
+  event?: TaskWriteEvent;
 }
 
 export const TASK_PRIORITIES = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'] as const;

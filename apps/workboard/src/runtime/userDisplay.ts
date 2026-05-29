@@ -34,7 +34,31 @@ export type TaskUserFieldSource = {
   owner_id?: string;
   REPORTER_ID?: string;
   reporter_id?: string;
+  createdBy?: string;
+  CREATED_BY?: string;
+  created_by?: string;
+  assignedTo?: string;
+  ASSIGNED_TO?: string;
+  assigned_to?: string;
+  ownerLabel?: string;
+  OWNER_LABEL?: string;
+  assignedToLabel?: string;
+  ASSIGNED_TO_LABEL?: string;
+  operatorMetaText?: string;
+  OPERATOR_META_TEXT?: string;
 };
+
+/** Additive display-name fields attached by enrichTaskUserDisplayNames. */
+export interface TaskUserDisplayNameFields {
+  createdByDisplayName?: string;
+  ownerDisplayName?: string;
+  assignedToDisplayName?: string;
+  displayAssigneeName?: string;
+  reporterDisplayName?: string;
+  ownerLabelDisplay?: string;
+  assignedToLabelDisplay?: string;
+  operatorMetaTextDisplay?: string;
+}
 
 export function resolveTaskOwnerId(task: TaskUserFieldSource): string {
   return normalizeUserLookupKey(
@@ -94,15 +118,16 @@ export function isUserRefKey(value?: string | null): boolean {
 }
 
 function entryLabel(entry: UserDirectoryEntry): string {
-  return (
-    String(entry.displayName || '').trim() ||
-    String(entry.fullName || '').trim() ||
-    String(entry.name || '').trim() ||
-    String(entry.userName || '').trim() ||
-    String(entry.email || '').trim() ||
-    String(entry.userCode || '').trim() ||
-    String(entry.id || '').trim()
-  );
+  // Priority: DISPLAY_NAME → FULL_NAME → NAME → USER_NAME → EMAIL → code → id.
+  // Skip any name field whose value is itself a raw USR_* code (backend may
+  // pre-fill displayName with the code for users missing a name) so we fall
+  // through to EMAIL instead of surfacing the raw id.
+  const named = [entry.displayName, entry.fullName, entry.name, entry.userName, entry.email];
+  for (const field of named) {
+    const s = String(field || '').trim();
+    if (s && !isUserRefKey(s)) return s;
+  }
+  return String(entry.userCode || '').trim() || String(entry.id || '').trim();
 }
 
 function normalizeDirectoryUser(u: DirectoryUser | UserDirectoryEntry): UserDirectoryEntry {
@@ -146,12 +171,17 @@ function indexDirectoryEntry(entry: UserDirectoryEntry): void {
 function indexDisplayMapEntry(rawKey: string, label: string): void {
   const key = normalizeUserLookupKey(rawKey);
   if (!key) return;
-  cachedMap[key] = label;
-  const trimmed = String(rawKey || '').trim();
-  if (trimmed && trimmed !== key) cachedMap[trimmed] = label;
+  // Never write a raw USR_* code as a "display label" — that would poison the
+  // cache and clobber a real label resolved from usersById (e.g. EMAIL fallback).
+  const isUsable = Boolean(label) && !isUserRefKey(label);
+  if (isUsable) {
+    cachedMap[key] = label;
+    const trimmed = String(rawKey || '').trim();
+    if (trimmed && trimmed !== key) cachedMap[trimmed] = label;
+  }
   if (!usersById[key]) {
-    usersById[key] = { id: key, userCode: key, displayName: label };
-  } else if (label && !isUserRefKey(label)) {
+    usersById[key] = { id: key, userCode: key, displayName: isUsable ? label : undefined };
+  } else if (isUsable) {
     usersById[key] = { ...usersById[key], displayName: usersById[key].displayName || label };
   }
 }
@@ -402,6 +432,64 @@ export function getTaskReporterTechnicalId(
   return task.reporterUser?.userCode || resolveTaskReporterId(task) || undefined;
 }
 
+/**
+ * Shared resolver (phase spec): USER_ID → display name.
+ * Priority DISPLAY_NAME → FULL_NAME → NAME → EMAIL → raw id. Never undefined/null.
+ * Role-independent — same logic for ADMIN and OPERATOR.
+ */
+export function resolveUserDisplayName(
+  userId?: string | null,
+  userMap?: Record<string, UserDirectoryEntry | RuntimeUser>,
+): string {
+  const raw = String(userId || '').trim();
+  if (!raw) return '';
+  const key = normalizeUserLookupKey(raw);
+  if (userMap) {
+    const entry = (userMap[raw] || userMap[key]) as UserDirectoryEntry | undefined;
+    if (entry) {
+      const label = entryLabel(entry);
+      if (label && !isUserRefKey(label)) return label;
+    }
+  }
+  // Fall back to the hydrated directory cache; raw id is the final safe fallback.
+  return resolveUserRefLabel(raw, raw, { surface: false });
+}
+
+/**
+ * Shared additive mapper (phase spec): attaches *DisplayName fields without
+ * replacing raw ids. Used by every role/path before FE render so OPERATOR and
+ * ADMIN resolve identically. Raw CREATED_BY/OWNER_ID/ASSIGNED_TO are retained.
+ */
+export function enrichTaskUserDisplayNames<T extends TaskUserFieldSource>(
+  task: T,
+  userMap?: Record<string, UserDirectoryEntry | RuntimeUser>,
+): T & TaskUserDisplayNameFields {
+  const createdBy = String(task.createdBy || task.CREATED_BY || task.created_by || '').trim();
+  const ownerId = resolveTaskOwnerId(task);
+  const assignedTo = String(task.assignedTo || task.ASSIGNED_TO || task.assigned_to || '').trim();
+  const reporterId = resolveTaskReporterId(task);
+
+  const next: TaskUserDisplayNameFields = {};
+  if (createdBy) next.createdByDisplayName = resolveUserDisplayName(createdBy, userMap);
+  if (ownerId) next.ownerDisplayName = resolveUserDisplayName(ownerId, userMap);
+  if (assignedTo) {
+    const label = resolveUserDisplayName(assignedTo, userMap);
+    next.assignedToDisplayName = label;
+    next.displayAssigneeName = label;
+  }
+  if (reporterId) next.reporterDisplayName = resolveUserDisplayName(reporterId, userMap);
+
+  // HOME_ALERT-derived labels: resolve any embedded raw USR_ at read time.
+  const ownerLabel = String(task.ownerLabel || task.OWNER_LABEL || '').trim();
+  if (ownerLabel) next.ownerLabelDisplay = resolveTimelineText(ownerLabel);
+  const assignedLabel = String(task.assignedToLabel || task.ASSIGNED_TO_LABEL || '').trim();
+  if (assignedLabel) next.assignedToLabelDisplay = resolveTimelineText(assignedLabel);
+  const operatorMeta = String(task.operatorMetaText || task.OPERATOR_META_TEXT || '').trim();
+  if (operatorMeta) next.operatorMetaTextDisplay = resolveTimelineText(operatorMeta);
+
+  return { ...task, ...next };
+}
+
 /** FE-side enrichment when snapshot tasks lack ownerUser but directory is loaded */
 export function enrichTaskUserFieldsFromDirectory<T extends TaskItem & TaskUserFieldSource>(task: T): T {
   const ownerId = resolveTaskOwnerId(task);
@@ -445,7 +533,7 @@ export function enrichTaskUserFieldsFromDirectory<T extends TaskItem & TaskUserF
     }
   }
 
-  return next;
+  return enrichTaskUserDisplayNames(next);
 }
 
 export function enrichTasksUserFieldsFromDirectory(tasks: TaskItem[]): TaskItem[] {
