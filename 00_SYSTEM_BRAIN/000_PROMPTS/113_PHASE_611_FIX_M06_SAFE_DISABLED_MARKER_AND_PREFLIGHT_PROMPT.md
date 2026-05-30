@@ -1,5 +1,11 @@
 # Phase 611 — FIX M06 WORKBOARD SAFE-DISABLED MARKER + CBV UI MARKER CONTRACT PREFLIGHT V1
 
+READ FIRST:
+
+00_SYSTEM_BRAIN/000_RUNTIME_ENTRYPOINT.md
+
+---
+
 **Append-only prompt record.** Source: user phase brief (2026-05-14).
 
 ## Target

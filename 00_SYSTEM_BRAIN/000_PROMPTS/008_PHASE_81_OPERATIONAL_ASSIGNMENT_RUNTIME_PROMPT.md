@@ -1,5 +1,11 @@
 # PHASE 81 — OPERATIONAL_ASSIGNMENT_RUNTIME (prompt archive)
 
+READ FIRST:
+
+00_SYSTEM_BRAIN/000_RUNTIME_ENTRYPOINT.md
+
+---
+
 **Branch:** `phase/from-v2.4.1-TASK-FIN`  
 **Repo:** `CBV_SSA_LAOCONG_PRO`  
 **Chuẩn:** CBV Operational Ecosystem Standard V1  

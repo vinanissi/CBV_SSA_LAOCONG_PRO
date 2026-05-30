@@ -1,5 +1,11 @@
 # CURSOR PROMPT — M08_OPS_STATE_RUNTIME (archived)
 
+READ FIRST:
+
+00_SYSTEM_BRAIN/000_RUNTIME_ENTRYPOINT.md
+
+---
+
 **Archived:** 2026-05-14  
 **Repo:** `D:\Workspace\projects\CBV_SSA_LAOCONG_PRO`  
 **Branch:** `phase/from-v2.4.1-TASK-FIN`

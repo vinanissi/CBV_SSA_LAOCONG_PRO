@@ -1,5 +1,11 @@
 # PHASE 93 — WebApp Admin Reference Viewer / Settings Read-First (Prompt)
 
+READ FIRST:
+
+00_SYSTEM_BRAIN/000_RUNTIME_ENTRYPOINT.md
+
+---
+
 > Snapshot of the AI handoff prompt used to drive Phase 93. Captured into `00_SYSTEM_BRAIN/000_PROMPTS/` per CBV Operational Ecosystem Standard V1.
 
 ---
@@ -8,10 +14,10 @@ Repo: `D:\Workspace\projects\CBV_SSA_LAOCONG_PRO`
 GitHub: `https://github.com/vinanissi/CBV_SSA_LAOCONG_PRO`  
 Branch: `phase/from-v2.4.1-TASK-FIN`
 
-Standards:
+**Context:** Ecosystem standards via Runtime Entrypoint. Phase-specific:
 
-- CBV Operational Ecosystem Standard V1
-- CBV Test Console Standard: `00_SYSTEM_BRAIN/000_TEST_CONSOLE/CBV_TCS_V1/docs/CBV_TCS_V1_STANDARD.md`
+- CBV Test Console Standard — `00_SYSTEM_BRAIN/000_TEST_CONSOLE/CBV_TCS_V1/docs/CBV_TCS_V1_STANDARD.md`
+
 
 ## Current architecture
 

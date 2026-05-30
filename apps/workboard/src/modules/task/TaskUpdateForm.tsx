@@ -37,17 +37,51 @@ export function TaskUpdateForm({ task, onUpdated }: TaskUpdateFormProps) {
     setSuccess(null);
     setLoading(true);
 
-    const res = await api.updateTask(task.taskId, form);
-    setLoading(false);
+    try {
+      if (!api.isMockMode()) {
+        let lastTask: TaskDetail = task;
 
-    if (!res.ok || !res.data) {
-      setError(res.errors[0] ?? 'Không lưu được — thử lại');
-      return;
+        if (form.status && form.status !== task.status) {
+          const action =
+            form.status === 'DONE'
+              ? await api.completeTask(task.taskId, form.note)
+              : await api.updateTaskStatus(task.taskId, form.status, form.note);
+          if (!action.ok) {
+            setError(action.errors[0] ?? 'Không cập nhật được trạng thái');
+            return;
+          }
+          if (action.data?.task) lastTask = action.data.task as TaskDetail;
+        } else if (form.assignee && form.assignee !== task.ownerId) {
+          const action = await api.assignTask(task.taskId, form.assignee, form.note);
+          if (!action.ok) {
+            setError(action.errors[0] ?? 'Không giao được việc');
+            return;
+          }
+          if (action.data?.task) lastTask = action.data.task as TaskDetail;
+        }
+
+        if (form.note?.trim() && form.status === task.status) {
+          await api.addTaskComment(task.taskId, form.note);
+        }
+
+        setSuccess('Đã lưu cập nhật');
+        onTaskChanged('patch');
+        onUpdated?.(lastTask);
+        return;
+      }
+
+      const res = await api.updateTask(task.taskId, form);
+      if (!res.ok || !res.data) {
+        setError(res.errors[0] ?? 'Không lưu được — thử lại');
+        return;
+      }
+
+      setSuccess('Đã lưu cập nhật');
+      onTaskChanged('patch');
+      onUpdated?.(res.data.task);
+    } finally {
+      setLoading(false);
     }
-
-    setSuccess('Đã lưu cập nhật');
-    onTaskChanged();
-    onUpdated?.(res.data.task);
   }
 
   return (

@@ -1,12 +1,24 @@
 /**
  * RF_12 — GAS Runtime API — Entry point (doGet / doPost).
  * Deploy as Web App: Execute as Me, Access Anyone with link.
+ * TASK_GS_02A: task-db actions route before RF_12 write switch.
+ * AUTH_01A: auth actions route before RF_12 write switch.
  */
 
 function doGet(e) {
   var traceId = buildTraceId_();
   try {
     var action = (e && e.parameter && e.parameter.action) ? String(e.parameter.action).trim() : 'health';
+    if (typeof cbvIsHomeAlertAction_ === 'function' && cbvIsHomeAlertAction_(action)) {
+      if (typeof homeAlertDoPost_ === 'function') {
+        return homeAlertDoPost_({ postData: { contents: JSON.stringify({ action: action, payload: e.parameter || {} }) }, parameter: e.parameter });
+      }
+    }
+    if (typeof cbvIsTaskDbAction_ === 'function' && cbvIsTaskDbAction_(action)) {
+      if (typeof taskDbDoGet_ === 'function') return taskDbDoGet_(e);
+    } else if (typeof taskDbIsTaskDbAction_ === 'function' && taskDbIsTaskDbAction_(action)) {
+      return taskDbDoGet_(e);
+    }
     var actor = parseActorFromRequest_(e);
     var data = null;
     var warnings = [];
@@ -112,7 +124,28 @@ function doPost(e) {
       return outputJson_(buildEnvelope_(null, { errors: ['Thiếu action trong body'], ok: false, status: 'FAIL', traceId: traceId }));
     }
 
+    var postAction = String(body.action || '').trim();
     traceId = body.traceId || traceId;
+
+    if (typeof cbvIsAuthAction_ === 'function' && cbvIsAuthAction_(postAction)) {
+      return cbvRouteAuthPost_(e, body, traceId);
+    }
+    if (typeof cbvIsAuthDbAction_ === 'function' && cbvIsAuthDbAction_(postAction)) {
+      return cbvRouteAuthDbPost_(e, body, traceId);
+    }
+    if (typeof authDbIsAuthDbAction_ === 'function' && authDbIsAuthDbAction_(postAction)) {
+      return authDbDoPost_(e);
+    }
+    if (typeof cbvIsHomeAlertAction_ === 'function' && cbvIsHomeAlertAction_(postAction)) {
+      return cbvRouteHomeAlertPost_(e, body, traceId);
+    }
+    if (typeof cbvIsTaskDbAction_ === 'function' && cbvIsTaskDbAction_(postAction)) {
+      return cbvRouteTaskDbPost_(e, body, traceId);
+    }
+    if (typeof taskDbIsTaskDbAction_ === 'function' && taskDbIsTaskDbAction_(postAction)) {
+      return taskDbDoPost_(e);
+    }
+
     var actor = parseActorFromRequest_(e);
     if (body._actor) {
       actor = {
@@ -156,9 +189,36 @@ function doPost(e) {
         });
         appendAuditLog_({ traceId: traceId, actor: actor.displayName, action: 'append_timeline', status: 'OK', detail: { taskId: payload.taskId } });
         return outputJson_(buildEnvelope_({ event: evt }, { traceId: traceId }));
-      default:
+      default: {
         appendAuditLog_({ traceId: traceId, actor: actor.displayName, action: body.action, status: 'REJECTED' });
-        return outputJson_(buildEnvelope_(null, { errors: ['Action không được phép: ' + body.action], ok: false, status: 'FAIL', traceId: traceId }));
+        if (typeof cbvIsAuthAction_ === 'function' && cbvIsAuthAction_(postAction)) {
+          return cbvRouteAuthPost_(e, body, traceId);
+        }
+        if (typeof cbvIsTaskDbAction_ === 'function' && cbvIsTaskDbAction_(postAction)) {
+          return cbvRouteTaskDbPost_(e, body, traceId);
+        }
+        var mergedAllowed = typeof authDbGetMergedAllowedActions_ === 'function'
+          ? authDbGetMergedAllowedActions_()
+          : (function () {
+              var rf12Allowed = ['create_task', 'update_task', 'append_timeline'];
+              var taskDbAllowed = typeof taskDbGetAllowedActions_ === 'function' ? taskDbGetAllowedActions_() : [];
+              var authAllowed = typeof authDbGetAllowedActions_ === 'function'
+                ? authDbGetAllowedActions_()
+                : ['authLogin', 'authMe', 'authLogout', 'getUserDirectory'];
+              return rf12Allowed.concat(authAllowed).concat(taskDbAllowed);
+            })();
+        return outputJson_({
+          ok: false,
+          code: 'UNKNOWN_ACTION',
+          action: postAction,
+          allowedActions: mergedAllowed,
+          status: 'FAIL',
+          data: null,
+          warnings: mergedAllowed.indexOf('authLogin') < 0 ? ['Auth module có thể chưa deploy — clasp push'] : [],
+          errors: ['Action không được phép: ' + postAction],
+          traceId: traceId,
+        });
+      }
     }
 
     if (!result.ok) {

@@ -1,5 +1,11 @@
 # PHASE_RF_06 — Finance + HO_SO Plugin Activation — Prompt
 
+READ FIRST:
+
+00_SYSTEM_BRAIN/000_RUNTIME_ENTRYPOINT.md
+
+---
+
 ## Phase
 
 **PHASE_RF_06_FINANCE_HOSO_PLUGIN_ACTIVATION**

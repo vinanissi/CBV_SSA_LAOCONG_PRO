@@ -1,5 +1,11 @@
 # PHASE 83 — SLA_POLICY_REGISTRY_AND_OPERATIONAL_CONTROL (Prompt Archive)
 
+READ FIRST:
+
+00_SYSTEM_BRAIN/000_RUNTIME_ENTRYPOINT.md
+
+---
+
 **Repo:** CBV_SSA_LAOCONG_PRO  
 **Prerequisite:** Phase 82 SLA/Escalation runtime (GO_WITH_WARNINGS acceptable).  
 **Standard:** CBV Operational Ecosystem Standard V1

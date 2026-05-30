@@ -1,0 +1,65 @@
+/**
+ * PHASE_TASK_GS_01/03 — Existing DB binding + performance config.
+ */
+var CBV_TASK_DB_ID = '1Jh3gQQKugazSvd24CKZremHjSmTNGrsnYczq4UzK5ZE';
+
+var CBV_TASK_DB_CONFIG = {
+  SPREADSHEET_ID: CBV_TASK_DB_ID,
+  TIMEZONE: 'Asia/Ho_Chi_Minh',
+  SCRIPT_PROP_TOKEN_KEY: 'GAS_TASK_API_TOKEN',
+  CACHE_TTL_SEC: 30,
+  COUNTS_CACHE_TTL_SEC: 60,
+  DETAIL_CACHE_TTL_SEC: 45,
+  CACHE_KEY_VERSION: 'v3',
+  DEFAULT_LIMIT: 100,
+  MAX_LIMIT: 200,
+  STALE_DAYS: 5,
+  ESCALATION_STALE_DAYS: 7,
+  SNAPSHOT_SLOW_MS: 2000,
+  CACHE_MISS_SLOW_MS: 1500,
+  DETAIL_SLOW_MS: 1500,
+  PAYLOAD_WARN_BYTES: 400000,
+  TIMELINE_LIMIT: 20,
+  ATTACHMENT_LIMIT: 10,
+  HIGHLIGHT_LIMIT: 15,
+  SHEETS: {
+    TASK_MAIN: 'TASK_MAIN',
+    TASK_CHECKLIST: 'TASK_CHECKLIST',
+    TASK_ATTACHMENT: 'TASK_ATTACHMENT',
+    TASK_UPDATE_LOG: 'TASK_UPDATE_LOG',
+    CBV_AUDIT_LOG: 'CBV_AUDIT_LOG',
+    TASK_OPERATOR_OBSERVATION: 'TASK_OPERATOR_OBSERVATION',
+    USER_DIRECTORY: 'USER_DIRECTORY',
+  },
+  DONE_STATUSES: ['DONE', 'COMPLETED', 'CLOSED'],
+  OPEN_STATUSES: ['NEW', 'ASSIGNED', 'IN_PROGRESS'],
+  BLOCKED_STATUSES: ['WAITING', 'BLOCKED', 'WAITING_APPROVAL'],
+  IN_PROGRESS_STATUSES: ['IN_PROGRESS', 'ASSIGNED'],
+  SUMMARY_FIELDS: [
+    'ID', 'TASK_CODE', 'TITLE', 'STATUS', 'PRIORITY', 'OWNER_ID',
+    'DUE_DATE', 'UPDATED_AT', 'CREATED_AT', 'PENDING_ACTION',
+    'RELATED_ENTITY_TYPE', 'RELATED_ENTITY_ID', 'PROGRESS_PERCENT', 'IS_DELETED',
+  ],
+};
+
+var CBV_TASK_DB_ACTIONS = [
+  'health',
+  'validateExistingDb',
+  'getTaskWorkspaceSnapshot',
+  'getTaskDetail',
+  'createTask',
+  'updateTaskStatus',
+  'assignTask',
+  'addTaskComment',
+  'completeTask',
+  'wiOpAppendActionAudit',
+  'wiOpAppendTimeline',
+  'wiOpGetTaskOperational',
+  'wiOpCreateAppointment',
+  'wiOpSaveNote',
+  'wiOpAddDocument',
+  'wiOpLookupSop',
+  'wiOpListFormTemplates',
+  'wiOpRecordAction',
+  'wiOpCreateUserTask',
+];

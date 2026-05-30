@@ -1,5 +1,11 @@
 # Prompt — Phase 96 — WEBAPP VIETNAMESE UX REFACTOR / USER FLOW GUIDE
 
+READ FIRST:
+
+00_SYSTEM_BRAIN/000_RUNTIME_ENTRYPOINT.md
+
+---
+
 **Archived:** 2026-05-14  
 **Repo:** `D:\Workspace\projects\CBV_SSA_LAOCONG_PRO`  
 **Branch:** `phase/from-v2.4.1-TASK-FIN`

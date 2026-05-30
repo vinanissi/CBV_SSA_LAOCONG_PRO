@@ -1,5 +1,11 @@
 # HOTFIX PHASE 88.2 — FE Architecture Safety Rule Text Gate Fix — Prompt
 
+READ FIRST:
+
+00_SYSTEM_BRAIN/000_RUNTIME_ENTRYPOINT.md
+
+---
+
 ## Context
 
 Phase 88.1 fixed persistence and detailed logging.

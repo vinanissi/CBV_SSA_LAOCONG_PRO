@@ -4,6 +4,7 @@ export type UserRole =
   | 'ADMIN'
   | 'MANAGER'
   | 'STAFF'
+  | 'USER'
   | 'FINANCE'
   | 'HO_SO'
   | 'VIEW_ONLY';
@@ -25,6 +26,7 @@ export interface UserContext {
   permissions: string[];
   source: string;
   demoLabel?: string;
+  mustChangePassword?: boolean;
 }
 
 export interface TaskItem {
@@ -85,6 +87,15 @@ export interface AlertItem {
   href?: string;
   nextStep?: string;
   createdAt: string;
+  updatedAt?: string;
+  dueAt?: string;
+  status?: string;
+  assignedTo?: string;
+  claimedBy?: string;
+  relatedEntityType?: string;
+  relatedEntityId?: string;
+  taskId?: string;
+  priority?: string;
   autoResolve: false;
   autoEscalate: false;
 }
@@ -206,6 +217,14 @@ export interface Env {
   CBV_APPSHEET_API_KEY?: string;
   CBV_ALLOWED_ORIGINS?: string;
   CBV_TASK_WRITE_MODE?: string;
+  GAS_TASK_API_URL?: string;
+  GAS_TASK_API_TOKEN?: string;
+  CBV_TASK_SHEET_ID?: string;
+  CBV_TASK_RUNTIME_MODE?: string;
+  CBV_APPSHEET_HOSO_URL?: string;
+  CBV_APPSHEET_FINANCE_URL?: string;
+  CBV_APPSHEET_TASK_URL?: string;
+  CBV_NOCODB_URL?: string;
 }
 
 export type TaskWriteMode = 'ENABLED' | 'LOCKED';
@@ -270,4 +289,55 @@ export interface HealthData {
   gasConfigured?: boolean;
   gasReachable?: boolean;
   writeAdapterStatus?: string;
+}
+
+export type ModuleRuntimeType = 'REACT' | 'APPSHEET' | 'WEBAPP' | 'GOOGLE_SHEET' | 'NOCODB' | 'EXTERNAL';
+export type ModuleOpenMode = 'INTERNAL_ROUTE' | 'NEW_TAB' | 'IFRAME' | 'EXTERNAL';
+
+export interface ModuleRegistryEntry {
+  moduleId: string;
+  moduleName: string;
+  moduleGroup: string;
+  moduleType: string;
+  runtimeType: ModuleRuntimeType;
+  icon: string;
+  description: string;
+  primaryUrl: string;
+  mobileUrl?: string;
+  adminUrl?: string;
+  openMode: ModuleOpenMode;
+  roleRequired: string[];
+  permissionRequired: string;
+  isEnabled: boolean;
+  isInternal: boolean;
+  sortOrder: number;
+  status: 'ACTIVE' | 'PARTIAL' | 'DISABLED' | 'NOT_CONFIGURED';
+  showInNav?: boolean;
+  navLabel?: string;
+  notes?: string;
+}
+
+export interface ModuleRuntimeStatus {
+  moduleId: string;
+  connected: boolean;
+  statusLabel: string;
+  degraded: boolean;
+  message?: string;
+}
+
+export interface ModulesResponse {
+  modules: ModuleRegistryEntry[];
+  demoLabel?: string;
+}
+
+export interface ModuleStatusResponse {
+  statuses: ModuleRuntimeStatus[];
+  degraded: boolean;
+  checkedAt: string;
+}
+
+export interface ModuleOpenLogBody {
+  moduleId: string;
+  openMode?: string;
+  context?: Record<string, string>;
 }

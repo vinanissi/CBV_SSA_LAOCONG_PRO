@@ -75,7 +75,7 @@ export function TaskCreateForm({ onCreated }: TaskCreateFormProps) {
     }
 
     setSuccess('Đã tạo việc thành công');
-    onTaskChanged();
+    onTaskChanged('snapshot');
     onCreated?.(res.data.task.taskId);
     setTimeout(() => {
       closeCreate();

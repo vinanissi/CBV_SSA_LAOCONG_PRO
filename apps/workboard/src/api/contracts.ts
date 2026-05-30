@@ -6,6 +6,7 @@ export type UserRole =
   | 'ADMIN'
   | 'MANAGER'
   | 'STAFF'
+  | 'USER'
   | 'FINANCE'
   | 'HO_SO'
   | 'VIEW_ONLY';
@@ -237,6 +238,15 @@ export interface AlertItem {
   href?: string;
   nextStep?: string;
   createdAt: string;
+  updatedAt?: string;
+  dueAt?: string;
+  status?: string;
+  assignedTo?: string;
+  claimedBy?: string;
+  relatedEntityType?: string;
+  relatedEntityId?: string;
+  taskId?: string;
+  priority?: string;
   autoResolve: false;
   autoEscalate: false;
 }

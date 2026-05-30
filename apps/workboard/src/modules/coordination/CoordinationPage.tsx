@@ -5,6 +5,7 @@ import type { CoordinationData } from '@/api/contracts';
 import { WorkQueue } from '@/components/ui/WorkQueue';
 import { PriorityStrip } from '@/components/ui/PriorityStrip';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import { getAssigneeDisplay } from '@/runtime/userDisplay';
 import { LoadingState } from '@/components/states/LoadingState';
 import { ErrorState } from '@/components/states/ErrorState';
 import { EmptyState } from '@/components/states/EmptyState';
@@ -53,7 +54,7 @@ export function CoordinationPage() {
             <Link key={q.queueId} to={q.href} className="panel block p-3 hover:border-border-soft">
               <p className="font-medium text-slate-100">{q.title}</p>
               <div className="mt-1 flex gap-2 text-xs text-slate-400">
-                <span>{q.assignee ?? 'Chưa giao'}</span>
+                <span title={q.assignee}>{getAssigneeDisplay(q.assignee)}</span>
                 {q.isOverdue && <StatusBadge status="Quá hạn" variant="overdue" />}
               </div>
             </Link>

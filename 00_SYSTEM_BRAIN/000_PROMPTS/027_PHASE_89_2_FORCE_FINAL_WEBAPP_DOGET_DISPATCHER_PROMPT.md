@@ -1,5 +1,11 @@
 # HOTFIX PHASE 89.2 — FORCE FINAL WebApp doGet Dispatcher — Prompt
 
+READ FIRST:
+
+00_SYSTEM_BRAIN/000_RUNTIME_ENTRYPOINT.md
+
+---
+
 ## Issue (after deploy)
 
 - `?action=ping` returns: `{"ok":true,"code":"PONG","message":"Webhook active"}`

@@ -1,5 +1,11 @@
 # 117 — Phase M07.2 — TASK_MAIN record-level AppSheet deeplink
 
+READ FIRST:
+
+00_SYSTEM_BRAIN/000_RUNTIME_ENTRYPOINT.md
+
+---
+
 **Branch:** `phase/from-v2.4.1-TASK-FIN`  
 **Repo:** `D:\Workspace\projects\CBV_SSA_LAOCONG_PRO`
 

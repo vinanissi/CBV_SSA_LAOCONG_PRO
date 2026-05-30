@@ -1,5 +1,11 @@
 # PHASE_RF_11 — Task Write Runtime Create/Update — Prompt (Archive)
 
+READ FIRST:
+
+00_SYSTEM_BRAIN/000_RUNTIME_ENTRYPOINT.md
+
+---
+
 > Append-only. Phase: **PHASE_RF_11_TASK_WRITE_RUNTIME_CREATE_UPDATE**
 
 ## Scope

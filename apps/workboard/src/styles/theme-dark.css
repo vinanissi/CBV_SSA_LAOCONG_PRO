@@ -1,0 +1,196 @@
+/**
+ * PHASE_TASK_GS_09G — optional dark operational cockpit overrides.
+ * Light theme is default; apply when html.theme-dark is set.
+ */
+
+html.theme-dark,
+html.theme-dark body,
+html.theme-dark #root {
+  background-color: #0a0f1a;
+  color: rgb(241 245 249);
+}
+
+html.theme-dark header {
+  border-color: #3b4f66;
+  background-color: #121a2b;
+  color: rgb(241 245 249);
+}
+
+html.theme-dark header .text-white,
+html.theme-dark header .text-slate-200,
+html.theme-dark header .text-slate-300,
+html.theme-dark h1.text-white,
+html.theme-dark h2.text-white,
+html.theme-dark .text-white {
+  color: rgb(241 245 249);
+}
+
+html.theme-dark .text-slate-100,
+html.theme-dark .text-slate-200 {
+  color: rgb(241 245 249);
+}
+
+html.theme-dark .text-slate-300 {
+  color: rgb(203 213 225);
+}
+
+html.theme-dark .text-slate-400 {
+  color: rgb(148 163 184);
+}
+
+html.theme-dark .text-slate-500,
+html.theme-dark .text-slate-600 {
+  color: rgb(100 116 139);
+}
+
+html.theme-dark .panel {
+  border-color: #3b4f66;
+  background-color: #243044;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.25);
+}
+
+html.theme-dark .panel-header {
+  border-color: #3b4f66;
+  color: rgb(241 245 249);
+}
+
+html.theme-dark .main-canvas {
+  border-color: #3b4f66;
+  background-color: rgb(18 26 43 / 0.6);
+}
+
+html.theme-dark .task-card-compact {
+  border-color: #3b4f66;
+  background-color: #243044;
+}
+
+html.theme-dark .task-card-compact:hover {
+  border-color: #4d6179;
+  background-color: rgb(42 58 82 / 0.9);
+}
+
+html.theme-dark .task-card-focused {
+  border-color: rgb(59 130 246 / 0.8);
+  background-color: rgb(59 130 246 / 0.08);
+  box-shadow: 0 4px 6px -1px rgb(59 130 246 / 0.1);
+  outline: 2px solid rgb(59 130 246 / 0.25);
+}
+
+html.theme-dark .task-card-meta {
+  color: rgb(148 163 184);
+}
+
+html.theme-dark .task-group-section {
+  border-color: rgb(59 79 102 / 0.4);
+  background-color: rgb(18 26 43 / 0.4);
+}
+
+html.theme-dark .task-group-header {
+  border-color: rgb(59 79 102 / 0.6);
+  background-color: #121a2b;
+  color: rgb(226 232 240);
+}
+
+html.theme-dark .detail-panel-aside {
+  border-color: #5a708a;
+  background-color: #121a2b;
+  box-shadow: -4px 0 16px rgb(0 0 0 / 0.18);
+}
+
+html.theme-dark .detail-panel-sticky-bar {
+  border-color: rgb(59 79 102 / 0.7);
+  background-color: #121a2b;
+}
+
+html.theme-dark .signal-pattern-critical {
+  border-left-color: rgb(248 113 113 / 0.9);
+  background-color: rgb(239 68 68 / 0.07);
+}
+
+html.theme-dark .signal-pattern-escalation {
+  border-left-color: rgb(167 139 250 / 0.85);
+  background-color: rgb(139 92 246 / 0.06);
+}
+
+html.theme-dark .signal-pattern-overdue {
+  border-left-color: rgb(251 191 36 / 0.9);
+  background-color: rgb(245 158 11 / 0.06);
+}
+
+html.theme-dark .dominant-critical {
+  color: rgb(254 226 226);
+}
+
+html.theme-dark .dominant-escalation {
+  color: rgb(237 233 254);
+}
+
+html.theme-dark .dominant-overdue {
+  color: rgb(254 243 199);
+}
+
+html.theme-dark .inline-action-primary {
+  border-color: rgb(59 130 246 / 0.55);
+  background-color: rgb(59 130 246 / 0.15);
+  color: rgb(219 234 254);
+}
+
+html.theme-dark .inline-action-secondary {
+  border-color: #4d6179;
+  background-color: rgb(18 26 43 / 0.8);
+  color: rgb(226 232 240);
+}
+
+html.theme-dark .inline-action-passive {
+  color: rgb(100 116 139);
+}
+
+html.theme-dark .inline-action-btn {
+  border-color: rgb(59 79 102 / 0.6);
+  color: rgb(203 213 225);
+}
+
+html.theme-dark .btn-ghost {
+  color: rgb(203 213 225);
+}
+
+html.theme-dark .btn-ghost:hover {
+  background-color: #182232;
+  color: rgb(255 255 255);
+}
+
+html.theme-dark .execution-support-section {
+  border-color: rgb(59 130 246 / 0.3);
+  background-color: rgb(59 130 246 / 0.08);
+}
+
+html.theme-dark .coordination-section {
+  border-color: rgb(59 79 102 / 0.55);
+  background-color: rgb(18 26 43 / 0.5);
+}
+
+html.theme-dark .escalation-critical {
+  border-color: rgb(248 113 113 / 0.5);
+  background-color: rgb(239 68 68 / 0.2);
+  color: rgb(254 226 226);
+}
+
+html.theme-dark .escalation-high {
+  border-color: rgb(251 191 36 / 0.45);
+  background-color: rgb(245 158 11 / 0.15);
+  color: rgb(254 243 199);
+}
+
+html.theme-dark input[type='search'],
+html.theme-dark input,
+html.theme-dark textarea,
+html.theme-dark select {
+  border-color: #3b4f66;
+  background-color: #182232;
+  color: rgb(241 245 249);
+}
+
+html.theme-dark input::placeholder,
+html.theme-dark textarea::placeholder {
+  color: rgb(100 116 139);
+}

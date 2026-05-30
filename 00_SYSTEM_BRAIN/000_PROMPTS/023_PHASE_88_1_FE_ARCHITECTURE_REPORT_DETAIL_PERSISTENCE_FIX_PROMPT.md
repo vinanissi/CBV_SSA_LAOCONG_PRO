@@ -1,5 +1,11 @@
 # HOTFIX PHASE 88.1 — FE Architecture Report Detail & Persistence Fix — Prompt
 
+READ FIRST:
+
+00_SYSTEM_BRAIN/000_RUNTIME_ENTRYPOINT.md
+
+---
+
 ## Context
 
 Phase 88 Test Console (`CbvFeArchitecture_TestConsole_run`) executed and returned:

@@ -1,5 +1,11 @@
 # PHASE_RF_05 — Plugin Runtime Baseline — Prompt
 
+READ FIRST:
+
+00_SYSTEM_BRAIN/000_RUNTIME_ENTRYPOINT.md
+
+---
+
 ## Phase
 
 **PHASE_RF_05_PLUGIN_RUNTIME_BASELINE**

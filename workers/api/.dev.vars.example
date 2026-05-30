@@ -7,6 +7,12 @@ CBV_ALLOWED_ORIGINS=http://localhost:5173
 # local | gas | locked
 CBV_TASK_WRITE_MODE=local
 
+# TASK_GS_01 — existing Google Sheet DB binding:
+# GAS_TASK_API_URL=https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec
+# GAS_TASK_API_TOKEN=
+# CBV_TASK_SHEET_ID=1Jh3gQQKugazSvd24CKZremHjSmTNGrsnYczq4UzK5ZE
+# CBV_TASK_RUNTIME_MODE=google_sheet_existing_db
+
 # RF_12 — connect to real Google Sheet via GAS Web App:
 # CBV_GAS_API_BASE_URL=https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec
 # CBV_TASK_WRITE_MODE=gas

@@ -1,51 +1,105 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { isWorkInboxRoute } from '@/shared/routes/inboxRoutes';
+import { api } from '@/api/client';
 import type { UserContext } from '@/api/contracts';
 import { ROLE_LABELS } from '@/shared/constants';
+import { findModuleByPath } from '@/runtime/moduleRegistry';
+import { useModuleRegistry } from '@/runtime/useModuleRegistry';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { WorkInboxSearchTopBarField } from '@/modules/task/inbox/search/WorkInboxSearchTopBarField';
+import { showFocusRuntimeFeedback } from '@/modules/task/inbox/focusRuntime/focusRuntimeFeedback';
 
 interface TopBarProps {
   user: UserContext;
   onSearchNavigate: (query: string) => void;
+  onLogout?: () => void;
 }
 
-export function TopBar({ user, onSearchNavigate }: TopBarProps) {
-  const [query, setQuery] = useState('');
+export function TopBar({ user, onSearchNavigate, onLogout }: TopBarProps) {
+  const [logoutPending, setLogoutPending] = useState(false);
+  const location = useLocation();
+  const { modules, degraded } = useModuleRegistry(user);
+  const currentModule = findModuleByPath(modules, location.pathname);
 
-  function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-    if (query.trim()) onSearchNavigate(query.trim());
+  async function handleLogout() {
+    if (logoutPending) return;
+    setLogoutPending(true);
+    try {
+      await api.logout();
+      onLogout?.();
+    } finally {
+      setLogoutPending(false);
+    }
   }
 
   return (
-    <header className="flex h-14 shrink-0 items-center gap-4 border-b border-border bg-surface-raised px-4">
+    <header className="operational-topbar">
       <div className="flex items-center gap-2">
-        <span className="text-lg font-bold tracking-tight text-white">CBV</span>
-        <span className="hidden text-sm text-slate-400 lg:inline">Bàn làm việc</span>
+        <span className="operational-topbar-brand">CBV</span>
+        <span className="operational-topbar-subtitle">Control Console</span>
       </div>
 
-      <form onSubmit={handleSearch} className="mx-4 flex flex-1 max-w-xl">
-        <input
-          type="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Tìm theo tên, SĐT, biển số, mã..."
-          className="w-full rounded-md border border-border bg-surface-content px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30"
-        />
-      </form>
+      <div className="mx-4 flex max-w-xl flex-1 flex-col">
+        <WorkInboxSearchTopBarField onLegacySearchNavigate={onSearchNavigate} />
+      </div>
 
-      <div className="flex items-center gap-3 text-sm">
-        <Link
-          to="/"
-          className="rounded-md border border-border/60 bg-surface-overlay px-3 py-1.5 text-slate-300 hover:text-white"
-        >
-          Cảnh báo hôm nay
+      <div className="flex items-center gap-3">
+        {isWorkInboxRoute(location.pathname) ? (
+          <span className="operational-topbar-chip operational-topbar-chip--status">
+            ✓ Việc vận hành
+          </span>
+        ) : (
+          currentModule && (
+            <span className="operational-topbar-chip">
+              {currentModule.icon} {currentModule.moduleName}
+            </span>
+          )
+        )}
+
+        {degraded && (
+          <span className="hidden text-sm font-semibold text-amber-700 md:inline" title="Runtime degraded">
+            ● Degraded
+          </span>
+        )}
+
+        <Link to="/" className="operational-topbar-link">
+          Bàn điều phối
         </Link>
 
+        {isWorkInboxRoute(location.pathname) && (
+          <Link to="/coordination" className="operational-topbar-link operational-topbar-link--compact">
+            ‹ Tới
+          </Link>
+        )}
+
+        <ThemeToggle />
+
         <div className="hidden items-center gap-2 md:flex">
-          <span className="text-slate-400">{user.displayName}</span>
-          <span className="rounded border border-border/60 bg-surface-overlay px-2 py-0.5 text-xs text-slate-300">
-            {ROLE_LABELS[user.role]}
+          <span className="operational-topbar-user" title={user.userId}>
+            {user.displayName || 'Operation 1'}
           </span>
+          <span className="operational-topbar-role">{ROLE_LABELS[user.role] ?? 'Nhân viên'}</span>
+          {user.role === 'ADMIN' ? (
+            <button
+              type="button"
+              className="operational-topbar-admin"
+              onClick={() => showFocusRuntimeFeedback('Chức năng đang chuẩn bị')}
+              title="Quản trị"
+            >
+              ADMIN <span aria-hidden>▾</span>
+            </button>
+          ) : null}
+          {onLogout && (
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={logoutPending}
+              className="btn-ghost !px-3 !py-1.5 text-sm"
+            >
+              {logoutPending ? 'Đang đăng xuất…' : 'Đăng xuất'}
+            </button>
+          )}
         </div>
       </div>
     </header>

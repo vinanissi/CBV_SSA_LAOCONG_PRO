@@ -4,6 +4,9 @@ import type {
   CreateTaskBody,
   FinanceItem,
   HoSoItem,
+  ModuleRegistryEntry,
+  ModulesResponse,
+  ModuleStatusResponse,
   ObservationData,
   PluginsResponse,
   SearchResponse,
@@ -18,6 +21,9 @@ import type {
   UserContext,
 } from './contracts';
 import { createEnvelope, delay } from '@/shared/utils';
+import { LOCAL_MODULE_REGISTRY } from '@/runtime/moduleRegistry';
+import { filterModulesForUser } from '@/runtime/modulePermissions';
+import { getTaskOwnerDisplay } from '@/runtime/userDisplay';
 
 const DEMO = 'Dữ liệu demo — phiên bản local';
 
@@ -330,7 +336,7 @@ export async function getCoordination(): Promise<ApiEnvelope<CoordinationData>> 
     queueId: t.taskId,
     title: t.title,
     status: t.status,
-    assignee: t.owner || undefined,
+    assignee: getTaskOwnerDisplay(t) === 'Chưa giao' ? undefined : getTaskOwnerDisplay(t),
     dueDate: t.dueDate,
     priority: t.priority,
     module: 'TASK',
@@ -482,7 +488,7 @@ export async function search(query: string): Promise<ApiEnvelope<SearchResponse>
       id: t.taskId,
       type: 'TASK',
       title: t.title,
-      subtitle: t.owner || 'Chưa giao',
+      subtitle: getTaskOwnerDisplay(t),
       status: t.status,
       module: 'TASK',
       href: `/tasks/${t.taskId}`,
@@ -531,7 +537,7 @@ const mockEvents: TaskWriteEvent[] = [];
 
 export async function getTaskWriteCapability(): Promise<ApiEnvelope<TaskWriteCapability>> {
   await delay(100);
-  const canCreate = MOCK_USER.role === 'ADMIN' || MOCK_USER.role === 'MANAGER';
+  const canCreate = MOCK_USER.role === 'ADMIN' || MOCK_USER.role === 'MANAGER' || MOCK_USER.role === 'USER' || MOCK_USER.role === 'STAFF';
   return createEnvelope({
     writeMode: 'ENABLED',
     adapterStatus: 'LOCAL',
@@ -591,6 +597,55 @@ export async function createTask(body: CreateTaskBody): Promise<ApiEnvelope<Task
   return createEnvelope({ task, event }, { warnings: [DEMO] });
 }
 
+export async function createWorkInboxUserTask(
+  body: import('@/modules/task/inbox/create/workInboxCreateTaskTypes').WorkInboxCreateTaskRequest,
+): Promise<
+  ApiEnvelope<{
+    task: TaskDetail;
+    taskPatch?: TaskDetail;
+    timelineEvent?: { eventType: string } | null;
+    auditEvent?: { action: string } | null;
+    refreshPolicy?: 'SELECTIVE';
+  }>
+> {
+  await delay(200);
+  if (MOCK_USER.role === 'VIEW_ONLY') {
+    return createEnvelope(null as never, { errors: ['Không có quyền tạo việc'], ok: false, status: 'FAIL' });
+  }
+  if (MOCK_USER.role !== 'ADMIN' && MOCK_USER.role !== 'MANAGER' && MOCK_USER.role !== 'USER' && MOCK_USER.role !== 'STAFF') {
+    return createEnvelope(null as never, { errors: ['Không có quyền tạo việc'], ok: false, status: 'FAIL' });
+  }
+  if (!body.title?.trim()) {
+    return createEnvelope(null as never, { errors: ['title là bắt buộc'], ok: false, status: 'FAIL' });
+  }
+  const taskId = `TK_MOCK_${Date.now().toString(36).toUpperCase()}`;
+  const task: TaskDetail = {
+    taskId,
+    title: body.title.trim(),
+    description: body.description ?? '',
+    status: 'NEW',
+    priority: body.priority === 'HIGH' ? 'HIGH' : body.priority === 'LOW' ? 'LOW' : 'MEDIUM',
+    owner: MOCK_USER.displayName,
+    ownerId: MOCK_USER.userId,
+    dueDate: body.dueDate ?? '',
+    href: `/inbox/${taskId}`,
+    permissionAllowed: true,
+    isMine: true,
+    module: 'TASK',
+    source: 'work_inbox_user_create',
+    timeline: [],
+    files: [],
+  };
+  mockWritten.set(taskId, task);
+  return createEnvelope({
+    task,
+    taskPatch: task,
+    timelineEvent: { eventType: 'TASK_CREATED_BY_USER' },
+    auditEvent: { action: 'ACTION_USER_CREATE_TASK' },
+    refreshPolicy: 'SELECTIVE',
+  }, { warnings: [DEMO] });
+}
+
 export async function updateTask(taskId: string, body: UpdateTaskBody): Promise<ApiEnvelope<TaskWriteResult>> {
   await delay(200);
   const existing = mockWritten.get(taskId) ?? TASKS.find((t) => t.taskId === taskId);
@@ -630,6 +685,33 @@ export async function updateTask(taskId: string, body: UpdateTaskBody): Promise<
   return createEnvelope({ task: updated, event }, { warnings: [DEMO] });
 }
 
+export async function getModules(): Promise<ApiEnvelope<ModulesResponse>> {
+  await delay();
+  const user = await getCurrentUser();
+  const modules = user.ok && user.data ? filterModulesForUser(user.data, LOCAL_MODULE_REGISTRY) : LOCAL_MODULE_REGISTRY;
+  return createEnvelope({ modules, demoLabel: DEMO }, { warnings: [DEMO] });
+}
+
+export async function getModule(moduleId: string): Promise<ApiEnvelope<ModuleRegistryEntry>> {
+  await delay();
+  const mod = LOCAL_MODULE_REGISTRY.find((m) => m.moduleId === moduleId);
+  if (!mod) return createEnvelope(null as unknown as ModuleRegistryEntry, { errors: ['Không tìm thấy mô-đun'], ok: false, status: 'FAIL' });
+  return createEnvelope(mod, { warnings: [DEMO] });
+}
+
+export async function getModulesStatus(): Promise<ApiEnvelope<ModuleStatusResponse>> {
+  await delay();
+  return createEnvelope({
+    statuses: [
+      { moduleId: 'TASK', connected: false, statusLabel: 'Mock', degraded: false },
+      { moduleId: 'HO_SO', connected: true, statusLabel: 'React OK', degraded: false },
+      { moduleId: 'FINANCE', connected: true, statusLabel: 'React OK', degraded: false },
+    ],
+    degraded: false,
+    checkedAt: new Date().toISOString(),
+  }, { warnings: [DEMO] });
+}
+
 export const mockApi = {
   getCurrentUser,
   getTodaySummary,
@@ -640,8 +722,12 @@ export const mockApi = {
   getCoordination,
   getObservation,
   getPlugins,
+  getModules,
+  getModule,
+  getModulesStatus,
   search,
   getTaskWriteCapability,
   createTask,
+  createWorkInboxUserTask,
   updateTask,
 };

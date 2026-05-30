@@ -1,5 +1,11 @@
 ## PHASE 80A — HOME_ALERT_SHEET_DRIVEN_RUNTIME (PROMPT LOG)
 
+READ FIRST:
+
+00_SYSTEM_BRAIN/000_RUNTIME_ENTRYPOINT.md
+
+---
+
 Bạn đang làm việc trong repo `CBV_SSA_LAOCONG_PRO`, branch hiện tại của TASK+FIN.
 
 Áp dụng tuyệt đối CBV Operational Ecosystem Standard V1: runtime-first, memory-first, append-only, manual-first → auto-later.

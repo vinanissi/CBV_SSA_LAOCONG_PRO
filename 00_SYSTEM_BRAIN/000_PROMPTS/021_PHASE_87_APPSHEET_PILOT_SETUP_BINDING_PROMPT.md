@@ -1,5 +1,11 @@
 # PHASE 87 — APPSHEET PILOT SETUP BINDING (saved prompt)
 
+READ FIRST:
+
+00_SYSTEM_BRAIN/000_RUNTIME_ENTRYPOINT.md
+
+---
+
 Saved: 2026-05-13  
 Branch: `phase/from-v2.4.1-TASK-FIN`
 

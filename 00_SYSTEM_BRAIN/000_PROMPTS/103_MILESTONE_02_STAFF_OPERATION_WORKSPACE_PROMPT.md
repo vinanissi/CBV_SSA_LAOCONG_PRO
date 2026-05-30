@@ -1,5 +1,11 @@
 # 103 — Milestone 02 Staff Operation Workspace (prompt archive)
 
+READ FIRST:
+
+00_SYSTEM_BRAIN/000_RUNTIME_ENTRYPOINT.md
+
+---
+
 **Append-only prompt capture** — source: user Cursor Agent request, branch `phase/from-v2.4.1-TASK-FIN`, date 2026-05-14.
 
 ## Scope summary

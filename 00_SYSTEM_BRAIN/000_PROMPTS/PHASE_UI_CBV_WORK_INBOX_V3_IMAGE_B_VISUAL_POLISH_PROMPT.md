@@ -1,0 +1,11 @@
+# PHASE_UI_CBV_WORK_INBOX_V3_IMAGE_B_VISUAL_POLISH
+
+READ FIRST:
+
+00_SYSTEM_BRAIN/000_RUNTIME_ENTRYPOINT.md
+
+---
+
+Polish Work Inbox V3 UI to match image B after 3-region layout fix.
+
+**Completed:** see `000_REPORTS/PHASE_UI_CBV_WORK_INBOX_V3_IMAGE_B_VISUAL_POLISH_REPORT.md`

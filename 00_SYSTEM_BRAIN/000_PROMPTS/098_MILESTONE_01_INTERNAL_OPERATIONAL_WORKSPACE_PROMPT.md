@@ -1,5 +1,11 @@
 # 098 — Milestone 01 Internal Operational Workspace (prompt archive)
 
+READ FIRST:
+
+00_SYSTEM_BRAIN/000_RUNTIME_ENTRYPOINT.md
+
+---
+
 Append-only record of the operator prompt for **MILESTONE_01 — INTERNAL OPERATIONAL WORKSPACE** (Phases 101–106).
 
 - Target branch: `phase/from-v2.4.1-TASK-FIN`

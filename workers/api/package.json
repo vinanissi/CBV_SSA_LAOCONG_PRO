@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "wrangler dev",
     "typecheck": "tsc --noEmit",
+    "test:permissions": "npx --yes tsx src/auth/taskPermissions.test.ts",
     "deploy:dryrun": "wrangler deploy --dry-run"
   },
   "devDependencies": {

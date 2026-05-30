@@ -1,5 +1,11 @@
 # PHASE_RF_07 — Real Usage UAT and Runtime Lock — Prompt
 
+READ FIRST:
+
+00_SYSTEM_BRAIN/000_RUNTIME_ENTRYPOINT.md
+
+---
+
 ## Phase
 
 **PHASE_RF_07_REAL_USAGE_UAT_AND_RUNTIME_LOCK** — no new features; stabilization + contract freeze.

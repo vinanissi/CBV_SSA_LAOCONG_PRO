@@ -1,8 +1,10 @@
 import { getEnv } from './env';
 
 const CORS_HEADERS = {
-  'Access-Control-Allow-Methods': 'GET, POST, PATCH, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Accept, x-cbv-role',
+  'Access-Control-Allow-Methods': 'GET, POST, PATCH, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers':
+    'Content-Type, Accept, Authorization, x-cbv-role, x-cbv-session, X-CBV-Trace-Id, x-cbv-trace-id',
+  'Access-Control-Expose-Headers': 'X-CBV-Trace-Id, x-cbv-trace-id',
   'Access-Control-Max-Age': '86400',
 };
 

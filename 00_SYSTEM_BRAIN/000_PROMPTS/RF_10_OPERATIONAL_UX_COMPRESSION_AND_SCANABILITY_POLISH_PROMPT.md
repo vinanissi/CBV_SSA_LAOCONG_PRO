@@ -1,5 +1,11 @@
 # RF_10 — Operational UX Compression and Scanability Polish — Prompt (Archive)
 
+READ FIRST:
+
+00_SYSTEM_BRAIN/000_RUNTIME_ENTRYPOINT.md
+
+---
+
 > Append-only. Phase: **RF_10_OPERATIONAL_UX_COMPRESSION_AND_SCANABILITY_POLISH**
 
 ## Goal

@@ -1,5 +1,11 @@
 # 109 — Milestone 05 — Guided SOP Runtime (Prompt archive)
 
+READ FIRST:
+
+00_SYSTEM_BRAIN/000_RUNTIME_ENTRYPOINT.md
+
+---
+
 **Date:** 2026-05-14  
 **Branch:** `phase/from-v2.4.1-TASK-FIN`  
 **Standards:** CBV Operational Ecosystem Standard V1 · CBV_TCS_V1 (`00_SYSTEM_BRAIN/000_TEST_CONSOLE/CBV_TCS_V1/docs/CBV_TCS_V1_STANDARD.md`)

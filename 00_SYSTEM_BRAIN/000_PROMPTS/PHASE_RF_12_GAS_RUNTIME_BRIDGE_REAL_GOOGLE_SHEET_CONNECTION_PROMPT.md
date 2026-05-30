@@ -1,5 +1,11 @@
 # PHASE_RF_12 — GAS Runtime Bridge Real Google Sheet Connection — Prompt
 
+READ FIRST:
+
+00_SYSTEM_BRAIN/000_RUNTIME_ENTRYPOINT.md
+
+---
+
 ## Phase metadata
 
 | Field | Value |

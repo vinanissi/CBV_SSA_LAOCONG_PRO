@@ -43,7 +43,14 @@ export function OperationalHome({ user }: OperationalHomeProps) {
       try {
         const res = await api.getTodaySummary();
         if (!res.ok) {
-          if (!cancelled) setError(res.errors[0] ?? 'Không tải được dữ liệu hôm nay');
+          if (!cancelled) {
+            const msg = res.errors[0] ?? 'Không tải được dữ liệu hôm nay';
+            setError(
+              res.warnings?.some((w) => w.includes('HOME_ALERT_MOCK_BLOCKED') || w.includes('NOT_CONFIGURED'))
+                ? `${msg} — kiểm tra GAS_TASK_API_URL và deploy HOME_ALERT runtime`
+                : msg,
+            );
+          }
           return;
         }
         // Ensure USER_DIRECTORY is hydrated so owner USER_IDs resolve to display names.

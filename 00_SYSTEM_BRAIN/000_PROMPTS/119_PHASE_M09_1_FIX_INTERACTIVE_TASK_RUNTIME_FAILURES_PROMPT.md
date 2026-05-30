@@ -1,5 +1,11 @@
 # Phase M09.1 — Fix Interactive Task Runtime Failures (Drive report 121)
 
+READ FIRST:
+
+00_SYSTEM_BRAIN/000_RUNTIME_ENTRYPOINT.md
+
+---
+
 **Branch:** `phase/from-v2.4.1-TASK-FIN`  
 **Scope:** Fix only `M09_ROWKEY_MISSING_SAFE_DISABLED` and `M09_SOP_ACTION` (no envelope fake, no new phase, no UI redesign).
 

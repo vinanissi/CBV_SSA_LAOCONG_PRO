@@ -1,5 +1,11 @@
 # HOTFIX PHASE 89.1 — WebApp doGet Dispatcher Binding Fix — Prompt
 
+READ FIRST:
+
+00_SYSTEM_BRAIN/000_RUNTIME_ENTRYPOINT.md
+
+---
+
 ## Issue
 
 Web App URL with route query:

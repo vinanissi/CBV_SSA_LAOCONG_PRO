@@ -1,6 +1,7 @@
 import type { UserContext, UserRole } from '../contracts';
+import { parseSessionHeader, sessionToUserContext } from './session';
 
-const ALLOWED_ROLES: UserRole[] = ['ADMIN', 'MANAGER', 'STAFF', 'FINANCE', 'HO_SO', 'VIEW_ONLY'];
+const ALLOWED_ROLES: UserRole[] = ['ADMIN', 'MANAGER', 'STAFF', 'USER', 'FINANCE', 'HO_SO', 'VIEW_ONLY'];
 
 const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
   ADMIN: [
@@ -31,7 +32,8 @@ const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     'PLUGIN_VIEW',
     'SEARCH',
   ],
-  STAFF: ['TASK_VIEW', 'TASK_UPDATE_OWN', 'SEARCH'],
+  STAFF: ['TASK_VIEW', 'TASK_UPDATE_OWN', 'CREATE_OWN_TASK', 'SEARCH'],
+  USER: ['TASK_VIEW', 'CREATE_OWN_TASK', 'TASK_UPDATE_OWN', 'SEARCH'],
   FINANCE: ['TASK_VIEW', 'FINANCE_VIEW', 'SEARCH'],
   HO_SO: ['TASK_VIEW', 'HO_SO_VIEW', 'SEARCH'],
   VIEW_ONLY: ['TASK_VIEW', 'FINANCE_VIEW', 'HO_SO_VIEW', 'OBSERVATION_VIEW', 'PLUGIN_VIEW', 'SEARCH'],
@@ -41,6 +43,7 @@ const ROLE_PROFILES: Record<UserRole, { userId: string; displayName: string; ema
   ADMIN: { userId: 'USR-LOCAL-ADMIN', displayName: 'Quản trị Local', email: 'admin.local@cbv.demo' },
   MANAGER: { userId: 'USR-LOCAL-MGR', displayName: 'Quản lý Local', email: 'manager.local@cbv.demo' },
   STAFF: { userId: 'USR-LOCAL-STAFF', displayName: 'Nhân viên Local', email: 'staff.local@cbv.demo' },
+  USER: { userId: 'USR-LOCAL-USER', displayName: 'User Pilot', email: 'user.local@cbv.demo' },
   FINANCE: { userId: 'USR-LOCAL-FIN', displayName: 'Tài chính Local', email: 'finance.local@cbv.demo' },
   HO_SO: { userId: 'USR-LOCAL-HS', displayName: 'Hồ sơ Local', email: 'hoso.local@cbv.demo' },
   VIEW_ONLY: { userId: 'USR-LOCAL-VIEW', displayName: 'Chỉ xem Local', email: 'view.local@cbv.demo' },
@@ -53,6 +56,9 @@ export function parseRoleHeader(request: Request): UserRole | null {
 }
 
 export function resolveUserContext(request: Request): UserContext {
+  const session = parseSessionHeader(request);
+  if (session) return sessionToUserContext(session);
+
   const headerRole = parseRoleHeader(request);
   const role: UserRole = headerRole ?? 'MANAGER';
   const profile = ROLE_PROFILES[role];

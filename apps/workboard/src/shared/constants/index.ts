@@ -21,6 +21,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   ADMIN: 'Quản trị',
   MANAGER: 'Quản lý',
   STAFF: 'Nhân viên',
+  USER: 'User',
   FINANCE: 'Tài chính',
   HO_SO: 'Hồ sơ',
   VIEW_ONLY: 'Chỉ xem',
@@ -41,7 +42,7 @@ export const TASK_FILTERS = [
 ];
 
 export const QUICK_BAR_ACTIONS = [
-  { id: 'add-task', label: '+ Việc', href: '/tasks', mode: 'NAVIGATE' as const },
+  { id: 'add-task', label: '+ Tạo việc', href: '/inbox', mode: 'NAVIGATE' as const },
   { id: 'add-hoso', label: '+ Hồ sơ', href: '/hoso', mode: 'NAVIGATE' as const },
   { id: 'upload', label: 'Tải lên', href: '', mode: 'EXECUTION_LOCKED' as const },
   { id: 'search', label: 'Tìm kiếm', href: '/search', mode: 'NAVIGATE' as const },

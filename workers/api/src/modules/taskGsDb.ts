@@ -1,4 +1,4 @@
-import type { Env } from '../contracts';
+import type { Env, TaskItem } from '../contracts';
 import {
   gsAddTaskComment,
   gsAssignTask,
@@ -12,25 +12,23 @@ import {
   isTaskDbRuntimeConfigured,
   isTaskDbRuntimeMode,
   type SnapshotFilters,
+  type TaskWorkspaceSnapshot,
 } from '../adapters/googleSheetTaskDbAdapter';
 import { resolveUserContext, canViewModule } from '../auth/userContext';
-import { canCreateTask, canAssignTask } from '../auth/taskPermissions';
+import {
+  canAssignTask,
+  canCommentTask,
+  canCompleteTask,
+  canCreateTask,
+  canUpdateTask,
+  canUserSeeTask,
+  toTaskPermissionFields,
+} from '../auth/taskPermissions';
 import { gsGetUserDirectory, type AuthGasUser } from '../adapters/googleSheetAuthAdapter';
 import { createEnvelope, createTraceId } from '../utils/envelope';
 import { forbidden, notFound, badRequest } from '../utils/errors';
-import type { CreateTaskBody } from '../contracts';
+import type { CreateTaskBody, TaskDetail } from '../contracts';
 
-/**
- * Role-agnostic directory enrichment for the workspace snapshot.
- *
- * The GAS snapshot ships `displayOwner` baked to the raw USER_ID (e.g. "USR_008")
- * and carries no directory map. ADMIN/MANAGER hydrate names via the admin-only
- * `/api/users` endpoint, but OPERATOR/STAFF get 403 there — so their cards keep
- * rendering raw codes. Embedding a minimal `userDisplayMap` + `usersById` in the
- * snapshot lets every role resolve names without any privileged call.
- *
- * Short in-memory cache keeps this rate-limit safe (one extra GAS call / TTL window).
- */
 const USER_DIRECTORY_TTL_MS = 5 * 60 * 1000;
 let userDirectoryCache: { users: AuthGasUser[]; expiresAt: number } | null = null;
 
@@ -95,6 +93,111 @@ function taskDbErrorEnvelope(result: { code: string; message: string; retryable:
   });
 }
 
+export function taskDbRuntimeRequired(env: Env, traceId?: string) {
+  if (!isTaskDbRuntimeMode(env)) {
+    return createEnvelope<null>(null, {
+      ok: false,
+      status: 'FAIL',
+      errors: ['Task runtime yêu cầu google_sheet_existing_db — không dùng legacy TASKS write'],
+      warnings: ['TASK_RUNTIME_LEGACY_WRITE_BLOCKED'],
+      traceId: traceId ?? createTraceId(),
+    });
+  }
+  if (!isTaskDbRuntimeConfigured(env)) {
+    return taskDbErrorEnvelope({
+      code: 'GOOGLE_SHEET_RUNTIME_NOT_CONFIGURED',
+      message: 'Google Sheet runtime chưa cấu hình.',
+      retryable: false,
+      traceId,
+    });
+  }
+  return null;
+}
+
+function sanitizeTaskForUser(user: ReturnType<typeof resolveUserContext>, task: TaskItem): TaskItem {
+  const fields = toTaskPermissionFields(task);
+  const allowed = canUserSeeTask(user, fields);
+  return {
+    ...task,
+    permissionAllowed: allowed,
+    isMine: task.ownerId === user.userId || task.owner === user.displayName,
+  };
+}
+
+function recomputeCounts(tasks: TaskItem[]): TaskWorkspaceSnapshot['counts'] {
+  const today = new Date().toISOString().slice(0, 10);
+  const counts = {
+    total: tasks.length,
+    open: 0,
+    inProgress: 0,
+    blocked: 0,
+    done: 0,
+    dueToday: 0,
+    overdue: 0,
+    noOwner: 0,
+  };
+  for (const t of tasks) {
+    const st = String(t.status || '').toUpperCase();
+    if (st === 'DONE') counts.done++;
+    else counts.open++;
+    if (st === 'IN_PROGRESS') counts.inProgress++;
+    if (st === 'WAITING' || st === 'WAITING_APPROVAL' || st === 'BLOCKED') counts.blocked++;
+    if (!t.ownerId?.trim()) counts.noOwner++;
+    if (t.dueDate === today && st !== 'DONE') counts.dueToday++;
+    if (t.isOverdue || (t.dueDate && t.dueDate < today && st !== 'DONE')) counts.overdue++;
+  }
+  return counts;
+}
+
+function filterSnapshotForUser(
+  snapshot: TaskWorkspaceSnapshot,
+  user: ReturnType<typeof resolveUserContext>,
+): TaskWorkspaceSnapshot {
+  const filterList = (list: TaskItem[]) =>
+    list.filter((t) => canUserSeeTask(user, toTaskPermissionFields(t))).map((t) => sanitizeTaskForUser(user, t));
+
+  const tasks = filterList(snapshot.tasks ?? []);
+  return {
+    ...snapshot,
+    tasks,
+    blockedTasks: filterList(snapshot.blockedTasks ?? []),
+    dueTasks: filterList(snapshot.dueTasks ?? []),
+    overdueTasks: filterList(snapshot.overdueTasks ?? []),
+    counts: recomputeCounts(tasks),
+  };
+}
+
+type LoadedTask =
+  | { ok: true; task: TaskDetail }
+  | { ok: false; envelope: ReturnType<typeof forbidden> };
+
+async function loadTaskForPermissionCheck(
+  env: Env,
+  user: ReturnType<typeof resolveUserContext>,
+  taskId: string,
+): Promise<LoadedTask> {
+  const result = await gsGetTaskDetail(env, user, taskId);
+  if (!result.ok) {
+    return {
+      ok: false,
+      envelope: taskDbErrorEnvelope({
+        code: result.code,
+        message: result.message,
+        retryable: result.retryable,
+        traceId: result.traceId,
+      }) as ReturnType<typeof forbidden>,
+    };
+  }
+  if (!result.data) {
+    return { ok: false, envelope: notFound('Không tìm thấy việc') };
+  }
+  const perm = toTaskPermissionFields(result.data);
+  if (!canUserSeeTask(user, perm)) {
+    return { ok: false, envelope: forbidden('Không có quyền xem việc này') };
+  }
+  return { ok: true, task: { ...result.data, permissionAllowed: true } };
+}
+
 export async function handleTaskDbHealth(env: Env) {
   if (!isTaskDbRuntimeConfigured(env)) {
     return taskDbErrorEnvelope({
@@ -126,13 +229,8 @@ export async function handleTaskWorkspaceSnapshot(request: Request, env: Env, ur
   const user = resolveUserContext(request);
   if (!canViewModule(user, 'TASK')) return forbidden('Không có quyền xem việc');
 
-  if (!isTaskDbRuntimeConfigured(env)) {
-    return taskDbErrorEnvelope({
-      code: 'GOOGLE_SHEET_RUNTIME_NOT_CONFIGURED',
-      message: 'Google Sheet runtime chưa cấu hình.',
-      retryable: false,
-    });
-  }
+  const blocked = taskDbRuntimeRequired(env);
+  if (blocked) return blocked;
 
   const filters: SnapshotFilters = {};
   const status = url.searchParams.get('status');
@@ -154,26 +252,23 @@ export async function handleTaskWorkspaceSnapshot(request: Request, env: Env, ur
   const warnings = [...result.warnings];
   if (result.data.schemaWarnings?.length) warnings.push(...result.data.schemaWarnings);
   if (isTaskDbRuntimeMode(env)) warnings.push('TASK_GS_03 — performance hardening runtime');
+  warnings.push('TASK_SECURITY_ROW_FILTER — snapshot filtered by canUserSeeTask');
   if (result.workerCacheHit && !warnings.some((w) => w.includes('Worker snapshot cache hit'))) {
     warnings.push('Worker snapshot cache hit');
   }
-  const gasMs = result.data.runtime?.gasDurationMs ?? result.data.runtime?.latencyMs ?? 0;
-  if (gasMs >= 2000 && !result.data.runtime?.cacheHit && !result.workerCacheHit) {
-    warnings.push('GOOGLE_SHEET_RUNTIME_SLOW');
-  }
+
+  const filtered = filterSnapshotForUser(result.data, user);
 
   const data: Record<string, unknown> = {
-    ...result.data,
+    ...filtered,
     runtime: {
-      ...result.data.runtime,
+      ...filtered.runtime,
       connected: true,
       workerLatencyMs,
       workerCacheHit: result.workerCacheHit ?? false,
     },
   };
 
-  // Role-agnostic display-name enrichment: attach a directory map so OPERATOR/STAFF
-  // (blocked from /api/users) can resolve owner/assignee names instead of raw USR_* codes.
   const existingMap = (result.data as { userDisplayMap?: Record<string, string> }).userDisplayMap;
   if (!existingMap || Object.keys(existingMap).length === 0) {
     try {
@@ -197,19 +292,13 @@ export async function handleTaskDbDetail(request: Request, env: Env, taskId: str
   const user = resolveUserContext(request);
   if (!canViewModule(user, 'TASK')) return forbidden('Không có quyền xem chi tiết việc');
 
-  if (!isTaskDbRuntimeConfigured(env)) {
-    return taskDbErrorEnvelope({
-      code: 'GOOGLE_SHEET_RUNTIME_NOT_CONFIGURED',
-      message: 'Google Sheet runtime chưa cấu hình.',
-      retryable: false,
-    });
-  }
+  const blocked = taskDbRuntimeRequired(env);
+  if (blocked) return blocked;
 
-  const result = await gsGetTaskDetail(env, user, taskId);
-  if (!result.ok) return taskDbErrorEnvelope(result);
-  if (!result.data) return notFound('Không tìm thấy việc');
+  const loaded = await loadTaskForPermissionCheck(env, user, taskId);
+  if (!loaded.ok) return loaded.envelope;
 
-  return createEnvelope(result.data, { warnings: result.warnings, traceId: result.traceId });
+  return createEnvelope(loaded.task, { warnings: ['TASK_SECURITY_ROW_FILTER'] });
 }
 
 export async function handleTaskDbCreate(request: Request, env: Env) {
@@ -217,9 +306,8 @@ export async function handleTaskDbCreate(request: Request, env: Env) {
   const traceId = createTraceId();
   if (!canCreateTask(user)) return forbidden('Không có quyền tạo việc');
 
-  if (!isTaskDbRuntimeConfigured(env)) {
-    return taskDbErrorEnvelope({ code: 'GOOGLE_SHEET_RUNTIME_NOT_CONFIGURED', message: 'Google Sheet runtime chưa cấu hình.', retryable: false, traceId });
-  }
+  const blocked = taskDbRuntimeRequired(env, traceId);
+  if (blocked) return blocked;
 
   let body: CreateTaskBody;
   try {
@@ -237,8 +325,12 @@ export async function handleTaskDbCreate(request: Request, env: Env) {
   const result = await gsCreateTask(env, body, user, traceId);
   if (!result.ok) return taskDbErrorEnvelope({ ...result, traceId: result.traceId ?? traceId });
 
+  const task = result.data.task
+    ? { ...result.data.task, permissionAllowed: canUserSeeTask(user, toTaskPermissionFields(result.data.task)) }
+    : result.data.task;
+
   return createEnvelope(
-    { task: result.data.task, log: result.data.log },
+    { task, log: result.data.log },
     { warnings: ['Ghi TASK_MAIN + TASK_UPDATE_LOG — TASK_GS_01', ...result.warnings], traceId: result.traceId },
   );
 }
@@ -247,8 +339,14 @@ export async function handleTaskDbStatus(request: Request, env: Env, taskId: str
   const user = resolveUserContext(request);
   const traceId = createTraceId();
 
-  if (!isTaskDbRuntimeConfigured(env)) {
-    return taskDbErrorEnvelope({ code: 'GOOGLE_SHEET_RUNTIME_NOT_CONFIGURED', message: 'Google Sheet runtime chưa cấu hình.', retryable: false, traceId });
+  const blocked = taskDbRuntimeRequired(env, traceId);
+  if (blocked) return blocked;
+
+  const loaded = await loadTaskForPermissionCheck(env, user, taskId);
+  if (!loaded.ok) return loaded.envelope;
+
+  if (!canUpdateTask(user, toTaskPermissionFields(loaded.task))) {
+    return forbidden('Không có quyền cập nhật trạng thái việc này');
   }
 
   let body: { status?: string; note?: string };
@@ -265,9 +363,19 @@ export async function handleTaskDbStatus(request: Request, env: Env, taskId: str
   const result = await gsUpdateTaskStatus(env, taskId, body.status, user, body.note, traceId);
   if (!result.ok) return taskDbErrorEnvelope({ ...result, traceId: result.traceId ?? traceId });
 
+  const task = result.data.task
+    ? sanitizeTaskForUser(user, result.data.task as TaskItem)
+    : result.data.task;
+
   return createEnvelope(
-    { task: result.data.task, log: result.data.log },
-    { warnings: result.warnings, traceId: result.traceId },
+    { task, log: result.data.log },
+    {
+      warnings: [
+        ...result.warnings,
+        'HANDOFF_STATUS_ONLY — chuyển xử lý qua status không đổi OWNER_ID; dùng POST /assign để giao việc',
+      ],
+      traceId: result.traceId,
+    },
   );
 }
 
@@ -275,10 +383,13 @@ export async function handleTaskDbAssign(request: Request, env: Env, taskId: str
   const user = resolveUserContext(request);
   const traceId = createTraceId();
 
+  const blocked = taskDbRuntimeRequired(env, traceId);
+  if (blocked) return blocked;
+
   if (!canAssignTask(user)) return forbidden('Không có quyền giao việc');
-  if (!isTaskDbRuntimeConfigured(env)) {
-    return taskDbErrorEnvelope({ code: 'GOOGLE_SHEET_RUNTIME_NOT_CONFIGURED', message: 'Google Sheet runtime chưa cấu hình.', retryable: false, traceId });
-  }
+
+  const loaded = await loadTaskForPermissionCheck(env, user, taskId);
+  if (!loaded.ok) return loaded.envelope;
 
   let body: { assignee?: string; note?: string };
   try {
@@ -294,15 +405,25 @@ export async function handleTaskDbAssign(request: Request, env: Env, taskId: str
   const result = await gsAssignTask(env, taskId, body.assignee, user, body.note, traceId);
   if (!result.ok) return taskDbErrorEnvelope({ ...result, traceId: result.traceId ?? traceId });
 
-  return createEnvelope({ task: result.data.task, log: result.data.log }, { warnings: result.warnings, traceId: result.traceId });
+  const task = result.data.task
+    ? sanitizeTaskForUser(user, result.data.task as TaskItem)
+    : result.data.task;
+
+  return createEnvelope({ task, log: result.data.log }, { warnings: result.warnings, traceId: result.traceId });
 }
 
 export async function handleTaskDbComment(request: Request, env: Env, taskId: string) {
   const user = resolveUserContext(request);
   const traceId = createTraceId();
 
-  if (!isTaskDbRuntimeConfigured(env)) {
-    return taskDbErrorEnvelope({ code: 'GOOGLE_SHEET_RUNTIME_NOT_CONFIGURED', message: 'Google Sheet runtime chưa cấu hình.', retryable: false, traceId });
+  const blocked = taskDbRuntimeRequired(env, traceId);
+  if (blocked) return blocked;
+
+  const loaded = await loadTaskForPermissionCheck(env, user, taskId);
+  if (!loaded.ok) return loaded.envelope;
+
+  if (!canCommentTask(user, toTaskPermissionFields(loaded.task))) {
+    return forbidden('Không có quyền ghi chú việc này');
   }
 
   let body: { comment?: string };
@@ -326,8 +447,14 @@ export async function handleTaskDbComplete(request: Request, env: Env, taskId: s
   const user = resolveUserContext(request);
   const traceId = createTraceId();
 
-  if (!isTaskDbRuntimeConfigured(env)) {
-    return taskDbErrorEnvelope({ code: 'GOOGLE_SHEET_RUNTIME_NOT_CONFIGURED', message: 'Google Sheet runtime chưa cấu hình.', retryable: false, traceId });
+  const blocked = taskDbRuntimeRequired(env, traceId);
+  if (blocked) return blocked;
+
+  const loaded = await loadTaskForPermissionCheck(env, user, taskId);
+  if (!loaded.ok) return loaded.envelope;
+
+  if (!canCompleteTask(user, toTaskPermissionFields(loaded.task))) {
+    return forbidden('Không có quyền hoàn tất việc này');
   }
 
   let body: { note?: string } = {};
@@ -341,7 +468,11 @@ export async function handleTaskDbComplete(request: Request, env: Env, taskId: s
   const result = await gsCompleteTask(env, taskId, user, body.note, traceId);
   if (!result.ok) return taskDbErrorEnvelope({ ...result, traceId: result.traceId ?? traceId });
 
-  return createEnvelope({ task: result.data.task, log: result.data.log }, { warnings: result.warnings, traceId: result.traceId });
+  const task = result.data.task
+    ? sanitizeTaskForUser(user, result.data.task as TaskItem)
+    : result.data.task;
+
+  return createEnvelope({ task, log: result.data.log }, { warnings: result.warnings, traceId: result.traceId });
 }
 
 export { isTaskDbRuntimeConfigured, isTaskDbRuntimeMode };

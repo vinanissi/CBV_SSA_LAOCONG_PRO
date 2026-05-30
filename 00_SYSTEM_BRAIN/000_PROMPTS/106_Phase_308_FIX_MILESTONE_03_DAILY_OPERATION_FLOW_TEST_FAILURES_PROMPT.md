@@ -1,5 +1,11 @@
 # 106 — Phase 308 FIX MILESTONE 03 DAILY OPERATION FLOW TEST FAILURES — PROMPT (append-only)
 
+READ FIRST:
+
+00_SYSTEM_BRAIN/000_RUNTIME_ENTRYPOINT.md
+
+---
+
 **Date:** 2026-05-14  
 **Branch:** `phase/from-v2.4.1-TASK-FIN`  
 

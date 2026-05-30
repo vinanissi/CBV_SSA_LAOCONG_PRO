@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { api } from '@/api/client';
+import { isWorkInboxRoute } from '@/shared/routes/inboxRoutes';
 
 export interface FocusItem {
   id: string;
@@ -12,10 +13,17 @@ export interface FocusItem {
 
 export function FocusStrip() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const onTasksRoute = isWorkInboxRoute(location.pathname);
   const [items, setItems] = useState<FocusItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (onTasksRoute) {
+      setLoading(false);
+      return;
+    }
+
     let active = true;
     Promise.all([api.getTodaySummary(), api.getCoordination()])
       .then(([todayRes, coordRes]) => {
@@ -29,6 +37,7 @@ export function FocusStrip() {
           (f) => f.warnings.some((w) => w.includes('xác nhận') || w.includes('Chờ')),
         ).length;
         const unassigned = coordRes.ok && coordRes.data ? coordRes.data.unassigned.length : 0;
+        const showUnassigned = coordRes.ok && coordRes.data;
 
         setItems([
           {
@@ -52,13 +61,17 @@ export function FocusStrip() {
             count: pendingConfirm || today.pendingFinance.length,
             active: today.pendingFinance.length > 0,
           },
-          {
-            id: 'unassigned',
-            label: `${unassigned} việc chưa phân công`,
-            href: '/coordination',
-            count: unassigned,
-            active: unassigned > 0,
-          },
+          ...(showUnassigned
+            ? [
+                {
+                  id: 'unassigned',
+                  label: `${unassigned} việc chưa phân công`,
+                  href: '/coordination',
+                  count: unassigned,
+                  active: unassigned > 0,
+                },
+              ]
+            : []),
         ]);
       })
       .finally(() => {
@@ -68,7 +81,11 @@ export function FocusStrip() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [onTasksRoute]);
+
+  if (onTasksRoute) {
+    return null;
+  }
 
   if (loading) {
     return (

@@ -1,5 +1,11 @@
 # Phase M09.2 — Focus Operation UX Upgrade (within M09)
 
+READ FIRST:
+
+00_SYSTEM_BRAIN/000_RUNTIME_ENTRYPOINT.md
+
+---
+
 **Branch:** `phase/from-v2.4.1-TASK-FIN`  
 **Goal:** Upgrade `/workspace/task-runtime` from link hub to operator-centric **Focus Operation Runtime** — no M10, no automation, no production writes.
 

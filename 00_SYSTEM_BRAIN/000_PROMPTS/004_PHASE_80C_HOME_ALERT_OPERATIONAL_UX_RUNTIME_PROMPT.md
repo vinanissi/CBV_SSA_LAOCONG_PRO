@@ -1,5 +1,11 @@
 ## PHASE 80C — HOME_ALERT_OPERATIONAL_UX_RUNTIME (PROMPT LOG)
 
+READ FIRST:
+
+00_SYSTEM_BRAIN/000_RUNTIME_ENTRYPOINT.md
+
+---
+
 Repo PC: `D:\Workspace\projects\CBV_SSA_LAOCONG_PRO`  
 GitHub: `https://github.com/vinanissi/CBV_SSA_LAOCONG_PRO`  
 Branch bắt buộc: `phase/from-v2.4.1-TASK-FIN`

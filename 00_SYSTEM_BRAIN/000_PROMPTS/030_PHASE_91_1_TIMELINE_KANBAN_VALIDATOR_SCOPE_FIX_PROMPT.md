@@ -1,5 +1,11 @@
 # PHASE 91.1 — Timeline / Kanban Validator Scope Fix (Prompt)
 
+READ FIRST:
+
+00_SYSTEM_BRAIN/000_RUNTIME_ENTRYPOINT.md
+
+---
+
 > Hotfix snapshot. Captures the AI handoff prompt that drove Phase 91.1.
 
 ---

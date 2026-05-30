@@ -1,5 +1,11 @@
 # PHASE M07 — AppSheet Live Bridge (Cursor execution prompt)
 
+READ FIRST:
+
+00_SYSTEM_BRAIN/000_RUNTIME_ENTRYPOINT.md
+
+---
+
 **Saved:** append-only registry `114_`.  
 **Repo:** `CBV_SSA_LAOCONG_PRO` · **Branch:** `phase/from-v2.4.1-TASK-FIN`
 

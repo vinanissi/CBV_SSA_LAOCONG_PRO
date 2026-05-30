@@ -1,5 +1,11 @@
 # 110 — Phase 510 — Fix Milestone 05 stepper markers (prompt archive)
 
+READ FIRST:
+
+00_SYSTEM_BRAIN/000_RUNTIME_ENTRYPOINT.md
+
+---
+
 **Date:** 2026-05-14  
 **Branch:** `phase/from-v2.4.1-TASK-FIN`
 

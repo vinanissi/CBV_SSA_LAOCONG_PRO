@@ -1,5 +1,11 @@
 # 104 — Phase 208 Fix Milestone 02 VI validation + envelope (prompt archive)
 
+READ FIRST:
+
+00_SYSTEM_BRAIN/000_RUNTIME_ENTRYPOINT.md
+
+---
+
 **Append-only** · 2026-05-14 · Branch `phase/from-v2.4.1-TASK-FIN`
 
 ## Problem

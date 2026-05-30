@@ -2,11 +2,8 @@ import type { Env, HealthData } from '../contracts';
 import { gasAdapterStatus, gasHealth, isGasConfigured } from '../adapters/gasAdapter';
 import { appSheetAdapterStatus } from '../adapters/appSheetAdapter';
 import { isTaskWriteEnabled, getTaskWriteAdapterStatus } from '../adapters/taskWriteAdapter';
-import { resolveUserContext, canViewModule } from '../auth/userContext';
-import { getTodaySummary } from '../adapters/mockData';
-import { getEnv, isGasRuntimeMode } from '../env';
 import { createEnvelope } from '../utils/envelope';
-import { forbidden } from '../utils/errors';
+import { getEnv, isGasRuntimeMode } from '../env';
 
 export async function handleHealth(env: Env) {
   const writeEnabled = isTaskWriteEnabled(env);
@@ -48,15 +45,4 @@ export async function handleHealth(env: Env) {
   return createEnvelope(data, { warnings });
 }
 
-export async function handleToday(request: Request, env: Env) {
-  const user = resolveUserContext(request);
-  if (!canViewModule(user, 'TASK')) {
-    return forbidden('Không có quyền xem việc hôm nay');
-  }
-
-  const warnings = isGasRuntimeMode(env)
-    ? ['GAS bridge — today summary uses local projection until full sync']
-    : ['Worker projection — demo local'];
-
-  return createEnvelope(getTodaySummary(user), { warnings });
-}
+export { handleToday } from './homeAlert';

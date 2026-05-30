@@ -1,5 +1,11 @@
 # PHASE DOCS-A — OPERATIONAL_DEPLOYMENT_AND_APPSHEET_RUNTIME_GUIDE (Prompt — Append-Only)
 
+READ FIRST:
+
+00_SYSTEM_BRAIN/000_RUNTIME_ENTRYPOINT.md
+
+---
+
 **Date:** 2026-05-12  
 **Repo:** D:\Workspace\projects\CBV_SSA_LAOCONG_PRO  
 **GitHub:** https://github.com/vinanissi/CBV_SSA_LAOCONG_PRO  

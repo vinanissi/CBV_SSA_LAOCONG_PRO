@@ -1,5 +1,11 @@
 # PHASE 84 — SAFE_OPERATIONAL_AUTOMATION_RUNTIME (Prompt archive)
 
+READ FIRST:
+
+00_SYSTEM_BRAIN/000_RUNTIME_ENTRYPOINT.md
+
+---
+
 **Repo:** CBV_SSA_LAOCONG_PRO  
 **Reference:** CBV Operational Ecosystem Standard V1  
 

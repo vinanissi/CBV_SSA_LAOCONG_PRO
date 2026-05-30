@@ -1,5 +1,11 @@
 # PHASE_RF_08 — Local FE Workboard Baseline — Prompt (Archive)
 
+READ FIRST:
+
+00_SYSTEM_BRAIN/000_RUNTIME_ENTRYPOINT.md
+
+---
+
 > Append-only memory-first prompt archive. Phase: **PHASE_RF_08_LOCAL_FE_WORKBOARD_BASELINE**
 
 ## Decision

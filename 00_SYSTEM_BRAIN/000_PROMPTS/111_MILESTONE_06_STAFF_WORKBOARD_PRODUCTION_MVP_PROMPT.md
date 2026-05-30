@@ -1,5 +1,11 @@
 # 111 — Milestone 06 Staff Workboard Production MVP — Prompt archive
 
+READ FIRST:
+
+00_SYSTEM_BRAIN/000_RUNTIME_ENTRYPOINT.md
+
+---
+
 **Repo:** `CBV_SSA_LAOCONG_PRO` · **Branch:** `phase/from-v2.4.1-TASK-FIN`  
 **Standards:** CBV Operational Ecosystem Standard V1 · `00_SYSTEM_BRAIN/000_TEST_CONSOLE/CBV_TCS_V1/docs/CBV_TCS_V1_STANDARD.md`  
 **Drive (TCS):** folder `1wQhgcq6An8YTu_6WD91p1nJLJ0gtChwG`

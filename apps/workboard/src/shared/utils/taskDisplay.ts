@@ -29,13 +29,40 @@ export function getPriorityStyle(priority: string, status: string) {
   }
 }
 
+export function getUrgencyLabels(task: TaskItem): string[] {
+  if (task.urgency?.labels?.length) return task.urgency.labels;
+  const labels: string[] = [];
+  if (task.isOverdue || task.urgency?.isOverdue) labels.push('Quá hạn SLA');
+  if (task.urgency?.isWaiting || task.status === 'WAITING') labels.push('Chờ xử lý');
+  if (task.urgency?.isBlocked || task.status === 'BLOCKED') labels.push('Bị kẹt');
+  if (task.urgency?.noOwner || !task.ownerId) labels.push('Chưa có người xử lý');
+  if (task.urgency?.isStale && task.urgency.staleDays) {
+    labels.push(`Không cập nhật ${task.urgency.staleDays} ngày`);
+  }
+  if (task.pendingAction) labels.push(task.pendingAction);
+  return labels;
+}
+
 export function getSlaLabel(task: TaskItem): string | null {
-  if (task.isOverdue) return 'Quá hạn SLA';
-  if (task.status === 'WAITING') return 'Chờ xử lý';
-  if (task.status === 'IN_PROGRESS') return 'Đang xử lý';
-  return null;
+  const labels = getUrgencyLabels(task);
+  return labels[0] ?? null;
 }
 
 export function getStatusLabel(status: string): string {
   return STATUS_LABELS[status] ?? status;
 }
+
+export { getUrgencyTier, getUrgencyTierStyle, getCompactMetaLine, getPrimaryUrgencyHint } from './taskGrouping';
+export type { UrgencyTier } from './taskGrouping';
+export { getAttentionLevel, getAttentionStyle, sortByAttention } from './taskAttention';
+export type { AttentionLevel } from './taskAttention';
+export { getTaskNextAction, getNextActionChipClass } from './taskNextAction';
+export type { TaskNextAction, NextActionPriority } from './taskNextAction';
+export {
+  getFilteredCriticalSignal,
+  getFilteredMetaLine,
+  filterRuntimeWarningsForCards,
+  isHistoricalStale,
+} from './taskSignalFiltering';
+export { groupCognitionTasks, cognitionGroupsToTaskGroups, classifyCognitionGroup } from './taskCognitionGrouping';
+export type { CognitionGroupKey, CognitionTaskGroup } from './taskCognitionGrouping';

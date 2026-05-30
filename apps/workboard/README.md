@@ -82,8 +82,10 @@ RF_08: FE + mock API only. GAS runtime lock v1 unchanged.
 
 | Route | Page |
 |-------|------|
-| `/` | Hôm nay |
-| `/tasks` | Việc |
+| `/` | Redirect → `/inbox` |
+| `/inbox` | Hộp việc (canonical) |
+| `/tasks` | Hộp việc (legacy alias) |
+| `/home` | Hôm nay (launchpad) |
 | `/finance` | Tài chính (chỉ xem) |
 | `/hoso` | Hồ sơ (chỉ xem) |
 | `/coordination` | Phối hợp |

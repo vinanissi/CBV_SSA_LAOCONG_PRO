@@ -36,7 +36,15 @@ export function handleTaskWriteCapability(request: Request, env: Env) {
       writeMode: enabled ? ('ENABLED' as const) : ('LOCKED' as const),
       adapterStatus: getTaskWriteAdapterStatus(env),
       canCreate: caps.canCreate,
-      canUpdate: enabled && (user.role === 'ADMIN' || user.role === 'MANAGER' || user.role === 'STAFF' || user.role === 'FINANCE' || user.role === 'HO_SO'),
+      canUpdate:
+        enabled &&
+        user.role !== 'VIEW_ONLY' &&
+        (user.role === 'ADMIN' ||
+          user.role === 'MANAGER' ||
+          user.role === 'USER' ||
+          user.role === 'STAFF' ||
+          user.role === 'FINANCE' ||
+          user.role === 'HO_SO'),
       message: enabled
         ? getTaskWriteAdapterStatus(env) === 'GAS'
           ? 'Ghi việc qua GAS Sheet bridge — RF_12'

@@ -1,5 +1,11 @@
 # PHASE_RF_09 — Cloudflare Worker API Bridge — Prompt (Archive)
 
+READ FIRST:
+
+00_SYSTEM_BRAIN/000_RUNTIME_ENTRYPOINT.md
+
+---
+
 > Append-only memory-first prompt archive. Phase: **PHASE_RF_09_CLOUDFLARE_WORKER_API_BRIDGE**
 
 ## Scope

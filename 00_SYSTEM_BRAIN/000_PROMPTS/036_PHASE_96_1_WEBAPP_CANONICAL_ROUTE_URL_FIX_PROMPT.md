@@ -1,5 +1,11 @@
 # Prompt — Phase 96.1 — WEBAPP CANONICAL ROUTE URL FIX
 
+READ FIRST:
+
+00_SYSTEM_BRAIN/000_RUNTIME_ENTRYPOINT.md
+
+---
+
 **Archived:** 2026-05-14  
 **Repo:** `D:\Workspace\projects\CBV_SSA_LAOCONG_PRO`
 

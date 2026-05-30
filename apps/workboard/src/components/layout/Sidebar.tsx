@@ -1,56 +1,97 @@
-import { NavLink } from 'react-router-dom';
-import { PRIMARY_NAV, SECONDARY_NAV } from '@/shared/constants';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import type { UserContext } from '@/api/contracts';
+import { useModuleRegistry } from '@/runtime/useModuleRegistry';
+import { getNavModules } from '@/runtime/moduleRegistry';
+import { groupModulesByGroup, MODULE_GROUP_LABELS } from '@/runtime/modulePermissions';
+import { planModuleLaunch, logModuleOpen } from '@/runtime/moduleLauncher';
+import { isWorkInboxRoute } from '@/shared/routes/inboxRoutes';
+import { isWorkInboxFocusRuntimeEnabled } from '@/modules/task/inbox/workInboxGroupsFeature';
+import { OperatorMainSidebar } from './OperatorMainSidebar';
 
-export function Sidebar() {
+interface SidebarProps {
+  user: UserContext;
+}
+
+export function Sidebar({ user }: SidebarProps) {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  if (isWorkInboxRoute(location.pathname) && isWorkInboxFocusRuntimeEnabled()) {
+    return <OperatorMainSidebar />;
+  }
+  const { modules } = useModuleRegistry(user);
+  const navModules = getNavModules(modules);
+  const grouped = groupModulesByGroup(navModules);
+
+  async function openModule(mod: (typeof navModules)[0]) {
+    const plan = planModuleLaunch(mod, { returnPath: window.location.pathname });
+    void logModuleOpen(mod.moduleId, mod.openMode);
+    if (plan.mode === 'navigate' && plan.path) navigate(plan.path);
+    else if (plan.mode === 'iframe' && plan.path) navigate(plan.path);
+    else if (plan.mode === 'new_tab' && plan.url) window.open(plan.url, '_blank', 'noopener,noreferrer');
+  }
+
+  const groupOrder = ['OPERATIONS', 'REFERENCE', 'SETTINGS'];
+
   return (
-    <aside className="flex w-52 shrink-0 flex-col border-r border-border bg-surface-raised">
-      <nav className="flex-1 p-3">
-        <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-          Làm việc hôm nay
-        </p>
-        <div className="space-y-0.5">
-          {PRIMARY_NAV.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.to === '/'}
-              className={({ isActive }) =>
-                `flex items-center gap-2.5 rounded-md px-3 py-2.5 text-[15px] transition-colors ${
-                  isActive
-                    ? 'bg-accent/15 font-semibold text-accent'
-                    : 'text-slate-300 hover:bg-surface-overlay hover:text-white'
-                }`
-              }
-            >
-              <span className="w-5 text-center text-sm opacity-80">{item.icon}</span>
-              {item.label}
-            </NavLink>
-          ))}
-        </div>
+    <aside className="sidebar-shell">
+      <nav className="flex-1 overflow-y-auto p-3">
+        <p className="sidebar-section-label">Module launchpad</p>
 
-        <div className="my-4 border-t border-border/50" />
+        {groupOrder.map((groupKey) => {
+          const items = grouped.get(groupKey);
+          if (!items?.length) return null;
+          return (
+            <div key={groupKey} className="mb-3">
+              {groupKey !== 'OPERATIONS' && (
+                <p className="sidebar-group-label">{MODULE_GROUP_LABELS[groupKey] ?? groupKey}</p>
+              )}
+              <div className="space-y-0.5">
+                {items.map((item) => {
+                  const label = item.navLabel ?? item.moduleName;
+                  const isInternal = item.openMode === 'INTERNAL_ROUTE' && item.primaryUrl.startsWith('/');
 
-        <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-slate-600">
-          Khác
-        </p>
-        <div className="space-y-0.5">
-          {SECONDARY_NAV.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                `flex items-center gap-2 rounded-md px-3 py-2 text-xs transition-colors ${
-                  isActive
-                    ? 'bg-surface-overlay text-slate-300'
-                    : 'text-slate-500 hover:bg-surface-overlay/60 hover:text-slate-400'
-                }`
-              }
-            >
-              <span className="w-5 text-center opacity-60">{item.icon}</span>
-              {item.label}
-            </NavLink>
-          ))}
-        </div>
+                  if (isInternal) {
+                    return (
+                      <NavLink
+                        key={item.moduleId}
+                        to={item.primaryUrl}
+                        end={item.primaryUrl === '/home'}
+                        className={({ isActive }) =>
+                          isActive ? 'sidebar-nav-link active' : 'sidebar-nav-link'
+                        }
+                      >
+                        <span className="sidebar-nav-icon">{item.icon}</span>
+                        {label}
+                      </NavLink>
+                    );
+                  }
+
+                  return (
+                    <button
+                      key={item.moduleId}
+                      type="button"
+                      onClick={() => openModule(item)}
+                      className="sidebar-nav-button"
+                    >
+                      <span className="sidebar-nav-icon">{item.icon}</span>
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+
+        <div className="my-3 border-t border-border/50" />
+        <NavLink
+          to="/tasks?filter=overdue"
+          className={({ isActive }) => (isActive ? 'sidebar-quick-link active' : 'sidebar-quick-link')}
+        >
+          <span className="sidebar-nav-icon">!</span>
+          Quá hạn
+        </NavLink>
       </nav>
     </aside>
   );

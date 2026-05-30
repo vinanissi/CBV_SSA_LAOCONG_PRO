@@ -1,5 +1,11 @@
 # Phase 86 — UI Contract pilot binding (archived prompt)
 
+READ FIRST:
+
+00_SYSTEM_BRAIN/000_RUNTIME_ENTRYPOINT.md
+
+---
+
 **Saved:** 2026-05-13  
 **Repo:** `D:\Workspace\projects\CBV_SSA_LAOCONG_PRO`  
 **Branch:** `phase/from-v2.4.1-TASK-FIN`
