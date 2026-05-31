@@ -115,7 +115,7 @@ export function WorkInboxGroupsPanel({
     const idx = findFocusIndexByTaskId(focusItems, selectedTaskId);
     if (focusItems[idx]?.id === selectedTaskId) {
       setFocusPreviewIndex((prev) => (prev === idx ? prev : idx));
-      if (focusRuntimeOn) setViewMode('focus');
+      if (focusRuntimeOn) setViewMode((prev) => (prev === 'focus' ? prev : 'focus'));
     }
   }, [selectedTaskId, focusItems, focusRuntimeOn]);
 

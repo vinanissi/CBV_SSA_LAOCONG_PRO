@@ -30,6 +30,15 @@ const DEFAULT_METRICS: WorkInboxKpiMetrics = {
   alerts: 0,
 };
 
+function metricsEqual(a: WorkInboxKpiMetrics, b: WorkInboxKpiMetrics): boolean {
+  return (
+    a.total === b.total &&
+    a.overdue === b.overdue &&
+    a.open === b.open &&
+    a.alerts === b.alerts
+  );
+}
+
 const WorkInboxLayoutContext = createContext<WorkInboxLayoutContextValue | null>(null);
 
 export function WorkInboxLayoutProvider({ children }: { children: ReactNode }) {
@@ -44,19 +53,23 @@ export function WorkInboxLayoutProvider({ children }: { children: ReactNode }) {
   const useThreeRegionFocusLayout = suppressGlobalDetailPanel && viewMode === 'focus';
 
   const publishMetrics = useCallback((next: WorkInboxKpiMetrics, queueSize: number) => {
-    setMetrics(next);
-    setFocusQueueSize(queueSize);
+    setMetrics((prev) => (metricsEqual(prev, next) ? prev : next));
+    setFocusQueueSize((prev) => (prev === queueSize ? prev : queueSize));
   }, []);
 
-  const enterFocus = useCallback(() => setViewMode('focus'), []);
-  const showInboxList = useCallback(() => setViewMode('inbox'), []);
+  const setViewModeGuarded = useCallback((mode: WorkInboxViewMode) => {
+    setViewMode((prev) => (prev === mode ? prev : mode));
+  }, []);
+
+  const enterFocus = useCallback(() => setViewModeGuarded('focus'), [setViewModeGuarded]);
+  const showInboxList = useCallback(() => setViewModeGuarded('inbox'), [setViewModeGuarded]);
 
   const value = useMemo<WorkInboxLayoutContextValue>(
     () => ({
       viewMode,
       metrics,
       focusQueueSize,
-      setViewMode,
+      setViewMode: setViewModeGuarded,
       enterFocus,
       showInboxList,
       publishMetrics,
@@ -67,6 +80,7 @@ export function WorkInboxLayoutProvider({ children }: { children: ReactNode }) {
       viewMode,
       metrics,
       focusQueueSize,
+      setViewModeGuarded,
       enterFocus,
       showInboxList,
       publishMetrics,

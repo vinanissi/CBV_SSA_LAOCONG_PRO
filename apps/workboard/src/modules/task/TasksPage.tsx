@@ -323,10 +323,9 @@ export function TasksPage({ user }: TasksPageProps) {
       panelErrorRef.current = detailError ?? undefined;
       if (!suppressDetailPanel) {
         setDetail(taskDetail.title, STABLE_DETAIL_PANEL_INVOKER);
-        if (!loading) bumpDetailContent();
       }
     },
-    [setDetail, bumpDetailContent, suppressDetailPanel],
+    [setDetail, suppressDetailPanel],
   );
 
   const applyDetailPatch = useCallback(
@@ -540,7 +539,15 @@ export function TasksPage({ user }: TasksPageProps) {
     panelDetailRef.current = detail;
     panelLoadingRef.current = false;
     bumpDetailContent();
-  }, [detail, inlineExec, taskFeedback.feedbackMap, initialLoading, bumpDetailContent]);
+  }, [
+    detail?.taskId,
+    detail?.updatedAt,
+    detail?.status,
+    inlineExec,
+    taskFeedback.feedbackMap,
+    initialLoading,
+    bumpDetailContent,
+  ]);
 
   const handleAccept = useCallback(
     async (task: TaskItem | TaskDetail) => {

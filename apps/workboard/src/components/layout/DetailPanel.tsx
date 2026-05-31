@@ -43,22 +43,26 @@ export function DetailProvider({ children }: { children: ReactNode }) {
     setContentRevision((r) => r + 1);
   }, []);
 
+  const setDetail = useCallback((t: string, c: DetailPanelContent | null) => {
+    setTitle((prev) => (prev === t ? prev : t));
+    setContent((prev) => (prev === c ? prev : c));
+  }, []);
+
+  const clearDetail = useCallback(() => {
+    setTitle((prev) => (prev === '' ? prev : ''));
+    setContent((prev) => (prev === null ? prev : null));
+  }, []);
+
   const value = useMemo<DetailContextValue>(
     () => ({
       title,
       content,
       contentRevision,
-      setDetail: (t, c) => {
-        setTitle(t);
-        setContent(c);
-      },
+      setDetail,
       bumpDetailContent,
-      clearDetail: () => {
-        setTitle('');
-        setContent(null);
-      },
+      clearDetail,
     }),
-    [title, content, contentRevision, bumpDetailContent],
+    [title, content, contentRevision, bumpDetailContent, setDetail, clearDetail],
   );
 
   return <DetailContext.Provider value={value}>{children}</DetailContext.Provider>;
