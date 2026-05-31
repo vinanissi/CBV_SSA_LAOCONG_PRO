@@ -62,4 +62,13 @@ var CBV_TASK_DB_ACTIONS = [
   'wiOpListFormTemplates',
   'wiOpRecordAction',
   'wiOpCreateUserTask',
+  'wiOpListChecklist',
+  'wiOpCreateChecklistItem',
+  'wiOpUpdateChecklistItem',
+  'wiOpToggleChecklistItem',
+  'wiOpSoftDeleteChecklistItem',
+  'wiOpListAttachments',
+  'wiOpCreateAttachment',
+  'wiOpUpdateAttachment',
+  'wiOpSoftDeleteAttachment',
 ];

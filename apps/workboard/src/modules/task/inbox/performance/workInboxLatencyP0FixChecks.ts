@@ -36,12 +36,12 @@ const refreshPolicy = readLocal('workInboxRefreshPolicy.ts');
 const executor = readLocal('../actionRuntime/workInboxActionExecutor.ts');
 const registry = readRoot('runtime/rcla/workInboxRuntimeContextRegistry.tsx');
 const workerAdapter = readWorker('adapters/googleSheetTaskDbAdapter.ts');
-const gasMutation = readGas('workInboxMutationFast.js');
-const gasCombined = readGas('workInboxCombinedAction.js');
-const gasAppend = readGas('workInboxAppendContext.js');
-const gasOp = readGas('workInboxOperationalService.js');
-const gasTrace = readGas('workInboxPerformanceTrace.js');
-const gasService = readGas('taskDbService.js');
+const gasMutation = readGas('14_WorkInboxMutationFast.js');
+const gasCombined = readGas('47_WorkInboxCombinedAction.js');
+const gasAppend = readGas('12_WorkInboxAppendContext.js');
+const gasOp = readGas('46_WorkInboxOperationalService.js');
+const gasTrace = readGas('22_WorkInboxPerformanceTrace.js');
+const gasService = readGas('40_TaskDbService.js');
 
 export function runWorkInboxLatencyP0FixChecks(): {
   suite: string;

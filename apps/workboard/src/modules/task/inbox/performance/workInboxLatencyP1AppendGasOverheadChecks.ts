@@ -34,13 +34,13 @@ const patchMerge = readLocal('workInboxTaskPatchMerge.ts');
 const host = readLocal('../actionRuntime/WorkInboxFocusActionHost.tsx');
 const registry = readRoot('runtime/rcla/workInboxRuntimeContextRegistry.tsx');
 const workerAdapter = readWorker('adapters/googleSheetTaskDbAdapter.ts');
-const gasTrace = readGas('workInboxPerformanceTrace.js');
-const gasApi = readGas('taskDbApi.js');
-const gasAppendFast = readGas('workInboxAppendFast.js');
-const gasOpConfig = readGas('workInboxOperationalConfig.js');
-const gasOp = readGas('workInboxOperationalService.js');
-const gasMutation = readGas('workInboxMutationFast.js');
-const gasCombined = readGas('workInboxCombinedAction.js');
+const gasTrace = readGas('22_WorkInboxPerformanceTrace.js');
+const gasApi = readGas('60_TaskDbApi.js');
+const gasAppendFast = readGas('13_WorkInboxAppendFast.js');
+const gasOpConfig = readGas('04_WorkInboxOperationalConfig.js');
+const gasOp = readGas('46_WorkInboxOperationalService.js');
+const gasMutation = readGas('14_WorkInboxMutationFast.js');
+const gasCombined = readGas('47_WorkInboxCombinedAction.js');
 
 export function runWorkInboxLatencyP1AppendGasOverheadChecks(): {
   suite: string;

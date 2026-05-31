@@ -55,6 +55,8 @@ interface WorkInboxFocusRuntimeProps {
   operationalDegraded?: boolean;
   onRetryOperational?: () => void;
   opPermissions?: Record<WorkInboxOperationalOp, boolean>;
+  attachDialogOpen?: boolean;
+  onAttachDialogOpenChange?: (open: boolean) => void;
   onFocusIndexChange?: (index: number) => void;
 }
 
@@ -89,6 +91,8 @@ export function WorkInboxFocusRuntime({
   operationalDegraded = false,
   onRetryOperational,
   opPermissions,
+  attachDialogOpen,
+  onAttachDialogOpenChange,
   onFocusIndexChange,
 }: WorkInboxFocusRuntimeProps) {
   const [focusIndex, setFocusIndex] = useState(initialIndex);
@@ -137,10 +141,6 @@ export function WorkInboxFocusRuntime({
         items={items}
         initialIndex={initialIndex}
         runtimeTask={runtimeTask}
-        taskDetail={taskDetail}
-        detailLoading={detailLoading}
-        createdLabel={createdLabel}
-        updatedLabel={updatedLabel}
         summaryText={summaryText}
         onBackToInbox={onBackToInbox}
         onPrimary={onPrimary}
@@ -156,9 +156,9 @@ export function WorkInboxFocusRuntime({
         onMoreAction={onMoreAction}
         moreMenuOpen={moreMenuOpen}
         focusProgress={focusProgress}
-        operationalBundle={operationalBundle}
-        operationalLoading={operationalLoading}
         opPermissions={opPermissions}
+        attachDialogOpen={attachDialogOpen}
+        onAttachDialogOpenChange={onAttachDialogOpenChange}
       />
       <div
         className="work-inbox-focus-runtime__status-anchor"
@@ -173,9 +173,12 @@ export function WorkInboxFocusRuntime({
       ? createPortal(
           <RightContextTabs
             item={current}
+            runtimeTask={runtimeTask}
             taskDetail={taskDetail?.taskId === current.id ? taskDetail : null}
             detailLoading={detailLoading}
             detailError={detailError}
+            createdLabel={createdLabel}
+            updatedLabel={updatedLabel}
             onRetryDetail={onRetryDetail}
             onQuickCall={onQuickCall}
             onQuickMessage={onQuickMessage}
@@ -189,6 +192,8 @@ export function WorkInboxFocusRuntime({
             onRetryOperational={onRetryOperational}
             onSaveNote={onSaveNote}
             opPermissions={opPermissions}
+            attachDialogOpen={attachDialogOpen}
+            onAttachDialogOpenChange={onAttachDialogOpenChange}
           />,
           rightMount,
         )

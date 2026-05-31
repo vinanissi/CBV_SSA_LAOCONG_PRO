@@ -32,6 +32,7 @@ export function useWorkInboxActionRuntime(deps: UseWorkInboxActionRuntimeDeps) {
   const [handoffDialogOpen, setHandoffDialogOpen] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [appointmentDialogOpen, setAppointmentDialogOpen] = useState(false);
+  const [attachDialogOpen, setAttachDialogOpen] = useState(false);
 
   const runAction = useCallback(
     async (code: WorkInboxActionCode, payload?: Record<string, string | undefined>) => {
@@ -175,6 +176,14 @@ export function useWorkInboxActionRuntime(deps: UseWorkInboxActionRuntimeDeps) {
   const onMoreAction = useCallback(
     async (code: WorkInboxActionCode) => {
       setMoreMenuOpen(false);
+      if (code === 'ACTION_MORE_ATTACH') {
+        if (!ctx.permissions.ops.DOCUMENT) {
+          showFocusRuntimeFeedback('Bạn không có quyền đính kèm tài liệu');
+          return;
+        }
+        setAttachDialogOpen(true);
+        return;
+      }
       if (code === 'ACTION_MORE_COPY_LINK') {
         const id = ctx.currentFocusItem?.id;
         if (!id) return;
@@ -190,7 +199,7 @@ export function useWorkInboxActionRuntime(deps: UseWorkInboxActionRuntimeDeps) {
       const result = await runAction(code);
       if (!result) showFocusRuntimeFeedback('Chức năng đang chuẩn bị');
     },
-    [ctx.currentFocusItem?.id, runAction],
+    [ctx.currentFocusItem?.id, ctx.permissions.ops.DOCUMENT, runAction],
   );
 
   const onQuickCall = useCallback(async () => {
@@ -364,6 +373,8 @@ export function useWorkInboxActionRuntime(deps: UseWorkInboxActionRuntimeDeps) {
     primaryLabel,
     operatorOptions: buildAssigneeOptions(ctx),
     opPermissions: ctx.permissions.ops,
+    attachDialogOpen,
+    setAttachDialogOpen,
   };
 }
 

@@ -597,6 +597,194 @@ export async function createTask(body: CreateTaskBody): Promise<ApiEnvelope<Task
   return createEnvelope({ task, event }, { warnings: [DEMO] });
 }
 
+const mockChecklistByTask = new Map<string, import('@/modules/task/inbox/checklist/workInboxChecklistTypes').WorkInboxChecklistItem[]>();
+
+function mockChecklistList(taskId: string) {
+  return (mockChecklistByTask.get(taskId) ?? []).slice().sort((a, b) => a.sortOrder - b.sortOrder);
+}
+
+export async function listWorkInboxChecklist(taskId: string): Promise<
+  ApiEnvelope<{ taskId: string; items: import('@/modules/task/inbox/checklist/workInboxChecklistTypes').WorkInboxChecklistItem[] }>
+> {
+  await delay(120);
+  return createEnvelope({ taskId, items: mockChecklistList(taskId) }, { warnings: [DEMO] });
+}
+
+export async function createWorkInboxChecklistItem(
+  taskId: string,
+  body: { title: string; sortOrder?: number },
+): Promise<
+  ApiEnvelope<{ item: import('@/modules/task/inbox/checklist/workInboxChecklistTypes').WorkInboxChecklistItem }>
+> {
+  await delay(120);
+  if (MOCK_USER.role === 'VIEW_ONLY') {
+    return createEnvelope(null as never, { errors: ['Không có quyền chỉnh checklist'], ok: false, status: 'FAIL' });
+  }
+  if (!body.title?.trim()) {
+    return createEnvelope(null as never, { errors: ['title là bắt buộc'], ok: false, status: 'FAIL' });
+  }
+  const items = mockChecklistList(taskId);
+  const item: import('@/modules/task/inbox/checklist/workInboxChecklistTypes').WorkInboxChecklistItem = {
+    checklistId: `TCL_MOCK_${Date.now().toString(36)}`,
+    taskId,
+    title: body.title.trim(),
+    status: 'open',
+    sortOrder: body.sortOrder ?? items.length + 1,
+    isDone: false,
+  };
+  mockChecklistByTask.set(taskId, [...items, item]);
+  return createEnvelope({ item }, { warnings: [DEMO] });
+}
+
+export async function updateWorkInboxChecklistItem(
+  taskId: string,
+  checklistId: string,
+  body: { title?: string },
+): Promise<
+  ApiEnvelope<{ item: import('@/modules/task/inbox/checklist/workInboxChecklistTypes').WorkInboxChecklistItem }>
+> {
+  await delay(120);
+  const items = mockChecklistList(taskId);
+  const idx = items.findIndex((i) => i.checklistId === checklistId);
+  if (idx < 0) return createEnvelope(null as never, { errors: ['Không tìm thấy mục'], ok: false, status: 'FAIL' });
+  const next = { ...items[idx], title: body.title?.trim() || items[idx].title };
+  const copy = items.slice();
+  copy[idx] = next;
+  mockChecklistByTask.set(taskId, copy);
+  return createEnvelope({ item: next }, { warnings: [DEMO] });
+}
+
+export async function toggleWorkInboxChecklistItem(
+  taskId: string,
+  checklistId: string,
+  body?: { isDone?: boolean },
+): Promise<
+  ApiEnvelope<{ item: import('@/modules/task/inbox/checklist/workInboxChecklistTypes').WorkInboxChecklistItem }>
+> {
+  await delay(120);
+  const items = mockChecklistList(taskId);
+  const idx = items.findIndex((i) => i.checklistId === checklistId);
+  if (idx < 0) return createEnvelope(null as never, { errors: ['Không tìm thấy mục'], ok: false, status: 'FAIL' });
+  const done = body?.isDone ?? !items[idx].isDone;
+  const next = { ...items[idx], isDone: done, status: done ? 'done' as const : 'open' as const };
+  const copy = items.slice();
+  copy[idx] = next;
+  mockChecklistByTask.set(taskId, copy);
+  return createEnvelope({ item: next }, { warnings: [DEMO] });
+}
+
+export async function deleteWorkInboxChecklistItem(
+  taskId: string,
+  checklistId: string,
+): Promise<ApiEnvelope<{ deleted: boolean; checklistId: string }>> {
+  await delay(120);
+  mockChecklistByTask.set(taskId, mockChecklistList(taskId).filter((i) => i.checklistId !== checklistId));
+  return createEnvelope({ deleted: true, checklistId }, { warnings: [DEMO] });
+}
+
+const mockAttachmentsByTask = new Map<
+  string,
+  import('@/modules/task/inbox/attachments/workInboxAttachmentsTypes').WorkInboxAttachmentItem[]
+>();
+
+function mockAttachmentList(taskId: string) {
+  return (mockAttachmentsByTask.get(taskId) ?? []).slice();
+}
+
+export async function listWorkInboxAttachments(taskId: string): Promise<
+  ApiEnvelope<{
+    taskId: string;
+    items: import('@/modules/task/inbox/attachments/workInboxAttachmentsTypes').WorkInboxAttachmentItem[];
+  }>
+> {
+  await delay(120);
+  return createEnvelope({ taskId, items: mockAttachmentList(taskId) }, { warnings: [DEMO] });
+}
+
+export async function createWorkInboxAttachment(
+  taskId: string,
+  body: {
+    type: 'LINK' | 'TEXT';
+    title?: string;
+    url?: string;
+    textContent?: string;
+    note?: string;
+  },
+): Promise<
+  ApiEnvelope<{ item: import('@/modules/task/inbox/attachments/workInboxAttachmentsTypes').WorkInboxAttachmentItem }>
+> {
+  await delay(120);
+  if (MOCK_USER.role === 'VIEW_ONLY') {
+    return createEnvelope(null as never, { errors: ['Không có quyền thêm tài liệu'], ok: false, status: 'FAIL' });
+  }
+  const type = body.type;
+  if (type === 'LINK' && !body.url?.trim()) {
+    return createEnvelope(null as never, { errors: ['url là bắt buộc cho LINK'], ok: false, status: 'FAIL' });
+  }
+  if (type === 'TEXT' && !body.textContent?.trim() && !body.title?.trim()) {
+    return createEnvelope(null as never, {
+      errors: ['textContent hoặc title là bắt buộc cho TEXT'],
+      ok: false,
+      status: 'FAIL',
+    });
+  }
+  const item: import('@/modules/task/inbox/attachments/workInboxAttachmentsTypes').WorkInboxAttachmentItem = {
+    attachmentId: `TAT_MOCK_${Date.now().toString(36)}`,
+    taskId,
+    type,
+    title:
+      body.title?.trim() ||
+      (type === 'LINK' ? body.url!.trim().slice(0, 60) : body.textContent!.trim().slice(0, 40)),
+    url: type === 'LINK' ? body.url!.trim() : undefined,
+    textContent: type === 'TEXT' ? body.textContent?.trim() : undefined,
+    note: body.note?.trim(),
+    createdAt: new Date().toISOString(),
+    createdBy: MOCK_USER.userId,
+  };
+  mockAttachmentsByTask.set(taskId, [...mockAttachmentList(taskId), item]);
+  return createEnvelope({ item }, { warnings: [DEMO] });
+}
+
+export async function updateWorkInboxAttachment(
+  taskId: string,
+  attachmentId: string,
+  body: { title?: string; url?: string; textContent?: string; note?: string },
+): Promise<
+  ApiEnvelope<{ item: import('@/modules/task/inbox/attachments/workInboxAttachmentsTypes').WorkInboxAttachmentItem }>
+> {
+  await delay(120);
+  const items = mockAttachmentList(taskId);
+  const idx = items.findIndex((i) => i.attachmentId === attachmentId);
+  if (idx < 0) return createEnvelope(null as never, { errors: ['Không tìm thấy tài liệu'], ok: false, status: 'FAIL' });
+  const prev = items[idx];
+  const next = {
+    ...prev,
+    title: body.title?.trim() || prev.title,
+    url: body.url?.trim() ?? prev.url,
+    textContent: body.textContent?.trim() ?? prev.textContent,
+    note: body.note?.trim() ?? prev.note,
+  };
+  const copy = items.slice();
+  copy[idx] = next;
+  mockAttachmentsByTask.set(taskId, copy);
+  return createEnvelope({ item: next }, { warnings: [DEMO] });
+}
+
+export async function deleteWorkInboxAttachment(
+  taskId: string,
+  attachmentId: string,
+): Promise<ApiEnvelope<{ deleted: boolean; attachmentId: string }>> {
+  await delay(120);
+  if (MOCK_USER.role === 'VIEW_ONLY') {
+    return createEnvelope(null as never, { errors: ['Không có quyền xóa tài liệu'], ok: false, status: 'FAIL' });
+  }
+  mockAttachmentsByTask.set(
+    taskId,
+    mockAttachmentList(taskId).filter((i) => i.attachmentId !== attachmentId),
+  );
+  return createEnvelope({ deleted: true, attachmentId }, { warnings: [DEMO] });
+}
+
 export async function createWorkInboxUserTask(
   body: import('@/modules/task/inbox/create/workInboxCreateTaskTypes').WorkInboxCreateTaskRequest,
 ): Promise<
@@ -729,5 +917,14 @@ export const mockApi = {
   getTaskWriteCapability,
   createTask,
   createWorkInboxUserTask,
+  listWorkInboxChecklist,
+  createWorkInboxChecklistItem,
+  updateWorkInboxChecklistItem,
+  toggleWorkInboxChecklistItem,
+  deleteWorkInboxChecklistItem,
+  listWorkInboxAttachments,
+  createWorkInboxAttachment,
+  updateWorkInboxAttachment,
+  deleteWorkInboxAttachment,
   updateTask,
 };

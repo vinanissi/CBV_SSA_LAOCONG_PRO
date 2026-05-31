@@ -48,9 +48,9 @@ const registry = readRoot('runtime/rcla/workInboxRuntimeContextRegistry.tsx');
 const workerTrace = readWorker('modules/workInboxPerformanceTrace.ts');
 const workerCombined = readWorker('modules/workInboxCombinedAction.ts');
 const workerOp = readWorker('modules/workInboxOperational.ts');
-const gasTrace = readGas('workInboxPerformanceTrace.js');
-const gasCombined = readGas('workInboxCombinedAction.js');
-const gasOp = readGas('workInboxOperationalService.js');
+const gasTrace = readGas('22_WorkInboxPerformanceTrace.js');
+const gasCombined = readGas('47_WorkInboxCombinedAction.js');
+const gasOp = readGas('46_WorkInboxOperationalService.js');
 
 export interface LatencyProfilingCheck {
   id: string;

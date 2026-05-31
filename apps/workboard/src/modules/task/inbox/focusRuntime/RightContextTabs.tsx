@@ -1,8 +1,19 @@
 import { useState } from 'react';
-import type { TaskDetail } from '@/api/contracts';
+import type { TaskDetail, TaskItem } from '@/api/contracts';
+import { WorkInboxAttachmentsSection } from '@/modules/task/inbox/attachments/WorkInboxAttachmentsSection';
 import type { WorkInboxFocusItem } from '@/modules/task/types/workInboxTypes';
+import { useWorkInboxRuntimeContext } from '@/runtime/rcla/workInboxRuntimeContextRegistry';
 import { WORK_INBOX_STATUS_CHIP } from '../components/WorkInboxStatusChip';
 import { showFocusRuntimeFeedback } from './focusRuntimeFeedback';
+import {
+  buildFocusHandoffView,
+  buildFocusRelatedInfoRows,
+  formatFocusTimelineActor,
+  formatFocusTimelineClock,
+  formatFocusTimelineFriendlyLabel,
+  mapRuntimeTimelineForPanel,
+  pickNextAppointmentTitle,
+} from './focusLayoutShared';
 import type { TaskOperationalBundle } from '@/modules/task/inbox/operationalRuntime/workInboxOperationalTypes';
 import type { WorkInboxOperationalOp } from '@/modules/task/inbox/operationalRuntime/workInboxOperationalPermissions';
 
@@ -17,9 +28,12 @@ const TABS: { id: FocusRightTabId; label: string }[] = [
 
 interface RightContextTabsProps {
   item: WorkInboxFocusItem;
+  runtimeTask?: TaskItem;
   taskDetail?: TaskDetail | null;
   detailLoading?: boolean;
   detailError?: string | null;
+  createdLabel?: string;
+  updatedLabel?: string;
   onRetryDetail?: () => void;
   operationalBundle?: TaskOperationalBundle | null;
   operationalLoading?: boolean;
@@ -33,19 +47,18 @@ interface RightContextTabsProps {
   onQuickFormTemplate?: () => void;
   onSaveNote?: (content: string) => void;
   opPermissions?: Record<WorkInboxOperationalOp, boolean>;
-}
-
-function formatTimelineTime(value: string): string {
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return value;
-  return d.toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  attachDialogOpen?: boolean;
+  onAttachDialogOpenChange?: (open: boolean) => void;
 }
 
 export function RightContextTabs({
   item,
+  runtimeTask,
   taskDetail = null,
   detailLoading = false,
   detailError = null,
+  createdLabel,
+  updatedLabel,
   onRetryDetail,
   operationalBundle = null,
   operationalLoading = false,
@@ -59,7 +72,10 @@ export function RightContextTabs({
   onQuickFormTemplate,
   onSaveNote,
   opPermissions,
+  attachDialogOpen,
+  onAttachDialogOpenChange,
 }: RightContextTabsProps) {
+  const ctx = useWorkInboxRuntimeContext();
   const [activeTab, setActiveTab] = useState<FocusRightTabId>('detail');
   const [noteDraft, setNoteDraft] = useState('');
 
@@ -84,7 +100,13 @@ export function RightContextTabs({
     taskDetail?.ownerId?.trim() ||
     'Chưa gán';
 
-  const lastHandoff = runtimeTimeline.find((e) => e.eventType === 'TASK_HANDOFF');
+  const handoffView = buildFocusHandoffView({
+    bundle: operationalBundle,
+    taskDetail,
+    defaultRecipient: assignee,
+  });
+  const relatedRows = buildFocusRelatedInfoRows({ item, runtimeTask, createdLabel, updatedLabel });
+  const nextAppointmentTitle = pickNextAppointmentTitle(operationalBundle);
 
   const hasOperationalData =
     Boolean(operationalBundle?.timeline?.length) ||
@@ -93,6 +115,11 @@ export function RightContextTabs({
 
   const showOperationalEmpty =
     !operationalLoading && !operationalError && !hasOperationalData && !operationalDegraded;
+
+  const panelTimeline =
+    runtimeTimeline.length > 0
+      ? mapRuntimeTimelineForPanel(runtimeTimeline)
+      : legacyTimeline;
 
   return (
     <aside
@@ -139,7 +166,7 @@ export function RightContextTabs({
             )}
             {operationalDegraded && (
               <p className="text-xs text-amber-700" role="status">
-                Tải dữ liệu vận hành chậm — hiển thị dữ liệu có sẵn.
+                Tải timeline/ghi chú chậm — đang hiển thị dữ liệu có sẵn (không làm mới liên tục).
               </p>
             )}
             {operationalError && (
@@ -153,7 +180,7 @@ export function RightContextTabs({
               </div>
             )}
             {showOperationalEmpty && (
-              <p className="text-xs text-operational-muted">Chưa có dữ liệu vận hành</p>
+              <p className="text-xs text-operational-muted">Chưa có dữ liệu vận hành bổ sung</p>
             )}
 
             <section>
@@ -198,6 +225,25 @@ export function RightContextTabs({
             </section>
 
             <section>
+              <h4 className="work-inbox-right-section-title">THÔNG TIN LIÊN QUAN</h4>
+              <dl className="work-inbox-right-related">
+                {relatedRows.map((row) => (
+                  <div key={row.label} className="work-inbox-right-related__row">
+                    <dt>{row.label}</dt>
+                    <dd>{row.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+
+            {nextAppointmentTitle ? (
+              <section>
+                <h4 className="work-inbox-right-section-title">LỊCH HẸN TIẾP THEO</h4>
+                <p className="text-xs text-operational-text">{nextAppointmentTitle}</p>
+              </section>
+            ) : null}
+
+            <section>
               <h4 className="work-inbox-right-section-title">THAO TÁC NHANH</h4>
               <div className="work-inbox-right-context-tabs__quick-actions">
                 <button type="button" className="work-inbox-right-quick-btn" onClick={() => onQuickCall?.()}>
@@ -228,7 +274,7 @@ export function RightContextTabs({
         {activeTab === 'timeline' && (
           <div className="space-y-2 text-xs">
             {operationalLoading && !operationalBundle && runtimeTimeline.length === 0 && !operationalError ? (
-              <p className="text-operational-muted">Đang tải timeline runtime…</p>
+              <p className="text-operational-muted">Đang tải timeline…</p>
             ) : operationalError ? (
               <div className="text-operational-muted space-y-2">
                 <p>{operationalError}</p>
@@ -238,94 +284,99 @@ export function RightContextTabs({
                   </button>
                 )}
               </div>
-            ) : runtimeTimeline.length > 0 ? (
-              <ul className="work-inbox-right-timeline-list space-y-2">
-                {runtimeTimeline.map((entry) => (
-                  <li key={entry.timelineId} className="border-l-2 border-slate-200 pl-2">
-                    <span className="text-operational-muted">{formatTimelineTime(entry.createdAt)}</span>
-                    <p className="font-medium text-operational-text">{entry.eventLabel || entry.eventType}</p>
-                    <p className="text-operational-muted">
-                      {entry.actor} · {entry.source}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            ) : legacyTimeline.length > 0 ? (
-              <ul className="work-inbox-right-timeline-list space-y-2">
-                {legacyTimeline.map((entry, i) => (
-                  <li key={`${entry.time}-${i}`} className="border-l-2 border-slate-200 pl-2">
-                    <span className="text-operational-muted">{formatTimelineTime(entry.time)}</span>
-                    <p className="text-operational-text">
-                      {entry.actor}: {entry.message || entry.action}
-                    </p>
-                  </li>
-                ))}
+            ) : panelTimeline.length > 0 ? (
+              <ul className="work-inbox-right-timeline-list work-inbox-right-timeline-list--friendly space-y-2">
+                {panelTimeline.map((entry, i) => {
+                  const label = formatFocusTimelineFriendlyLabel({
+                    eventType: entry.action,
+                    eventLabel: entry.message,
+                    action: entry.action,
+                    message: entry.message,
+                  });
+                  const actorLabel = formatFocusTimelineActor(entry.actor);
+                  const key =
+                    'resourceId' in entry && entry.resourceId
+                      ? entry.resourceId
+                      : `${entry.time}-${i}`;
+                  return (
+                    <li key={key} className="work-inbox-right-timeline-list__item">
+                      <p className="work-inbox-right-timeline-list__line">
+                        <span className="work-inbox-right-timeline-list__time">
+                          {formatFocusTimelineClock(entry.time)}
+                        </span>
+                        <span className="work-inbox-right-timeline-list__label"> — {label}</span>
+                      </p>
+                      {actorLabel ? (
+                        <p className="work-inbox-right-timeline-list__actor">{actorLabel}</p>
+                      ) : null}
+                    </li>
+                  );
+                })}
               </ul>
             ) : (
-              <p className="text-operational-muted">Chưa có sự kiện timeline runtime.</p>
+              <p className="text-operational-muted">Chưa có sự kiện timeline.</p>
             )}
           </div>
         )}
 
         {activeTab === 'handoff' && (
-          <div className="space-y-2 text-xs">
-            <p>
-              <strong>Người nhận:</strong> {assignee}
-            </p>
-            {lastHandoff && (
-              <p>
-                <strong>Chuyển giao gần nhất:</strong> {formatTimelineTime(lastHandoff.createdAt)} — {lastHandoff.eventLabel}
-              </p>
+          <div className="work-inbox-right-handoff space-y-2 text-xs">
+            {handoffView.hasHandoff ? (
+              <>
+                <dl className="work-inbox-right-handoff__meta">
+                  {handoffView.fromActor ? (
+                    <div className="work-inbox-right-handoff__row">
+                      <dt>Người giao</dt>
+                      <dd>{handoffView.fromActor}</dd>
+                    </div>
+                  ) : null}
+                  <div className="work-inbox-right-handoff__row">
+                    <dt>Người nhận</dt>
+                    <dd>{handoffView.recipient}</dd>
+                  </div>
+                  {handoffView.at ? (
+                    <div className="work-inbox-right-handoff__row">
+                      <dt>Thời điểm</dt>
+                      <dd>{formatFocusTimelineClock(handoffView.at)}</dd>
+                    </div>
+                  ) : null}
+                  <div className="work-inbox-right-handoff__row">
+                    <dt>Trạng thái</dt>
+                    <dd>{handoffView.statusLabel}</dd>
+                  </div>
+                </dl>
+                {handoffView.note ? (
+                  <p className="work-inbox-right-handoff__note">{handoffView.note}</p>
+                ) : null}
+              </>
+            ) : (
+              <p className="text-operational-muted">Chưa có bàn giao cho việc này.</p>
             )}
-            <p>
-              <strong>Trạng thái:</strong> {taskDetail?.status ?? item.status}
-            </p>
-            <p className="text-operational-muted">
-              {taskDetail?.pendingAction?.trim() || 'Dùng ⇄ Chuyển giao trên thanh hành động.'}
-            </p>
+            <button
+              type="button"
+              className="work-inbox-right-handoff__link"
+              onClick={() =>
+                showFocusRuntimeFeedback(
+                  handoffView.hasHandoff
+                    ? 'Dùng ⇄ Chuyển giao trên thanh hành động để bàn giao thêm.'
+                    : 'Dùng ⇄ Chuyển giao trên thanh hành động để tạo bàn giao.',
+                )
+              }
+            >
+              Xem chi tiết →
+            </button>
           </div>
         )}
 
         {activeTab === 'documents' && (
-          <div className="text-xs space-y-2">
-            {operationalBundle?.documents && operationalBundle.documents.length > 0 ? (
-              <ul className="space-y-1">
-                {operationalBundle.documents.map((d) => (
-                  <li key={d.documentId}>
-                    {d.url ? (
-                      <a href={d.url} target="_blank" rel="noreferrer" className="text-blue-700 hover:underline">
-                        {d.title}
-                      </a>
-                    ) : (
-                      d.title
-                    )}
-                    <span className="text-operational-muted"> — {formatTimelineTime(d.uploadedAt)}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : taskDetail?.files && taskDetail.files.length > 0 ? (
-              <ul className="space-y-1">
-                {taskDetail.files.map((f) => (
-                  <li key={f.fileId}>{f.fileName}</li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-operational-muted">
-                {taskDetail?.relatedHoSoId
-                  ? `Liên kết hồ sơ: ${taskDetail.relatedHoSoId}`
-                  : 'Không có tài liệu đính kèm.'}
-              </p>
-            )}
-            {opPermissions?.DOCUMENT !== false && (
-              <button
-                type="button"
-                className="btn-secondary w-full text-xs"
-                onClick={() => showFocusRuntimeFeedback('Tải tài liệu — dùng luồng đính kèm TASK_ATTACHMENT')}
-              >
-                Đính kèm tài liệu
-              </button>
-            )}
-          </div>
+          <WorkInboxAttachmentsSection
+            taskId={item.id}
+            operator={ctx.operator}
+            canMutate={opPermissions?.DOCUMENT !== false}
+            variant="panel"
+            dialogOpen={attachDialogOpen}
+            onDialogOpenChange={onAttachDialogOpenChange}
+          />
         )}
       </div>
     </aside>

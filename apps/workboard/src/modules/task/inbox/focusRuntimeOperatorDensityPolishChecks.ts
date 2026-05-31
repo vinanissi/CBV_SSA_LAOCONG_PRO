@@ -5,6 +5,7 @@
 import appShellSource from '@/components/layout/AppShell.tsx?raw';
 import detailSource from '@/components/layout/DetailPanel.tsx?raw';
 import cardsSource from './focusRuntime/FocusContentCards.tsx?raw';
+import tabsSource from './focusRuntime/RightContextTabs.tsx?raw';
 import previewSource from './focusRuntime/FocusPreviewCards.tsx?raw';
 import workspaceSource from './focusRuntime/FocusTaskWorkspace.tsx?raw';
 import runtimeSource from './focusRuntime/WorkInboxFocusRuntime.tsx?raw';
@@ -35,18 +36,18 @@ export function runFocusRuntimeOperatorDensityPolishChecks(): {
 
   push(
     'UI_OPERATOR_DENSITY_PREVIEW_TIMELINE',
-    'Timeline Preview card below Related Info',
-    cardsSource.includes('TimelinePreviewCard') &&
-      previewSource.includes('TIMELINE PREVIEW') &&
-      cardsSource.includes('work-inbox-focus-content-cards__right'),
+    'Timeline in right panel (rebalance)',
+    !cardsSource.includes('TimelinePreviewCard') &&
+      tabsSource.includes('formatFocusTimelineFriendlyLabel') &&
+      previewSource.includes('TIMELINE PREVIEW'),
     'CRITICAL',
   );
 
   push(
     'UI_OPERATOR_DENSITY_PREVIEW_HANDOFF',
-    'Handoff Preview card below Timeline',
-    cardsSource.includes('HandoffPreviewCard') &&
-      previewSource.includes('HANDOFF PREVIEW'),
+    'Handoff in right panel (rebalance)',
+    !cardsSource.includes('HandoffPreviewCard') &&
+      tabsSource.includes('Chưa có bàn giao cho việc này'),
     'CRITICAL',
   );
 
@@ -60,10 +61,10 @@ export function runFocusRuntimeOperatorDensityPolishChecks(): {
 
   push(
     'UI_OPERATOR_DENSITY_TASK_DETAIL_WIRED',
-    'TaskDetail passed to content cards without API change',
-    workspaceSource.includes('activeDetail') &&
-      runtimeSource.includes('taskDetail={taskDetail}') &&
-      cardsSource.includes('taskDetail={activeDetail}'),
+    'TaskDetail wired to right panel without API change',
+    runtimeSource.includes('taskDetail={taskDetail}') &&
+      tabsSource.includes('taskDetail') &&
+      cardsSource.includes('work-inbox-focus-content-cards--stack'),
     'CRITICAL',
   );
 

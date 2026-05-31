@@ -44,6 +44,19 @@ import {
 } from './modules/workInboxOperational';
 import { handleWorkInboxRecordAction } from './modules/workInboxCombinedAction';
 import { handleWorkInboxCreateTask } from './modules/workInboxCreateTask';
+import {
+  handleWorkInboxChecklistCreate,
+  handleWorkInboxChecklistDelete,
+  handleWorkInboxChecklistList,
+  handleWorkInboxChecklistToggle,
+  handleWorkInboxChecklistUpdate,
+} from './modules/workInboxChecklist';
+import {
+  handleWorkInboxAttachmentsCreate,
+  handleWorkInboxAttachmentsDelete,
+  handleWorkInboxAttachmentsList,
+  handleWorkInboxAttachmentsUpdate,
+} from './modules/workInboxAttachments';
 import { jsonEnvelope } from './utils/envelope';
 import { createEnvelope } from './utils/envelope';
 import { withCors } from './cors';
@@ -256,6 +269,59 @@ export async function route(request: Request, env: Env): Promise<Response> {
 
   if (request.method === 'POST' && path === '/api/work-inbox/create-task') {
     envelope = await handleWorkInboxCreateTask(request, env);
+    return withCors(jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)), request, env);
+  }
+
+  const wiChecklistMatch = path.match(/^\/api\/work-inbox\/tasks\/([^/]+)\/checklist(?:\/([^/]+))?(?:\/(toggle))?$/);
+  if (wiChecklistMatch) {
+    const parsed = parseRouteTaskId(request, wiChecklistMatch[1]);
+    if ('error' in parsed) {
+      envelope = parsed.error;
+      return withCors(jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)), request, env);
+    }
+    const checklistId = wiChecklistMatch[2];
+    const subAction = wiChecklistMatch[3];
+    if (request.method === 'GET' && !checklistId) {
+      envelope = await handleWorkInboxChecklistList(request, env, parsed.taskId);
+    } else if (request.method === 'POST' && !checklistId) {
+      envelope = await handleWorkInboxChecklistCreate(request, env, parsed.taskId);
+    } else if (request.method === 'PATCH' && checklistId && !subAction) {
+      envelope = await handleWorkInboxChecklistUpdate(request, env, parsed.taskId, checklistId);
+    } else if (request.method === 'POST' && checklistId && subAction === 'toggle') {
+      envelope = await handleWorkInboxChecklistToggle(request, env, parsed.taskId, checklistId);
+    } else if (request.method === 'DELETE' && checklistId && !subAction) {
+      envelope = await handleWorkInboxChecklistDelete(request, env, parsed.taskId, checklistId);
+    } else {
+      envelope = createEnvelope(null, {
+        ok: false,
+        status: 'FAIL',
+        errors: ['Method not allowed for checklist route'],
+      });
+      return withCors(jsonEnvelope(envelope, 405), request, env);
+    }
+    return withCors(jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)), request, env);
+  }
+
+  const wiAttachMatch = path.match(/^\/api\/work-inbox\/tasks\/([^/]+)\/attachments(?:\/([^/]+))?$/);
+  if (wiAttachMatch) {
+    const parsed = parseRouteTaskId(request, wiAttachMatch[1]);
+    if ('error' in parsed) {
+      envelope = parsed.error;
+      return withCors(jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)), request, env);
+    }
+    const attachmentId = wiAttachMatch[2];
+    if (request.method === 'GET' && !attachmentId) {
+      envelope = await handleWorkInboxAttachmentsList(request, env, parsed.taskId);
+    } else if (request.method === 'POST' && !attachmentId) {
+      envelope = await handleWorkInboxAttachmentsCreate(request, env, parsed.taskId);
+    } else if (request.method === 'PATCH' && attachmentId) {
+      envelope = await handleWorkInboxAttachmentsUpdate(request, env, parsed.taskId, attachmentId);
+    } else if (request.method === 'DELETE' && attachmentId) {
+      envelope = await handleWorkInboxAttachmentsDelete(request, env, parsed.taskId, attachmentId);
+    } else {
+      envelope = createEnvelope(null, { ok: false, status: 'FAIL', errors: ['Method not allowed for attachments route'] });
+      return withCors(jsonEnvelope(envelope, 405), request, env);
+    }
     return withCors(jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)), request, env);
   }
 

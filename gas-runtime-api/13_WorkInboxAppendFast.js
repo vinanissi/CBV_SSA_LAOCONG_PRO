@@ -2,20 +2,45 @@
  * PHASE_WORK_INBOX_LATENCY_P1 — fast append (setValues) + batch OP_STORE + micro-timers.
  */
 
+/**
+ * HOTFIX_WORK_INBOX_CHECKLIST_APPEND_ROW_WIDTH — row width = physical header columns (headerRow.map).
+ * Avoids taskDbRecordToRow_ filtered-headers length mismatch on wide sheets (e.g. 65 cols).
+ */
+function wiOpBuildSheetRowPhysical_(info, record) {
+  if (!info || !info.sheet) return [];
+  var sheet = info.sheet;
+  var lastCol = Math.max(sheet.getLastColumn(), 1);
+  var headerRow = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  var normalized = {};
+  Object.keys(record || {}).forEach(function (key) {
+    normalized[String(key).toUpperCase()] = record[key];
+  });
+  var dense = [];
+  for (var i = 0; i < headerRow.length; i++) {
+    var colName = String(headerRow[i] || '').trim().toUpperCase();
+    dense.push(colName && normalized[colName] !== undefined ? normalized[colName] : '');
+  }
+  return dense;
+}
+
 function wiOpAppendRowFast_(info, record, timerKeys) {
   timerKeys = timerKeys || {};
   if (!info || !info.exists) return null;
   var rowBuildStart = Date.now();
-  var row = taskDbRecordToRow_(info.headerMap, info.headers, record);
+  var row =
+    typeof wiOpBuildSheetRowPhysical_ === 'function'
+      ? wiOpBuildSheetRowPhysical_(info, record)
+      : taskDbRecordToRow_(info.headerMap, info.headers, record);
   if (timerKeys.rowBuild && typeof wiPerfMarkPhase_ === 'function') {
     wiPerfMarkPhase_(timerKeys.rowBuild, Date.now() - rowBuildStart);
   }
   var writeStart = Date.now();
   var sheet = info.sheet;
   var nextRow = sheet.getLastRow() + 1;
-  var width = Math.max(row.length, info.headers.length, sheet.getLastColumn());
-  while (row.length < width) row.push('');
-  sheet.getRange(nextRow, 1, nextRow, width).setValues([row]);
+  var width = row.length;
+  if (width < 1) return null;
+  // GAS 4-arg: (startRow, startCol, numRows, numCols)
+  sheet.getRange(nextRow, 1, 1, width).setValues([row]);
   var writeMs = Date.now() - writeStart;
   if (typeof wiPerfAddSheetWrite_ === 'function') wiPerfAddSheetWrite_(writeMs);
   if (timerKeys.write && typeof wiPerfMarkPhase_ === 'function') wiPerfMarkPhase_(timerKeys.write, writeMs);
@@ -28,7 +53,10 @@ function wiOpAppendRowWithInfo_(info, record) {
     return wiOpAppendRowFast_(info, record, {});
   }
   if (!info || !info.exists) return null;
-  var row = taskDbRecordToRow_(info.headerMap, info.headers, record);
+  var row =
+    typeof wiOpBuildSheetRowPhysical_ === 'function'
+      ? wiOpBuildSheetRowPhysical_(info, record)
+      : taskDbRecordToRow_(info.headerMap, info.headers, record);
   info.sheet.appendRow(row);
   if (typeof wiPerfAddSheetWrite_ === 'function') wiPerfAddSheetWrite_(0);
   return record;
@@ -54,13 +82,26 @@ function wiOpAppendOpStoreBatch_(entries) {
       PAYLOAD_JSON: JSON.stringify(entry.payload || {}),
       CREATED_AT: wiOpNow_(),
     };
-    matrix.push(taskDbRecordToRow_(info.headerMap, info.headers, row));
+    matrix.push(
+      typeof wiOpBuildSheetRowPhysical_ === 'function'
+        ? wiOpBuildSheetRowPhysical_(info, row)
+        : taskDbRecordToRow_(info.headerMap, info.headers, row),
+    );
   });
   if (typeof wiPerfMarkPhase_ === 'function') wiPerfMarkPhase_('appendBatchRowBuildMs', Date.now() - buildStart);
   var writeStart = Date.now();
   var nextRow = sheet.getLastRow() + 1;
-  var width = matrix[0].length;
-  sheet.getRange(nextRow, 1, nextRow + matrix.length - 1, width).setValues(matrix);
+  var width = 0;
+  matrix.forEach(function (r) {
+    if (r.length > width) width = r.length;
+  });
+  if (width < 1) return false;
+  matrix = matrix.map(function (r) {
+    var padded = r.slice();
+    while (padded.length < width) padded.push('');
+    return padded;
+  });
+  sheet.getRange(nextRow, 1, matrix.length, width).setValues(matrix);
   if (typeof wiPerfAddSheetWrite_ === 'function') wiPerfAddSheetWrite_(Date.now() - writeStart);
   if (typeof wiPerfMarkPhase_ === 'function') wiPerfMarkPhase_('appendBatchWriteMs', Date.now() - writeStart);
   return true;

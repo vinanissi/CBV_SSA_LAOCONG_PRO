@@ -38,9 +38,9 @@ const registry = readRoot('runtime/rcla/workInboxRuntimeContextRegistry.tsx');
 const workerTrace = readWorker('modules/workInboxPerformanceTrace.ts');
 const workerOp = readWorker('modules/workInboxOperational.ts');
 const workerAdapter = readWorker('adapters/googleSheetTaskDbAdapter.ts');
-const gasTrace = readGas('workInboxPerformanceTrace.js');
-const gasApi = readGas('taskDbApi.js');
-const gasService = readGas('taskDbService.js');
+const gasTrace = readGas('22_WorkInboxPerformanceTrace.js');
+const gasApi = readGas('60_TaskDbApi.js');
+const gasService = readGas('40_TaskDbService.js');
 const reportPath = join(
   __dir,
   '..',
@@ -143,7 +143,7 @@ export function runWorkInboxRuntimePerformanceAuditChecks(): {
     'PERF_SHEET_WRITE_COUNT_TRACKED',
     'GAS tracks sheet write count',
     gasTrace.includes('wiPerfAddSheetWrite_') &&
-      (gasService.includes('wiPerfAddSheetWrite_') || readGas('taskDbAudit.js').includes('wiPerfAddSheetWrite_')),
+      (gasService.includes('wiPerfAddSheetWrite_') || readGas('20_TaskDbAudit.js').includes('wiPerfAddSheetWrite_')),
   );
 
   push(

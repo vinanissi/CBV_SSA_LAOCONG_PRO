@@ -1,4 +1,5 @@
 import type { TaskWorkspaceRuntime } from '@/api/contracts';
+import { evaluateTaskMainRuntimeHealth } from '@/shared/utils/taskMainRuntimeHealth';
 
 interface TaskRuntimeBarProps {
   runtime: TaskWorkspaceRuntime | null;
@@ -8,13 +9,24 @@ interface TaskRuntimeBarProps {
 }
 
 export function TaskRuntimeBar({ runtime, connected, refreshing, degraded }: TaskRuntimeBarProps) {
-  const isReal = runtime?.mode === 'google_sheet_existing_db';
+  const health = evaluateTaskMainRuntimeHealth({
+    connected,
+    error: null,
+    hasSnapshot: Boolean(runtime),
+    warnings: [],
+    runtime,
+  });
   const latency = runtime?.workerLatencyMs ?? runtime?.gasDurationMs ?? runtime?.latencyMs;
-  const slow = typeof latency === 'number' && latency >= 2000;
-  const statusLabel =
-    !connected ? 'Disconnected' : degraded || slow ? 'Degraded' : isReal ? 'Connected — TASK_MAIN' : 'Worker OK';
-  const statusClass =
-    !connected ? 'bg-status-warn' : degraded || slow ? 'bg-amber-400' : isReal ? 'bg-status-ok' : 'bg-amber-400';
+  const slow = health.state === 'slow_live';
+  const showDegraded = degraded || health.degraded;
+  const statusLabel = health.operatorLabel;
+  const statusClass = !connected
+    ? 'bg-status-warn'
+    : showDegraded
+      ? 'bg-amber-400'
+      : health.state === 'slow_live'
+        ? 'bg-amber-300'
+        : 'bg-status-ok';
 
   const cacheLabel = runtime?.workerCacheHit
     ? 'stale/worker hit'

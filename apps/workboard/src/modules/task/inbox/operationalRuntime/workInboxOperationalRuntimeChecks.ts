@@ -11,8 +11,8 @@ const readLocal = (rel: string) => readFileSync(join(__dir, rel), 'utf8');
 const repoRoot = join(__dir, '..', '..', '..', '..', '..', '..', '..');
 const readRepo = (rel: string) => readFileSync(join(repoRoot, rel), 'utf8');
 
-const gasService = readRepo('gas-runtime-api/workInboxOperationalService.js');
-const gasConfig = readRepo('gas-runtime-api/workInboxOperationalConfig.js');
+const gasService = readRepo('gas-runtime-api/46_WorkInboxOperationalService.js');
+const gasConfig = readRepo('gas-runtime-api/04_WorkInboxOperationalConfig.js');
 const executor = readLocal('../actionRuntime/workInboxActionExecutor.ts');
 const registry = readLocal('../../../../runtime/rcla/workInboxRuntimeContextRegistry.tsx');
 const host = readLocal('../actionRuntime/WorkInboxFocusActionHost.tsx');

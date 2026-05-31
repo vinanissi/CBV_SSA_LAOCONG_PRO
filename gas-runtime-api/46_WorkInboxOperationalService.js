@@ -695,6 +695,105 @@ function wiOpHandleAction_(action, payload, actor, traceId) {
       return taskDbBuildResponse_(action, createRes, { traceId: traceId, code: 'OK' });
     }
 
+    case 'wiOpListChecklist': {
+      if (typeof wiOpListChecklist_ !== 'function') {
+        return taskDbBuildResponse_(action, null, { traceId: traceId, ok: false, errors: ['Checklist list handler missing'] });
+      }
+      var listRes = wiOpListChecklist_(payload.taskId);
+      if (!listRes.ok) {
+        return taskDbBuildResponse_(action, null, { traceId: traceId, ok: false, errors: [listRes.message || 'Không tải checklist'] });
+      }
+      return taskDbBuildResponse_(action, listRes, { traceId: traceId, code: 'OK' });
+    }
+
+    case 'wiOpCreateChecklistItem': {
+      if (typeof wiOpCreateChecklistItem_ !== 'function') {
+        return taskDbBuildResponse_(action, null, { traceId: traceId, ok: false, errors: ['Checklist create handler missing'] });
+      }
+      var clCreate = wiOpCreateChecklistItem_(payload, actor, traceId);
+      if (!clCreate.ok) {
+        return taskDbBuildResponse_(action, null, { traceId: traceId, ok: false, errors: [clCreate.message || 'Không tạo mục checklist'] });
+      }
+      return taskDbBuildResponse_(action, clCreate, { traceId: traceId, code: 'OK' });
+    }
+
+    case 'wiOpUpdateChecklistItem': {
+      if (typeof wiOpUpdateChecklistItem_ !== 'function') {
+        return taskDbBuildResponse_(action, null, { traceId: traceId, ok: false, errors: ['Checklist update handler missing'] });
+      }
+      var clUpdate = wiOpUpdateChecklistItem_(payload, actor, traceId);
+      if (!clUpdate.ok) {
+        return taskDbBuildResponse_(action, null, { traceId: traceId, ok: false, errors: [clUpdate.message || 'Không cập nhật mục checklist'] });
+      }
+      return taskDbBuildResponse_(action, clUpdate, { traceId: traceId, code: 'OK' });
+    }
+
+    case 'wiOpToggleChecklistItem': {
+      if (typeof wiOpToggleChecklistItem_ !== 'function') {
+        return taskDbBuildResponse_(action, null, { traceId: traceId, ok: false, errors: ['Checklist toggle handler missing'] });
+      }
+      var clToggle = wiOpToggleChecklistItem_(payload, actor, traceId);
+      if (!clToggle.ok) {
+        return taskDbBuildResponse_(action, null, { traceId: traceId, ok: false, errors: [clToggle.message || 'Không đổi trạng thái checklist'] });
+      }
+      return taskDbBuildResponse_(action, clToggle, { traceId: traceId, code: 'OK' });
+    }
+
+    case 'wiOpSoftDeleteChecklistItem': {
+      if (typeof wiOpSoftDeleteChecklistItem_ !== 'function') {
+        return taskDbBuildResponse_(action, null, { traceId: traceId, ok: false, errors: ['Checklist delete handler missing'] });
+      }
+      var clDelete = wiOpSoftDeleteChecklistItem_(payload, actor, traceId);
+      if (!clDelete.ok) {
+        return taskDbBuildResponse_(action, null, { traceId: traceId, ok: false, errors: [clDelete.message || 'Không xóa mục checklist'] });
+      }
+      return taskDbBuildResponse_(action, clDelete, { traceId: traceId, code: 'OK' });
+    }
+
+    case 'wiOpListAttachments': {
+      if (typeof wiOpListAttachments_ !== 'function') {
+        return taskDbBuildResponse_(action, null, { traceId: traceId, ok: false, errors: ['Attachments list handler missing'] });
+      }
+      var attList = wiOpListAttachments_(payload.taskId);
+      if (!attList.ok) {
+        return taskDbBuildResponse_(action, null, { traceId: traceId, ok: false, errors: [attList.message || 'Không tải tài liệu'] });
+      }
+      return taskDbBuildResponse_(action, attList, { traceId: traceId, code: 'OK' });
+    }
+
+    case 'wiOpCreateAttachment': {
+      if (typeof wiOpCreateAttachment_ !== 'function') {
+        return taskDbBuildResponse_(action, null, { traceId: traceId, ok: false, errors: ['Attachment create handler missing'] });
+      }
+      var attCreate = wiOpCreateAttachment_(payload, actor, traceId);
+      if (!attCreate.ok) {
+        return taskDbBuildResponse_(action, null, { traceId: traceId, ok: false, errors: [attCreate.message || 'Không tạo tài liệu'] });
+      }
+      return taskDbBuildResponse_(action, attCreate, { traceId: traceId, code: 'OK', warnings: attCreate.warnings || [] });
+    }
+
+    case 'wiOpUpdateAttachment': {
+      if (typeof wiOpUpdateAttachment_ !== 'function') {
+        return taskDbBuildResponse_(action, null, { traceId: traceId, ok: false, errors: ['Attachment update handler missing'] });
+      }
+      var attUpdate = wiOpUpdateAttachment_(payload, actor, traceId);
+      if (!attUpdate.ok) {
+        return taskDbBuildResponse_(action, null, { traceId: traceId, ok: false, errors: [attUpdate.message || 'Không cập nhật tài liệu'] });
+      }
+      return taskDbBuildResponse_(action, attUpdate, { traceId: traceId, code: 'OK' });
+    }
+
+    case 'wiOpSoftDeleteAttachment': {
+      if (typeof wiOpSoftDeleteAttachment_ !== 'function') {
+        return taskDbBuildResponse_(action, null, { traceId: traceId, ok: false, errors: ['Attachment delete handler missing'] });
+      }
+      var attDelete = wiOpSoftDeleteAttachment_(payload, actor, traceId);
+      if (!attDelete.ok) {
+        return taskDbBuildResponse_(action, null, { traceId: traceId, ok: false, errors: [attDelete.message || 'Không xóa tài liệu'] });
+      }
+      return taskDbBuildResponse_(action, attDelete, { traceId: traceId, code: 'OK' });
+    }
+
     default:
       return null;
   }

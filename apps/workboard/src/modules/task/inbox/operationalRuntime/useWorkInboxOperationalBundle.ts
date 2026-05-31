@@ -66,6 +66,7 @@ export function useWorkInboxOperationalBundle(taskId: string | null | undefined)
         if (envelope.ok && envelope.data) {
           setBundle(envelope.data);
           loadedTaskIdRef.current = id;
+          setDegraded(false);
         } else {
           const msg = envelope.errors[0] ?? 'Không tải được dữ liệu vận hành';
           setError(msg);

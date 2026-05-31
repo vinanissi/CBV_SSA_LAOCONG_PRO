@@ -2,11 +2,12 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import type { TaskRuntimeTelemetryPayload } from '@/runtime/TaskRuntimeTelemetryContext';
 import { isWorkInboxRoute } from '@/shared/routes/inboxRoutes';
 import {
-  getCompactConnectionLabel,
+  getCompactConnectionLabelFromTelemetry,
   getRuntimeCacheLabel,
   getRuntimeHealthLevel,
   getStatusDotClass,
 } from '@/shared/utils/runtimeTelemetry';
+import { evaluateTaskMainRuntimeHealth } from '@/shared/utils/taskMainRuntimeHealth';
 
 interface RuntimeTelemetryInlineProps {
   telemetry: TaskRuntimeTelemetryPayload;
@@ -29,7 +30,21 @@ export function RuntimeTelemetryInline({ telemetry, onOpenDrawer }: RuntimeTelem
 
   const healthInput = { connected, degraded, runtime, warnings, error, staleMessage };
   const health = getRuntimeHealthLevel(healthInput);
-  const connectionLabel = getCompactConnectionLabel(connected, runtime, degraded);
+  const connectionLabel = getCompactConnectionLabelFromTelemetry({
+    connected,
+    degraded,
+    runtime,
+    warnings,
+    error,
+    staleMessage,
+  });
+  const connectionHint = evaluateTaskMainRuntimeHealth({
+    connected,
+    error: error ?? null,
+    hasSnapshot: Boolean(runtime),
+    warnings,
+    runtime,
+  }).operatorHint;
   const warningCount = warnings.length;
   const onTasksRoute = isWorkInboxRoute(location.pathname);
   const showLivePulse = connected && health === 'healthy' && !refreshing;
@@ -64,7 +79,7 @@ export function RuntimeTelemetryInline({ telemetry, onOpenDrawer }: RuntimeTelem
           type="button"
           className="runtime-status-metric runtime-status-metric-interactive runtime-status-connected"
           onClick={handleConnectionClick}
-          title="Runtime connection — mở console"
+          title={connectionHint ?? 'Runtime connection — mở console'}
         >
           <span
             className={`runtime-status-dot ${getStatusDotClass(health)} ${showLivePulse ? 'runtime-dot-live' : ''} ${refreshing ? 'runtime-dot-busy' : ''}`}

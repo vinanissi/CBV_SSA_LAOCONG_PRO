@@ -7,8 +7,8 @@ import alertHeaderSource from '@/components/ui/OperationalAlertHeader.tsx?raw';
 import clientSource from '@/api/client.ts?raw';
 import telemetrySource from '@/shared/utils/runtimeTelemetry.ts?raw';
 import workerAdapterSource from '../../../../workers/api/src/adapters/googleSheetTaskDbAdapter.ts?raw';
-import gasCacheSource from '../../../../gas-runtime-api/taskDbCache.js?raw';
-import gasServiceSource from '../../../../gas-runtime-api/taskDbService.js?raw';
+import gasCacheSource from '../../../../gas-runtime-api/33_TaskDbCache.js?raw';
+import gasServiceSource from '../../../../gas-runtime-api/40_TaskDbService.js?raw';
 
 export interface GoogleSheetsPerformanceCheck {
   id: string;

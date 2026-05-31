@@ -83,6 +83,8 @@ function FocusRuntimeWithActions(props: WorkInboxFocusActionHostProps) {
         onQuickFormTemplate={actions.onQuickFormTemplate}
         onSaveNote={actions.onSaveNote}
         opPermissions={actions.opPermissions}
+        attachDialogOpen={actions.attachDialogOpen}
+        onAttachDialogOpenChange={actions.setAttachDialogOpen}
         onFocusIndexChange={props.onFocusIndexChange}
       />
       <PauseReasonDialog

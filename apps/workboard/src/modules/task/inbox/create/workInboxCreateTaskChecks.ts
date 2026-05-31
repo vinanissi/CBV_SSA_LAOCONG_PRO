@@ -51,8 +51,8 @@ export function runWorkInboxUserCreateTaskRuntimeChecks(): {
   const workerMod = readWorker('modules/workInboxCreateTask.ts');
   const workerPerm = readWorker('auth/workInboxCreatePermissions.ts');
   const workerRouter = readWorker('router.ts');
-  const gasCreate = readGas('workInboxCreateTask.js');
-  const gasOp = readGas('workInboxOperationalService.js');
+  const gasCreate = readGas('48_WorkInboxCreateTask.js');
+  const gasOp = readGas('46_WorkInboxOperationalService.js');
   const client = readRoot('api/client.ts');
 
   push(

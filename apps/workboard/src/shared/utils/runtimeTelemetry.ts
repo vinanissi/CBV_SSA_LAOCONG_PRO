@@ -1,4 +1,5 @@
 import type { TaskWorkspaceCounts, TaskWorkspaceRuntime } from '@/api/contracts';
+import { evaluateTaskMainRuntimeHealth } from './taskMainRuntimeHealth';
 
 export type RuntimeHealthLevel = 'healthy' | 'warning' | 'critical';
 
@@ -29,7 +30,8 @@ export function getRuntimeHealthLevel(input: RuntimeHealthInput): RuntimeHealthL
   if (!connected) return 'critical';
   if (warnings.some((w) => w.includes('mock') || w.includes('Không kết nối'))) return 'critical';
 
-  if (degraded || staleMessage || isRuntimeSlow(runtime)) return 'warning';
+  if (degraded || staleMessage) return 'warning';
+  if (isRuntimeSlow(runtime) && !degraded) return 'warning';
   if (error) return 'warning';
   if (warnings.length > 0) return 'warning';
   if (runtime?.mode === 'mock_dev_only') return 'warning';
@@ -40,13 +42,37 @@ export function getRuntimeHealthLevel(input: RuntimeHealthInput): RuntimeHealthL
 export function getCompactConnectionLabel(
   connected: boolean,
   runtime?: TaskWorkspaceRuntime | null,
-  degraded?: boolean,
+  _degraded?: boolean,
+  options?: { warnings?: string[]; error?: string | null },
 ): string {
-  if (!connected) return 'Disconnected';
-  const isReal = runtime?.mode === 'google_sheet_existing_db';
-  if (degraded || isRuntimeSlow(runtime)) return 'TASK_MAIN Degraded';
-  if (isReal) return 'TASK_MAIN Connected';
-  return 'Worker OK';
+  return evaluateTaskMainRuntimeHealth({
+    connected,
+    error: options?.error ?? null,
+    hasSnapshot: Boolean(runtime),
+    warnings: options?.warnings ?? [],
+    runtime,
+  }).operatorLabel;
+}
+
+/** Status bar / footer — full telemetry context from TasksPage. */
+export function getCompactConnectionLabelFromTelemetry(input: {
+  connected: boolean;
+  degraded?: boolean;
+  runtime?: TaskWorkspaceRuntime | null;
+  warnings?: string[];
+  error?: string | null;
+  staleMessage?: string | null;
+}): string {
+  const health = evaluateTaskMainRuntimeHealth({
+    connected: input.connected,
+    error: input.error ?? null,
+    hasSnapshot: Boolean(input.runtime),
+    warnings: input.warnings ?? [],
+    runtime: input.runtime,
+  });
+  if (input.staleMessage) return health.operatorLabel;
+  if (input.degraded) return health.operatorLabel;
+  return health.operatorLabel;
 }
 
 export function getCompactCountsLine(counts: TaskWorkspaceCounts): string {

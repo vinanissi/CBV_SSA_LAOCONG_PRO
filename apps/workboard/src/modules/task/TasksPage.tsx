@@ -90,6 +90,7 @@ import { invalidateWorkspaceSnapshotCache } from '@/modules/task/inbox/network/w
 import { loadWorkspaceSnapshotNetwork } from '@/modules/task/inbox/network/workInboxWorkspaceSnapshotLoader';
 import { invalidateWorkInboxCachesForAction } from '@/modules/task/inbox/network/workInboxNetworkInvalidation';
 import { showFocusRuntimeFeedback } from '@/modules/task/inbox/focusRuntime/focusRuntimeFeedback';
+import { evaluateTaskMainRuntimeHealth } from '@/shared/utils/taskMainRuntimeHealth';
 
 const DETAIL_CACHE_TTL_MS = NETWORK_CACHE_TTL_MS.TASK_DETAIL;
 const SNAPSHOT_LIMIT = 100;
@@ -109,14 +110,6 @@ function patchTaskInSnapshot(snapshot: TaskWorkspaceSnapshot, updated: TaskItem)
     dueTasks: patch(snapshot.dueTasks),
     overdueTasks: patch(snapshot.overdueTasks),
   };
-}
-
-function runtimeStaleMessage(warnings: string[], degraded: boolean): string | null {
-  if (warnings.some((w) => w.includes('gần nhất') || w.includes('quá tải'))) {
-    return 'Đang dùng dữ liệu gần nhất do runtime chậm.';
-  }
-  if (degraded) return 'Runtime degraded — giữ view hiện tại, làm mới nền.';
-  return null;
 }
 
 interface TasksPageProps {
@@ -272,19 +265,23 @@ export function TasksPage({ user }: TasksPageProps) {
   );
   const signalContext = useMemo(() => buildSignalCollapseContext(flatTasks), [flatTasks]);
 
-  const degraded = useMemo(
+  const runtime = snapshot?.runtime;
+  const connected = api.isRealTaskRuntime() && Boolean(runtime?.connected ?? !error);
+
+  const runtimeHealth = useMemo(
     () =>
-      Boolean(error && snapshot) ||
-      warnings.some((w) => w.includes('quá tải') || w.includes('chậm') || w.includes('gần nhất')) ||
-      Boolean(
-        snapshot?.runtime?.workerLatencyMs &&
-          snapshot.runtime.workerLatencyMs >= 2000 &&
-          !snapshot.runtime.cacheHit,
-      ),
-    [error, snapshot, warnings],
+      evaluateTaskMainRuntimeHealth({
+        connected,
+        error: error && snapshot ? error : null,
+        hasSnapshot: Boolean(snapshot),
+        warnings,
+        runtime: snapshot?.runtime ?? null,
+      }),
+    [connected, error, snapshot, warnings],
   );
 
-  const staleMsg = runtimeStaleMessage(warnings, degraded);
+  const degraded = runtimeHealth.degraded;
+  const staleMsg = runtimeHealth.staleMessage;
   degradedRef.current = degraded;
 
   registerDetailPanelRenderer(() => {
@@ -395,7 +392,7 @@ export function TasksPage({ user }: TasksPageProps) {
             enrichedSnapshot.runtime.workerLatencyMs >= 2000 &&
             !enrichedSnapshot.runtime.cacheHit
           ) {
-            w.push('Đang đồng bộ TASK_MAIN — phản hồi chậm');
+            w.push('TASK_MAIN phản hồi chậm — vẫn đồng bộ được');
           }
           setWarnings(w);
           const queueOnLoad = deriveVisibleTaskRuntime({
@@ -1086,9 +1083,6 @@ export function TasksPage({ user }: TasksPageProps) {
     },
     [activeFilter, activeGroupMode, quickFocus],
   );
-
-  const runtime = snapshot?.runtime;
-  const connected = api.isRealTaskRuntime() && Boolean(runtime?.connected ?? !error);
 
   useEffect(() => {
     publishRuntimeTelemetry({

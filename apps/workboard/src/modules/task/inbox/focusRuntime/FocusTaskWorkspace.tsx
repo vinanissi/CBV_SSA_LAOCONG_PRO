@@ -1,16 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { TaskDetail, TaskItem } from '@/api/contracts';
+import type { TaskItem } from '@/api/contracts';
 import type { WorkInboxFocusItem } from '@/modules/task/types/workInboxTypes';
 import { clampFocusIndex } from '@/modules/task/inbox/focusModeModels';
+import { CompactTaskHeader } from './CompactTaskHeader';
 import { FocusHeader } from './FocusHeader';
-import { QuickContextBadges } from './QuickContextBadges';
-import { TaskMetadataRow } from './TaskMetadataRow';
 import { FocusContentCards } from './FocusContentCards';
 import { FocusActionBar } from './FocusActionBar';
 import { NextTaskCard } from './NextTaskCard';
 import type { FocusPendingAction } from '@/modules/task/inbox/actionRuntime/useWorkInboxActionRuntime';
 import type { WorkInboxActionCode } from '@/modules/task/inbox/actionRuntime/workInboxActionTypes';
-import type { TaskOperationalBundle, FocusProgressRuntime } from '@/modules/task/inbox/operationalRuntime/workInboxOperationalTypes';
+import type { FocusProgressRuntime } from '@/modules/task/inbox/operationalRuntime/workInboxOperationalTypes';
 import type { WorkInboxOperationalOp } from '@/modules/task/inbox/operationalRuntime/workInboxOperationalPermissions';
 
 const ASSIGNEE_FALLBACK = 'Chưa gán';
@@ -19,10 +18,6 @@ interface FocusTaskWorkspaceProps {
   items: WorkInboxFocusItem[];
   initialIndex?: number;
   runtimeTask?: TaskItem;
-  taskDetail?: TaskDetail | null;
-  detailLoading?: boolean;
-  createdLabel?: string;
-  updatedLabel?: string;
   summaryText?: string;
   onBackToInbox: () => void;
   onPrimary: (item: WorkInboxFocusItem) => void;
@@ -38,19 +33,15 @@ interface FocusTaskWorkspaceProps {
   onMoreAction?: (code: WorkInboxActionCode) => void;
   moreMenuOpen?: boolean;
   focusProgress?: FocusProgressRuntime;
-  operationalBundle?: TaskOperationalBundle | null;
-  operationalLoading?: boolean;
   opPermissions?: Record<WorkInboxOperationalOp, boolean>;
+  attachDialogOpen?: boolean;
+  onAttachDialogOpenChange?: (open: boolean) => void;
 }
 
 export function FocusTaskWorkspace({
   items,
   initialIndex = 0,
   runtimeTask,
-  taskDetail = null,
-  detailLoading = false,
-  createdLabel,
-  updatedLabel,
   summaryText,
   onBackToInbox,
   onPrimary,
@@ -66,9 +57,9 @@ export function FocusTaskWorkspace({
   onMoreAction,
   moreMenuOpen,
   focusProgress,
-  operationalBundle = null,
-  operationalLoading = false,
   opPermissions,
+  attachDialogOpen,
+  onAttachDialogOpenChange,
 }: FocusTaskWorkspaceProps) {
   const [index, setIndex] = useState(() => clampFocusIndex(initialIndex, items.length));
 
@@ -123,11 +114,10 @@ export function FocusTaskWorkspace({
   }
 
   const assignee = current.assigneeName?.trim() || ASSIGNEE_FALLBACK;
-  const activeDetail = taskDetail?.taskId === current.id ? taskDetail : null;
 
   return (
     <section
-      className="work-inbox-focus-workspace work-inbox-focus-workspace--flat work-inbox-focus-workspace--density"
+      className="work-inbox-focus-workspace work-inbox-focus-workspace--flat work-inbox-focus-workspace--density work-inbox-focus-workspace--focus-density"
       data-cbv-panel="work-inbox-focus-workspace"
       aria-label="Focus Task Workspace"
     >
@@ -146,27 +136,18 @@ export function FocusTaskWorkspace({
         onNavigateNext={onNavigateNext}
       />
 
-      <QuickContextBadges item={current} />
-
-      <h2 className="work-inbox-focus-workspace__title">{current.title}</h2>
-
-      <TaskMetadataRow
+      <CompactTaskHeader
+        item={current}
         assignee={assignee}
         dueLabel={current.dueLabel?.trim() || 'Chưa có hạn'}
-        createdLabel={createdLabel}
-        updatedLabel={updatedLabel}
       />
 
       <FocusContentCards
         item={current}
-        runtimeTask={runtimeTask}
-        taskDetail={activeDetail}
-        detailLoading={detailLoading}
-        operationalBundle={operationalBundle}
-        operationalLoading={operationalLoading}
         summaryText={summaryText}
-        createdLabel={createdLabel}
-        updatedLabel={updatedLabel}
+        opPermissions={opPermissions}
+        attachDialogOpen={attachDialogOpen}
+        onAttachDialogOpenChange={onAttachDialogOpenChange}
       />
 
       <FocusActionBar

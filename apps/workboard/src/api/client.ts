@@ -255,6 +255,121 @@ export const api = {
     });
   },
 
+  listWorkInboxChecklist(taskId: string) {
+    if (useTaskMock()) return mockApi.listWorkInboxChecklist(taskId);
+    return fetchEnvelope<import('@/modules/task/inbox/checklist/workInboxChecklistTypes').WorkInboxChecklistListResult & {
+      items: import('@/modules/task/inbox/checklist/workInboxChecklistTypes').WorkInboxChecklistItem[];
+      taskId: string;
+    }>(`/api/work-inbox/tasks/${encodeTaskId(taskId)}/checklist`);
+  },
+
+  createWorkInboxChecklistItem(
+    taskId: string,
+    body: { title: string; sortOrder?: number; traceId?: string },
+  ) {
+    if (useTaskMock()) return mockApi.createWorkInboxChecklistItem(taskId, body);
+    return fetchEnvelope<import('@/modules/task/inbox/checklist/workInboxChecklistTypes').WorkInboxChecklistMutateResult & {
+      item: import('@/modules/task/inbox/checklist/workInboxChecklistTypes').WorkInboxChecklistItem;
+    }>(`/api/work-inbox/tasks/${encodeTaskId(taskId)}/checklist`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  },
+
+  updateWorkInboxChecklistItem(
+    taskId: string,
+    checklistId: string,
+    body: { title?: string; sortOrder?: number; traceId?: string },
+  ) {
+    if (useTaskMock()) return mockApi.updateWorkInboxChecklistItem(taskId, checklistId, body);
+    return fetchEnvelope<import('@/modules/task/inbox/checklist/workInboxChecklistTypes').WorkInboxChecklistMutateResult & {
+      item: import('@/modules/task/inbox/checklist/workInboxChecklistTypes').WorkInboxChecklistItem;
+    }>(`/api/work-inbox/tasks/${encodeTaskId(taskId)}/checklist/${encodeURIComponent(checklistId)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  },
+
+  toggleWorkInboxChecklistItem(
+    taskId: string,
+    checklistId: string,
+    body?: { isDone?: boolean; traceId?: string },
+  ) {
+    if (useTaskMock()) return mockApi.toggleWorkInboxChecklistItem(taskId, checklistId, body);
+    return fetchEnvelope<import('@/modules/task/inbox/checklist/workInboxChecklistTypes').WorkInboxChecklistMutateResult & {
+      item: import('@/modules/task/inbox/checklist/workInboxChecklistTypes').WorkInboxChecklistItem;
+    }>(`/api/work-inbox/tasks/${encodeTaskId(taskId)}/checklist/${encodeURIComponent(checklistId)}/toggle`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body ?? {}),
+    });
+  },
+
+  deleteWorkInboxChecklistItem(taskId: string, checklistId: string, traceId?: string) {
+    if (useTaskMock()) return mockApi.deleteWorkInboxChecklistItem(taskId, checklistId);
+    return fetchEnvelope<import('@/modules/task/inbox/checklist/workInboxChecklistTypes').WorkInboxChecklistMutateResult>(`/api/work-inbox/tasks/${encodeTaskId(taskId)}/checklist/${encodeURIComponent(checklistId)}`, {
+      method: 'DELETE',
+      headers: traceId ? { 'X-CBV-Trace-Id': traceId } : undefined,
+    });
+  },
+
+  listWorkInboxAttachments(taskId: string) {
+    if (useTaskMock()) return mockApi.listWorkInboxAttachments(taskId);
+    return fetchEnvelope<{
+      taskId: string;
+      items: import('@/modules/task/inbox/attachments/workInboxAttachmentsTypes').WorkInboxAttachmentItem[];
+    }>(`/api/work-inbox/tasks/${encodeTaskId(taskId)}/attachments`);
+  },
+
+  createWorkInboxAttachment(
+    taskId: string,
+    body: {
+      type: 'LINK' | 'TEXT';
+      title?: string;
+      url?: string;
+      textContent?: string;
+      note?: string;
+      traceId?: string;
+    },
+  ) {
+    if (useTaskMock()) return mockApi.createWorkInboxAttachment(taskId, body);
+    return fetchEnvelope<{
+      item: import('@/modules/task/inbox/attachments/workInboxAttachmentsTypes').WorkInboxAttachmentItem;
+    }>(`/api/work-inbox/tasks/${encodeTaskId(taskId)}/attachments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  },
+
+  updateWorkInboxAttachment(
+    taskId: string,
+    attachmentId: string,
+    body: { type?: 'LINK' | 'TEXT'; title?: string; url?: string; textContent?: string; note?: string; traceId?: string },
+  ) {
+    if (useTaskMock()) return mockApi.updateWorkInboxAttachment(taskId, attachmentId, body);
+    return fetchEnvelope<{
+      item: import('@/modules/task/inbox/attachments/workInboxAttachmentsTypes').WorkInboxAttachmentItem;
+    }>(`/api/work-inbox/tasks/${encodeTaskId(taskId)}/attachments/${encodeURIComponent(attachmentId)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  },
+
+  deleteWorkInboxAttachment(taskId: string, attachmentId: string, traceId?: string) {
+    if (useTaskMock()) return mockApi.deleteWorkInboxAttachment(taskId, attachmentId);
+    return fetchEnvelope<{ deleted: boolean; attachmentId: string }>(
+      `/api/work-inbox/tasks/${encodeTaskId(taskId)}/attachments/${encodeURIComponent(attachmentId)}`,
+      {
+        method: 'DELETE',
+        headers: traceId ? { 'X-CBV-Trace-Id': traceId } : undefined,
+      },
+    );
+  },
+
   updateTask(taskId: string, body: import('./contracts').UpdateTaskBody) {
     if (useTaskMock()) return mockApi.updateTask(taskId, body);
     return fetchEnvelope<import('./contracts').TaskWriteResult>(`/api/tasks/${encodeTaskId(taskId)}`, {

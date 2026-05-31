@@ -24,6 +24,141 @@ export async function gsWiOpCreateUserTask(
   );
 }
 
+export async function gsWiOpListChecklist(
+  env: Env,
+  user: UserContext,
+  taskId: string,
+  traceId?: string,
+) {
+  return callTaskDbGas<import('../contracts/workInboxChecklist').WorkInboxChecklistListResponse>(
+    env,
+    'wiOpListChecklist',
+    { taskId },
+    user,
+    traceId,
+  );
+}
+
+export async function gsWiOpCreateChecklistItem(
+  env: Env,
+  payload: Record<string, unknown>,
+  user: UserContext,
+  traceId: string,
+) {
+  return callTaskDbGas<import('../contracts/workInboxChecklist').WorkInboxChecklistMutateResponse>(
+    env,
+    'wiOpCreateChecklistItem',
+    payload,
+    user,
+    traceId,
+  );
+}
+
+export async function gsWiOpUpdateChecklistItem(
+  env: Env,
+  payload: Record<string, unknown>,
+  user: UserContext,
+  traceId: string,
+) {
+  return callTaskDbGas<import('../contracts/workInboxChecklist').WorkInboxChecklistMutateResponse>(
+    env,
+    'wiOpUpdateChecklistItem',
+    payload,
+    user,
+    traceId,
+  );
+}
+
+export async function gsWiOpToggleChecklistItem(
+  env: Env,
+  payload: Record<string, unknown>,
+  user: UserContext,
+  traceId: string,
+) {
+  return callTaskDbGas<import('../contracts/workInboxChecklist').WorkInboxChecklistMutateResponse>(
+    env,
+    'wiOpToggleChecklistItem',
+    payload,
+    user,
+    traceId,
+  );
+}
+
+export async function gsWiOpSoftDeleteChecklistItem(
+  env: Env,
+  payload: Record<string, unknown>,
+  user: UserContext,
+  traceId: string,
+) {
+  return callTaskDbGas<import('../contracts/workInboxChecklist').WorkInboxChecklistMutateResponse>(
+    env,
+    'wiOpSoftDeleteChecklistItem',
+    payload,
+    user,
+    traceId,
+  );
+}
+
+export async function gsWiOpListAttachments(
+  env: Env,
+  user: UserContext,
+  taskId: string,
+  traceId?: string,
+) {
+  return callTaskDbGas<import('../contracts/workInboxAttachments').WorkInboxAttachmentListResponse>(
+    env,
+    'wiOpListAttachments',
+    { taskId },
+    user,
+    traceId,
+  );
+}
+
+export async function gsWiOpCreateAttachment(
+  env: Env,
+  payload: Record<string, unknown>,
+  user: UserContext,
+  traceId: string,
+) {
+  return callTaskDbGas<import('../contracts/workInboxAttachments').WorkInboxAttachmentMutateResponse>(
+    env,
+    'wiOpCreateAttachment',
+    payload,
+    user,
+    traceId,
+  );
+}
+
+export async function gsWiOpUpdateAttachment(
+  env: Env,
+  payload: Record<string, unknown>,
+  user: UserContext,
+  traceId: string,
+) {
+  return callTaskDbGas<import('../contracts/workInboxAttachments').WorkInboxAttachmentMutateResponse>(
+    env,
+    'wiOpUpdateAttachment',
+    payload,
+    user,
+    traceId,
+  );
+}
+
+export async function gsWiOpSoftDeleteAttachment(
+  env: Env,
+  payload: Record<string, unknown>,
+  user: UserContext,
+  traceId: string,
+) {
+  return callTaskDbGas<import('../contracts/workInboxAttachments').WorkInboxAttachmentMutateResponse>(
+    env,
+    'wiOpSoftDeleteAttachment',
+    payload,
+    user,
+    traceId,
+  );
+}
+
 export async function gsWiOpAppendActionAudit(
   env: Env,
   user: UserContext,
