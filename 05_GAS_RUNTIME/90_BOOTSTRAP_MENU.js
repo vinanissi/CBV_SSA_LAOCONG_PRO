@@ -145,7 +145,8 @@ function buildCbvProMenu_() {
 function buildCbvTestConsoleMenu_() {
   var ui = SpreadsheetApp.getUi();
   if (!ui) return;
-  ui.createMenu('🧪 CBV Test Console')
+  var menu = ui.createMenu('🧪 CBV Test Console');
+  menu
     .addSubMenu(
       ui.createMenu('Phase 85 — UI Contract')
         .addItem('Bootstrap UI Contract', 'menuCbvTestConsoleUiContract85_bootstrap')
@@ -325,8 +326,11 @@ function buildCbvTestConsoleMenu_() {
     .addItem('HOME_ALERT Phase 82 — SLA & Escalation', 'menuCbvTestConsoleHomeAlertSla82')
     .addItem('HOME_ALERT Phase 83 — SLA Policy Registry', 'menuCbvTestConsoleHomeAlertSla83')
     .addItem('HOME_ALERT Phase 84 — Safe Automation Runtime', 'menuCbvTestConsoleHomeAlertSafeAutomation84')
-    .addItem('REF-A — Operational Reference Layer', 'menuCbvTestConsoleOperationalReferenceRefA')
-    .addToUi();
+    .addItem('REF-A — Operational Reference Layer', 'menuCbvTestConsoleOperationalReferenceRefA');
+  if (typeof buildCbvDsrTestConsoleSubMenu_ === 'function') {
+    menu.addSubMenu(buildCbvDsrTestConsoleSubMenu_(ui));
+  }
+  menu.addToUi();
 }
 
 /**
@@ -334,5 +338,6 @@ function buildCbvTestConsoleMenu_() {
  */
 function onOpen() {
   buildCbvProMenu_();
+  if (typeof buildCbvRuntimeMenu_ === 'function') buildCbvRuntimeMenu_();
   buildCbvTestConsoleMenu_();
 }
