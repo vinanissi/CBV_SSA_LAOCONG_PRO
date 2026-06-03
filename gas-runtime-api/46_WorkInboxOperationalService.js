@@ -794,6 +794,86 @@ function wiOpHandleAction_(action, payload, actor, traceId) {
       return taskDbBuildResponse_(action, attDelete, { traceId: traceId, code: 'OK' });
     }
 
+    case 'wiOpClBridge': {
+      if (typeof clBridgeDispatch_ !== 'function') {
+        return taskDbBuildResponse_(action, null, {
+          traceId: traceId,
+          ok: false,
+          errors: ['Checklist Sheet/Drive bridge missing'],
+        });
+      }
+      var bridgeMethod = String(payload.method || '').trim();
+      var bridgeRes = clBridgeDispatch_(bridgeMethod, payload, actor, traceId);
+      if (!bridgeRes.ok) {
+        return taskDbBuildResponse_(action, bridgeRes.data, {
+          traceId: bridgeRes.traceId || traceId,
+          ok: false,
+          errors: bridgeRes.errors && bridgeRes.errors.length ? bridgeRes.errors : [bridgeRes.message || 'Bridge failed'],
+          warnings: bridgeRes.warnings || [],
+        });
+      }
+      return taskDbBuildResponse_(action, bridgeRes.data, {
+        traceId: bridgeRes.traceId || traceId,
+        code: bridgeRes.status === 'GO_WITH_WARNINGS' ? 'OK' : 'OK',
+        warnings: bridgeRes.warnings || [],
+      });
+    }
+
+    case 'wiOpClBridgeValidate': {
+      if (typeof validateChecklistSheetDriveBridge !== 'function') {
+        return taskDbBuildResponse_(action, null, {
+          traceId: traceId,
+          ok: false,
+          errors: ['validateChecklistSheetDriveBridge missing'],
+        });
+      }
+      var valBridge = validateChecklistSheetDriveBridge(payload || {});
+      return taskDbBuildResponse_(action, valBridge, {
+        traceId: valBridge.traceId || traceId,
+        ok: !!valBridge.ok,
+        warnings: valBridge.warnings || [],
+        errors: valBridge.errors || [],
+      });
+    }
+
+    case 'checklist.schema.bootstrap': {
+      if (typeof CBV_TCS_CHECKLIST_09_bootstrapSchema !== 'function' && typeof bootstrapChecklistSheetSchema !== 'function') {
+        return taskDbBuildResponse_(action, null, {
+          traceId: traceId,
+          ok: false,
+          errors: ['checklist schema bootstrap handler missing'],
+        });
+      }
+      var schemaBootstrap = typeof CBV_TCS_CHECKLIST_09_bootstrapSchema === 'function'
+        ? CBV_TCS_CHECKLIST_09_bootstrapSchema()
+        : bootstrapChecklistSheetSchema({});
+      return taskDbBuildResponse_(action, schemaBootstrap, {
+        traceId: traceId,
+        ok: !!(schemaBootstrap && schemaBootstrap.ok),
+        warnings: (schemaBootstrap && schemaBootstrap.warnings) || [],
+        errors: (schemaBootstrap && schemaBootstrap.errors) || [],
+      });
+    }
+
+    case 'checklist.schema.validate': {
+      if (typeof CBV_TCS_CHECKLIST_09_validateSchema !== 'function' && typeof validateChecklistSheetSchema !== 'function') {
+        return taskDbBuildResponse_(action, null, {
+          traceId: traceId,
+          ok: false,
+          errors: ['checklist schema validate handler missing'],
+        });
+      }
+      var schemaValidate = typeof CBV_TCS_CHECKLIST_09_validateSchema === 'function'
+        ? CBV_TCS_CHECKLIST_09_validateSchema()
+        : validateChecklistSheetSchema({});
+      return taskDbBuildResponse_(action, schemaValidate, {
+        traceId: traceId,
+        ok: !!(schemaValidate && schemaValidate.ok),
+        warnings: (schemaValidate && schemaValidate.warnings) || [],
+        errors: (schemaValidate && schemaValidate.errors) || [],
+      });
+    }
+
     default:
       return null;
   }

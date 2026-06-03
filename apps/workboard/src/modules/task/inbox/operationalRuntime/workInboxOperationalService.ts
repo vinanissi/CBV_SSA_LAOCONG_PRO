@@ -4,11 +4,12 @@ import { getActiveWorkInboxTraceId } from '../performance/workInboxPerformanceTr
 import { appendWorkInboxActionAudit } from '../actionRuntime/workInboxActionAudit';
 import type { WorkInboxAuditEvent } from '../actionRuntime/workInboxActionTypes';
 import { normalizeWorkInboxRole } from './workInboxOperationalPermissions';
+import { getApiBaseUrl, isWorkerApiConfigured } from '@/api/apiBase';
 
-const API_BASE = import.meta.env.VITE_CBV_API_BASE_URL?.trim() ?? '';
+const API_BASE = getApiBaseUrl();
 
 async function postJson<T>(path: string, body: unknown) {
-  if (!API_BASE) return { ok: false as const, data: null as T };
+  if (!isWorkerApiConfigured()) return { ok: false as const, data: null as T };
   const traceId = getActiveWorkInboxTraceId();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',

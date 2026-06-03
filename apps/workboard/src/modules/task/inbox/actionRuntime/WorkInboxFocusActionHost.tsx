@@ -74,6 +74,7 @@ function FocusRuntimeWithActions(props: WorkInboxFocusActionHostProps) {
         onNavigatePrev={actions.onNavigatePrev}
         onNavigateNext={actions.onNavigateNext}
         onMoreMenuOpen={() => actions.setMoreMenuOpen(true)}
+        onMoreMenuClose={() => actions.setMoreMenuOpen(false)}
         onMoreAction={actions.onMoreAction}
         moreMenuOpen={actions.moreMenuOpen}
         onQuickCall={actions.onQuickCall}
@@ -86,6 +87,7 @@ function FocusRuntimeWithActions(props: WorkInboxFocusActionHostProps) {
         attachDialogOpen={actions.attachDialogOpen}
         onAttachDialogOpenChange={actions.setAttachDialogOpen}
         onFocusIndexChange={props.onFocusIndexChange}
+        operator={props.user}
       />
       <PauseReasonDialog
         open={actions.pauseDialogOpen}

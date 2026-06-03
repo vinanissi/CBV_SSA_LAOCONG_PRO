@@ -55,13 +55,14 @@ export function useWorkInboxChecklistRuntime(options: UseWorkInboxChecklistRunti
   const traceId = () => getActiveWorkInboxTraceId() ?? undefined;
 
   const createItem = useCallback(
-    async (title: string) => {
+    async (title: string, opts?: { sortOrder?: number }) => {
       const trimmed = title.trim();
       if (!trimmed || !canMutate) return { ok: false as const, error: 'Không thể thêm mục' };
       setMutatingId('__create__');
       setError(null);
       const res = await api.createWorkInboxChecklistItem(options.taskId, {
         title: trimmed,
+        sortOrder: opts?.sortOrder,
         traceId: traceId(),
       });
       setMutatingId(null);
@@ -93,9 +94,46 @@ export function useWorkInboxChecklistRuntime(options: UseWorkInboxChecklistRunti
         return { ok: false as const, error: msg };
       }
       setItems((prev) => upsertChecklistItem(prev, res.data!.item!));
-      return { ok: true as const };
+      return { ok: true as const, item: res.data.item };
     },
     [canMutate, options.taskId],
+  );
+
+  const updateItemSortOrder = useCallback(
+    async (checklistId: string, sortOrder: number) => {
+      if (!canMutate || !Number.isFinite(sortOrder)) return { ok: false as const };
+      setMutatingId(checklistId);
+      setError(null);
+      const res = await api.updateWorkInboxChecklistItem(options.taskId, checklistId, {
+        sortOrder,
+        traceId: traceId(),
+      });
+      setMutatingId(null);
+      if (!res.ok || !res.data?.item) {
+        const msg = res.errors[0] ?? 'Không đổi thứ tự';
+        setError(msg);
+        return { ok: false as const, error: msg };
+      }
+      setItems((prev) => upsertChecklistItem(prev, res.data!.item!));
+      return { ok: true as const, item: res.data.item };
+    },
+    [canMutate, options.taskId],
+  );
+
+  const reorderItem = useCallback(
+    async (checklistId: string, direction: 'up' | 'down') => {
+      const sorted = [...items].sort((a, b) => a.sortOrder - b.sortOrder);
+      const idx = sorted.findIndex((i) => i.checklistId === checklistId);
+      if (idx < 0) return { ok: false as const, error: 'Không tìm thấy mục' };
+      const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+      if (swapIdx < 0 || swapIdx >= sorted.length) return { ok: false as const, error: 'Không thể di chuyển' };
+      const current = sorted[idx];
+      const neighbor = sorted[swapIdx];
+      const resA = await updateItemSortOrder(current.checklistId, neighbor.sortOrder);
+      if (!resA.ok) return resA;
+      return updateItemSortOrder(neighbor.checklistId, current.sortOrder);
+    },
+    [items, updateItemSortOrder],
   );
 
   const toggleItem = useCallback(
@@ -137,6 +175,10 @@ export function useWorkInboxChecklistRuntime(options: UseWorkInboxChecklistRunti
     [canMutate, options.taskId],
   );
 
+  const replaceItemsFromRemote = useCallback((remoteItems: WorkInboxChecklistItem[]) => {
+    setItems(remoteItems);
+  }, []);
+
   return {
     items,
     loading,
@@ -147,8 +189,11 @@ export function useWorkInboxChecklistRuntime(options: UseWorkInboxChecklistRunti
     reload: load,
     createItem,
     updateItem,
+    updateItemSortOrder,
+    reorderItem,
     toggleItem,
     deleteItem,
+    replaceItemsFromRemote,
     runtimeContextUsed: Boolean(ctx),
   };
 }

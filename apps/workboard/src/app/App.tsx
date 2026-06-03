@@ -7,6 +7,7 @@ import { AppShell } from '@/components/layout/AppShell';
 import { DetailProvider } from '@/components/layout/DetailPanel';
 import { WorkInboxLayoutProvider } from '@/modules/task/inbox/WorkInboxLayoutContext';
 import { TaskWriteProvider } from '@/modules/task/TaskWriteContext';
+import { ChecklistSyncFooterProvider } from '@/runtime/ChecklistSyncFooterContext';
 import { TaskRuntimeTelemetryProvider } from '@/runtime/TaskRuntimeTelemetryContext';
 import { TaskCreateModal } from '@/modules/task/TaskCreateForm';
 import { LoginPage } from '@/modules/auth/LoginPage';
@@ -92,12 +93,14 @@ export default function App() {
     <DetailProvider>
       <TaskWriteProvider>
         <TaskRuntimeTelemetryProvider>
-          <WorkInboxLayoutProvider>
-            <AppShell user={user} onLogout={() => { clearStoredAuthSession(); setNeedsLogin(true); setUser(null); }}>
-              <AppRoutes user={user} />
-            </AppShell>
-          </WorkInboxLayoutProvider>
-          <TaskCreateModal />
+          <ChecklistSyncFooterProvider>
+            <WorkInboxLayoutProvider>
+              <AppShell user={user} onLogout={() => { clearStoredAuthSession(); setNeedsLogin(true); setUser(null); }}>
+                <AppRoutes user={user} />
+              </AppShell>
+            </WorkInboxLayoutProvider>
+            <TaskCreateModal />
+          </ChecklistSyncFooterProvider>
         </TaskRuntimeTelemetryProvider>
       </TaskWriteProvider>
     </DetailProvider>

@@ -5,6 +5,7 @@ import App from './app/App';
 import { initThemeRuntime } from '@/runtime/themeRuntime';
 import { isRenderPerfEnabled, markRenderEnd, markRenderStart } from '@/shared/utils/renderPerf';
 import './styles/index.css';
+import './styles/operator-design-baseline-v1.css';
 import './styles/theme-dark.css';
 
 initThemeRuntime();

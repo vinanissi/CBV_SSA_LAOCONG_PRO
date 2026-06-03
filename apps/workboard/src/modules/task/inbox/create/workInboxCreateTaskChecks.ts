@@ -67,7 +67,17 @@ export function runWorkInboxUserCreateTaskRuntimeChecks(): {
   );
   push(
     'CREATE_TASK_TITLE_REQUIRED',
-    validateCreateTaskForm({ title: '', description: '', priority: 'NORMAL', dueDate: '', relatedPhone: '', relatedPlate: '' }) !== null &&
+    validateCreateTaskForm({
+      title: '',
+      description: '',
+      taskTypeId: '',
+      donViId: '',
+      ownerId: '',
+      priority: 'NORMAL',
+      dueDate: '',
+      relatedEntityType: '',
+      relatedEntityValue: '',
+    }) !== null &&
       dialog.includes('required'),
   );
   push(

@@ -6,8 +6,9 @@ import type {
 } from './workInboxOperationalTypes';
 
 import { getActiveWorkInboxTraceId } from '../performance/workInboxPerformanceTrace';
+import { getApiBaseUrl, isWorkerApiConfigured } from '@/api/apiBase';
 
-const API_BASE = import.meta.env.VITE_CBV_API_BASE_URL?.trim() ?? '';
+const API_BASE = getApiBaseUrl();
 
 function perfHeaders(): Record<string, string> {
   const traceId = getActiveWorkInboxTraceId();
@@ -15,13 +16,13 @@ function perfHeaders(): Record<string, string> {
 }
 
 async function fetchOp<T>(path: string, init?: RequestInit): Promise<ApiEnvelope<T>> {
-  if (!API_BASE) {
+  if (!isWorkerApiConfigured()) {
     return {
       ok: false,
       status: 'FAIL',
       data: null as T,
       warnings: ['OPERATIONAL_API_OFFLINE'],
-      errors: ['Chưa cấu hình VITE_CBV_API_BASE_URL'],
+      errors: ['Chưa cấu hình Worker API (VITE_CBV_API_BASE_URL hoặc Vite dev proxy)'],
       traceId: `local-${Date.now()}`,
     };
   }

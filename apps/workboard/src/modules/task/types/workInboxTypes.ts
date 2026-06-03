@@ -57,11 +57,13 @@ export interface TaskCardModel {
   id: string;
   code?: string;
   title: string;
+  summary?: string;
   status: InboxStatus;
   group: InboxGroup;
   priority?: InboxPriority;
   assigneeName?: string;
   dueLabel?: string;
+  module?: ModuleKey;
   primaryActionLabel: string;
   primaryActionHref: string;
 }

@@ -99,6 +99,21 @@ export async function gsWiOpSoftDeleteChecklistItem(
   );
 }
 
+export async function gsWiOpClBridge(
+  env: Env,
+  payload: Record<string, unknown>,
+  user: UserContext,
+  traceId: string,
+) {
+  return callTaskDbGas<import('../contracts/workInboxChecklistBridge').ChecklistBridgeResult>(
+    env,
+    'wiOpClBridge',
+    payload,
+    user,
+    traceId,
+  );
+}
+
 export async function gsWiOpListAttachments(
   env: Env,
   user: UserContext,

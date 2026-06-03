@@ -1,0 +1,35 @@
+# Phase Charter — PHASE_OCMS_02A_CASE_STRIP_VISIBILITY_RULES
+
+---
+
+## PHASE
+
+`PHASE_OCMS_02A_CASE_STRIP_VISIBILITY_RULES`
+
+---
+
+## ADR
+
+`ADR_OCMS_CASE_STRIP_VISIBILITY_RULES.md`
+
+---
+
+## MODE
+
+- [x] DOC-ONLY
+
+---
+
+## SUCCESS CRITERIA
+
+**GO** — visibility rules + ADR; OCMS_03 unblocked.
+
+---
+
+## NEXT PHASE
+
+`PHASE_OCMS_03_FOCUS_CASE_CONTEXT_STRIP`
+
+---
+
+*Phase charter.*

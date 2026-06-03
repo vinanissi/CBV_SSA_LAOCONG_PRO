@@ -8,8 +8,13 @@ export interface WorkInboxCreateTaskRequest {
   actorRole?: string;
   title: string;
   description?: string;
+  taskTypeId?: string;
+  donViId?: string;
+  ownerId?: string;
   priority?: WorkInboxCreateTaskPriority;
   dueDate?: string;
+  relatedEntityType?: string;
+  relatedEntityId?: string;
   relatedPhone?: string;
   relatedPlate?: string;
   assignee?: string;

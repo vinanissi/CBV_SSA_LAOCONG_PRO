@@ -454,6 +454,11 @@ function taskDbGetAttachmentsForTask_(taskId) {
   return files;
 }
 
+function taskDbMakeTaskCode_(taskId) {
+  var suffix = String(taskId || '').replace(/^TASK-?/i, '').slice(-8).toUpperCase();
+  return 'TK-' + (suffix || Date.now().toString(36).toUpperCase());
+}
+
 function taskDbCreateTask_(payload, actor) {
   var info = taskDbGetMainHeaderMap_();
   var taskId = taskDbMakeId_('TASK');
@@ -462,18 +467,32 @@ function taskDbCreateTask_(payload, actor) {
 
   var record = {
     ID: taskId,
+    TASK_CODE: payload.taskCode || taskDbMakeTaskCode_(taskId),
     TITLE: String(payload.title || '').trim(),
     DESCRIPTION: String(payload.description || '').trim(),
+    TASK_TYPE_ID: String(payload.taskTypeId || payload.task_type_id || '').trim(),
     STATUS: 'NEW',
     PRIORITY: String(payload.priority || 'MEDIUM').toUpperCase(),
+    DON_VI_ID: String(payload.donViId || payload.don_vi_id || actor.donViId || '').trim(),
     OWNER_ID: ownerId,
     REPORTER_ID: actor.userId || ownerId,
+    SHARED_WITH: '',
+    IS_PRIVATE: 'false',
+    START_DATE: '',
     DUE_DATE: payload.dueDate || taskDbToday_(),
+    DONE_AT: '',
+    PROGRESS_PERCENT: 0,
+    RESULT_SUMMARY: '',
     CREATED_AT: now,
     CREATED_BY: actor.displayName || actor.userId,
     UPDATED_AT: now,
     UPDATED_BY: actor.displayName || actor.userId,
+    IS_STARRED: 'false',
+    IS_PINNED: 'false',
     IS_DELETED: 'false',
+    PENDING_ACTION: '',
+    RELATED_ENTITY_TYPE: String(payload.relatedEntityType || payload.related_entity_type || '').trim(),
+    RELATED_ENTITY_ID: String(payload.relatedEntityId || payload.related_entity_id || '').trim(),
   };
 
   if (!record.TITLE) return { ok: false, message: 'title là bắt buộc' };

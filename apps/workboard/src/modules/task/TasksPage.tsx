@@ -94,10 +94,35 @@ import { evaluateTaskMainRuntimeHealth } from '@/shared/utils/taskMainRuntimeHea
 
 const DETAIL_CACHE_TTL_MS = NETWORK_CACHE_TTL_MS.TASK_DETAIL;
 const SNAPSHOT_LIMIT = 100;
+const SHEET_RUNTIME_SOFT_WARNING = 'Google Sheet đang chậm hoặc đang thử lại — dữ liệu hiện tại vẫn dùng được.';
+const SHEET_RUNTIME_SLOW_SIGNAL = 'TASK_MAIN phản hồi chậm — vẫn đồng bộ được';
 
 interface DetailCacheEntry {
   detail: TaskDetail;
   fetchedAt: number;
+}
+
+function isSheetRuntimeTransientWarning(message: string): boolean {
+  const m = message.trim().toLowerCase();
+  return (
+    m === 'aborted' ||
+    m.includes('phản hồi chậm') ||
+    m.includes('try lại sau') ||
+    m.includes('thử lại sau')
+  );
+}
+
+function normalizeWorkspaceWarnings(input: string[], hasUsableData: boolean): string[] {
+  if (!input.length) return input;
+  const out: string[] = [];
+  for (const w of input) {
+    if (hasUsableData && isSheetRuntimeTransientWarning(w)) {
+      if (!out.includes(SHEET_RUNTIME_SOFT_WARNING)) out.push(SHEET_RUNTIME_SOFT_WARNING);
+      continue;
+    }
+    if (!out.includes(w)) out.push(w);
+  }
+  return out;
 }
 
 function patchTaskInSnapshot(snapshot: TaskWorkspaceSnapshot, updated: TaskItem): TaskWorkspaceSnapshot {
@@ -174,6 +199,7 @@ export function TasksPage({ user }: TasksPageProps) {
   const selectedTaskIdRef = useRef<string | null>(null);
   const detailCacheRef = useRef<Map<string, DetailCacheEntry>>(new Map());
   const hasSnapshotRef = useRef(false);
+  const workspaceRequestSeqRef = useRef(0);
   const { setDetail, clearDetail, bumpDetailContent } = useDetailPanel();
   const panelDetailRef = useRef<TaskDetail | null>(null);
   const panelLoadingRef = useRef(false);
@@ -342,6 +368,8 @@ export function TasksPage({ user }: TasksPageProps) {
 
   const loadWorkspace = useCallback(
     (soft = false, force = false) => {
+      workspaceRequestSeqRef.current += 1;
+      const requestSeq = workspaceRequestSeqRef.current;
       const hasStale = hasSnapshotRef.current;
       if (!soft && !hasStale) setInitialLoading(true);
       else setRefreshing(true);
@@ -356,9 +384,17 @@ export function TasksPage({ user }: TasksPageProps) {
         force,
       })
         .then(({ envelope: res }) => {
+          if (requestSeq !== workspaceRequestSeqRef.current) return;
           if (!res.ok) {
             const msg = res.errors[0] ?? 'Không tải được workspace task';
-            if (hasStale) setWarnings((prev) => [...prev, msg]);
+            if (hasStale) {
+              const softMessage = isSheetRuntimeTransientWarning(msg)
+                ? SHEET_RUNTIME_SOFT_WARNING
+                : msg;
+              setWarnings((prev) =>
+                normalizeWorkspaceWarnings([...prev.filter((w) => w !== msg), softMessage], true),
+              );
+            }
             else setError(msg);
             return;
           }
@@ -392,9 +428,9 @@ export function TasksPage({ user }: TasksPageProps) {
             enrichedSnapshot.runtime.workerLatencyMs >= 2000 &&
             !enrichedSnapshot.runtime.cacheHit
           ) {
-            w.push('TASK_MAIN phản hồi chậm — vẫn đồng bộ được');
+            w.push(SHEET_RUNTIME_SLOW_SIGNAL);
           }
-          setWarnings(w);
+          setWarnings(normalizeWorkspaceWarnings(w, true));
           const queueOnLoad = deriveVisibleTaskRuntime({
             snapshot: enrichedSnapshot,
             filter: activeFilter,
@@ -416,13 +452,20 @@ export function TasksPage({ user }: TasksPageProps) {
           }
         })
         .catch(() => {
+          if (requestSeq !== workspaceRequestSeqRef.current) return;
           if (hasStale) {
-            setWarnings((prev) => [...prev, 'Không kết nối — đang hiển thị bản gần nhất']);
+            setWarnings((prev) =>
+              normalizeWorkspaceWarnings(
+                [...prev, 'Không kết nối — đang hiển thị bản gần nhất'],
+                true,
+              ),
+            );
           } else {
             setError('Không kết nối được dữ liệu');
           }
         })
         .finally(() => {
+          if (requestSeq !== workspaceRequestSeqRef.current) return;
           setInitialLoading(false);
           setRefreshing(false);
         });

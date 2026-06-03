@@ -11,15 +11,24 @@ function wiOpMapCreatePriority_(raw) {
   return 'MEDIUM';
 }
 
+function wiOpResolveRelatedEntityFromPayload_(payload) {
+  var type = String(payload.relatedEntityType || payload.related_entity_type || '').trim().toUpperCase();
+  var id = String(payload.relatedEntityId || payload.related_entity_id || payload.relatedEntityValue || '').trim();
+  if (!type && payload.relatedPhone) {
+    type = 'PHONE';
+    id = String(payload.relatedPhone).trim();
+  }
+  if (!type && payload.relatedPlate) {
+    type = 'LICENSE_PLATE';
+    id = String(payload.relatedPlate).trim();
+  }
+  if (type === 'DOSSIER') type = 'HO_SO';
+  if (type === 'MEMBER') type = 'XA_VIEN';
+  return { type: type, id: id };
+}
+
 function wiOpBuildCreateDescription_(payload) {
-  var parts = [];
-  var desc = String(payload.description || '').trim();
-  if (desc) parts.push(desc);
-  var phone = String(payload.relatedPhone || payload.phone || '').trim();
-  var plate = String(payload.relatedPlate || payload.plate || '').trim();
-  if (phone) parts.push('[SĐT: ' + phone + ']');
-  if (plate) parts.push('[Biển số: ' + plate + ']');
-  return parts.join('\n');
+  return String(payload.description || '').trim();
 }
 
 function wiOpCreateUserTask_(payload, actor, traceId) {
@@ -47,6 +56,8 @@ function wiOpCreateUserTask_(payload, actor, traceId) {
     if (requestedOwner) ownerId = requestedOwner;
   }
 
+  var related = wiOpResolveRelatedEntityFromPayload_(payload);
+
   var createPayload = {
     title: title,
     description: description,
@@ -54,6 +65,10 @@ function wiOpCreateUserTask_(payload, actor, traceId) {
     dueDate: payload.dueDate || '',
     assignee: ownerId,
     ownerId: ownerId,
+    taskTypeId: String(payload.taskTypeId || payload.task_type_id || '').trim(),
+    donViId: String(payload.donViId || payload.don_vi_id || actor.donViId || '').trim(),
+    relatedEntityType: related.type,
+    relatedEntityId: related.id,
     note: 'work_inbox_user_create',
     traceId: traceId || payload.traceId,
     source: 'work_inbox_user_create',

@@ -41,6 +41,7 @@ export function runWorkInboxChecklistRuntimeChecks(): {
   const push = (id: string, pass: boolean) => checks.push({ id, pass });
 
   const section = readLocal('WorkInboxChecklistSection.tsx');
+  const row = readLocal('SmartChecklistItemRow.tsx');
   const hook = readLocal('useWorkInboxChecklistRuntime.ts');
   const localState = readLocal('workInboxChecklistLocalState.ts');
   const cards = readRoot('modules/task/inbox/focusRuntime/FocusContentCards.tsx');
@@ -64,6 +65,20 @@ export function runWorkInboxChecklistRuntimeChecks(): {
   push('CHECKLIST_GAS_ACTIONS', gasConfig.includes('wiOpListChecklist') && gasOp.includes("case 'wiOpToggleChecklistItem'"));
   push('CHECKLIST_ADAPTER', workerAdapter.includes('gsWiOpListChecklist') && workerAdapter.includes('gsWiOpSoftDeleteChecklistItem'));
   push('CHECKLIST_UI_ADD_TOGGLE', section.includes('+ Thêm mục') && section.includes('toggleItem'));
+  push('CHECKLIST_SMART_ROW', section.includes('SmartChecklistItemRow') && section.includes('adaptChecklistItems'));
+  push(
+    'CHECKLIST_FEEDBACK_RUNTIME',
+    section.includes('useChecklistFeedbackRuntime') && section.includes('enrichSmartChecklistListRuntime'),
+  );
+  push(
+    'CHECKLIST_ATTACHMENT_RUNTIME',
+    section.includes('useChecklistAttachmentRuntime') && section.includes('ChecklistAttachmentPanel'),
+  );
+  push(
+    'CHECKLIST_INLINE_ACTIONS',
+    row.includes('ChecklistInlineActionRow') && row.includes('ChecklistItemLatestPreview'),
+  );
+  push('CHECKLIST_LINK_RUNTIME', section.includes('useChecklistLinkRuntime') && row.includes('ChecklistLinkPanel'));
   push('CHECKLIST_TITLE_VALIDATION', gasChecklist.includes("title là bắt buộc") && workerMod.includes('title là bắt buộc'));
   push(
     'CHECKLIST_APPEND_ROW_WIDTH_HOTFIX',

@@ -13,6 +13,8 @@ interface FocusHeaderProps {
   onNext: () => void;
   onNavigatePrev?: () => void;
   onNavigateNext?: () => void;
+  /** Compact queue hint when center Next Task card is hidden */
+  nextTaskPreview?: string | null;
 }
 
 export function FocusHeader({
@@ -28,7 +30,12 @@ export function FocusHeader({
   onNext,
   onNavigatePrev,
   onNavigateNext,
+  nextTaskPreview,
 }: FocusHeaderProps) {
+  const preview =
+    nextTaskPreview?.trim() && nextTaskPreview.length > 48
+      ? `${nextTaskPreview.slice(0, 45)}…`
+      : nextTaskPreview?.trim() || null;
   return (
     <header className="work-inbox-focus-header" data-cbv-panel="work-inbox-focus-header">
       <button type="button" className="work-inbox-focus-header__back" onClick={onBackToInbox}>
@@ -46,6 +53,11 @@ export function FocusHeader({
         <WorkInboxJumpToPosition currentPosition={currentPosition} total={queueTotal} />
         <div className="work-inbox-focus-header__progress text-right">
           <span className="work-inbox-focus-header__counter tabular-nums">{progressLabel}</span>
+          {preview && !atEnd ? (
+            <span className="work-inbox-focus-header__next-preview block max-w-[12rem] truncate text-[10px] text-slate-600" title={nextTaskPreview ?? undefined}>
+              Tiếp: {preview}
+            </span>
+          ) : null}
           {progressSubLabel && (
             <span className="block text-[10px] text-operational-muted">{progressSubLabel}</span>
           )}

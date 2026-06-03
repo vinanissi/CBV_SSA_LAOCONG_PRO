@@ -639,7 +639,7 @@ export async function createWorkInboxChecklistItem(
 export async function updateWorkInboxChecklistItem(
   taskId: string,
   checklistId: string,
-  body: { title?: string },
+  body: { title?: string; sortOrder?: number },
 ): Promise<
   ApiEnvelope<{ item: import('@/modules/task/inbox/checklist/workInboxChecklistTypes').WorkInboxChecklistItem }>
 > {
@@ -647,7 +647,14 @@ export async function updateWorkInboxChecklistItem(
   const items = mockChecklistList(taskId);
   const idx = items.findIndex((i) => i.checklistId === checklistId);
   if (idx < 0) return createEnvelope(null as never, { errors: ['Không tìm thấy mục'], ok: false, status: 'FAIL' });
-  const next = { ...items[idx], title: body.title?.trim() || items[idx].title };
+  const next = {
+    ...items[idx],
+    title: body.title?.trim() || items[idx].title,
+    sortOrder:
+      typeof body.sortOrder === 'number' && Number.isFinite(body.sortOrder)
+        ? body.sortOrder
+        : items[idx].sortOrder,
+  };
   const copy = items.slice();
   copy[idx] = next;
   mockChecklistByTask.set(taskId, copy);
@@ -816,6 +823,8 @@ export async function createWorkInboxUserTask(
     owner: MOCK_USER.displayName,
     ownerId: MOCK_USER.userId,
     dueDate: body.dueDate ?? '',
+    relatedEntityType: body.relatedEntityType,
+    relatedEntityId: body.relatedEntityId,
     href: `/inbox/${taskId}`,
     permissionAllowed: true,
     isMine: true,

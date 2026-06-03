@@ -55,7 +55,8 @@ export function runWorkInboxAttachmentsRuntimeChecks(): {
   const gasConfig = readGas('04_WorkInboxOperationalConfig.js');
 
   push('ATTACH_FE_WORKER_API_ONLY', client.includes('listWorkInboxAttachments') && !hook.includes('script.google.com'));
-  push('ATTACH_UI_PREVIEW_AND_PANEL', cards.includes('WorkInboxAttachmentsSection') && rightTabs.includes('variant="panel"'));
+  push('ATTACH_UI_DOSSIER_LAYOUT', rightTabs.includes('DossierAggregatePanel') && cards.includes('isCenterRecentDocumentsVisible'));
+  push('ATTACH_DIALOG_HOST', readRoot('modules/task/inbox/attachments/WorkInboxTaskAttachmentDialogHost.tsx').includes('WorkInboxAddAttachmentDialog'));
   push('ATTACH_MORE_MENU_OPENS_DIALOG', actionHook.includes('ACTION_MORE_ATTACH') && actionHook.includes('setAttachDialogOpen(true)'));
   push('ATTACH_LOCAL_PATCH', localState.includes('upsertAttachmentItem') && hook.includes('setItems'));
   push('ATTACH_NO_FULL_SNAPSHOT', !hook.includes('loadWorkspace') && !hook.includes('getTaskWorkspaceSnapshot'));

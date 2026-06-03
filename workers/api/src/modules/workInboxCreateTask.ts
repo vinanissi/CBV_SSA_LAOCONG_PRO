@@ -90,14 +90,23 @@ export async function handleWorkInboxCreateTask(request: Request, env: Env) {
     actorRole,
     title,
     description,
+    taskTypeId: body.taskTypeId?.trim(),
+    donViId: body.donViId?.trim(),
     priority: body.priority ?? 'NORMAL',
     dueDate: body.dueDate,
+    relatedEntityType: body.relatedEntityType?.trim(),
+    relatedEntityId: body.relatedEntityId?.trim(),
     relatedPhone: normalizePhone(body.relatedPhone),
     relatedPlate: body.relatedPlate?.trim(),
   };
 
-  if (canUserAssignOnCreate(user) && body.assignee?.trim()) {
+  const ownerId = body.ownerId?.trim() || body.assignee?.trim() || user.userId;
+  payload.ownerId = ownerId;
+  payload.assignee = ownerId;
+
+  if (canUserAssignOnCreate(user) && body.assignee?.trim() && body.assignee.trim() !== user.userId) {
     payload.assignee = body.assignee.trim();
+    payload.ownerId = body.assignee.trim();
   }
 
   const result = await gsWiOpCreateUserTask(env, payload, user, traceId);

@@ -1,8 +1,9 @@
 import type { ApiEnvelope } from '@/api/contracts';
 import { getActiveWorkInboxTraceId } from '../performance/workInboxPerformanceTrace';
 import type { WorkInboxRefreshPolicy } from '../performance/workInboxRefreshPolicy';
+import { getApiBaseUrl, isWorkerApiConfigured } from '@/api/apiBase';
 
-const API_BASE = import.meta.env.VITE_CBV_API_BASE_URL?.trim() ?? '';
+const API_BASE = getApiBaseUrl();
 
 export type WorkInboxCombinedActionType =
   | 'START_PROCESSING'
@@ -27,7 +28,7 @@ export interface WorkInboxCombinedActionResult {
 }
 
 export function isCombinedActionAvailable(): boolean {
-  return Boolean(API_BASE);
+  return isWorkerApiConfigured();
 }
 
 export async function recordWorkInboxCombinedAction(body: {
@@ -40,13 +41,13 @@ export async function recordWorkInboxCombinedAction(body: {
   note?: string;
   payload?: Record<string, unknown>;
 }): Promise<ApiEnvelope<WorkInboxCombinedActionResult>> {
-  if (!API_BASE) {
+  if (!isWorkerApiConfigured()) {
     return {
       ok: false,
       status: 'FAIL',
       data: null as unknown as WorkInboxCombinedActionResult,
       warnings: ['COMBINED_ACTION_OFFLINE'],
-      errors: ['Chưa cấu hình VITE_CBV_API_BASE_URL'],
+      errors: ['Chưa cấu hình Worker API (VITE_CBV_API_BASE_URL hoặc Vite dev proxy)'],
       traceId: body.traceId,
     };
   }

@@ -1,5 +1,18 @@
 import { getEnv } from './env';
 
+function isLocalDevOrigin(origin: string): boolean {
+  if (!origin) return false;
+  try {
+    const u = new URL(origin);
+    return (
+      (u.hostname === 'localhost' || u.hostname === '127.0.0.1') &&
+      (u.protocol === 'http:' || u.protocol === 'https:')
+    );
+  } catch {
+    return false;
+  }
+}
+
 const CORS_HEADERS = {
   'Access-Control-Allow-Methods': 'GET, POST, PATCH, PUT, DELETE, OPTIONS',
   'Access-Control-Allow-Headers':
@@ -11,7 +24,11 @@ const CORS_HEADERS = {
 export function corsHeaders(request: Request, env: { CBV_ALLOWED_ORIGINS?: string }): HeadersInit {
   const { allowedOrigins } = getEnv(env);
   const origin = request.headers.get('Origin') ?? '';
-  const allowOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0] ?? 'http://localhost:5173';
+  const allowOrigin = allowedOrigins.includes(origin)
+    ? origin
+    : isLocalDevOrigin(origin)
+      ? origin
+      : (allowedOrigins[0] ?? 'http://localhost:5173');
 
   return {
     ...CORS_HEADERS,

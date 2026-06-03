@@ -902,7 +902,47 @@
 
   /* GS_09M–09P — industrial light runtime footer console */
   .operational-status-bar.runtime-footer-console.runtime-light-console {
-    @apply relative flex h-11 min-h-[42px] max-h-[46px] shrink-0 items-center border-t border-slate-300 bg-slate-100 px-3 text-slate-900 shadow-[0_-1px_3px_rgba(15,23,42,0.06)];
+    @apply relative z-[var(--cbv-layer-footer,25)] flex h-11 min-h-[42px] max-h-[46px] shrink-0 items-center border-t border-slate-300 bg-slate-100 px-3 text-slate-900 shadow-[0_-1px_3px_rgba(15,23,42,0.06)];
+  }
+
+  .runtime-checklist-sync {
+    @apply inline-flex max-w-[min(100%,22rem)] shrink-0 items-center gap-1.5 truncate rounded border border-slate-300 bg-white px-2 py-0.5 text-[12px] font-medium text-slate-800;
+  }
+
+  .runtime-checklist-sync--ok {
+    @apply border-emerald-300 bg-emerald-50 text-emerald-950;
+  }
+
+  .runtime-checklist-sync--warn {
+    @apply border-amber-300 bg-amber-50 text-amber-950;
+  }
+
+  .runtime-checklist-sync--error {
+    @apply border-red-300 bg-red-50 text-red-950;
+  }
+
+  .runtime-checklist-sync--off {
+    @apply border-dashed border-slate-300 bg-slate-50 text-slate-600;
+  }
+
+  .runtime-checklist-sync__time {
+    @apply font-mono text-[11px] text-slate-600;
+  }
+
+  .runtime-checklist-sync__action {
+    @apply shrink-0 rounded border border-slate-300 bg-white px-1.5 py-0 text-[11px] font-semibold hover:bg-slate-50 disabled:opacity-50;
+  }
+
+  .runtime-checklist-sync__detail {
+    @apply max-w-[8rem] truncate text-[10px] font-normal;
+  }
+
+  /* Operator layer tokens — sticky bar (20) < footer (25) < dropdown (60) < toast (80) */
+  .operational-runtime {
+    --cbv-layer-sticky-action-bar: 20;
+    --cbv-layer-footer: 25;
+    --cbv-layer-dropdown: 60;
+    --cbv-layer-toast: 80;
   }
 
   .operational-status-zone {
@@ -935,6 +975,22 @@
 
   .runtime-light-console .operational-status-action-lock {
     @apply ml-1 text-[12px] font-medium text-slate-700;
+  }
+
+  .runtime-light-console .operational-status-action--active {
+    @apply border-blue-400 bg-blue-50 text-blue-900;
+  }
+
+  .runtime-footer-more-menu {
+    @apply relative inline-flex;
+  }
+
+  .runtime-footer-more-menu__panel {
+    @apply absolute bottom-full left-0 z-[60] mb-1 min-w-[9rem] rounded-md border border-slate-200 bg-white py-1 shadow-lg;
+  }
+
+  .runtime-footer-more-menu__item {
+    @apply block w-full px-3 py-1.5 text-left text-[13px] font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-60;
   }
 
   .runtime-status-telemetry {
@@ -1602,6 +1658,26 @@ html.theme-light textarea::placeholder {
   @apply w-full text-left;
 }
 
+.operator-main-sidebar__section--system {
+  @apply opacity-90;
+}
+
+.operator-main-sidebar__system-summary {
+  @apply cursor-pointer list-none text-[10px] font-medium uppercase tracking-wide text-operational-muted hover:text-operational-text;
+}
+
+.operator-main-sidebar__system-summary::-webkit-details-marker {
+  display: none;
+}
+
+.sidebar-nav-link--secondary {
+  @apply text-[13px] text-operational-muted;
+}
+
+.sidebar-nav-link--secondary.active {
+  @apply text-operational-text;
+}
+
 .work-inbox-focus-header {
   @apply grid grid-cols-[1fr_auto_1fr] items-center gap-2 border-b border-border/40 pb-2;
 }
@@ -1799,6 +1875,26 @@ html.theme-light textarea::placeholder {
   @apply opacity-100 pointer-events-auto;
 }
 
+.cbv-checklist-toast {
+  @apply fixed bottom-4 right-4 z-50 rounded-md border border-slate-200 bg-white px-3 py-2 text-[12px] text-slate-800 opacity-0 shadow-lg transition-opacity pointer-events-none;
+}
+
+.cbv-checklist-toast[data-visible='true'] {
+  @apply opacity-100 pointer-events-auto;
+}
+
+.cbv-checklist-toast[data-kind='success'] {
+  @apply border-emerald-300 bg-emerald-50 text-emerald-900;
+}
+
+.cbv-checklist-toast[data-kind='error'] {
+  @apply border-red-300 bg-red-50 text-red-900;
+}
+
+.cbv-checklist-toast[data-kind='warning'] {
+  @apply border-amber-300 bg-amber-50 text-amber-900;
+}
+
 .work-inbox-shell__body--focus-safe {
   padding-bottom: max(3rem, env(safe-area-inset-bottom, 0px));
 }
@@ -1951,6 +2047,993 @@ html.theme-light textarea::placeholder {
 
 .work-inbox-checklist__retry {
   @apply underline;
+}
+
+.work-inbox-checklist-progress {
+  @apply mb-1.5 rounded-md border border-slate-200 bg-slate-50/80 px-2 py-1.5;
+}
+
+.work-inbox-checklist-progress__meta {
+  @apply mb-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-slate-600;
+}
+
+.work-inbox-checklist-progress__meta strong {
+  @apply text-slate-800;
+}
+
+.work-inbox-checklist-progress__bar {
+  @apply h-1.5 w-full overflow-hidden rounded-full bg-slate-200;
+}
+
+.work-inbox-checklist-progress__fill {
+  @apply h-full rounded-full bg-emerald-500;
+  transition: width 160ms ease-out;
+}
+
+.work-inbox-smart-checklist__list {
+  @apply space-y-2;
+}
+
+.work-inbox-smart-checklist__row {
+  @apply flex-col items-stretch gap-0 rounded-md border border-transparent px-1 py-0.5 transition-colors duration-150 sm:flex-row sm:items-start;
+}
+
+.work-inbox-smart-checklist__row:hover {
+  @apply border-slate-200 bg-slate-50/50;
+}
+
+.work-inbox-smart-checklist__row:focus-within {
+  @apply border-blue-300 ring-2 ring-blue-100;
+}
+
+.work-inbox-smart-checklist__row--archived {
+  @apply opacity-75;
+}
+
+.work-inbox-smart-checklist__row--compact {
+  @apply py-0.5;
+}
+
+.work-inbox-smart-checklist--operator-density .work-inbox-smart-checklist__list {
+  @apply space-y-1;
+}
+
+.work-inbox-smart-checklist--operator-density .work-inbox-smart-checklist__row--compact {
+  @apply py-0;
+}
+
+.work-inbox-smart-checklist__comment-badge {
+  @apply inline-flex min-h-[1.25rem] items-center rounded-full bg-violet-100 px-1.5 text-[10px] font-semibold text-violet-900;
+}
+
+.work-inbox-smart-checklist__compact-counters {
+  @apply inline-flex shrink-0 flex-wrap items-center gap-1.5 text-slate-600;
+}
+
+.work-inbox-smart-checklist__compact-counter {
+  @apply inline-flex items-center gap-0.5 rounded-md bg-slate-100/90 px-1.5 py-0.5 font-medium tabular-nums text-slate-700;
+}
+
+.work-inbox-smart-checklist__row--expanded {
+  @apply border-b border-slate-100 pb-2;
+}
+
+.work-inbox-smart-checklist__row--pending {
+  @apply border-l-2 border-amber-300 bg-amber-50/40;
+}
+
+.work-inbox-smart-checklist__row--saved {
+  @apply border-l-2 border-emerald-300 bg-emerald-50/40;
+}
+
+.work-inbox-smart-checklist__row--failed {
+  @apply border-l-2 border-red-300 bg-red-50/40;
+}
+
+.work-inbox-smart-checklist__row--disabled {
+  @apply opacity-80;
+}
+
+.work-inbox-smart-checklist__interaction-hint {
+  @apply m-0 pl-6 text-[10px] font-medium text-slate-600;
+}
+
+.work-inbox-smart-checklist__comment-signal {
+  @apply m-0 pl-6 text-[10px] font-medium;
+}
+
+.work-inbox-smart-checklist__comment-signal--none {
+  @apply text-slate-500;
+}
+
+.work-inbox-smart-checklist__comment-signal--has-comments {
+  @apply font-semibold text-violet-800;
+}
+
+.work-inbox-smart-checklist__row--focused {
+  @apply ring-2 ring-violet-500 ring-offset-1 border-violet-300 bg-violet-50/60 shadow-sm;
+}
+
+.work-inbox-smart-checklist__row--dimmed {
+  opacity: 0.72;
+}
+
+.work-inbox-smart-checklist__row--focus-none {
+  @apply opacity-100;
+}
+
+.work-inbox-smart-checklist__header {
+  @apply flex items-start justify-between gap-1.5;
+}
+
+.work-inbox-smart-checklist__header--focusable {
+  @apply cursor-pointer rounded-md;
+}
+
+.work-inbox-smart-checklist__header--focusable .work-inbox-smart-checklist__title {
+  @apply min-w-0 flex-1;
+}
+
+.work-inbox-smart-checklist__check--completion-only {
+  @apply shrink-0;
+}
+
+.work-inbox-smart-checklist__check--completion-only .work-inbox-checklist__status {
+  @apply pointer-events-none;
+}
+
+.work-inbox-smart-checklist__header-actions {
+  @apply flex shrink-0 items-center gap-0.5;
+}
+
+.work-inbox-smart-checklist__edit-btn {
+  @apply rounded px-1.5 py-0.5 text-[11px] font-medium text-slate-600 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300;
+}
+
+.work-inbox-smart-checklist__step-link-btn {
+  @apply inline-flex min-h-[1.75rem] items-center rounded border border-slate-200 bg-white px-2 py-0.5 text-[11px] font-medium text-slate-700 hover:border-blue-300 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 disabled:opacity-60;
+}
+
+.work-inbox-smart-checklist__archived-badge {
+  @apply m-0 pl-6 text-[10px] font-medium uppercase tracking-wide text-slate-400;
+}
+
+.work-inbox-smart-checklist__expanded-body {
+  @apply mt-1 pl-6;
+}
+
+.work-inbox-smart-checklist__crud-actions {
+  @apply flex flex-wrap gap-2 pb-1;
+}
+
+.work-inbox-smart-checklist__crud-link {
+  @apply text-[11px] font-medium text-slate-700 underline hover:text-slate-900;
+}
+
+.work-inbox-smart-checklist__note-input {
+  @apply mt-1 w-full;
+}
+
+.work-inbox-smart-checklist__note-editor-actions {
+  @apply mt-1 flex gap-2;
+}
+
+.work-inbox-smart-checklist__save-btn {
+  @apply rounded border border-slate-300 bg-slate-50 px-2 py-0.5 text-[11px] hover:bg-slate-100;
+}
+
+.work-inbox-smart-checklist__cancel-btn {
+  @apply rounded px-2 py-0.5 text-[11px] text-slate-500 hover:bg-slate-100;
+}
+
+.work-inbox-smart-checklist__collapse-btn {
+  @apply mt-2 text-[11px] font-medium text-slate-600 hover:text-slate-900;
+}
+
+.work-inbox-smart-checklist__note--compact {
+  @apply line-clamp-1;
+}
+
+.work-inbox-checklist-toolbar {
+  @apply mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between;
+}
+
+.work-inbox-checklist-toolbar__primary {
+  @apply flex min-w-0 flex-1 flex-wrap items-center gap-2;
+}
+
+.work-inbox-checklist-toolbar__secondary {
+  @apply flex flex-wrap gap-1;
+}
+
+.work-inbox-checklist-toolbar__add-input {
+  @apply min-w-[8rem] flex-1 rounded border border-slate-200 px-2 py-1 text-[12px];
+}
+
+.work-inbox-checklist-toolbar__btn {
+  @apply rounded border border-slate-200 bg-white px-2 py-1 text-[11px] text-slate-700 hover:bg-slate-50;
+}
+
+.work-inbox-checklist-toolbar__btn--primary {
+  @apply border-slate-800 bg-slate-800 text-white hover:bg-slate-900;
+}
+
+.work-inbox-checklist-toolbar__btn--template {
+  @apply border-violet-200 text-violet-900 hover:bg-violet-50;
+}
+
+.work-inbox-checklist-toolbar__btn--active {
+  @apply ring-1 ring-violet-300;
+}
+
+.work-inbox-checklist-sync {
+  @apply mb-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-[12px] text-slate-700;
+}
+
+.work-inbox-checklist-sync--off {
+  @apply border-dashed text-slate-500;
+}
+
+.work-inbox-checklist-sync--warn {
+  @apply border-amber-300 bg-amber-50 text-amber-900;
+}
+
+.work-inbox-checklist-sync__row {
+  @apply flex flex-wrap items-center gap-2;
+}
+
+.work-inbox-checklist-sync__btn {
+  @apply rounded border border-slate-300 bg-white px-2 py-0.5 text-[12px] font-medium text-slate-800 hover:bg-slate-100 disabled:opacity-50;
+}
+
+.work-inbox-checklist-sync__meta,
+.work-inbox-checklist-sync__status {
+  @apply text-slate-600;
+}
+
+.work-inbox-checklist-sync__conflict {
+  @apply mt-1 mb-0 font-medium text-amber-900;
+}
+
+.work-inbox-checklist-sync__message {
+  @apply mt-1 mb-0 text-slate-600;
+}
+
+.work-inbox-checklist-focus-bar {
+  @apply mb-2 space-y-1.5;
+}
+
+.work-inbox-checklist-focus-bar__row {
+  @apply flex min-w-0 flex-wrap items-center gap-2;
+}
+
+.work-inbox-checklist-focus-bar__action {
+  @apply shrink-0;
+}
+
+.work-inbox-checklist-focus-workspace__controls {
+  @apply flex flex-wrap gap-1.5;
+}
+
+.work-inbox-checklist-focus-workspace__btn {
+  @apply rounded border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50;
+}
+
+.work-inbox-checklist-focus-workspace__navigator {
+  @apply flex flex-wrap gap-1;
+}
+
+.work-inbox-checklist-focus-workspace__step {
+  @apply max-w-[14rem] truncate rounded border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] text-slate-700 hover:bg-slate-100;
+}
+
+.work-inbox-checklist-focus-status {
+  @apply mb-0 flex min-w-0 flex-1 flex-wrap items-center justify-between gap-2 overflow-hidden text-[11px] leading-snug text-operational-muted;
+}
+
+.work-inbox-checklist-focus-status__actions {
+  @apply flex shrink-0 flex-wrap items-center gap-1.5;
+}
+
+.work-inbox-checklist-focus-bar__complete {
+  @apply rounded border border-emerald-600 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-900 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+.work-inbox-checklist-focus-status__label {
+  @apply inline-flex min-w-0 items-center overflow-hidden whitespace-nowrap;
+}
+
+.work-inbox-checklist-focus-status__title {
+  @apply ml-0.5 min-w-0 truncate font-semibold text-slate-800;
+}
+
+.work-inbox-checklist-focus-status__sep {
+  @apply shrink-0 px-1 text-slate-400;
+}
+
+.work-inbox-checklist-focus-status__clear {
+  @apply shrink-0;
+}
+
+.work-inbox-checklist__hint--dual-pane {
+  @apply mb-2 text-[11px] text-operational-muted;
+}
+
+.work-inbox-smart-checklist__row--navigator-only .work-inbox-smart-checklist__header {
+  @apply cursor-pointer rounded-md hover:bg-slate-50/80;
+}
+
+.work-inbox-smart-checklist__row--navigator-only.work-inbox-smart-checklist__row--focused {
+  @apply ring-2 ring-sky-300/80;
+}
+
+.work-inbox-smart-checklist__row--center-inline-open {
+  @apply ring-1 ring-sky-200/90;
+}
+
+.work-inbox-smart-checklist__center-inline-panels {
+  @apply mt-2 ml-8 space-y-2 border-l-2 border-sky-200/90 pl-3;
+}
+
+.work-inbox-focused-step-detail {
+  @apply mb-3 space-y-2 rounded-lg border border-slate-200 bg-slate-50/60 p-2.5 text-xs;
+}
+
+.work-inbox-focused-step-detail--empty {
+  @apply border-dashed bg-white;
+}
+
+.work-inbox-focused-step-detail__header {
+  @apply flex items-start gap-2;
+}
+
+.work-inbox-focused-step-detail__status {
+  @apply shrink-0 text-sm;
+}
+
+.work-inbox-focused-step-detail__title {
+  @apply m-0 text-sm font-semibold leading-snug text-slate-900;
+}
+
+.work-inbox-focused-step-detail__sections {
+  @apply flex flex-wrap gap-1;
+}
+
+.work-inbox-focused-step-detail__section-tab {
+  @apply inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-medium text-slate-700 hover:bg-slate-50;
+}
+
+.work-inbox-focused-step-detail__section-tab--active {
+  @apply border-sky-300 bg-sky-50 text-sky-900;
+}
+
+.work-inbox-focused-step-detail__count {
+  @apply rounded bg-slate-100 px-1 text-[9px] text-slate-600;
+}
+
+.work-inbox-focused-step-detail__section-empty,
+.work-inbox-focused-step-detail__empty,
+.work-inbox-focused-step-detail__hint {
+  @apply m-0 text-operational-muted;
+}
+
+.work-inbox-focused-step-detail__counts {
+  @apply m-0 grid grid-cols-2 gap-1.5;
+}
+
+.work-inbox-focused-step-detail__count-row {
+  @apply flex items-center justify-between rounded border border-slate-200 bg-white px-2 py-1;
+}
+
+.work-inbox-focused-step-detail__count-row dt {
+  @apply m-0 text-[10px] font-medium text-slate-700;
+}
+
+.work-inbox-focused-step-detail__count-row dd {
+  @apply m-0 text-[10px] font-semibold tabular-nums text-slate-900;
+}
+
+.work-inbox-right-context-tabs[data-checklist-dual-pane-right='true'] .work-inbox-focused-step-detail {
+  @apply shrink-0;
+}
+
+.work-inbox-dossier {
+  @apply space-y-3 text-xs text-operational-text;
+}
+
+.work-inbox-dossier__heading {
+  @apply m-0 text-[11px] font-semibold uppercase tracking-wide text-operational-muted;
+}
+
+.work-inbox-dossier__summary {
+  @apply m-0 font-medium text-slate-800;
+}
+
+.work-inbox-dossier__hint,
+.work-inbox-dossier__empty-sub {
+  @apply text-operational-muted;
+}
+
+.work-inbox-dossier__empty {
+  @apply rounded border border-dashed border-slate-200 bg-slate-50/80 p-3 text-slate-600;
+}
+
+.work-inbox-dossier__group-title {
+  @apply m-0 mb-1 font-semibold text-slate-800;
+}
+
+.work-inbox-dossier__list {
+  @apply m-0 list-none space-y-1 pl-0;
+}
+
+.work-inbox-dossier__item-link {
+  @apply text-violet-700 hover:underline;
+}
+
+.work-inbox-dossier__item-meta {
+  @apply text-operational-muted;
+}
+
+.work-inbox-dossier__warn {
+  @apply text-[11px] text-amber-700;
+}
+
+.work-inbox-dossier-layout-hint {
+  @apply m-0 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-[12px] text-slate-600;
+}
+
+.work-inbox-dossier__filters {
+  @apply flex flex-wrap gap-1;
+}
+
+.work-inbox-dossier__filter {
+  @apply rounded border border-slate-200 bg-white px-2 py-0.5 text-[11px] text-slate-700 hover:bg-slate-50;
+}
+
+.work-inbox-dossier__filter--active {
+  @apply border-violet-400 bg-violet-50 font-medium text-violet-900;
+}
+
+.work-inbox-dossier__filter-count {
+  @apply tabular-nums text-slate-500;
+}
+
+.work-inbox-dossier__grouping {
+  @apply flex flex-wrap gap-1;
+}
+
+.work-inbox-dossier__grouping-btn {
+  @apply rounded border border-dashed border-slate-300 bg-transparent px-2 py-0.5 text-[10px] text-slate-600 hover:bg-slate-50;
+}
+
+.work-inbox-dossier__grouping-btn--active {
+  @apply border-solid border-slate-400 bg-slate-100 font-medium;
+}
+
+.work-inbox-dossier__group-header {
+  @apply mb-1 flex flex-wrap items-center justify-between gap-2;
+}
+
+.work-inbox-dossier__item-main {
+  @apply block;
+}
+
+.work-inbox-dossier__item-step {
+  @apply m-0 mt-0.5 text-[10px] text-slate-600;
+}
+
+.work-inbox-dossier__goto-step {
+  @apply mt-1 rounded border border-violet-200 bg-violet-50 px-2 py-0.5 text-[10px] font-medium text-violet-800 hover:bg-violet-100;
+}
+
+.work-inbox-dossier__goto-step--group,
+.work-inbox-dossier__action-btn.work-inbox-dossier__goto-step--group {
+  @apply mt-0 shrink-0;
+}
+
+.work-inbox-dossier__actions {
+  @apply mt-1 flex flex-wrap gap-1;
+}
+
+.work-inbox-dossier__action-btn {
+  @apply rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-medium text-slate-700 hover:bg-slate-50;
+}
+
+.work-inbox-dossier__action-btn--disabled {
+  @apply cursor-not-allowed opacity-50 hover:bg-white;
+}
+
+.work-inbox-dossier__item-title {
+  @apply font-medium text-slate-800;
+}
+
+.work-inbox-dossier__item-task-level {
+  @apply m-0 mt-1 text-[10px] text-slate-500 italic;
+}
+
+.work-inbox-dossier__focus-msg {
+  @apply rounded border border-violet-200 bg-violet-50/80 px-2 py-1 text-[11px] text-violet-900;
+}
+
+.work-inbox-dossier__focus-msg--warn {
+  @apply border-amber-200 bg-amber-50/90 text-amber-900;
+}
+
+.work-inbox-dossier__focus-dismiss {
+  @apply ml-1 underline text-inherit hover:no-underline;
+}
+
+.work-inbox-smart-checklist__row--cross-focus {
+  @apply ring-2 ring-violet-400 ring-offset-1 transition-shadow duration-300;
+}
+
+.work-inbox-checklist-template {
+  @apply mb-3 rounded-lg border border-violet-100 bg-violet-50/40 p-3;
+}
+
+.work-inbox-checklist-template__header {
+  @apply mb-2 flex items-center justify-between gap-2;
+}
+
+.work-inbox-checklist-template__title {
+  @apply m-0 text-[13px] font-semibold text-slate-800;
+}
+
+.work-inbox-checklist-template__close {
+  @apply rounded px-1.5 text-slate-500 hover:bg-white/80;
+}
+
+.work-inbox-checklist-template__picker {
+  @apply flex flex-wrap gap-1.5;
+}
+
+.work-inbox-checklist-template__chip {
+  @apply flex flex-col items-start rounded border border-violet-200 bg-white px-2 py-1.5 text-left hover:border-violet-400;
+}
+
+.work-inbox-checklist-template__chip--active {
+  @apply border-violet-500 bg-violet-50 ring-1 ring-violet-200;
+}
+
+.work-inbox-checklist-template__chip-cat {
+  @apply text-[10px] uppercase tracking-wide text-violet-600;
+}
+
+.work-inbox-checklist-template__chip-name {
+  @apply text-[12px] font-medium text-slate-800;
+}
+
+.work-inbox-checklist-template__preview {
+  @apply mt-3 border-t border-violet-100 pt-3;
+}
+
+.work-inbox-checklist-template__preview-heading {
+  @apply m-0 text-[12px] text-slate-700;
+}
+
+.work-inbox-checklist-template__preview-desc {
+  @apply mt-1 text-[11px] text-slate-500;
+}
+
+.work-inbox-checklist-template__preview-list {
+  @apply my-2 list-decimal pl-5 text-[12px] text-slate-800 space-y-0.5;
+}
+
+.work-inbox-checklist-template__required {
+  @apply text-red-600;
+}
+
+.work-inbox-checklist-template__apply {
+  @apply rounded border border-violet-300 bg-violet-600 px-3 py-1 text-[12px] font-medium text-white hover:bg-violet-700 disabled:opacity-50;
+}
+
+.work-inbox-checklist-template__hint {
+  @apply m-0 mt-2 text-[11px] text-slate-500;
+}
+
+.work-inbox-checklist-template__empty {
+  @apply text-[11px] text-slate-500 italic;
+}
+
+.work-inbox-checklist-crud-menu {
+  @apply relative;
+}
+
+.work-inbox-checklist-crud-menu__trigger {
+  @apply rounded px-1.5 py-0.5 text-[14px] leading-none text-slate-500 hover:bg-slate-100;
+}
+
+.work-inbox-checklist-crud-menu__panel {
+  @apply absolute right-0 top-full z-20 mt-0.5 min-w-[9rem] rounded border border-slate-200 bg-white py-1 shadow-md;
+}
+
+.work-inbox-checklist-crud-menu__panel button {
+  @apply block w-full px-3 py-1.5 text-left text-[12px] text-slate-700 hover:bg-slate-50 disabled:text-slate-300;
+}
+
+.work-inbox-checklist__hint--archived {
+  @apply text-slate-500;
+}
+
+.work-inbox-smart-checklist__main {
+  @apply min-w-0 flex-1;
+}
+
+.work-inbox-smart-checklist__note {
+  @apply mt-0.5 pl-6 text-[12px] leading-snug text-slate-600 line-clamp-1;
+}
+
+.work-inbox-smart-checklist__meta {
+  @apply mt-0.5 flex flex-wrap gap-x-1 gap-y-0.5 pl-6 text-[11px] text-slate-500;
+}
+
+.work-inbox-smart-checklist__meta-part {
+  @apply whitespace-nowrap;
+}
+
+.work-inbox-smart-checklist__meta-sep {
+  @apply text-slate-300;
+}
+
+.work-inbox-focus-card--checklist-dense .work-inbox-smart-checklist__meta {
+  @apply text-[10px];
+}
+
+.work-inbox-smart-checklist__meta-row {
+  @apply mt-0.5 flex flex-col gap-0.5 pl-6 sm:flex-row sm:flex-wrap sm:items-center;
+}
+
+.work-inbox-smart-checklist__feedback-toggle {
+  @apply w-fit rounded px-0.5 text-left text-[11px] text-slate-600 underline-offset-2 hover:text-slate-800 hover:underline;
+}
+
+.work-inbox-smart-checklist__meta-rest {
+  @apply flex flex-wrap gap-x-1 gap-y-0.5 text-[11px] text-slate-500;
+}
+
+.work-inbox-checklist-feedback {
+  @apply mt-1 border-l-2 border-slate-200 pl-3 ml-6;
+}
+
+.work-inbox-checklist-feedback__empty {
+  @apply text-[11px] text-slate-500 italic;
+}
+
+.work-inbox-checklist-feedback__list {
+  @apply m-0 space-y-2 p-0 list-none;
+}
+
+.work-inbox-checklist-feedback__entry {
+  @apply text-[12px] text-slate-700;
+}
+
+.work-inbox-checklist-feedback__time {
+  @apply text-[11px] font-medium text-slate-500 tabular-nums;
+}
+
+.work-inbox-checklist-feedback__message {
+  @apply m-0 whitespace-pre-wrap break-words;
+}
+
+.work-inbox-checklist-feedback__author {
+  @apply mt-0.5 block text-[10px] text-slate-400;
+}
+
+.work-inbox-checklist-feedback__composer {
+  @apply mt-2;
+}
+
+.work-inbox-checklist-feedback__input {
+  @apply w-full resize-y rounded border border-slate-200 px-2 py-1 text-[12px];
+}
+
+.work-inbox-checklist-feedback__composer-actions {
+  @apply mt-1 flex gap-2;
+}
+
+.work-inbox-checklist-feedback__add {
+  @apply text-[11px] font-medium text-blue-700 hover:text-blue-900;
+}
+
+.work-inbox-checklist-feedback__submit {
+  @apply rounded border border-blue-200 bg-blue-50 px-2 py-0.5 text-[11px] text-blue-800 hover:bg-blue-100;
+}
+
+.work-inbox-checklist-feedback__cancel {
+  @apply rounded px-2 py-0.5 text-[11px] text-slate-500 hover:bg-slate-100;
+}
+
+.work-inbox-smart-checklist__attachment-toggle {
+  @apply w-fit rounded px-0.5 text-left text-[11px] text-slate-600 underline-offset-2 hover:text-slate-800 hover:underline;
+}
+
+.work-inbox-checklist-inline-actions {
+  @apply mt-1 flex flex-wrap gap-1.5 pl-6;
+}
+
+.work-inbox-checklist-inline-actions__chip {
+  @apply rounded-md border px-2 py-0.5 text-[11px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300;
+}
+
+.work-inbox-checklist-inline-actions__chip--feedback {
+  @apply border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50;
+}
+
+.work-inbox-checklist-inline-actions__chip--attachment {
+  @apply border-slate-200 bg-white text-slate-700 hover:border-amber-300 hover:bg-amber-50;
+}
+
+.work-inbox-checklist-inline-actions__chip--active {
+  @apply border-blue-400 bg-blue-50 text-blue-900 ring-1 ring-blue-200;
+}
+
+.work-inbox-checklist-inline-actions__chip--attachment.work-inbox-checklist-inline-actions__chip--active {
+  @apply border-amber-400 bg-amber-50 text-amber-950 ring-amber-200;
+}
+
+.work-inbox-checklist-inline-actions__chip--link {
+  @apply border-slate-200 bg-white text-slate-700 hover:border-violet-300 hover:bg-violet-50;
+}
+
+.work-inbox-checklist-inline-actions__chip--history {
+  @apply border-slate-200 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50;
+}
+
+.work-inbox-checklist-inline-actions__chip--history.work-inbox-checklist-inline-actions__chip--active {
+  @apply border-slate-500 bg-slate-100 text-slate-900 ring-slate-300;
+}
+
+.work-inbox-checklist-inline-actions__chip--link.work-inbox-checklist-inline-actions__chip--active {
+  @apply border-violet-400 bg-violet-50 text-violet-950 ring-violet-200;
+}
+
+.work-inbox-checklist-link {
+  @apply mt-1 border-l-2 border-violet-200 pl-3 ml-6;
+}
+
+.work-inbox-checklist-link__heading {
+  @apply m-0 text-[11px] font-medium text-slate-600;
+}
+
+.work-inbox-checklist-link__empty {
+  @apply text-[11px] text-slate-500 italic;
+}
+
+.work-inbox-checklist-link__list {
+  @apply m-0 mt-1 list-none space-y-1.5 p-0;
+}
+
+.work-inbox-checklist-link__row {
+  @apply flex items-start gap-2 text-[12px];
+}
+
+.work-inbox-checklist-link__main {
+  @apply min-w-0 flex-1;
+}
+
+.work-inbox-checklist-link__open {
+  @apply text-left font-medium text-violet-800 underline hover:text-violet-950;
+}
+
+.work-inbox-checklist-link__disabled {
+  @apply text-slate-700;
+}
+
+.work-inbox-checklist-link__unavailable {
+  @apply text-[10px] text-slate-400;
+}
+
+.work-inbox-checklist-link__meta {
+  @apply block text-[10px] text-slate-400 break-all;
+}
+
+.work-inbox-checklist-link__desc {
+  @apply block text-[10px] text-slate-500;
+}
+
+.work-inbox-checklist-link__remove {
+  @apply shrink-0 rounded px-1 text-slate-400 hover:bg-slate-100 hover:text-red-600;
+}
+
+.work-inbox-checklist-link__form {
+  @apply mt-2 space-y-1.5;
+}
+
+.work-inbox-checklist-link__input {
+  @apply w-full rounded border border-slate-200 px-2 py-1 text-[12px];
+}
+
+.work-inbox-checklist-link__hint-warn {
+  @apply m-0 text-[10px] text-amber-700;
+}
+
+.work-inbox-checklist-link__composer-actions {
+  @apply flex flex-wrap gap-2;
+}
+
+.work-inbox-checklist-link__add {
+  @apply text-[11px] font-medium text-violet-800 hover:text-violet-950;
+}
+
+.work-inbox-checklist-link__submit {
+  @apply rounded border border-violet-200 bg-violet-50 px-2 py-0.5 text-[11px] text-violet-900 hover:bg-violet-100;
+}
+
+.work-inbox-checklist-link__cancel {
+  @apply rounded px-2 py-0.5 text-[11px] text-slate-500 hover:bg-slate-100;
+}
+
+.work-inbox-checklist-link__task-refs {
+  @apply flex flex-wrap items-center gap-1 pt-1;
+}
+
+.work-inbox-checklist-link__task-refs-label {
+  @apply text-[10px] text-slate-500;
+}
+
+.work-inbox-checklist-link__task-ref-btn {
+  @apply rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] text-slate-700 hover:bg-slate-50;
+}
+
+.work-inbox-checklist-history {
+  @apply mt-1 border-l-2 border-slate-300 pl-3 ml-6;
+}
+
+.work-inbox-checklist-history__heading {
+  @apply m-0 text-[11px] font-medium text-slate-600;
+}
+
+.work-inbox-checklist-history__empty {
+  @apply text-[11px] text-slate-500 italic;
+}
+
+.work-inbox-checklist-history__list {
+  @apply m-0 mt-1 list-none space-y-1.5 p-0;
+}
+
+.work-inbox-checklist-history__entry {
+  @apply text-[12px] text-slate-700;
+}
+
+.work-inbox-checklist-history__time {
+  @apply mr-1 text-[10px] text-slate-400 tabular-nums;
+}
+
+.work-inbox-checklist-history__actor {
+  @apply mr-1 font-medium text-slate-600;
+}
+
+.work-inbox-checklist-history__type {
+  @apply mr-1 text-[10px] uppercase tracking-wide text-slate-400;
+}
+
+.work-inbox-checklist-history__message {
+  @apply m-0 mt-0.5 text-[12px] text-slate-800;
+}
+
+.work-inbox-checklist-history__composer {
+  @apply mt-2;
+}
+
+.work-inbox-checklist-history__input {
+  @apply w-full rounded border border-slate-200 px-2 py-1 text-[12px];
+}
+
+.work-inbox-checklist-history__composer-actions {
+  @apply mt-1 flex flex-wrap gap-2;
+}
+
+.work-inbox-checklist-history__add {
+  @apply text-[11px] font-medium text-slate-700 hover:text-slate-900;
+}
+
+.work-inbox-checklist-history__submit {
+  @apply rounded border border-slate-300 bg-slate-50 px-2 py-0.5 text-[11px] text-slate-900 hover:bg-slate-100;
+}
+
+.work-inbox-checklist-history__cancel {
+  @apply rounded px-2 py-0.5 text-[11px] text-slate-500 hover:bg-slate-100;
+}
+
+.work-inbox-checklist-inline-preview__btn--muted {
+  @apply text-slate-500;
+}
+
+.work-inbox-checklist-inline-preview {
+  @apply mt-1.5 pl-6 text-[11px] text-slate-600;
+}
+
+.work-inbox-checklist-inline-preview__label {
+  @apply font-medium text-slate-500;
+}
+
+.work-inbox-checklist-inline-preview__list {
+  @apply m-0 mt-0.5 list-none space-y-0.5 p-0;
+}
+
+.work-inbox-checklist-inline-preview__btn {
+  @apply max-w-full truncate text-left text-slate-700 hover:text-blue-800 hover:underline;
+}
+
+.work-inbox-checklist-inline-preview__time {
+  @apply font-medium text-slate-500 tabular-nums;
+}
+
+.work-inbox-smart-checklist__meta-secondary {
+  @apply mt-1 flex flex-wrap gap-x-1 gap-y-0.5 pl-6 text-[10px] text-slate-400;
+}
+
+.work-inbox-checklist-attachment {
+  @apply mt-1 border-l-2 border-amber-200 pl-3 ml-6;
+}
+
+.work-inbox-checklist-attachment__heading {
+  @apply m-0 text-[11px] font-medium text-slate-600;
+}
+
+.work-inbox-checklist-attachment__empty {
+  @apply text-[11px] text-slate-500 italic;
+}
+
+.work-inbox-checklist-attachment__list {
+  @apply m-0 mt-1 list-none space-y-1 p-0;
+}
+
+.work-inbox-checklist-attachment__row {
+  @apply flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[12px];
+}
+
+.work-inbox-checklist-attachment__name {
+  @apply break-all text-slate-800;
+}
+
+.work-inbox-checklist-attachment__name--link {
+  @apply text-blue-700 underline hover:text-blue-900;
+}
+
+.work-inbox-checklist-attachment__meta {
+  @apply text-[10px] text-slate-400;
+}
+
+.work-inbox-checklist-attachment__remove {
+  @apply rounded px-1 text-slate-400 hover:bg-slate-100 hover:text-red-600;
+}
+
+.work-inbox-checklist-attachment__form {
+  @apply mt-2 space-y-1.5;
+}
+
+.work-inbox-checklist-attachment__input {
+  @apply w-full rounded border border-slate-200 px-2 py-1 text-[12px];
+}
+
+.work-inbox-checklist-attachment__composer-actions {
+  @apply flex flex-wrap gap-2;
+}
+
+.work-inbox-checklist-attachment__add {
+  @apply text-[11px] font-medium text-amber-800 hover:text-amber-950;
+}
+
+.work-inbox-checklist-attachment__submit,
+.work-inbox-checklist-attachment__pick {
+  @apply rounded border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] text-amber-900 hover:bg-amber-100;
+}
+
+.work-inbox-checklist-attachment__cancel {
+  @apply rounded px-2 py-0.5 text-[11px] text-slate-500 hover:bg-slate-100;
+}
+
+.work-inbox-checklist-attachment__task-refs {
+  @apply flex flex-wrap items-center gap-1 pt-1;
+}
+
+.work-inbox-checklist-attachment__task-refs-label {
+  @apply text-[10px] text-slate-500;
+}
+
+.work-inbox-checklist-attachment__task-ref-btn {
+  @apply rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] text-slate-700 hover:bg-slate-50;
 }
 
 .work-inbox-right-related {
@@ -2106,6 +3189,47 @@ html.theme-light textarea::placeholder {
   @apply flex-row flex-wrap items-center gap-2 border-t border-slate-200/80 pt-2.5;
 }
 
+.work-inbox-focus-action-bar--sticky-bottom {
+  @apply sticky bottom-0 z-20 flex-row flex-wrap items-center gap-2 overflow-visible border-t border-slate-200 bg-white/95 px-2 py-2 shadow-[0_-4px_12px_rgba(15,23,42,0.08)] backdrop-blur-sm;
+}
+
+.work-inbox-focus-action-bar--sticky-bottom .work-inbox-focus-action-bar__more-menu-anchor {
+  @apply overflow-visible;
+}
+
+.work-inbox-focus-action-bar--sticky-bottom .work-inbox-focus-action-bar__primary {
+  @apply min-w-[7.5rem] max-w-none flex-none px-4 py-2 text-sm;
+}
+
+.work-inbox-focus-action-bar--reduced-primary.work-inbox-focus-action-bar--sticky-bottom {
+  @apply py-1.5;
+}
+
+.work-inbox-focus-action-bar--reduced-primary .work-inbox-focus-action-bar__secondary--reduced {
+  @apply w-full flex-1 flex-wrap gap-1;
+}
+
+.work-inbox-focus-action-bar__complete-btn {
+  @apply border-violet-300 bg-violet-50 font-semibold text-violet-900 hover:bg-violet-100;
+}
+
+.work-inbox-focus-workspace--sticky-action-bar {
+  @apply flex min-h-0 flex-1 flex-col gap-0;
+}
+
+.work-inbox-focus-workspace__scroll-body {
+  @apply flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto;
+  padding-bottom: var(--cbv-sticky-action-bar-offset, 3.5rem);
+}
+
+.focus-workspace .main-canvas--focus {
+  @apply flex min-h-0 flex-1 flex-col;
+}
+
+.focus-workspace .work-inbox-focus-workspace--sticky-action-bar {
+  @apply min-h-0 flex-1;
+}
+
 .work-inbox-focus-action-bar__primary {
   @apply shrink-0 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-blue-700;
   width: min(100%, 320px);
@@ -2163,6 +3287,26 @@ html.theme-light textarea::placeholder {
 
 .work-inbox-right-sla-pill--warn {
   @apply bg-amber-100 text-amber-900;
+}
+
+.work-inbox-operator-detail-panel__title {
+  @apply text-sm font-bold tracking-wide text-slate-800;
+}
+
+.work-inbox-operator-detail-panel__actions {
+  @apply flex flex-wrap gap-1.5;
+}
+
+.work-inbox-operator-detail-panel__action-btn {
+  @apply rounded border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+.work-inbox-operator-detail-panel__technical {
+  @apply rounded-md border border-dashed border-slate-200 bg-slate-50/80 px-2 py-1.5 text-xs;
+}
+
+.work-inbox-operator-detail-panel__technical-summary {
+  @apply cursor-pointer font-semibold text-slate-600;
 }
 
 .work-inbox-right-note-input {
@@ -2251,6 +3395,204 @@ html.theme-light textarea::placeholder {
 
 .work-inbox-compact-task-header__sep {
   @apply text-slate-400;
+}
+
+.work-inbox-compact-task-header__fields {
+  @apply mt-1.5 space-y-1 text-sm leading-snug text-slate-700;
+}
+
+.work-inbox-compact-task-header__field {
+  @apply grid gap-x-2 gap-y-0.5 sm:grid-cols-[auto_1fr];
+}
+
+.work-inbox-compact-task-header__field dt {
+  @apply shrink-0 font-semibold text-slate-600;
+}
+
+.work-inbox-compact-task-header__field dd {
+  @apply m-0 min-w-0 break-words;
+}
+
+.work-inbox-compact-task-header__ai {
+  @apply mt-1.5 text-sm leading-snug text-slate-700;
+}
+
+.work-inbox-compact-task-header__pill--priority {
+  @apply border-indigo-200 bg-indigo-50 text-indigo-900;
+}
+
+.work-inbox-compact-task-header__semantic {
+  @apply mt-2 border-t border-slate-100 pt-2;
+}
+
+.work-inbox-compact-task-header__context {
+  @apply mt-1.5;
+}
+
+.work-inbox-task-header-context {
+  @apply grid gap-1.5 text-sm leading-snug;
+}
+
+.work-inbox-task-header-context__row {
+  @apply grid gap-0.5 sm:grid-cols-[minmax(7rem,auto)_1fr] sm:items-baseline sm:gap-2;
+}
+
+.work-inbox-task-header-context__label {
+  @apply m-0 text-[11px] font-bold uppercase tracking-wide text-slate-500;
+}
+
+.work-inbox-task-header-context__value {
+  @apply m-0 min-w-0 break-words font-normal text-slate-800;
+}
+
+.work-inbox-task-semantic-summary {
+  @apply grid gap-1.5 text-sm;
+}
+
+.work-inbox-task-semantic-summary--compact {
+  @apply gap-1;
+}
+
+.work-inbox-task-semantic-summary__row {
+  @apply grid gap-0.5 sm:grid-cols-[minmax(5.5rem,auto)_1fr] sm:items-baseline sm:gap-2;
+}
+
+.work-inbox-task-semantic-summary__row--compact {
+  @apply sm:grid-cols-[minmax(5.5rem,auto)_1fr];
+}
+
+.work-inbox-task-semantic-summary__label {
+  @apply m-0 text-[11px] font-bold uppercase tracking-wide text-slate-500;
+}
+
+.work-inbox-task-semantic-summary__value {
+  @apply m-0 font-medium text-slate-900;
+}
+
+.work-inbox-task-semantic-summary__value--warn {
+  @apply text-amber-800;
+}
+
+.work-inbox-task-semantic-summary__value--danger {
+  @apply text-red-800;
+}
+
+.work-inbox-task-semantic-summary__value--ok {
+  @apply text-emerald-800;
+}
+
+.work-inbox-checklist-focus-bar__secondary {
+  @apply rounded border border-slate-300 bg-white px-2 py-0.5 text-[11px] font-medium text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+.work-inbox-case-context-strip {
+  @apply rounded-md border border-slate-200/80 bg-slate-50/80 px-2 py-1 text-[11px] leading-snug text-slate-700;
+}
+
+.work-inbox-case-context-strip--minimal {
+  @apply py-0.5;
+  max-height: 2.75rem;
+  @apply overflow-hidden;
+}
+
+.work-inbox-case-context-strip--standard {
+  max-height: 4.75rem;
+  @apply overflow-hidden;
+}
+
+.work-inbox-case-context-strip--expanded {
+  max-height: 9.5rem;
+  @apply overflow-hidden;
+}
+
+.work-inbox-case-context-strip__context-line {
+  @apply mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5;
+}
+
+.work-inbox-case-context-strip__pill {
+  @apply inline-flex max-w-full items-center gap-0.5 truncate text-[10px] text-slate-600;
+}
+
+.work-inbox-case-context-strip__pill-icon {
+  @apply shrink-0 text-[10px];
+}
+
+.work-inbox-case-context-strip__pill--ok {
+  @apply text-emerald-700;
+}
+
+.work-inbox-case-context-strip__pill--warn {
+  @apply font-medium text-amber-800;
+}
+
+.work-inbox-case-context-strip__key-hint {
+  @apply mt-0.5 truncate text-[10px] text-slate-400;
+}
+
+.work-inbox-case-context-strip__header {
+  @apply mb-0.5 flex flex-wrap items-center gap-1.5;
+}
+
+.work-inbox-case-context-strip__section-label {
+  @apply text-[10px] font-bold tracking-wide text-slate-500;
+}
+
+.work-inbox-case-context-strip__title {
+  @apply mb-0.5 truncate text-[12px] font-medium text-slate-800;
+}
+
+.work-inbox-case-context-strip__row {
+  @apply flex flex-wrap items-center gap-1;
+}
+
+.work-inbox-case-context-strip__chip {
+  @apply rounded-full border border-slate-200 bg-white px-1.5 py-px text-[10px] font-semibold text-slate-700;
+}
+
+.work-inbox-case-context-strip__chip--type {
+  @apply border-indigo-200 bg-indigo-50 text-indigo-900;
+}
+
+.work-inbox-case-context-strip__chip--lifecycle {
+  @apply border-amber-200 bg-amber-50 text-amber-900;
+}
+
+.work-inbox-case-context-strip__relation,
+.work-inbox-case-context-strip__meta,
+.work-inbox-case-context-strip__recent {
+  @apply mt-0.5 truncate text-[11px] text-slate-600;
+}
+
+.work-inbox-case-context-strip__meta-label {
+  @apply font-semibold text-slate-500;
+}
+
+.work-inbox-case-context-strip__meta--diag {
+  @apply text-[10px] text-slate-500 italic;
+}
+
+.work-inbox-case-context-strip__meta--ok {
+  @apply text-emerald-700;
+}
+
+.work-inbox-case-context-strip__meta--warn {
+  @apply text-amber-800;
+}
+
+.work-inbox-case-context-strip__link {
+  @apply font-medium text-indigo-700 underline-offset-2 hover:underline;
+}
+
+.work-inbox-case-context-strip__sep {
+  @apply text-slate-400;
+}
+
+.work-inbox-case-context-strip__warning {
+  @apply mt-0.5 text-[10px] text-amber-800;
+}
+
+.work-inbox-case-context-strip__collapse {
+  @apply mt-1 min-h-[44px] rounded border border-slate-200 bg-white px-2 py-1 text-[10px] font-semibold text-slate-600;
 }
 
 .work-inbox-ai-summary--compact {
@@ -2452,8 +3794,44 @@ html.theme-light textarea::placeholder {
   @apply rounded border border-slate-300 px-2 py-1.5 text-sm;
 }
 
+.work-inbox-create-dialog {
+  @apply max-h-[90vh] overflow-y-auto;
+}
+
+.work-inbox-create-section {
+  @apply space-y-2 rounded-md border border-slate-100 bg-slate-50/60 p-2.5;
+}
+
+.work-inbox-create-section__title {
+  @apply mb-1 text-xs font-bold uppercase tracking-wide text-slate-500;
+}
+
+.work-inbox-create-section__toggle {
+  @apply w-full text-left text-xs font-semibold text-slate-600 hover:text-slate-900;
+}
+
+.work-inbox-create-autofill {
+  @apply grid gap-1 text-xs text-slate-700;
+}
+
+.work-inbox-create-autofill__row {
+  @apply grid gap-x-2 sm:grid-cols-[minmax(6rem,auto)_1fr];
+}
+
+.work-inbox-create-autofill__row dt {
+  @apply font-medium text-slate-500;
+}
+
+.work-inbox-create-autofill__row dd {
+  @apply m-0;
+}
+
 .work-inbox-more-menu {
-  @apply absolute right-0 top-full z-50 mt-1 min-w-[11rem] rounded-md border border-slate-200 bg-white py-1 shadow-lg;
+  @apply absolute right-0 top-full z-[var(--cbv-layer-dropdown,60)] mt-1 min-w-[11rem] rounded-md border border-slate-200 bg-white py-1 shadow-lg;
+}
+
+.work-inbox-more-menu--drop-up {
+  @apply bottom-full top-auto mb-1 mt-0;
 }
 
 .work-inbox-more-menu__item {
@@ -2535,4 +3913,173 @@ html.theme-light textarea::placeholder {
 
 .work-inbox-jump-to__error {
   @apply text-[10px] text-amber-800;
+}
+
+/* CASE_REFACTOR_03 — Case Workspace (flag: VITE_CASE_WORKSPACE_ENABLED) */
+.case-workspace {
+  @apply flex flex-col gap-2;
+}
+
+.case-workspace__header {
+  @apply rounded-lg border border-indigo-200/80 bg-indigo-50/40 px-3 py-2;
+}
+
+.case-workspace__eyebrow {
+  @apply text-[10px] font-semibold uppercase tracking-wide text-indigo-700;
+}
+
+.case-workspace__title {
+  @apply text-base font-semibold text-slate-900 leading-snug;
+}
+
+.case-workspace__badges {
+  @apply mt-1 flex flex-wrap gap-1;
+}
+
+.case-workspace__badge {
+  @apply rounded-full border border-slate-200 bg-white px-2 py-px text-[10px] font-medium text-slate-700;
+}
+
+.case-workspace__badge--state {
+  @apply border-amber-200 bg-amber-50 text-amber-900;
+}
+
+.case-workspace__badge--key {
+  @apply border-slate-200 text-slate-500 font-normal;
+}
+
+.case-workspace__responsible {
+  @apply mt-1 text-xs text-slate-600;
+}
+
+.case-workspace__context {
+  @apply -mt-0.5;
+}
+
+.case-workspace__diagnostics {
+  @apply rounded border border-amber-200 bg-amber-50 px-2 py-1 text-[11px] text-amber-900 list-disc pl-4;
+}
+
+.case-workspace__ai {
+  @apply rounded-md border border-slate-200/80 bg-white px-2 py-1.5;
+}
+
+.case-workspace__grid {
+  @apply grid gap-3 lg:grid-cols-2;
+}
+
+.case-workspace__column {
+  @apply flex flex-col gap-2 min-w-0;
+}
+
+.case-workspace__section {
+  @apply rounded-md border border-slate-200/80 bg-white px-2 py-1.5;
+}
+
+.case-workspace__section-title {
+  @apply mb-1 text-[11px] font-bold uppercase tracking-wide text-slate-500;
+}
+
+.case-workspace__section-body {
+  @apply text-xs text-slate-700;
+}
+
+.case-workspace__task-list {
+  @apply space-y-1 text-xs;
+}
+
+.case-workspace__task-item {
+  @apply rounded border border-slate-100 bg-slate-50 px-2 py-1;
+}
+
+.case-workspace__task-item--current {
+  @apply border-indigo-300 bg-indigo-50/80;
+}
+
+.case-workspace__task-title {
+  @apply block font-medium text-slate-800;
+}
+
+.case-workspace__task-meta {
+  @apply block text-[10px] text-slate-500;
+}
+
+.case-workspace__task-current {
+  @apply mt-0.5 inline-block text-[10px] font-semibold text-indigo-700;
+}
+
+.case-workspace__doc-list {
+  @apply mb-1 space-y-0.5 text-xs list-disc pl-4;
+}
+
+.case-workspace__doc-link {
+  @apply text-indigo-700 underline;
+}
+
+.case-workspace__timeline-list {
+  @apply space-y-1 text-xs;
+}
+
+.case-workspace__timeline-item {
+  @apply border-l-2 border-slate-200 pl-2;
+}
+
+.case-workspace__timeline-time {
+  @apply block text-[10px] text-slate-400;
+}
+
+.case-workspace__timeline-label {
+  @apply text-slate-700;
+}
+
+.case-workspace__handoff {
+  @apply space-y-0.5 text-xs text-slate-700;
+}
+
+.case-workspace__empty {
+  @apply text-xs text-slate-500;
+}
+
+.case-workspace__hint {
+  @apply mt-1;
+}
+
+.case-workspace__uat-recorder {
+  @apply mt-4 rounded-lg border border-amber-300/60 bg-amber-50/80 p-3 text-sm dark:border-amber-700/50 dark:bg-amber-950/30;
+}
+
+.case-workspace__uat-recorder-title {
+  @apply mb-2 font-medium text-amber-900 dark:text-amber-100;
+}
+
+.case-workspace__uat-recorder-actions {
+  @apply flex flex-wrap gap-2;
+}
+
+.case-workspace__uat-recorder-friction {
+  @apply mt-2 flex flex-wrap gap-2;
+}
+
+.case-workspace__uat-recorder-footer {
+  @apply mt-2 flex flex-wrap gap-2;
+}
+
+.case-workspace__uat-btn {
+  @apply rounded border border-amber-400/80 bg-white px-2 py-1 text-xs font-medium text-amber-950 hover:bg-amber-100 dark:border-amber-600 dark:bg-amber-900/40 dark:text-amber-50 dark:hover:bg-amber-900/60;
+}
+
+.case-workspace__uat-btn--secondary {
+  @apply border-slate-300 bg-slate-50 text-slate-800 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100;
+}
+
+.case-workspace__uat-btn--ghost {
+  @apply border-transparent bg-transparent text-slate-600 dark:text-slate-400;
+}
+
+.case-workspace__uat-input {
+  @apply min-w-[12rem] flex-1 rounded border border-slate-300 px-2 py-1 text-xs dark:border-slate-600 dark:bg-slate-900;
+}
+
+.case-workspace__uat-hint {
+  @apply mt-2 text-xs text-amber-800 dark:text-amber-200;
 }

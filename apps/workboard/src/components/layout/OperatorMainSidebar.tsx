@@ -75,23 +75,31 @@ export function OperatorMainSidebar() {
           </div>
         </div>
 
-        <div className="operator-main-sidebar__section">
-          <p className="sidebar-group-label">HỆ THỐNG</p>
-          <div className="space-y-0.5">
+        <details className="operator-main-sidebar__section operator-main-sidebar__section--system">
+          <summary className="sidebar-group-label operator-main-sidebar__system-summary">Hệ thống</summary>
+          <div className="space-y-0.5 pt-1">
             <NavLink
               to="/observation"
-              className={({ isActive }) => (isActive ? 'sidebar-nav-link active' : 'sidebar-nav-link')}
+              className={({ isActive }) =>
+                isActive
+                  ? 'sidebar-nav-link sidebar-nav-link--secondary active'
+                  : 'sidebar-nav-link sidebar-nav-link--secondary'
+              }
             >
               Quan sát
             </NavLink>
             <NavLink
               to="/plugins"
-              className={({ isActive }) => (isActive ? 'sidebar-nav-link active' : 'sidebar-nav-link')}
+              className={({ isActive }) =>
+                isActive
+                  ? 'sidebar-nav-link sidebar-nav-link--secondary active'
+                  : 'sidebar-nav-link sidebar-nav-link--secondary'
+              }
             >
               Cấu hình
             </NavLink>
           </div>
-        </div>
+        </details>
 
         <div className="operator-main-sidebar__section operator-main-sidebar__overdue">
           <NavLink

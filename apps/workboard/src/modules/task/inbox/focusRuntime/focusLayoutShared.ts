@@ -18,35 +18,25 @@ export interface FocusRelatedInfoRow {
   value: string;
 }
 
+export {
+  buildOperatorDetailSummaryRows,
+  buildOperatorTechnicalMetadataRows,
+} from './focusOperatorDetailModel';
+import {
+  buildOperatorDetailSummaryRows,
+  buildOperatorTechnicalMetadataRows,
+} from './focusOperatorDetailModel';
+
+/** Combined rows — prefer summary + collapsed technical metadata in operator UI. */
 export function buildFocusRelatedInfoRows(options: {
   item: WorkInboxFocusItem;
   runtimeTask?: TaskItem;
   createdLabel?: string;
   updatedLabel?: string;
 }): FocusRelatedInfoRow[] {
-  const { item, runtimeTask, createdLabel, updatedLabel } = options;
-  const assignee =
-    item.assigneeName?.trim() ||
-    runtimeTask?.displayAssigneeName?.trim() ||
-    runtimeTask?.ownerId?.trim() ||
-    'Chưa gán';
-
   return [
-    { label: 'Mã việc', value: item.code?.trim() || item.id },
-    { label: 'Loại việc', value: runtimeTask?.module || 'TASK' },
-    { label: 'Nguồn', value: runtimeTask?.source?.trim() || 'TASK_MAIN' },
-    { label: 'Ưu tiên', value: focusPriorityLabel(item.priority) },
-    { label: 'Người phụ trách', value: assignee },
-    {
-      label: 'Người tạo',
-      value:
-        runtimeTask?.createdByDisplayName?.trim() ||
-        runtimeTask?.displayReporter?.trim() ||
-        '—',
-    },
-    { label: 'Tạo lúc', value: createdLabel || '—' },
-    { label: 'Cập nhật', value: updatedLabel || '—' },
-    { label: 'Hạn', value: item.dueLabel?.trim() || 'Chưa có hạn' },
+    ...buildOperatorDetailSummaryRows(options),
+    ...buildOperatorTechnicalMetadataRows(options),
   ];
 }
 

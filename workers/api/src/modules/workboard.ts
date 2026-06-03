@@ -3,7 +3,7 @@ import { gasAdapterStatus, gasHealth, isGasConfigured } from '../adapters/gasAda
 import { appSheetAdapterStatus } from '../adapters/appSheetAdapter';
 import { isTaskWriteEnabled, getTaskWriteAdapterStatus } from '../adapters/taskWriteAdapter';
 import { createEnvelope } from '../utils/envelope';
-import { getEnv, isGasRuntimeMode } from '../env';
+import { getEnv, getTaskDbEnv, isGasRuntimeMode } from '../env';
 
 export async function handleHealth(env: Env) {
   const writeEnabled = isTaskWriteEnabled(env);
@@ -43,6 +43,25 @@ export async function handleHealth(env: Env) {
   }
 
   return createEnvelope(data, { warnings });
+}
+
+/** Diagnostics for browser ↔ Worker ↔ GAS path (connectivity phase). */
+export async function handleRuntimeConnectivity(request: Request, env: Env) {
+  const healthEnvelope = await handleHealth(env);
+  const taskDb = getTaskDbEnv(env);
+  const healthData = healthEnvelope.data ?? ({} as HealthData);
+  const data = {
+    connectivity: 'worker_ok',
+    workerService: healthData.service,
+    workerVersion: healthData.version,
+    mode: healthData.mode,
+    gasConfigured: healthData.gasConfigured,
+    gasReachable: healthData.gasReachable,
+    taskRuntimeMode: taskDb.runtimeMode || 'unset',
+    taskDbConfigured: taskDb.isConfigured,
+    requestOrigin: request.headers.get('Origin'),
+  };
+  return createEnvelope(data, { warnings: healthEnvelope.warnings });
 }
 
 export { handleToday } from './homeAlert';

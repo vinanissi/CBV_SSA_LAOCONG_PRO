@@ -49,6 +49,12 @@ export const QUICK_BAR_ACTIONS = [
   { id: 'sla', label: 'SLA', href: '/observation', mode: 'NAVIGATE' as const },
 ];
 
+/** Footer primary strip (operator density polish). */
+export const QUICK_BAR_PRIMARY_IDS = ['add-task', 'search'] as const;
+
+/** Grouped under footer "Thêm" menu — same routes/behavior as full list. */
+export const QUICK_BAR_MORE_IDS = ['add-hoso', 'upload', 'sla'] as const;
+
 export const PERMISSIONS = {
   TASK_VIEW: 'TASK_VIEW',
   TASK_ASSIGN: 'TASK_ASSIGN',

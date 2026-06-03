@@ -1,29 +1,30 @@
 import { useState } from 'react';
 import type { TaskDetail, TaskItem } from '@/api/contracts';
-import { WorkInboxAttachmentsSection } from '@/modules/task/inbox/attachments/WorkInboxAttachmentsSection';
+import { DossierAggregatePanel } from '@/modules/task/inbox/dossier/DossierAggregatePanel';
 import type { WorkInboxFocusItem } from '@/modules/task/types/workInboxTypes';
 import { useWorkInboxRuntimeContext } from '@/runtime/rcla/workInboxRuntimeContextRegistry';
-import { WORK_INBOX_STATUS_CHIP } from '../components/WorkInboxStatusChip';
 import { showFocusRuntimeFeedback } from './focusRuntimeFeedback';
 import {
   buildFocusHandoffView,
-  buildFocusRelatedInfoRows,
-  formatFocusTimelineActor,
   formatFocusTimelineClock,
-  formatFocusTimelineFriendlyLabel,
   mapRuntimeTimelineForPanel,
-  pickNextAppointmentTitle,
 } from './focusLayoutShared';
+import { OperatorDetailPanel } from './OperatorDetailPanel';
+import { OperatorPanelTimelineList } from './OperatorPanelTimelineList';
+import { OperatorTechnicalPanel } from './OperatorTechnicalPanel';
+import type { WorkInboxActionCode } from '@/modules/task/inbox/actionRuntime/workInboxActionTypes';
 import type { TaskOperationalBundle } from '@/modules/task/inbox/operationalRuntime/workInboxOperationalTypes';
 import type { WorkInboxOperationalOp } from '@/modules/task/inbox/operationalRuntime/workInboxOperationalPermissions';
+import { isChecklistDualPaneRuntimeEnabled } from '@/modules/task/inbox/checklist/checklistDualPaneRuntimeConfig';
 
-export type FocusRightTabId = 'detail' | 'timeline' | 'handoff' | 'documents';
+export type FocusRightTabId = 'detail' | 'timeline' | 'handoff' | 'dossier' | 'technical';
 
 const TABS: { id: FocusRightTabId; label: string }[] = [
   { id: 'detail', label: 'Chi tiết' },
   { id: 'timeline', label: 'Timeline' },
   { id: 'handoff', label: 'Handoff' },
-  { id: 'documents', label: 'Tài liệu' },
+  { id: 'dossier', label: 'Hồ sơ' },
+  { id: 'technical', label: 'Kỹ thuật' },
 ];
 
 interface RightContextTabsProps {
@@ -46,9 +47,13 @@ interface RightContextTabsProps {
   onQuickGuide?: () => void;
   onQuickFormTemplate?: () => void;
   onSaveNote?: (content: string) => void;
+  onFocusForward?: () => void;
+  onFocusPause?: () => void;
+  onMoreAction?: (code: WorkInboxActionCode) => void;
   opPermissions?: Record<WorkInboxOperationalOp, boolean>;
   attachDialogOpen?: boolean;
   onAttachDialogOpenChange?: (open: boolean) => void;
+  aiSummaryText?: string;
 }
 
 export function RightContextTabs({
@@ -71,16 +76,16 @@ export function RightContextTabs({
   onQuickGuide,
   onQuickFormTemplate,
   onSaveNote,
+  onFocusForward,
+  onFocusPause,
+  onMoreAction,
   opPermissions,
-  attachDialogOpen,
-  onAttachDialogOpenChange,
+  attachDialogOpen: _attachDialogOpen,
+  onAttachDialogOpenChange: _onAttachDialogOpenChange,
+  aiSummaryText,
 }: RightContextTabsProps) {
   const ctx = useWorkInboxRuntimeContext();
   const [activeTab, setActiveTab] = useState<FocusRightTabId>('detail');
-  const [noteDraft, setNoteDraft] = useState('');
-
-  const statusConfig = WORK_INBOX_STATUS_CHIP[item.status] ?? WORK_INBOX_STATUS_CHIP.unknown;
-  const slaOk = item.status !== 'overdue';
 
   const latestNote = operationalBundle?.notes?.[0];
   const persistedNote =
@@ -105,27 +110,21 @@ export function RightContextTabs({
     taskDetail,
     defaultRecipient: assignee,
   });
-  const relatedRows = buildFocusRelatedInfoRows({ item, runtimeTask, createdLabel, updatedLabel });
-  const nextAppointmentTitle = pickNextAppointmentTitle(operationalBundle);
-
-  const hasOperationalData =
-    Boolean(operationalBundle?.timeline?.length) ||
-    Boolean(operationalBundle?.notes?.length) ||
-    Boolean(operationalBundle?.documents?.length);
-
-  const showOperationalEmpty =
-    !operationalLoading && !operationalError && !hasOperationalData && !operationalDegraded;
 
   const panelTimeline =
     runtimeTimeline.length > 0
       ? mapRuntimeTimelineForPanel(runtimeTimeline)
       : legacyTimeline;
 
+  const recentTimeline = panelTimeline.slice(0, 4);
+  const dualPaneOn = isChecklistDualPaneRuntimeEnabled();
+
   return (
     <aside
       className="work-inbox-right-context-tabs work-inbox-right-context-tabs--outer"
       aria-label="Ngữ cảnh công việc"
       data-cbv-panel="work-inbox-right-context-tabs"
+      data-checklist-dual-pane-right={dualPaneOn ? 'true' : 'false'}
     >
       <div className="work-inbox-right-context-tabs__tablist" role="tablist">
         {TABS.map((tab) => (
@@ -164,9 +163,37 @@ export function RightContextTabs({
                 )}
               </div>
             )}
+
+            <OperatorDetailPanel
+              item={item}
+              runtimeTask={runtimeTask}
+              taskDetail={taskDetail}
+              aiSummaryText={aiSummaryText}
+              persistedNote={persistedNote}
+              opPermissions={opPermissions}
+              onSaveNote={onSaveNote}
+              onQuickCall={onQuickCall}
+              onQuickMessage={onQuickMessage}
+              onQuickAppointment={onQuickAppointment}
+              onQuickGuide={onQuickGuide}
+              onQuickFormTemplate={onQuickFormTemplate}
+              onFocusForward={onFocusForward}
+              onFocusPause={onFocusPause}
+              onMoreAction={onMoreAction}
+            />
+          </div>
+        )}
+
+        {activeTab === 'timeline' && (
+          <div className="work-inbox-operator-timeline-panel space-y-4 text-sm" data-cbv-panel="work-inbox-operator-timeline-panel">
+            {operationalLoading && !operationalBundle && runtimeTimeline.length === 0 && !operationalError ? (
+              <p className="text-operational-muted" role="status">
+                Đang tải timeline…
+              </p>
+            ) : null}
             {operationalDegraded && (
               <p className="text-xs text-amber-700" role="status">
-                Tải timeline/ghi chú chậm — đang hiển thị dữ liệu có sẵn (không làm mới liên tục).
+                Tải lịch sử vận hành chậm — đang hiển thị dữ liệu có sẵn.
               </p>
             )}
             {operationalError && (
@@ -179,143 +206,22 @@ export function RightContextTabs({
                 )}
               </div>
             )}
-            {showOperationalEmpty && (
-              <p className="text-xs text-operational-muted">Chưa có dữ liệu vận hành bổ sung</p>
-            )}
 
             <section>
-              <h4 className="work-inbox-right-section-title">TRẠNG THÁI</h4>
-              <div className="mt-1 flex flex-wrap items-center gap-2">
-                <span className="work-inbox-right-status-pill">{statusConfig.label}</span>
-                <span
-                  className={
-                    slaOk
-                      ? 'work-inbox-right-sla-pill work-inbox-right-sla-pill--ok'
-                      : 'work-inbox-right-sla-pill work-inbox-right-sla-pill--warn'
-                  }
-                >
-                  SLA: {slaOk ? 'OK' : 'Cảnh báo'}
-                </span>
-              </div>
-            </section>
-
-            <section>
-              <h4 className="work-inbox-right-section-title">GHI CHÚ</h4>
-              <textarea
-                className="work-inbox-right-note-input"
-                rows={3}
-                placeholder="Nhập ghi chú..."
-                value={noteDraft || persistedNote}
-                onChange={(e) => setNoteDraft(e.target.value)}
-                disabled={opPermissions?.NOTES === false}
+              <h4 className="work-inbox-right-section-title">TIMELINE GẦN NHẤT</h4>
+              <OperatorPanelTimelineList
+                entries={recentTimeline}
+                emptyMessage="Chưa có sự kiện gần đây."
               />
-              <button
-                type="button"
-                className="btn-secondary mt-2 w-full text-xs"
-                disabled={opPermissions?.NOTES === false || !noteDraft.trim()}
-                onClick={() => {
-                  if (onSaveNote && noteDraft.trim()) {
-                    void onSaveNote(noteDraft.trim());
-                    setNoteDraft('');
-                  }
-                }}
-              >
-                Lưu ghi chú
-              </button>
             </section>
 
             <section>
-              <h4 className="work-inbox-right-section-title">THÔNG TIN LIÊN QUAN</h4>
-              <dl className="work-inbox-right-related">
-                {relatedRows.map((row) => (
-                  <div key={row.label} className="work-inbox-right-related__row">
-                    <dt>{row.label}</dt>
-                    <dd>{row.value}</dd>
-                  </div>
-                ))}
-              </dl>
+              <h4 className="work-inbox-right-section-title">TIMELINE ĐẦY ĐỦ</h4>
+              <OperatorPanelTimelineList
+                entries={panelTimeline}
+                emptyMessage="Chưa có sự kiện timeline."
+              />
             </section>
-
-            {nextAppointmentTitle ? (
-              <section>
-                <h4 className="work-inbox-right-section-title">LỊCH HẸN TIẾP THEO</h4>
-                <p className="text-xs text-operational-text">{nextAppointmentTitle}</p>
-              </section>
-            ) : null}
-
-            <section>
-              <h4 className="work-inbox-right-section-title">THAO TÁC NHANH</h4>
-              <div className="work-inbox-right-context-tabs__quick-actions">
-                <button type="button" className="work-inbox-right-quick-btn" onClick={() => onQuickCall?.()}>
-                  Gọi điện
-                </button>
-                <button type="button" className="work-inbox-right-quick-btn" onClick={() => onQuickMessage?.()}>
-                  Nhắn tin
-                </button>
-                <button
-                  type="button"
-                  className="work-inbox-right-quick-btn"
-                  disabled={opPermissions?.APPOINTMENT === false}
-                  onClick={() => onQuickAppointment?.()}
-                >
-                  Tạo lịch hẹn
-                </button>
-                <button type="button" className="work-inbox-right-quick-btn" onClick={() => onQuickGuide?.()}>
-                  Hướng dẫn
-                </button>
-                <button type="button" className="work-inbox-right-quick-btn" onClick={() => onQuickFormTemplate?.()}>
-                  Mẫu biểu mẫu
-                </button>
-              </div>
-            </section>
-          </div>
-        )}
-
-        {activeTab === 'timeline' && (
-          <div className="space-y-2 text-xs">
-            {operationalLoading && !operationalBundle && runtimeTimeline.length === 0 && !operationalError ? (
-              <p className="text-operational-muted">Đang tải timeline…</p>
-            ) : operationalError ? (
-              <div className="text-operational-muted space-y-2">
-                <p>{operationalError}</p>
-                {onRetryOperational && (
-                  <button type="button" className="btn-secondary text-xs" onClick={() => onRetryOperational()}>
-                    Thử lại
-                  </button>
-                )}
-              </div>
-            ) : panelTimeline.length > 0 ? (
-              <ul className="work-inbox-right-timeline-list work-inbox-right-timeline-list--friendly space-y-2">
-                {panelTimeline.map((entry, i) => {
-                  const label = formatFocusTimelineFriendlyLabel({
-                    eventType: entry.action,
-                    eventLabel: entry.message,
-                    action: entry.action,
-                    message: entry.message,
-                  });
-                  const actorLabel = formatFocusTimelineActor(entry.actor);
-                  const key =
-                    'resourceId' in entry && entry.resourceId
-                      ? entry.resourceId
-                      : `${entry.time}-${i}`;
-                  return (
-                    <li key={key} className="work-inbox-right-timeline-list__item">
-                      <p className="work-inbox-right-timeline-list__line">
-                        <span className="work-inbox-right-timeline-list__time">
-                          {formatFocusTimelineClock(entry.time)}
-                        </span>
-                        <span className="work-inbox-right-timeline-list__label"> — {label}</span>
-                      </p>
-                      {actorLabel ? (
-                        <p className="work-inbox-right-timeline-list__actor">{actorLabel}</p>
-                      ) : null}
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : (
-              <p className="text-operational-muted">Chưa có sự kiện timeline.</p>
-            )}
           </div>
         )}
 
@@ -368,14 +274,16 @@ export function RightContextTabs({
           </div>
         )}
 
-        {activeTab === 'documents' && (
-          <WorkInboxAttachmentsSection
-            taskId={item.id}
-            operator={ctx.operator}
-            canMutate={opPermissions?.DOCUMENT !== false}
-            variant="panel"
-            dialogOpen={attachDialogOpen}
-            onDialogOpenChange={onAttachDialogOpenChange}
+        {activeTab === 'dossier' && (
+          <DossierAggregatePanel taskId={item.id} operator={ctx.operator} />
+        )}
+
+        {activeTab === 'technical' && (
+          <OperatorTechnicalPanel
+            item={item}
+            runtimeTask={runtimeTask}
+            createdLabel={createdLabel}
+            updatedLabel={updatedLabel}
           />
         )}
       </div>

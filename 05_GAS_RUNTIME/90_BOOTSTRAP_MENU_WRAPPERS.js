@@ -656,6 +656,51 @@ function menuOpenAdminAuditLog() {
   menuOpenAuditLog();
 }
 
+function menuChecklistRuntime09BootstrapSchema() {
+  if (typeof bootstrapChecklistSheetSchema !== 'function') {
+    SpreadsheetApp.getUi().alert('Not loaded', 'bootstrapChecklistSheetSchema is not loaded.', SpreadsheetApp.getUi().ButtonSet.OK);
+    return;
+  }
+  var report = bootstrapChecklistSheetSchema({});
+  SpreadsheetApp.getUi().alert('Checklist 09 Bootstrap Schema', JSON.stringify(report, null, 2).slice(0, 3500), SpreadsheetApp.getUi().ButtonSet.OK);
+}
+
+function menuChecklistRuntime09ValidateSchema() {
+  if (typeof validateChecklistSheetSchema !== 'function') {
+    SpreadsheetApp.getUi().alert('Not loaded', 'validateChecklistSheetSchema is not loaded.', SpreadsheetApp.getUi().ButtonSet.OK);
+    return;
+  }
+  var report = validateChecklistSheetSchema({});
+  SpreadsheetApp.getUi().alert('Checklist 09 Validate Schema', JSON.stringify(report, null, 2).slice(0, 3500), SpreadsheetApp.getUi().ButtonSet.OK);
+}
+
+function menuChecklistRuntime10BootstrapDriveFolders() {
+  if (typeof bootstrapChecklistDriveFolders !== 'function') {
+    SpreadsheetApp.getUi().alert('Not loaded', 'bootstrapChecklistDriveFolders is not loaded.', SpreadsheetApp.getUi().ButtonSet.OK);
+    return;
+  }
+  var report = bootstrapChecklistDriveFolders({});
+  SpreadsheetApp.getUi().alert('Checklist 10 Bootstrap Drive', JSON.stringify(report, null, 2).slice(0, 3500), SpreadsheetApp.getUi().ButtonSet.OK);
+}
+
+function menuChecklistRuntime10ValidateDriveFolders() {
+  if (typeof validateChecklistDriveFolders !== 'function') {
+    SpreadsheetApp.getUi().alert('Not loaded', 'validateChecklistDriveFolders is not loaded.', SpreadsheetApp.getUi().ButtonSet.OK);
+    return;
+  }
+  var report = validateChecklistDriveFolders({});
+  SpreadsheetApp.getUi().alert('Checklist 10 Validate Drive', JSON.stringify(report, null, 2).slice(0, 3500), SpreadsheetApp.getUi().ButtonSet.OK);
+}
+
+function menuChecklistRuntime11HealthCheck() {
+  if (typeof validateChecklistSheetDriveBridge !== 'function') {
+    SpreadsheetApp.getUi().alert('Not loaded', 'validateChecklistSheetDriveBridge is not loaded.', SpreadsheetApp.getUi().ButtonSet.OK);
+    return;
+  }
+  var report = validateChecklistSheetDriveBridge({});
+  SpreadsheetApp.getUi().alert('Checklist 11 Runtime Health', JSON.stringify(report, null, 2).slice(0, 3500), SpreadsheetApp.getUi().ButtonSet.OK);
+}
+
 // Backward compatibility: preserve old menu handler names
 function runFullDeploymentMenu() { menuRunFullDeployment(); }
 function runEnumHealthCheck() {

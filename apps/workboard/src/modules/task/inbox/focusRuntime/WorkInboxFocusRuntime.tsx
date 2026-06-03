@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import type { TaskDetail, TaskItem } from '@/api/contracts';
+import type { TaskDetail, TaskItem, UserContext } from '@/api/contracts';
 import type { WorkInboxFocusItem } from '@/modules/task/types/workInboxTypes';
 import { RIGHT_CONTEXT_ROOT_ID } from '@/modules/task/inbox/rightContextPortal';
 import { FocusTaskWorkspace } from './FocusTaskWorkspace';
@@ -10,6 +10,8 @@ import type { WorkInboxActionCode } from '@/modules/task/inbox/actionRuntime/wor
 import type { TaskOperationalBundle } from '@/modules/task/inbox/operationalRuntime/workInboxOperationalTypes';
 import type { WorkInboxOperationalOp } from '@/modules/task/inbox/operationalRuntime/workInboxOperationalPermissions';
 import { buildFocusProgressRuntime } from '@/modules/task/inbox/operationalRuntime/focusProgressRuntime';
+import { ChecklistDualPaneFocusProvider } from '@/modules/task/inbox/checklist/ChecklistDualPaneFocusContext';
+import { isChecklistDualPaneRuntimeEnabled } from '@/modules/task/inbox/checklist/checklistDualPaneRuntimeConfig';
 
 function formatTaskTimestamp(value: string | undefined): string | undefined {
   if (!value?.trim()) return undefined;
@@ -41,6 +43,7 @@ interface WorkInboxFocusRuntimeProps {
   onNavigatePrev?: () => void;
   onNavigateNext?: () => void;
   onMoreMenuOpen?: () => void;
+  onMoreMenuClose?: () => void;
   onMoreAction?: (code: WorkInboxActionCode) => void;
   moreMenuOpen?: boolean;
   onQuickCall?: () => void;
@@ -58,6 +61,7 @@ interface WorkInboxFocusRuntimeProps {
   attachDialogOpen?: boolean;
   onAttachDialogOpenChange?: (open: boolean) => void;
   onFocusIndexChange?: (index: number) => void;
+  operator?: UserContext;
 }
 
 export function WorkInboxFocusRuntime({
@@ -77,6 +81,7 @@ export function WorkInboxFocusRuntime({
   onNavigatePrev,
   onNavigateNext,
   onMoreMenuOpen,
+  onMoreMenuClose,
   onMoreAction,
   moreMenuOpen,
   onQuickCall,
@@ -94,6 +99,7 @@ export function WorkInboxFocusRuntime({
   attachDialogOpen,
   onAttachDialogOpenChange,
   onFocusIndexChange,
+  operator,
 }: WorkInboxFocusRuntimeProps) {
   const [focusIndex, setFocusIndex] = useState(initialIndex);
   const [rightMount, setRightMount] = useState<HTMLElement | null>(null);
@@ -120,7 +126,7 @@ export function WorkInboxFocusRuntime({
 
   const updatedLabel = formatTaskTimestamp(runtimeTask?.updatedAt);
   const createdLabel = updatedLabel;
-  const summaryText = runtimeTask?.pendingAction?.trim() || runtimeTask?.title;
+  const aiSummaryText = current?.summary?.trim() || undefined;
   const focusProgress = buildFocusProgressRuntime(safeIndex, items.length);
 
   const handleIndexChange = useCallback(
@@ -141,7 +147,8 @@ export function WorkInboxFocusRuntime({
         items={items}
         initialIndex={initialIndex}
         runtimeTask={runtimeTask}
-        summaryText={summaryText}
+        taskDetail={current && taskDetail?.taskId === current.id ? taskDetail : null}
+        summaryText={aiSummaryText}
         onBackToInbox={onBackToInbox}
         onPrimary={onPrimary}
         onPause={onPause}
@@ -153,12 +160,15 @@ export function WorkInboxFocusRuntime({
         onNavigatePrev={onNavigatePrev}
         onNavigateNext={onNavigateNext}
         onMoreMenuOpen={onMoreMenuOpen}
+        onMoreMenuClose={onMoreMenuClose}
         onMoreAction={onMoreAction}
         moreMenuOpen={moreMenuOpen}
         focusProgress={focusProgress}
         opPermissions={opPermissions}
         attachDialogOpen={attachDialogOpen}
         onAttachDialogOpenChange={onAttachDialogOpenChange}
+        operationalBundle={operationalBundle}
+        operator={operator}
       />
       <div
         className="work-inbox-focus-runtime__status-anchor"
@@ -174,7 +184,7 @@ export function WorkInboxFocusRuntime({
           <RightContextTabs
             item={current}
             runtimeTask={runtimeTask}
-            taskDetail={taskDetail?.taskId === current.id ? taskDetail : null}
+            taskDetail={current && taskDetail?.taskId === current.id ? taskDetail : null}
             detailLoading={detailLoading}
             detailError={detailError}
             createdLabel={createdLabel}
@@ -191,18 +201,24 @@ export function WorkInboxFocusRuntime({
             operationalDegraded={operationalDegraded}
             onRetryOperational={onRetryOperational}
             onSaveNote={onSaveNote}
+            onFocusForward={onForward ? () => onForward(current) : undefined}
+            onFocusPause={onPause ? () => onPause(current) : undefined}
+            onMoreAction={onMoreAction}
             opPermissions={opPermissions}
             attachDialogOpen={attachDialogOpen}
             onAttachDialogOpenChange={onAttachDialogOpenChange}
+            aiSummaryText={aiSummaryText}
           />,
           rightMount,
         )
       : null;
 
+  const dualPaneOn = isChecklistDualPaneRuntimeEnabled();
+
   return (
-    <>
+    <ChecklistDualPaneFocusProvider enabled={dualPaneOn}>
       {workspace}
       {rightPanel}
-    </>
+    </ChecklistDualPaneFocusProvider>
   );
 }

@@ -1,0 +1,82 @@
+/**
+ * Operator UX Golden Reference V1 — typography & hierarchy tokens.
+ * Scoped to html.operator-design-baseline-v1 (see themeRuntime.ts).
+ */
+
+html.operator-design-baseline-v1.theme-light {
+  --op-font-nav: 15px;
+  --op-font-task-title: 22px;
+  --op-font-checklist-title: 17px;
+  --op-font-checklist-meta: 13px;
+  --op-font-action: 15px;
+  --op-font-right-section: 14px;
+  --op-font-right-body: 14px;
+  --op-font-footer: 13px;
+  --op-font-tech: 12px;
+}
+
+html.operator-design-baseline-v1.theme-light .sidebar-nav-link,
+html.operator-design-baseline-v1.theme-light .sidebar-nav-button {
+  font-size: var(--op-font-nav);
+}
+
+html.operator-design-baseline-v1.theme-light .work-inbox-compact-task-header__title {
+  font-size: var(--op-font-task-title);
+  line-height: 1.25;
+}
+
+html.operator-design-baseline-v1.theme-light .work-inbox-smart-checklist__title,
+html.operator-design-baseline-v1.theme-light .work-inbox-checklist__title {
+  font-size: var(--op-font-checklist-title);
+  line-height: 1.35;
+}
+
+html.operator-design-baseline-v1.theme-light .work-inbox-smart-checklist__compact-counters {
+  font-size: var(--op-font-checklist-meta);
+}
+
+html.operator-design-baseline-v1.theme-light .work-inbox-checklist-focus-status,
+html.operator-design-baseline-v1.theme-light .work-inbox-checklist-progress__meta {
+  font-size: var(--op-font-checklist-meta);
+}
+
+html.operator-design-baseline-v1.theme-light .work-inbox-right-section-title {
+  font-size: var(--op-font-right-section);
+  letter-spacing: 0.04em;
+}
+
+html.operator-design-baseline-v1.theme-light .work-inbox-operator-detail-panel,
+html.operator-design-baseline-v1.theme-light .work-inbox-operator-detail-panel__action-btn,
+html.operator-design-baseline-v1.theme-light .work-inbox-right-quick-btn,
+html.operator-design-baseline-v1.theme-light .work-inbox-right-note-input {
+  font-size: var(--op-font-right-body);
+}
+
+html.operator-design-baseline-v1.theme-light .work-inbox-operator-detail-panel__action-btn,
+html.operator-design-baseline-v1.theme-light .work-inbox-right-quick-btn {
+  min-height: 2.25rem;
+  padding-top: 0.375rem;
+  padding-bottom: 0.375rem;
+}
+
+html.operator-design-baseline-v1.theme-light .work-inbox-right-timeline-list--friendly {
+  font-size: var(--op-font-right-body);
+}
+
+html.operator-design-baseline-v1.theme-light .runtime-light-console .operational-status-action,
+html.operator-design-baseline-v1.theme-light .runtime-footer-more-menu__item {
+  font-size: var(--op-font-footer);
+}
+
+html.operator-design-baseline-v1.theme-light .work-inbox-operator-detail-panel__technical,
+html.operator-design-baseline-v1.theme-light .work-inbox-operator-detail-panel__technical-summary {
+  font-size: var(--op-font-tech);
+}
+
+html.operator-design-baseline-v1.theme-light .work-inbox-checklist-inline-actions__chip {
+  font-size: var(--op-font-checklist-meta);
+}
+
+html.operator-design-baseline-v1.theme-light .work-inbox-focus-card__title {
+  font-size: var(--op-font-right-section);
+}

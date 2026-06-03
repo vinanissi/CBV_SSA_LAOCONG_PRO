@@ -12,6 +12,9 @@ export interface WorkInboxChecklistItem {
   sortOrder: number;
   isDone: boolean;
   isRequired?: boolean;
+  note?: string;
+  updatedAt?: string;
+  updatedBy?: string;
 }
 
 export interface WorkInboxChecklistListResult {

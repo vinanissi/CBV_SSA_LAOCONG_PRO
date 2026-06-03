@@ -36,7 +36,7 @@ export function runWorkInboxFocusDensityOptimizationChecks(): {
   push('DENSITY_NO_CREATED_UPDATED_MAIN', !workspace.includes('createdLabel') && !workspace.includes('Tạo lúc'));
   push('DENSITY_AI_COMPACT_ROW', cards.includes('work-inbox-ai-summary--compact') && cards.includes('isCompactAiSummary'));
   push('DENSITY_CHECKLIST_DENSE_PROP', cards.includes('dense') && checklist.includes('checklist-dense'));
-  push('DENSITY_ATTACHMENTS_DENSE_PROP', cards.includes('dense') && attachments.includes('attachments-dense'));
+  push('DENSITY_ATTACHMENTS_DENSE_OPTIONAL', cards.includes('isCenterRecentDocumentsVisible'));
   push('DENSITY_CHECKLIST_RUNTIME_INTACT', checklist.includes('toggleItem(') && checklist.includes('deleteItem('));
   push('DENSITY_CHECKLIST_CRUD', checklist.includes('createItem') && checklist.includes('deleteItem'));
   push('DENSITY_ATTACHMENTS_RUNTIME_INTACT', attachments.includes('useWorkInboxAttachmentsRuntime'));

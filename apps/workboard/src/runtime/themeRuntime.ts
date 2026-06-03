@@ -11,10 +11,13 @@ export function loadThemeMode(): ThemeMode {
   }
 }
 
+const OPERATOR_DESIGN_BASELINE_CLASS = 'operator-design-baseline-v1';
+
 export function applyThemeMode(mode: ThemeMode): void {
   const root = document.documentElement;
   root.classList.remove('theme-dark', 'theme-light');
   root.classList.add(mode === 'light' ? 'theme-light' : 'theme-dark');
+  root.classList.add(OPERATOR_DESIGN_BASELINE_CLASS);
 }
 
 export function setThemeMode(mode: ThemeMode): void {

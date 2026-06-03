@@ -314,11 +314,13 @@ export function mapInboxItemToTaskCardModel(item: InboxItem): TaskCardModel {
     id: item.id,
     code: item.code,
     title: item.title,
+    summary: item.summary,
     status: item.status,
     group: item.group,
     priority: item.priority,
     assigneeName: item.assigneeName ?? item.ownerName,
     dueLabel: item.dueLabel,
+    module: item.module,
     primaryActionLabel: item.primaryActionLabel,
     primaryActionHref: item.primaryActionHref,
   };

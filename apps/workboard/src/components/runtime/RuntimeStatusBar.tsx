@@ -3,7 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '@/api/client';
 import { getCachedModulesStatus } from '@/modules/task/inbox/network/workInboxStaticRuntimeCache';
 import type { UserContext } from '@/api/contracts';
-import { QUICK_BAR_ACTIONS, SESSION_LABEL } from '@/shared/constants';
+import {
+  QUICK_BAR_ACTIONS,
+  QUICK_BAR_MORE_IDS,
+  QUICK_BAR_PRIMARY_IDS,
+  SESSION_LABEL,
+} from '@/shared/constants';
 import { executionLabel } from '@/shared/utils';
 import { useTaskWrite } from '@/modules/task/TaskWriteContext';
 import { canRoleCreateWorkInboxTask } from '@/modules/task/inbox/create/workInboxCreateTaskTypes';
@@ -12,6 +17,9 @@ import { useTaskRuntimeTelemetryState } from '@/runtime/TaskRuntimeTelemetryCont
 import { RuntimeTelemetryInline } from '@/components/runtime/RuntimeTelemetryInline';
 import { getCompactConnectionLabel } from '@/shared/utils/runtimeTelemetry';
 import { formatRuntimeSyncLabel, pickRuntimeSyncTimestamp } from '@/shared/utils/runtimeClock';
+import { isOperatorDevMode } from '@/shared/utils/operatorDevMode';
+import { useChecklistSyncFooterState } from '@/runtime/ChecklistSyncFooterContext';
+import { ChecklistSyncFooterIndicator } from '@/modules/task/inbox/checklist/ChecklistSyncFooterIndicator';
 
 const RuntimeFooterDrawer = lazy(() =>
   import('@/components/runtime/RuntimeFooterDrawer').then((m) => ({ default: m.RuntimeFooterDrawer })),
@@ -28,12 +36,24 @@ export function RuntimeStatusBar({ user }: RuntimeStatusBarProps) {
   const navigate = useNavigate();
   const { openWorkInboxCreate, capability } = useTaskWrite();
   const taskTelemetry = useTaskRuntimeTelemetryState();
+  const checklistSyncFooter = useChecklistSyncFooterState();
   const [workerConnected, setWorkerConnected] = useState(!api.isMockMode());
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [warningFocus, setWarningFocus] = useState(false);
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [, clockTick] = useState(0);
 
+  const primaryActions = useMemo(
+    () => QUICK_BAR_ACTIONS.filter((a) => (QUICK_BAR_PRIMARY_IDS as readonly string[]).includes(a.id)),
+    [],
+  );
+  const moreActions = useMemo(
+    () => QUICK_BAR_ACTIONS.filter((a) => (QUICK_BAR_MORE_IDS as readonly string[]).includes(a.id)),
+    [],
+  );
+
   const canCreateTask = canRoleCreateWorkInboxTask(user.role) && (capability?.canCreate ?? true);
+  const showDevShortcutHints = isOperatorDevMode();
 
   useEffect(() => {
     getCachedModulesStatus().then((res) => {
@@ -71,6 +91,37 @@ export function RuntimeStatusBar({ user }: RuntimeStatusBarProps) {
     }
   }
 
+  function runQuickAction(action: (typeof QUICK_BAR_ACTIONS)[number]) {
+    const isCreate = action.id === 'add-task';
+    const locked = isCreate ? !canCreateTask : action.mode === 'EXECUTION_LOCKED';
+    if (locked) return;
+    if (isCreate) {
+      handleAddTaskClick();
+      return;
+    }
+    if (action.href) navigate(action.href);
+  }
+
+  useEffect(() => {
+    if (!moreMenuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMoreMenuOpen(false);
+    };
+    const onPointer = (e: MouseEvent) => {
+      const t = e.target;
+      if (!(t instanceof Node)) return;
+      if (!document.querySelector('.runtime-footer-more-menu')?.contains(t)) {
+        setMoreMenuOpen(false);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    document.addEventListener('mousedown', onPointer);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.removeEventListener('mousedown', onPointer);
+    };
+  }, [moreMenuOpen]);
+
   return (
     <>
       <footer
@@ -78,24 +129,17 @@ export function RuntimeStatusBar({ user }: RuntimeStatusBarProps) {
         aria-label="Runtime footer console"
       >
         <div className="operational-status-zone operational-status-zone-actions">
-          {QUICK_BAR_ACTIONS.map((action) => {
+          {primaryActions.map((action) => {
             const isCreate = action.id === 'add-task';
             const locked = isCreate ? !canCreateTask : action.mode === 'EXECUTION_LOCKED';
-            const label = isCreate ? '+ Tạo việc' : action.label;
+            const label = isCreate ? '+ Tạo' : action.label;
 
             return (
               <button
                 key={action.id}
                 type="button"
                 disabled={locked}
-                onClick={() => {
-                  if (locked) return;
-                  if (isCreate) {
-                    handleAddTaskClick();
-                    return;
-                  }
-                  if (action.href) navigate(action.href);
-                }}
+                onClick={() => runQuickAction(action)}
                 className={locked ? 'operational-status-action locked' : 'operational-status-action'}
                 title={
                   isCreate && locked
@@ -108,12 +152,50 @@ export function RuntimeStatusBar({ user }: RuntimeStatusBarProps) {
                 }
               >
                 {label}
-                {locked && !isCreate && (
-                  <span className="operational-status-action-lock">· Sắp mở</span>
-                )}
               </button>
             );
           })}
+          <div className="runtime-footer-more-menu">
+            <button
+              type="button"
+              className={
+                moreMenuOpen
+                  ? 'operational-status-action operational-status-action--active'
+                  : 'operational-status-action'
+              }
+              aria-expanded={moreMenuOpen}
+              aria-haspopup="menu"
+              onClick={() => setMoreMenuOpen((v) => !v)}
+            >
+              Thêm
+            </button>
+            {moreMenuOpen ? (
+              <div className="runtime-footer-more-menu__panel" role="menu">
+                {moreActions.map((action) => {
+                  const locked = action.mode === 'EXECUTION_LOCKED';
+                  return (
+                    <button
+                      key={action.id}
+                      type="button"
+                      role="menuitem"
+                      className="runtime-footer-more-menu__item"
+                      disabled={locked}
+                      title={locked ? executionLabel(action.mode) : undefined}
+                      onClick={() => {
+                        setMoreMenuOpen(false);
+                        runQuickAction(action);
+                      }}
+                    >
+                      {action.label}
+                      {locked ? (
+                        <span className="operational-status-action-lock"> · Sắp mở</span>
+                      ) : null}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
+          </div>
         </div>
 
         <div className="operational-status-zone-sep" aria-hidden />
@@ -136,6 +218,9 @@ export function RuntimeStatusBar({ user }: RuntimeStatusBarProps) {
         <div className="operational-status-zone-sep" aria-hidden />
 
         <div className="operational-status-zone operational-status-zone-session">
+          {checklistSyncFooter ? (
+            <ChecklistSyncFooterIndicator {...checklistSyncFooter} />
+          ) : null}
           <span className="runtime-console-clock" title="Last runtime sync">
             {syncClockLabel}
           </span>
@@ -143,9 +228,11 @@ export function RuntimeStatusBar({ user }: RuntimeStatusBarProps) {
             <span className="runtime-status-metric-icon" aria-hidden>🖥</span>
             <span>{SESSION_LABEL}</span>
           </span>
-          <span className="runtime-console-shortcuts" aria-label="Keyboard shortcuts">
-            {RUNTIME_SHORTCUT_HINTS}
-          </span>
+          {showDevShortcutHints ? (
+            <span className="runtime-console-shortcuts" aria-label="Keyboard shortcuts (dev)">
+              {RUNTIME_SHORTCUT_HINTS}
+            </span>
+          ) : null}
           {taskTelemetry && (
             <button
               type="button"

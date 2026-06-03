@@ -67,6 +67,15 @@ function buildCbvProMenu_() {
       .addItem('Generate deployment report', 'menuGenerateDeploymentReport')
   );
 
+  menu.addSubMenu(
+    ui.createMenu('🧪 Checklist Runtime')
+      .addItem('09. Bootstrap Sheet Schema', 'menuChecklistRuntime09BootstrapSchema')
+      .addItem('09. Validate Sheet Schema', 'menuChecklistRuntime09ValidateSchema')
+      .addItem('10. Bootstrap Drive Folders', 'menuChecklistRuntime10BootstrapDriveFolders')
+      .addItem('10. Validate Drive Folders', 'menuChecklistRuntime10ValidateDriveFolders')
+      .addItem('11. Runtime Health Check', 'menuChecklistRuntime11HealthCheck')
+  );
+
   // 4. Master data
   menu.addSubMenu(
     ui.createMenu('Master data')

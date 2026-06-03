@@ -2,13 +2,14 @@ import type { ApiEnvelope, TaskFilter } from './contracts';
 import { mockApi } from './mockApi';
 import { getAuthToken, clearStoredAuthSession } from '@/auth/sessionStorage';
 import { getActiveWorkInboxTraceId } from '@/modules/task/inbox/performance/workInboxPerformanceTrace';
+import { getApiBaseUrl, isWorkerApiConfigured } from './apiBase';
 
-const API_BASE = import.meta.env.VITE_CBV_API_BASE_URL?.trim() ?? '';
+const API_BASE = getApiBaseUrl();
 const API_ROLE = import.meta.env.VITE_CBV_ROLE?.trim() ?? '';
 const TASK_RUNTIME_MODE = import.meta.env.VITE_CBV_TASK_RUNTIME_MODE?.trim() ?? 'google_sheet_existing_db';
 
 function isWorkerConnected(): boolean {
-  return Boolean(API_BASE);
+  return isWorkerApiConfigured();
 }
 
 function isRealTaskRuntime(): boolean {
@@ -312,6 +313,27 @@ export const api = {
     return fetchEnvelope<import('@/modules/task/inbox/checklist/workInboxChecklistTypes').WorkInboxChecklistMutateResult>(`/api/work-inbox/tasks/${encodeTaskId(taskId)}/checklist/${encodeURIComponent(checklistId)}`, {
       method: 'DELETE',
       headers: traceId ? { 'X-CBV-Trace-Id': traceId } : undefined,
+    });
+  },
+
+  callWorkInboxChecklistBridge(
+    taskId: string,
+    body: { method: string; [key: string]: unknown },
+  ) {
+    if (useTaskMock()) {
+      return Promise.resolve({
+        ok: false,
+        status: 'FAIL' as const,
+        errors: ['Checklist bridge unavailable in mock mode'],
+        traceId: '',
+        data: null,
+        warnings: [],
+      });
+    }
+    return fetchEnvelope<unknown>(`/api/work-inbox/tasks/${encodeTaskId(taskId)}/checklist-bridge`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
     });
   },
 

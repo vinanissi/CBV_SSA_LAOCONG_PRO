@@ -1,0 +1,12 @@
+# PHASE_CHECKLIST_07_TEMPLATE_RUNTIME
+
+**Status:** COMPLETE (GO_WITH_WARNINGS)
+
+---
+
+## Artifacts
+
+| Type | Path |
+|------|------|
+| Report | `000_REPORTS/PHASE_CHECKLIST_07_TEMPLATE_RUNTIME_REPORT.md` |
+| Contract | `CHECKLIST/CHECKLIST_TEMPLATE_CONTRACT.md` |

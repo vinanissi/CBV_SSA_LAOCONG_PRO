@@ -1,0 +1,35 @@
+# Phase Charter — PHASE_OCMS_02B_CASE_STRIP_LAYOUT_AUTHORITY
+
+---
+
+## PHASE
+
+`PHASE_OCMS_02B_CASE_STRIP_LAYOUT_AUTHORITY`
+
+---
+
+## ADR
+
+`ADR_OCMS_CASE_STRIP_LAYOUT_AUTHORITY.md`
+
+---
+
+## MODE
+
+- [x] DOC-ONLY
+
+---
+
+## SUCCESS CRITERIA
+
+**GO**
+
+---
+
+## NEXT PHASE
+
+`PHASE_OCMS_03_FOCUS_CASE_CONTEXT_STRIP`
+
+---
+
+*Phase charter.*

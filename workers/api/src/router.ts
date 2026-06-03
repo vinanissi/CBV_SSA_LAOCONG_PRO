@@ -1,7 +1,7 @@
 import type { Env, TaskFilter } from './contracts';
 import { handleMe } from './auth/me';
 import { handleAuthLogin, handleAuthLogout, handleAuthMe, handleGetUsers } from './auth/authHandlers';
-import { handleHealth } from './modules/workboard';
+import { handleHealth, handleRuntimeConnectivity } from './modules/workboard';
 import { handleToday, handleHomeAlertClaim, handleHomeAlertResolve } from './modules/homeAlert';
 import { handleTasksList, handleTaskDetail } from './modules/tasks';
 import {
@@ -50,7 +50,9 @@ import {
   handleWorkInboxChecklistList,
   handleWorkInboxChecklistToggle,
   handleWorkInboxChecklistUpdate,
+  handleWorkInboxChecklistBridge,
 } from './modules/workInboxChecklist';
+import { handleWorkInboxChecklistBridge } from './modules/workInboxChecklistBridge';
 import {
   handleWorkInboxAttachmentsCreate,
   handleWorkInboxAttachmentsDelete,
@@ -302,6 +304,17 @@ export async function route(request: Request, env: Env): Promise<Response> {
     return withCors(jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)), request, env);
   }
 
+  const wiChecklistBridgeMatch = path.match(/^\/api\/work-inbox\/tasks\/([^/]+)\/checklist-bridge$/);
+  if (wiChecklistBridgeMatch && request.method === 'POST') {
+    const parsed = parseRouteTaskId(request, wiChecklistBridgeMatch[1]);
+    if ('error' in parsed) {
+      envelope = parsed.error;
+      return withCors(jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)), request, env);
+    }
+    envelope = await handleWorkInboxChecklistBridge(request, env, parsed.taskId);
+    return withCors(jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)), request, env);
+  }
+
   const wiAttachMatch = path.match(/^\/api\/work-inbox\/tasks\/([^/]+)\/attachments(?:\/([^/]+))?$/);
   if (wiAttachMatch) {
     const parsed = parseRouteTaskId(request, wiAttachMatch[1]);
@@ -352,6 +365,9 @@ export async function route(request: Request, env: Env): Promise<Response> {
   switch (true) {
     case path === '/api/health':
       envelope = await handleHealth(env);
+      break;
+    case path === '/api/runtime/connectivity':
+      envelope = await handleRuntimeConnectivity(request, env);
       break;
     case path === '/api/me':
       envelope = await handleMe(request, env);
