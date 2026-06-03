@@ -50,7 +50,6 @@ import {
   handleWorkInboxChecklistList,
   handleWorkInboxChecklistToggle,
   handleWorkInboxChecklistUpdate,
-  handleWorkInboxChecklistBridge,
 } from './modules/workInboxChecklist';
 import { handleWorkInboxChecklistBridge } from './modules/workInboxChecklistBridge';
 import {

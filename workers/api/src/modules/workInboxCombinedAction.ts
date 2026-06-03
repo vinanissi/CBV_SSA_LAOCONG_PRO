@@ -38,7 +38,7 @@ export async function gsWiOpRecordAction(
 }
 
 function memoryCombinedAction(
-  user: UserContext,
+  _user: UserContext,
   body: WorkInboxCombinedActionRequest,
   traceId: string,
 ): WorkInboxCombinedActionResponse {

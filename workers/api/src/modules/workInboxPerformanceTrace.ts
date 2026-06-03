@@ -1,5 +1,7 @@
 /** PHASE_WORK_INBOX_LATENCY_PROFILING — Worker timing wrapper (extended breakdown). */
 
+import type { ApiEnvelope } from '../contracts';
+
 export type WorkInboxPerfStatus = 'OK' | 'WARNING' | 'DEGRADED' | 'FAIL';
 
 export type WorkInboxLatencyClass =
@@ -148,6 +150,8 @@ export function finishWorkerPerf(
     warnings?: string[];
     errors?: string[];
     requestCount?: number;
+    sheetReadCount?: number;
+    sheetWriteCount?: number;
   } = {},
 ): WorkInboxPerformanceTraceEnvelope {
   const endedAt = Date.now();
@@ -263,17 +267,25 @@ export function extractRequestTraceId(request: Request, fallback?: string): stri
   );
 }
 
+export type ApiEnvelopeWithPerf<T> = ApiEnvelope<T> & {
+  performanceTrace: WorkInboxPerformanceTraceEnvelope;
+};
+
 export function envelopeWithRoutePerf<T>(
   request: Request,
   action: string,
   perfCtx: WorkerPerfContext,
-  envelope: { traceId?: string; [key: string]: unknown },
+  envelope: ApiEnvelope<T>,
   gasResult?: { performanceTrace?: Record<string, unknown>; workerLatencyMs?: number },
-): typeof envelope & { performanceTrace: WorkInboxPerformanceTraceEnvelope } {
+): ApiEnvelopeWithPerf<T> {
   markWorkerGasEnd(perfCtx);
-  let perf = finishWorkerPerf(perfCtx, { gasTotalMs: gasResult?.workerLatencyMs });
+  let perf = finishWorkerPerf(perfCtx, {
+    gasTotalMs: gasResult?.workerLatencyMs,
+    sheetReadCount: perfCtx.sheetReadCount,
+    sheetWriteCount: perfCtx.sheetWriteCount,
+  });
   perf = mergeGasPerformanceTrace(perf, gasResult?.performanceTrace);
-  perf.traceId = extractRequestTraceId(request, envelope.traceId as string | undefined);
+  perf.traceId = extractRequestTraceId(request, envelope.traceId);
   perf.action = action;
   return { ...envelope, performanceTrace: perf };
 }

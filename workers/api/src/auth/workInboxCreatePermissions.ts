@@ -29,7 +29,6 @@ export function canUserAssignOnCreate(user: UserContext): boolean {
 }
 
 export function enforceCreateOwnerForUser(user: UserContext, requestedAssignee?: string): string | null {
-  const role = normalizeWorkInboxPilotRole(user.role);
   const assignee = requestedAssignee?.trim();
   if (!assignee) return null;
   if (canUserAssignOnCreate(user)) return assignee;

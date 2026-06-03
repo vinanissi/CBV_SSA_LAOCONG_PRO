@@ -180,13 +180,15 @@ Worker (`workers/api/src/modules/finance.ts`) uses **mock data** — no sheet FK
 node 09_AUDIT/scripts/financeRelationPhase03Checks.mjs
 ```
 
+**Current-state note (post–Phase 05):** This script validates the **repair plan** (`VP54`, `FIN_20260418_*`, schema refs). Runtime guards (`financeAssertOptionalDonViId_`, `logFinance` parent lookup) were implemented in `PHASE_DATA_REL_05`. The Phase 03 script **passes** when guards exist (detail: `guard present after PHASE_DATA_REL_05`) or when guards are absent but documented as deferred in this plan.
+
 ---
 
 ## 10. Tests run
 
 | Command | Result |
 |---------|--------|
-| `node 09_AUDIT/scripts/financeRelationPhase03Checks.mjs` | **GO_WITH_WARNINGS** — documents missing DON_VI / FIN_ID guards (PHASE 05) |
+| `node 09_AUDIT/scripts/financeRelationPhase03Checks.mjs` | Re-run after `PHASE_DATA_REL_06A` (expect **GO** when Phase 05 guards present) |
 | Workbook re-validation | Not run (xlsx not in repo) |
 | `npm run typecheck` | Not required — no runtime code change |
 

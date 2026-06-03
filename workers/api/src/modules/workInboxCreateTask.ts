@@ -116,7 +116,6 @@ export async function handleWorkInboxCreateTask(request: Request, env: Env) {
       status: 'FAIL',
       errors: [result.message],
       traceId: result.traceId ?? traceId,
-      warnings: result.warnings,
     });
   }
 
