@@ -58,3 +58,15 @@ AppSheet filters: `[TASK_ID] = [TASK_MAIN].[ID]`.
 - Renaming `ID` → `TASK_ID` on `TASK_MAIN`
 - Adding duplicate `TASK_MAIN.TASK_ID` column
 - User / finance / HO_SO FK cleanup (later phases)
+
+---
+
+## Related authority
+
+| Topic | Document |
+|-------|----------|
+| Index | [DATA_REL_AUTHORITY_INDEX.md](./DATA_REL_AUTHORITY_INDEX.md) |
+| Schema manifest | `05_GAS_RUNTIME/90_BOOTSTRAP_SCHEMA.js` |
+| FK audit map | `05_GAS_RUNTIME/90_BOOTSTRAP_AUDIT_SCHEMA.js` |
+| User refs | [USER_TASK_FINANCE_MAPPING.md](./USER_TASK_FINANCE_MAPPING.md) |
+| HO_SO relations | [ADR_HO_SO_RELATION_AUTHORITY.md](../00_SYSTEM_BRAIN/002_DECISIONS/ADR_HO_SO_RELATION_AUTHORITY.md) |

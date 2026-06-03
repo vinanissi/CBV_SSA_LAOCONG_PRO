@@ -11,6 +11,8 @@
 
 Re-verified the full `PHASE_DATA_REL_*` program after phases **06A** (finance script rebase) and **06B** (Worker typecheck repair). **Repo contracts, GAS write guards, and Worker/Workboard compile are green.** **No workbook or production DB rows were mutated** in this program; data repair remains plan-only pending admin sign-off.
 
+**Evidence note:** Closeout written before **Phase 07**. For current HO_SO `createHoSoRelation` guard state, see **`PHASE_DATA_REL_07`** and **`PHASE_DATA_REL_08`** (§6 runtime guards updated there).
+
 ---
 
 ## 2. Phase status table
@@ -25,6 +27,8 @@ Re-verified the full `PHASE_DATA_REL_*` program after phases **06A** (finance sc
 | 06A | `PHASE_DATA_REL_06A_FINANCE_CHECK_REBASE_REPORT.md` | Script fix | **GO** | Phase 03 script no longer `NO_GO` when guards exist |
 | 06B | `PHASE_DATA_REL_06B_WORKER_TYPECHECK_REPAIR_REPORT.md` | Worker tsc | **GO** | Pre-existing compile errors cleared |
 | 06C | This report | Closeout | **GO_WITH_WARNINGS** | Migration backlog explicit |
+| 07 | `PHASE_DATA_REL_07_HO_SO_RELATED_PAIR_GUARD_REPORT.md` | GAS guard | **GO** | RELATED_* pair guard (post-06C) |
+| 08 | `PHASE_DATA_REL_08_REPORT_EVIDENCE_CONSISTENCY_REPORT.md` | Doc sweep | See Phase 08 | Aligns 05/06/07 claims |
 
 ---
 
@@ -44,7 +48,7 @@ node 09_AUDIT/scripts/runtimeGuardPhase05Checks.mjs
 | `userReferencePhase02Checks.mjs` | 0 | GO_WITH_WARNINGS | 20× `USR-LOCAL-*` in Worker/FE only |
 | `financeRelationPhase03Checks.mjs` | 0 | **GO** | Guards present after Phase 05 |
 | `hosoRelationPhase04Checks.mjs` | 0 | GO_WITH_WARNINGS | Workbook `FROM_TYPE` not in manifest |
-| `runtimeGuardPhase05Checks.mjs` | 0 | GO_WITH_WARNINGS | `ACTOR_ID` email/system fallback by design |
+| `runtimeGuardPhase05Checks.mjs` | 0 | GO_WITH_WARNINGS | At 06C: 11 checks; **after 07: 13 checks** (pair guard) |
 
 ---
 
@@ -73,7 +77,7 @@ node 09_AUDIT/scripts/runtimeGuardPhase05Checks.mjs
 
 ---
 
-## 6. Runtime guards (Phase 05 — current)
+## 6. Runtime guards (Phase 05 + 07 — current as of Phase 08)
 
 | Write path | Guard |
 |------------|--------|
@@ -82,7 +86,8 @@ node 09_AUDIT/scripts/runtimeGuardPhase05Checks.mjs
 | `createTransaction` / `updateDraftTransaction` | `financeAssertOptionalDonViId_` |
 | `logFinance` | Parent `FINANCE_TRANSACTION` must exist |
 | `setFinanceStatus` (CONFIRMED) | `financeAssertOptionalActiveUserId_` on `CONFIRMED_BY` |
-| `addHosoRelation` / `createHoSoRelation` | Master + optional `hosoValidateRelationTarget` |
+| `addHosoRelation` | Both `RELATED_TABLE` + `RELATED_RECORD_ID` required; `hosoValidateRelationTarget` |
+| `createHoSoRelation` | Master FROM/TO + `HO_SO_ID`; **`hosoAssertRelatedRecordPair_`** (Phase 07) |
 
 ---
 

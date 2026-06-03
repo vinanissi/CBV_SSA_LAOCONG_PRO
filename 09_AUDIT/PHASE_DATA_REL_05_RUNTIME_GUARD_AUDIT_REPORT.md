@@ -1,6 +1,6 @@
 # PHASE_DATA_REL_05 — Runtime Guard Audit Report
 
-**Result:** GO_WITH_WARNINGS (GAS guards + static checks GO; Worker typecheck pre-existing failures)  
+**Result:** GO_WITH_WARNINGS (historical — see §11 for post–06B/07 state)  
 **Date:** 2026-06-03  
 **Branch:** `phase/data-relationship-refactor-prep`  
 **Prerequisites:** `PHASE_DATA_REL_04_HO_SO_RELATION_AUTHORITY` (DECISION_LOCKED)
@@ -26,8 +26,8 @@ Audited GAS write paths for task, checklist, finance, and HO_SO relation. **Task
 | `logFinance` | `30_FINANCE_SERVICE.js` | None on FIN_ID parent | **`_findById` FINANCE_TRANSACTION** |
 | `setFinanceStatus` → CONFIRMED | `30_FINANCE_SERVICE.js` | None on CONFIRMED_BY | **`financeAssertOptionalActiveUserId_`** when non-empty |
 | `addHosoRelation` | `10_HOSO_SERVICE.js` | `hosoValidateRelationTarget` | Unchanged |
-| `createHoSoRelation` | `10_HOSO_SERVICE.js` | Master FROM/TO only | **+ `hosoValidateRelationTarget`** if RELATED_* set; **+ `HO_SO_ID` master** |
-| `createHoSoRelation` RELATED only | — | — | Satellite tables still need whitelist extension (PHASE 04 M-HO-3) |
+| `createHoSoRelation` | `10_HOSO_SERVICE.js` | Master FROM/TO only | **+ `HO_SO_ID` master**; partial RELATED_* allowed when both set (**superseded by Phase 07**) |
+| `createHoSoRelation` RELATED pair | — | — | **Completed in `PHASE_DATA_REL_07`:** `hosoAssertRelatedRecordPair_` (both or neither + FK validate) |
 
 ### Out of scope (documented)
 
@@ -59,7 +59,7 @@ Audited GAS write paths for task, checklist, finance, and HO_SO relation. **Task
 | Finance could write invalid `DON_VI_ID` (e.g. `VP54`) | Block on create/update when non-empty |
 | `logFinance` could append orphan `FIN_ID` | Parent row required |
 | Checklist could set `DONE_BY` to unregistered id | Assert when internal id mapped |
-| `createHoSoRelation` optional RELATED_* unchecked | Validate when both provided |
+| `createHoSoRelation` half-populated RELATED_* | **Fixed in Phase 07** (`hosoAssertRelatedRecordPair_`) |
 | `HO_SO_ID` context not verified on master–master create | Assert master exists |
 
 ---
@@ -88,8 +88,8 @@ node 09_AUDIT/scripts/runtimeGuardPhase05Checks.mjs
 
 | Command | Result |
 |---------|--------|
-| `node 09_AUDIT/scripts/runtimeGuardPhase05Checks.mjs` | **GO** (11/11) |
-| `npm run typecheck` in `workers/api` | **Fail** — pre-existing errors in `router.ts`, `workInbox*` (unchanged by this phase) |
+| `node 09_AUDIT/scripts/runtimeGuardPhase05Checks.mjs` | **GO** at time of phase (11 checks); **13 checks** after Phase 07 (see Phase 08) |
+| `npm run typecheck` in `workers/api` | **Fail at time of phase** — fixed in **Phase 06B** |
 | `npm run typecheck` in `apps/workboard` | **Pass** (no TS changes) |
 | GAS unit tests | Not run (no harness in CI for clasp) |
 
@@ -116,11 +116,22 @@ node 09_AUDIT/scripts/runtimeGuardPhase05Checks.mjs
 | 03 Finance relation plan | PLAN_ONLY |
 | 04 HO_SO relation authority | DECISION_LOCKED |
 | 05 Runtime guards | **GO_WITH_WARNINGS** (this phase) |
+| 07 HO_SO RELATED_* pair guard | **GO** — closes open item from §4 (see `PHASE_DATA_REL_07_HO_SO_RELATED_PAIR_GUARD_REPORT.md`) |
 
-**Next:** Execute workbook migrations (02–04 plans) with admin sign-off; optional `UD_SYSTEM` seed; extend finance/HO_SO audit functions.
+**Next (at time of writing):** Workbook migrations; `UD_SYSTEM` seed. **Evidence refresh:** Phase 08.
 
 ---
 
 ## 10. Files changed (summary)
 
 See §3. Registry: `00_SYSTEM_BRAIN/006_PHASES/PHASE_REGISTRY.md`.
+
+---
+
+## 11. Post-phase evidence (do not treat §7 tests as current)
+
+| Topic | Current repo state (after 06B + 07) |
+|-------|-------------------------------------|
+| Worker `npm run typecheck` | **Pass** (06B) |
+| `createHoSoRelation` RELATED_* | **`hosoAssertRelatedRecordPair_`** — both fields or neither (07) |
+| `runtimeGuardPhase05Checks.mjs` | Includes `HOSO_CREATE_RELATED_PAIR_GUARD` (07); run via Phase 08/09 suite |

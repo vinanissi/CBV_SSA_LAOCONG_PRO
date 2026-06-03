@@ -26,7 +26,7 @@ Workbook-only **`FROM_TYPE` / `FROM_ID` / `TO_TYPE` / `TO_ID`** are **not** auth
 | Workbook (audit) | Columns empty | — | **Populated** (18 rows) |
 | `90_BOOTSTRAP_SCHEMA.js` | Required columns | In manifest cols 12–13 | **Absent** |
 | `90_BOOTSTRAP_AUDIT_SCHEMA.js` | FK rules on FROM/TO/HO_SO_ID | optionalColumns | **Absent** |
-| `10_HOSO_SERVICE.js` `createHoSoRelation` | **Writes** FROM/TO | Optional RELATED_* | No |
+| `10_HOSO_SERVICE.js` `createHoSoRelation` | **Writes** FROM/TO | Optional RELATED_* (both or neither; Phase 07) | No |
 | `10_HOSO_SERVICE.js` `addHosoRelation` | Sets FROM; TO if `RELATED_TABLE=HO_SO` | **Requires** RELATED_* | No |
 | `10_HOSO_REPOSITORY.js` / `getHosoRelations` | Filter on FROM/TO/HO_SO_ID | Reads RELATED_* | No |
 | AppSheet (`APPSHEET_DETAIL_VIEWS`, forms) | Inline filter FROM/TO | Partial | No |

@@ -58,8 +58,8 @@ import {
   handleWorkInboxAttachmentsList,
   handleWorkInboxAttachmentsUpdate,
 } from './modules/workInboxAttachments';
-import { jsonEnvelope } from './utils/envelope';
-import { createEnvelope } from './utils/envelope';
+import type { ApiEnvelopeWire } from './utils/envelope';
+import { corsJsonResponse, createEnvelope } from './utils/envelope';
 import { withCors } from './cors';
 import { decodeRouteTaskId, logRouteValidationError, validateTaskId } from './utils/routeParams';
 import { createTraceId } from './utils/envelope';
@@ -85,27 +85,6 @@ function parseRouteTaskId(request: Request, raw: string): { taskId: string } | {
   return { taskId };
 }
 
-function resolveStatus(envelope: { ok: boolean; errors: string[] }): number {
-  if (envelope.ok) return 200;
-  if (envelope.errors.some((e) => e.includes('Không có quyền'))) return 403;
-  if (envelope.errors.some((e) => e.includes('Chưa đăng nhập'))) return 401;
-  if (
-    envelope.errors.some(
-      (e) =>
-        e.includes('Role không hợp lệ') ||
-        e.includes('Thiếu tham số') ||
-        e.includes('không hợp lệ') ||
-        e.includes('Không được cập nhật') ||
-        e.includes('Body JSON'),
-    )
-  ) {
-    return 400;
-  }
-  if (envelope.errors.some((e) => e.includes('Không tìm thấy'))) return 404;
-  if (envelope.errors.some((e) => e.includes('Chức năng ghi chưa được bật'))) return 423;
-  return 400;
-}
-
 export async function route(request: Request, env: Env): Promise<Response> {
   if (request.method === 'OPTIONS') {
     return withCors(new Response(null, { status: 204 }), request, env);
@@ -114,38 +93,38 @@ export async function route(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
   const path = url.pathname.replace(/\/+$/, '') || '/';
 
-  let envelope;
+  let envelope: ApiEnvelopeWire<unknown>;
 
   if (request.method === 'POST' && path === '/api/auth/login') {
     envelope = await handleAuthLogin(request, env);
-    return withCors(jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)), request, env);
+    return corsJsonResponse(request, env, envelope);
   }
   if (request.method === 'POST' && path === '/api/auth/logout') {
     envelope = await handleAuthLogout(request, env);
-    return withCors(jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)), request, env);
+    return corsJsonResponse(request, env, envelope);
   }
 
   if (request.method === 'GET' && path === '/api/auth/me') {
     envelope = await handleAuthMe(request, env);
-    return withCors(jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)), request, env);
+    return corsJsonResponse(request, env, envelope);
   }
   if (request.method === 'GET' && path === '/api/users') {
     envelope = await handleGetUsers(request, env);
-    return withCors(jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)), request, env);
+    return corsJsonResponse(request, env, envelope);
   }
 
   // TASK_GS_01 — existing DB binding routes
   if (request.method === 'GET' && path === '/api/tasks/health') {
     envelope = await handleTaskDbHealth(env);
-    return withCors(jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)), request, env);
+    return corsJsonResponse(request, env, envelope);
   }
   if (request.method === 'GET' && path === '/api/tasks/validate-db') {
     envelope = await handleTaskDbValidate(env);
-    return withCors(jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)), request, env);
+    return corsJsonResponse(request, env, envelope);
   }
   if (request.method === 'GET' && path === '/api/tasks/workspace-snapshot') {
     envelope = await handleTaskWorkspaceSnapshot(request, env, url);
-    return withCors(jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)), request, env);
+    return corsJsonResponse(request, env, envelope);
   }
 
   if (request.method === 'POST' && path === '/api/tasks') {
@@ -162,7 +141,7 @@ export async function route(request: Request, env: Env): Promise<Response> {
     } else {
       envelope = await handleCreateTask(request, env);
     }
-    return withCors(jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)), request, env);
+    return corsJsonResponse(request, env, envelope);
   }
 
   const taskSubMatch = path.match(/^\/api\/tasks\/([^/]+)\/(status|assign|comments|complete)$/);
@@ -177,12 +156,12 @@ export async function route(request: Request, env: Env): Promise<Response> {
         warnings: ['TASK_RUNTIME_LEGACY_WRITE_BLOCKED'],
         traceId: `rt-${Date.now()}`,
       });
-      return withCors(jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)), request, env);
+      return corsJsonResponse(request, env, envelope);
     }
     const parsed = parseRouteTaskId(request, taskSubMatch[1]);
     if ('error' in parsed) {
       envelope = parsed.error;
-      return withCors(jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)), request, env);
+      return corsJsonResponse(request, env, envelope);
     }
     const taskId = parsed.taskId;
     const sub = taskSubMatch[2];
@@ -190,7 +169,7 @@ export async function route(request: Request, env: Env): Promise<Response> {
     else if (sub === 'assign') envelope = await handleTaskDbAssign(request, env, taskId);
     else if (sub === 'comments') envelope = await handleTaskDbComment(request, env, taskId);
     else envelope = await handleTaskDbComplete(request, env, taskId);
-    return withCors(jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)), request, env);
+    return corsJsonResponse(request, env, envelope);
   }
 
   if (request.method === 'PATCH' && /^\/api\/tasks\/[^/]+$/.test(path)) {
@@ -198,7 +177,7 @@ export async function route(request: Request, env: Env): Promise<Response> {
     const parsed = parseRouteTaskId(request, rawId);
     if ('error' in parsed) {
       envelope = parsed.error;
-      return withCors(jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)), request, env);
+      return corsJsonResponse(request, env, envelope);
     }
     const taskId = parsed.taskId;
     if (isTaskDbRuntimeMode(env)) {
@@ -212,7 +191,7 @@ export async function route(request: Request, env: Env): Promise<Response> {
     } else {
       envelope = await handleUpdateTask(request, env, taskId);
     }
-    return withCors(jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)), request, env);
+    return corsJsonResponse(request, env, envelope);
   }
 
   const homeAlertMatch = path.match(/^\/api\/home-alert\/([^/]+)\/(claim|resolve)$/);
@@ -223,12 +202,12 @@ export async function route(request: Request, env: Env): Promise<Response> {
       action === 'claim'
         ? await handleHomeAlertClaim(request, env, alertId)
         : await handleHomeAlertResolve(request, env, alertId);
-    return withCors(jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)), request, env);
+    return corsJsonResponse(request, env, envelope);
   }
 
   if (request.method === 'POST' && path === '/api/modules/open-log') {
     envelope = await handleModuleOpenLog(request, env);
-    return withCors(jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)), request, env);
+    return corsJsonResponse(request, env, envelope);
   }
 
   const wiOpBundleMatch = path.match(/^\/api\/work-inbox\/tasks\/([^/]+)\/operational$/);
@@ -236,10 +215,10 @@ export async function route(request: Request, env: Env): Promise<Response> {
     const parsed = parseRouteTaskId(request, wiOpBundleMatch[1]);
     if ('error' in parsed) {
       envelope = parsed.error;
-      return withCors(jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)), request, env);
+      return corsJsonResponse(request, env, envelope);
     }
     envelope = await handleWorkInboxOperationalBundle(request, env, parsed.taskId);
-    return withCors(jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)), request, env);
+    return corsJsonResponse(request, env, envelope);
   }
 
   const wiOpWriteMatch = path.match(/^\/api\/work-inbox\/tasks\/([^/]+)\/(appointment|note|document)$/);
@@ -247,7 +226,7 @@ export async function route(request: Request, env: Env): Promise<Response> {
     const parsed = parseRouteTaskId(request, wiOpWriteMatch[1]);
     if ('error' in parsed) {
       envelope = parsed.error;
-      return withCors(jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)), request, env);
+      return corsJsonResponse(request, env, envelope);
     }
     envelope = await handleWorkInboxOperationalWrite(
       request,
@@ -255,22 +234,22 @@ export async function route(request: Request, env: Env): Promise<Response> {
       parsed.taskId,
       wiOpWriteMatch[2] as 'appointment' | 'note' | 'document',
     );
-    return withCors(jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)), request, env);
+    return corsJsonResponse(request, env, envelope);
   }
 
   if (request.method === 'GET' && path === '/api/work-inbox/sop') {
     envelope = await handleWorkInboxSopLookup(request, env);
-    return withCors(jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)), request, env);
+    return corsJsonResponse(request, env, envelope);
   }
 
   if (request.method === 'GET' && path === '/api/work-inbox/form-templates') {
     envelope = await handleWorkInboxFormTemplates(request, env);
-    return withCors(jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)), request, env);
+    return corsJsonResponse(request, env, envelope);
   }
 
   if (request.method === 'POST' && path === '/api/work-inbox/create-task') {
     envelope = await handleWorkInboxCreateTask(request, env);
-    return withCors(jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)), request, env);
+    return corsJsonResponse(request, env, envelope);
   }
 
   const wiChecklistMatch = path.match(/^\/api\/work-inbox\/tasks\/([^/]+)\/checklist(?:\/([^/]+))?(?:\/(toggle))?$/);
@@ -278,7 +257,7 @@ export async function route(request: Request, env: Env): Promise<Response> {
     const parsed = parseRouteTaskId(request, wiChecklistMatch[1]);
     if ('error' in parsed) {
       envelope = parsed.error;
-      return withCors(jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)), request, env);
+      return corsJsonResponse(request, env, envelope);
     }
     const checklistId = wiChecklistMatch[2];
     const subAction = wiChecklistMatch[3];
@@ -298,9 +277,9 @@ export async function route(request: Request, env: Env): Promise<Response> {
         status: 'FAIL',
         errors: ['Method not allowed for checklist route'],
       });
-      return withCors(jsonEnvelope(envelope, 405), request, env);
+      return corsJsonResponse(request, env, envelope, 405);
     }
-    return withCors(jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)), request, env);
+    return corsJsonResponse(request, env, envelope);
   }
 
   const wiChecklistBridgeMatch = path.match(/^\/api\/work-inbox\/tasks\/([^/]+)\/checklist-bridge$/);
@@ -308,10 +287,10 @@ export async function route(request: Request, env: Env): Promise<Response> {
     const parsed = parseRouteTaskId(request, wiChecklistBridgeMatch[1]);
     if ('error' in parsed) {
       envelope = parsed.error;
-      return withCors(jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)), request, env);
+      return corsJsonResponse(request, env, envelope);
     }
     envelope = await handleWorkInboxChecklistBridge(request, env, parsed.taskId);
-    return withCors(jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)), request, env);
+    return corsJsonResponse(request, env, envelope);
   }
 
   const wiAttachMatch = path.match(/^\/api\/work-inbox\/tasks\/([^/]+)\/attachments(?:\/([^/]+))?$/);
@@ -319,7 +298,7 @@ export async function route(request: Request, env: Env): Promise<Response> {
     const parsed = parseRouteTaskId(request, wiAttachMatch[1]);
     if ('error' in parsed) {
       envelope = parsed.error;
-      return withCors(jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)), request, env);
+      return corsJsonResponse(request, env, envelope);
     }
     const attachmentId = wiAttachMatch[2];
     if (request.method === 'GET' && !attachmentId) {
@@ -332,24 +311,24 @@ export async function route(request: Request, env: Env): Promise<Response> {
       envelope = await handleWorkInboxAttachmentsDelete(request, env, parsed.taskId, attachmentId);
     } else {
       envelope = createEnvelope(null, { ok: false, status: 'FAIL', errors: ['Method not allowed for attachments route'] });
-      return withCors(jsonEnvelope(envelope, 405), request, env);
+      return corsJsonResponse(request, env, envelope, 405);
     }
-    return withCors(jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)), request, env);
+    return corsJsonResponse(request, env, envelope);
   }
 
   if (request.method === 'POST' && path === '/api/work-inbox/record-action') {
     envelope = await handleWorkInboxRecordAction(request, env);
-    return withCors(jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)), request, env);
+    return corsJsonResponse(request, env, envelope);
   }
 
   if (request.method === 'POST' && path === '/api/work-inbox/audit') {
     envelope = await handleWorkInboxAppendAudit(request, env);
-    return withCors(jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)), request, env);
+    return corsJsonResponse(request, env, envelope);
   }
 
   if (request.method === 'POST' && path === '/api/work-inbox/timeline') {
     envelope = await handleWorkInboxAppendTimeline(request, env);
-    return withCors(jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)), request, env);
+    return corsJsonResponse(request, env, envelope);
   }
 
   if (!['GET', 'HEAD'].includes(request.method)) {
@@ -358,7 +337,7 @@ export async function route(request: Request, env: Env): Promise<Response> {
       ok: false,
       status: 'FAIL',
     });
-    return withCors(jsonEnvelope(envelope, 405), request, env);
+    return corsJsonResponse(request, env, envelope, 405);
   }
 
   switch (true) {
@@ -458,9 +437,5 @@ export async function route(request: Request, env: Env): Promise<Response> {
       });
   }
 
-  return withCors(
-    jsonEnvelope(envelope as import('./contracts').ApiEnvelope<unknown>, resolveStatus(envelope)),
-    request,
-    env,
-  );
+  return corsJsonResponse(request, env, envelope);
 }

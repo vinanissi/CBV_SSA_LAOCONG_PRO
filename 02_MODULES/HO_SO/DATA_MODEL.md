@@ -49,6 +49,8 @@ Immutable file row (chỉ `CREATED_AT` / `CREATED_BY`, không có cột audit UP
 
 Quan hệ **FROM_HO_SO_ID → TO_HO_SO_ID** (hai hồ sơ) + optional polymorphic `RELATED_TABLE` / `RELATED_RECORD_ID`; audit đầy đủ.
 
+**Authority:** hybrid **A+B** per `00_SYSTEM_BRAIN/002_DECISIONS/ADR_HO_SO_RELATION_AUTHORITY.md`. Workbook columns `FROM_TYPE` / `FROM_ID` / `TO_TYPE` / `TO_ID` are **not** write authority — normalize via migration only.
+
 | Column | Notes |
 |--------|--------|
 | ID | PK |

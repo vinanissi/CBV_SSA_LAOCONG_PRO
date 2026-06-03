@@ -76,6 +76,7 @@ Details: `09_AUDIT/PHASE_DATA_REL_04_HO_SO_RELATION_AUTHORITY_DECISION.md`.
 
 ## References
 
+- `03_SHARED/DATA_REL_AUTHORITY_INDEX.md` — cross-links all data-rel authority docs
 - `05_GAS_RUNTIME/90_BOOTSTRAP_SCHEMA.js` — `HO_SO_RELATION` column order
 - `05_GAS_RUNTIME/10_HOSO_SERVICE.js` — `addHosoRelation`, `createHoSoRelation`
 - `02_MODULES/HO_SO/DATA_MODEL.md`

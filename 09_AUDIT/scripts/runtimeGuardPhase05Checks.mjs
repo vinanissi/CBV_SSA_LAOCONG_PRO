@@ -33,8 +33,24 @@ push('FIN_CONFIRM_USER_GUARD', /CONFIRMED_BY[\s\S]*financeAssertOptionalActiveUs
 
 const hosoSvc = read('05_GAS_RUNTIME/10_HOSO_SERVICE.js');
 push('HOSO_ADD_RELATION_TARGET', /function addHosoRelation[\s\S]*hosoValidateRelationTarget/.test(hosoSvc));
-push('HOSO_CREATE_RELATION_TARGET', /function createHoSoRelation[\s\S]*hosoValidateRelationTarget/.test(hosoSvc));
 push('HOSO_CREATE_CTX_MASTER', /function createHoSoRelation[\s\S]*hosoRepoFindMasterById\(ctx\)/.test(hosoSvc));
+
+const pairHelper = hosoSvc.match(/function hosoAssertRelatedRecordPair_[\s\S]*?\n\}/);
+push(
+  'HOSO_RELATED_PAIR_HELPER',
+  !!(pairHelper && /RELATED_RECORD_ID required when RELATED_TABLE/.test(pairHelper[0]) && /RELATED_TABLE required when RELATED_RECORD_ID/.test(pairHelper[0])),
+);
+const createBlock = hosoSvc.match(/function createHoSoRelation[\s\S]*?return cbvResponse\(true, 'HO_SO_RELATION_CREATED'/);
+push(
+  'HOSO_CREATE_RELATED_PAIR_GUARD',
+  !!(createBlock && /hosoAssertRelatedRecordPair_/.test(createBlock[0])),
+  'createHoSoRelation must call hosoAssertRelatedRecordPair_ (PHASE 07)',
+);
+push(
+  'HOSO_CREATE_NO_WEAK_PARTIAL_RELATED',
+  !(createBlock && /if \(relTable && relId && typeof hosoValidateRelationTarget/.test(createBlock[0])),
+  'must not use weak partial RELATED_* validation only',
+);
 
 const report = read('09_AUDIT/PHASE_DATA_REL_05_RUNTIME_GUARD_AUDIT_REPORT.md');
 push('REPORT_EXISTS', report.includes('PHASE_DATA_REL_05'));
@@ -47,5 +63,11 @@ if (!logFn || !/assertActiveUserId/.test(logFn[0])) {
 const failed = checks.filter((c) => !c.pass);
 const result = failed.length === 0 ? (warnings.length ? 'GO_WITH_WARNINGS' : 'GO') : 'NO_GO';
 
-console.log(JSON.stringify({ suite: 'PHASE_DATA_REL_05_RUNTIME_GUARD', result, checks, warnings }, null, 2));
+console.log(
+  JSON.stringify(
+    { suite: 'PHASE_DATA_REL_05_RUNTIME_GUARD', includesPhase07RelatedPair: true, result, checks, warnings },
+    null,
+    2,
+  ),
+);
 process.exit(result === 'NO_GO' ? 1 : 0);

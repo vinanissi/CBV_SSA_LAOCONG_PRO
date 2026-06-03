@@ -460,7 +460,22 @@ function attachHoSoFile(hoSoId, fileMeta) {
 }
 
 /**
- * Tạo quan hệ giữa hai HO_SO (FROM → TO) + optional polymorphic ref.
+ * RELATED_TABLE and RELATED_RECORD_ID must both be set or both empty (no half-populated pair).
+ * @param {string} relatedTable
+ * @param {string} relatedRecordId
+ */
+function hosoAssertRelatedRecordPair_(relatedTable, relatedRecordId) {
+  var table = relatedTable != null ? String(relatedTable).trim() : '';
+  var id = relatedRecordId != null ? String(relatedRecordId).trim() : '';
+  if (table && !id) throw new Error('RELATED_RECORD_ID required when RELATED_TABLE is set');
+  if (id && !table) throw new Error('RELATED_TABLE required when RELATED_RECORD_ID is set');
+  if (table && id && typeof hosoValidateRelationTarget === 'function') {
+    hosoValidateRelationTarget(table, id);
+  }
+}
+
+/**
+ * Tạo quan hệ giữa hai HO_SO (FROM → TO) + optional polymorphic ref (both RELATED_* or neither).
  * @param {Object} data
  * @returns {Object} cbvResponse
  */
@@ -483,11 +498,9 @@ function createHoSoRelation(data) {
   var ctx = data.HO_SO_ID != null && String(data.HO_SO_ID).trim() !== '' ? String(data.HO_SO_ID).trim() : fromId;
   cbvAssert(hosoRepoFindMasterById(ctx), 'HO_SO_ID not found');
 
+  hosoAssertRelatedRecordPair_(data.RELATED_TABLE, data.RELATED_RECORD_ID);
   var relTable = data.RELATED_TABLE != null ? String(data.RELATED_TABLE).trim() : '';
   var relId = data.RELATED_RECORD_ID != null ? String(data.RELATED_RECORD_ID).trim() : '';
-  if (relTable && relId && typeof hosoValidateRelationTarget === 'function') {
-    hosoValidateRelationTarget(relTable, relId);
-  }
 
   var stamp = hosoStampCreate();
   var rec = {

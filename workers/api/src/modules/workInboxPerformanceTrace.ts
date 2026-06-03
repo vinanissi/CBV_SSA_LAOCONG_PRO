@@ -1,6 +1,8 @@
 /** PHASE_WORK_INBOX_LATENCY_PROFILING — Worker timing wrapper (extended breakdown). */
 
 import type { ApiEnvelope } from '../contracts';
+import type { ApiEnvelopeWithPerf } from '../utils/envelope';
+import { attachPerformanceTrace } from '../utils/envelope';
 
 export type WorkInboxPerfStatus = 'OK' | 'WARNING' | 'DEGRADED' | 'FAIL';
 
@@ -267,9 +269,7 @@ export function extractRequestTraceId(request: Request, fallback?: string): stri
   );
 }
 
-export type ApiEnvelopeWithPerf<T> = ApiEnvelope<T> & {
-  performanceTrace: WorkInboxPerformanceTraceEnvelope;
-};
+export type { ApiEnvelopeWithPerf } from '../utils/envelope';
 
 export function envelopeWithRoutePerf<T>(
   request: Request,
@@ -287,5 +287,5 @@ export function envelopeWithRoutePerf<T>(
   perf = mergeGasPerformanceTrace(perf, gasResult?.performanceTrace);
   perf.traceId = extractRequestTraceId(request, envelope.traceId);
   perf.action = action;
-  return { ...envelope, performanceTrace: perf };
+  return attachPerformanceTrace(envelope, perf);
 }

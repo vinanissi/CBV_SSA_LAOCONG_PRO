@@ -109,21 +109,23 @@ Leave unchanged. AppSheet inline: `[FIN_ID] = [FINANCE_TRANSACTION].[ID]` (`04_A
 
 ## 5. Runtime validation audit
 
-| Write path | File | Validates `DON_VI_ID`? | Validates `FIN_ID` parent? |
-|------------|------|------------------------|----------------------------|
-| `createTransaction` | `30_FINANCE_SERVICE.js` | **No** — accepts `data.DON_VI_ID \|\| ''` | N/A (creates parent) |
-| `updateDraftTransaction` | same | **No** | Implicit (find by id) |
-| `logFinance` | same | N/A | **No** — appends log with given `finId` |
+**Snapshot at plan write (pre–Phase 05).** Current GAS (after Phase 05): `createTransaction` / `updateDraftTransaction` use `financeAssertOptionalDonViId_`; `logFinance` requires parent row.
+
+| Write path | File | At plan write | After Phase 05 (current) |
+|------------|------|---------------|---------------------------|
+| `createTransaction` | `30_FINANCE_SERVICE.js` | No DON_VI validate | **`financeAssertOptionalDonViId_`** when non-empty |
+| `updateDraftTransaction` | same | No | **`financeAssertOptionalDonViId_`** on patch |
+| `logFinance` | same | No parent check | **`_findById(FINANCE_TRANSACTION, finId)`** |
 | `createFinanceAttachment` | same | N/A | **Yes** — `_findById(FINANCE_TRANSACTION, data.FINANCE_ID)` |
 | `createTask` | `20_TASK_SERVICE.js` | **Yes** — `assertActiveDonViId` | N/A |
 | Task system audit | `96_TASK_SYSTEM_AUDIT_REPAIR.js` | TASK_MAIN only | **Does not scan FINANCE_TRANSACTION** |
 
 `donViFindById` (`20_TASK_REPOSITORY.js`) uses `_findById` on **`ID`** column only — passing `VP54` as CODE would fail task validation even if CODE exists.
 
-### PHASE 05 guard proposals (not implemented here)
+### PHASE 05 guard proposals
 
-1. **`createTransaction` / `updateDraftTransaction`:** If `DON_VI_ID` non-empty → `assertActiveDonViId(DON_VI_ID)` (reuse task helper).  
-2. **`logFinance`:** Before append, `cbvAssert(_findById(FINANCE_TRANSACTION, finId), 'Finance transaction not found')`.  
+**Items 1–2: implemented in Phase 05.** Remaining:
+
 3. **Extend `96_TASK_SYSTEM_AUDIT_REPAIR` or new `auditFinanceReferences_`:**  
    - `INVALID_FIN_DON_VI_REF`  
    - `ORPHAN_FINANCE_LOG`  
@@ -166,9 +168,7 @@ Worker (`workers/api/src/modules/finance.ts`) uses **mock data** — no sheet FK
 | Finding | Target |
 |---------|--------|
 | Workbook cell updates | F1–F2 after admin sign-off |
-| `assertActiveDonViId` on finance create | PHASE 05 |
-| `logFinance` parent guard | PHASE 05 |
-| Finance section in `96_TASK_SYSTEM_AUDIT_REPAIR` | PHASE 05 or dedicated audit |
+| Finance section in `96_TASK_SYSTEM_AUDIT_REPAIR` | Dedicated audit (still open) |
 | `REF_STATUS` column | Schema migration phase |
 | `FINANCE_LOG` actor `system` | PHASE 02 `UD_SYSTEM` |
 

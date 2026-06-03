@@ -2,6 +2,8 @@
 
 **Purpose:** Define how USER_DIRECTORY integrates with TASK, FINANCE, and HO_SO modules. All user references use USER_DIRECTORY.ID (or email fallback for audit).
 
+**Authority index:** [DATA_REL_AUTHORITY_INDEX.md](./DATA_REL_AUTHORITY_INDEX.md) · **Task PK:** [TASK_KEY_CONTRACT.md](./TASK_KEY_CONTRACT.md)
+
 ---
 
 ## 1. Field Mappings (USER_DIRECTORY.ID as Primary)
@@ -15,7 +17,8 @@
 | FINANCE_TRANSACTION | CONFIRMED_BY | USER_DIRECTORY | ID | mapCurrentUserEmailToInternalId | DISPLAY_NAME or FULL_NAME |
 | FINANCE_LOG | ACTOR_ID | USER_DIRECTORY (fallback: email) | ID or email | mapCurrentUserEmailToInternalId \|\| cbvUser | getUserDisplay(ACTOR_ID) |
 | ADMIN_AUDIT_LOG | ACTOR_ID | USER_DIRECTORY (fallback: email) | ID or email | mapCurrentUserEmailToInternalId \|\| cbvUser | getUserDisplay(ACTOR_ID) |
-| HO_SO_MASTER | OWNER_ID | USER_DIRECTORY | ID | assertActiveUserId when provided | DISPLAY_NAME or FULL_NAME |
+| HO_SO_MASTER | OWNER_ID | USER_DIRECTORY | ID | `hosoValidateOptionalRefUser` (exists; not ACTIVE-only) | DISPLAY_NAME or FULL_NAME |
+| TASK_MAIN | SHARED_WITH | USER_DIRECTORY | ID list | AppSheet + `45_SHARED_WITH_SERVICE` (no GAS assert yet — see Phase 11) | DISPLAY_NAME |
 
 ---
 
@@ -52,7 +55,7 @@ Display code must handle both: `getUserDisplay(ACTOR_ID)` accepts ID or email.
 
 | Entity | User Fields | Notes |
 |--------|-------------|-------|
-| TASK_MAIN | OWNER_ID, REPORTER_ID | No ASSIGNEE_ID; OWNER_ID is assignee |
+| TASK_MAIN | OWNER_ID, REPORTER_ID, SHARED_WITH, IS_PRIVATE | No ASSIGNEE_ID; OWNER_ID is assignee |
 | TASK_UPDATE_LOG | ACTOR_ID | Text; can store ID or email |
 | TASK_CHECKLIST | DONE_BY | Stores ID |
 | FINANCE_TRANSACTION | CONFIRMED_BY | Stores ID |

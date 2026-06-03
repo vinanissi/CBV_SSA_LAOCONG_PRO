@@ -1,6 +1,7 @@
 /**
- * CBV_WORK_INBOX_V3 — frontend view-model types (014_DATA_CONTRACT.md).
- * Runtime API envelope remains `@/api/contracts` ApiEnvelope until inbox API ships.
+ * CBV_WORK_INBOX_V3 — frontend view-model types.
+ * Task primary key: InboxItem.id / API TaskItem.taskId both map to TASK_MAIN.ID (see 03_SHARED/TASK_KEY_CONTRACT.md).
+ * Runtime API envelope: `@/api/contracts` ApiEnvelope.
  */
 
 export type InboxGroup = 'need_action' | 'waiting' | 'follow_up' | 'completed';
