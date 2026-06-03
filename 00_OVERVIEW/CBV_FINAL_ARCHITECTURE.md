@@ -146,6 +146,8 @@ Enum dictionary only.
 
 **Removed:** TASK_TYPE, HTX_ID, RESULT_NOTE.
 
+**Key contract:** Physical primary key is **`ID`** only. There is no `TASK_MAIN.TASK_ID` column. Child tables use column `TASK_ID` storing values equal to `TASK_MAIN.ID`. Runtime APIs may expose this as `taskId`. See `03_SHARED/TASK_KEY_CONTRACT.md`.
+
 ---
 
 ### TASK_CHECKLIST
@@ -153,7 +155,7 @@ Enum dictionary only.
 | Column | Type | Required | Notes |
 |--------|------|----------|-------|
 | ID | Text | Yes | Unique key |
-| TASK_ID | Text | Yes | Ref TASK_MAIN |
+| TASK_ID | Text | Yes | FK → TASK_MAIN.**ID** |
 | ITEM_NO | Number | No | Order |
 | TITLE | Text | Yes | Checklist item |
 | IS_REQUIRED | Yes/No | No | Required for completion |
@@ -176,7 +178,7 @@ Enum dictionary only.
 | Column | Type | Required | Notes |
 |--------|------|----------|-------|
 | ID | Text | Yes | Unique key |
-| TASK_ID | Text | Yes | Ref TASK_MAIN |
+| TASK_ID | Text | Yes | FK → TASK_MAIN.**ID** |
 | UPDATE_TYPE | Text | Yes | Type of update |
 | ACTION | Text | Yes | Action code |
 | OLD_STATUS | Text | No | Previous STATUS |
@@ -198,7 +200,7 @@ Enum dictionary only.
 | Column | Type | Required | Notes |
 |--------|------|----------|-------|
 | ID | Text | Yes | Unique key |
-| TASK_ID | Text | Yes | Ref TASK_MAIN |
+| TASK_ID | Text | Yes | FK → TASK_MAIN.**ID** |
 | FILE_NAME | Text | No | Original filename |
 | FILE_URL | Text | No | URL |
 | DRIVE_FILE_ID | Text | No | Drive ID |
@@ -256,11 +258,11 @@ Enum dictionary only.
 | TASK_MAIN | TASK_TYPE_ID | MASTER_CODE |
 | TASK_MAIN | OWNER_ID | USER_DIRECTORY |
 | TASK_MAIN | REPORTER_ID | USER_DIRECTORY |
-| TASK_CHECKLIST | TASK_ID | TASK_MAIN |
+| TASK_CHECKLIST | TASK_ID | TASK_MAIN.**ID** |
 | TASK_CHECKLIST | DONE_BY | USER_DIRECTORY |
-| TASK_UPDATE_LOG | TASK_ID | TASK_MAIN |
+| TASK_UPDATE_LOG | TASK_ID | TASK_MAIN.**ID** |
 | TASK_UPDATE_LOG | ACTOR_ID | USER_DIRECTORY |
-| TASK_ATTACHMENT | TASK_ID | TASK_MAIN |
+| TASK_ATTACHMENT | TASK_ID | TASK_MAIN.**ID** |
 | FINANCE_TRANSACTION | DON_VI_ID | DON_VI |
 | FINANCE_TRANSACTION | CONFIRMED_BY | USER_DIRECTORY |
 

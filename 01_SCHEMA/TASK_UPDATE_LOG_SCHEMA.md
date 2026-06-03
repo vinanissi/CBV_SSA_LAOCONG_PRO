@@ -13,7 +13,7 @@ Audit log for task changes. GAS writes rows; AppSheet read-only.
 | # | Column | Type | Required | Notes |
 |---|--------|------|----------|-------|
 | 1 | ID | Text | Yes | Unique key |
-| 2 | TASK_ID | Text | Yes | Ref TASK_MAIN |
+| 2 | TASK_ID | Text | Yes | FK → `TASK_MAIN.ID` (parent PK; not `TASK_MAIN.TASK_ID`) |
 | 3 | UPDATE_TYPE | Text | Yes | Type of update |
 | 4 | ACTION | Text | Yes | Action code |
 | 5 | OLD_STATUS | Text | No | Previous STATUS |

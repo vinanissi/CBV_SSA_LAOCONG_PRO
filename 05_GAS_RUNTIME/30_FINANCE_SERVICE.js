@@ -4,6 +4,20 @@ const FIN_ALLOWED_TRANSITIONS = {
   CANCELLED: ['ARCHIVED']
 };
 
+/** @param {string} donViId */
+function financeAssertOptionalDonViId_(donViId, fieldName) {
+  var id = donViId != null ? String(donViId).trim() : '';
+  if (!id) return;
+  if (typeof assertActiveDonViId === 'function') assertActiveDonViId(id, fieldName || 'DON_VI_ID');
+}
+
+/** @param {string} userId */
+function financeAssertOptionalActiveUserId_(userId, fieldName) {
+  var id = userId != null ? String(userId).trim() : '';
+  if (!id) return;
+  if (typeof assertActiveUserId === 'function') assertActiveUserId(id, fieldName || 'CONFIRMED_BY');
+}
+
 function createTransaction(data) {
   ensureRequired(data.TRANS_TYPE, 'TRANS_TYPE');
   ensureRequired(data.CATEGORY, 'CATEGORY');
@@ -12,6 +26,7 @@ function createTransaction(data) {
   assertValidEnumValue('FIN_CATEGORY', data.CATEGORY, 'CATEGORY');
   assertValidEnumValue('PAYMENT_METHOD', data.PAYMENT_METHOD || 'OTHER', 'PAYMENT_METHOD');
   if (data.RELATED_ENTITY_TYPE != null) assertValidEnumValue('RELATED_ENTITY_TYPE', data.RELATED_ENTITY_TYPE, 'RELATED_ENTITY_TYPE');
+  financeAssertOptionalDonViId_(data.DON_VI_ID, 'DON_VI_ID');
 
   const record = {
     ID: cbvMakeId('FIN'),
@@ -43,6 +58,8 @@ function createTransaction(data) {
 }
 
 function logFinance(finId, action, beforeObj, afterObj, note) {
+  cbvAssert(finId, 'FIN_ID required');
+  cbvAssert(_findById(CBV_CONFIG.SHEETS.FINANCE_TRANSACTION, finId), 'Finance transaction not found: ' + finId);
   var actorId = (typeof mapCurrentUserEmailToInternalId === 'function' ? mapCurrentUserEmailToInternalId() : null) || cbvUser();
   const record = {
     ID: cbvMakeId('FLOG'),
@@ -66,6 +83,7 @@ function updateDraftTransaction(id, patch) {
   if (patch && patch.CATEGORY != null) assertValidEnumValue('FIN_CATEGORY', patch.CATEGORY, 'CATEGORY');
   if (patch && patch.PAYMENT_METHOD != null) assertValidEnumValue('PAYMENT_METHOD', patch.PAYMENT_METHOD, 'PAYMENT_METHOD');
   if (patch && patch.RELATED_ENTITY_TYPE != null) assertValidEnumValue('RELATED_ENTITY_TYPE', patch.RELATED_ENTITY_TYPE, 'RELATED_ENTITY_TYPE');
+  if (patch && patch.DON_VI_ID != null) financeAssertOptionalDonViId_(patch.DON_VI_ID, 'DON_VI_ID');
 
   const beforeObj = cbvClone(current);
   Object.keys(patch || {}).forEach(function(k) {
@@ -110,6 +128,7 @@ function setFinanceStatus(id, newStatus, note) {
   if (newStatus === 'CONFIRMED') {
     current.CONFIRMED_AT = cbvNow();
     current.CONFIRMED_BY = (typeof mapCurrentUserEmailToInternalId === 'function' ? mapCurrentUserEmailToInternalId() : null) || '';
+    financeAssertOptionalActiveUserId_(current.CONFIRMED_BY, 'CONFIRMED_BY');
   }
   current.UPDATED_AT = cbvNow();
   current.UPDATED_BY = cbvUser();

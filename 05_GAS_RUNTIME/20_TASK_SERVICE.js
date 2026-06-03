@@ -347,6 +347,7 @@ function markChecklistDone(checklistId, note) {
   }
 
   var actorId = (typeof mapCurrentUserEmailToInternalId === 'function' ? mapCurrentUserEmailToInternalId() : null) || '';
+  if (actorId && typeof assertActiveUserId === 'function') assertActiveUserId(actorId, 'DONE_BY');
   var patch = {
     IS_DONE: true,
     DONE_AT: cbvNow(),

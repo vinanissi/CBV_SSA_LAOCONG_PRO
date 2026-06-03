@@ -13,7 +13,7 @@ Checklist items for tasks. Completion tracked via IS_DONE, DONE_AT, DONE_BY.
 | # | Column | Type | Required | Notes |
 |---|--------|------|----------|-------|
 | 1 | ID | Text | Yes | Unique key |
-| 2 | TASK_ID | Text | Yes | Ref TASK_MAIN |
+| 2 | TASK_ID | Text | Yes | FK → `TASK_MAIN.ID` (parent PK; not `TASK_MAIN.TASK_ID`) |
 | 3 | ITEM_NO | Number | No | Display order |
 | 4 | TITLE | Text | Yes | Checklist item |
 | 5 | IS_REQUIRED | Yes/No | No | Required for completion |
@@ -39,5 +39,5 @@ Checklist items for tasks. Completion tracked via IS_DONE, DONE_AT, DONE_BY.
 
 | Ref Field | Target | Notes |
 |-----------|--------|-------|
-| TASK_ID | TASK_MAIN | Parent task |
+| TASK_ID | TASK_MAIN.ID | Parent task PK |
 | DONE_BY | USER_DIRECTORY | Who marked done |

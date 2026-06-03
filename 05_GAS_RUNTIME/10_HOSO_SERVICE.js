@@ -481,6 +481,13 @@ function createHoSoRelation(data) {
   hosoAssertEnum('HO_SO_RELATION_TYPE', rt, 'RELATION_TYPE');
 
   var ctx = data.HO_SO_ID != null && String(data.HO_SO_ID).trim() !== '' ? String(data.HO_SO_ID).trim() : fromId;
+  cbvAssert(hosoRepoFindMasterById(ctx), 'HO_SO_ID not found');
+
+  var relTable = data.RELATED_TABLE != null ? String(data.RELATED_TABLE).trim() : '';
+  var relId = data.RELATED_RECORD_ID != null ? String(data.RELATED_RECORD_ID).trim() : '';
+  if (relTable && relId && typeof hosoValidateRelationTarget === 'function') {
+    hosoValidateRelationTarget(relTable, relId);
+  }
 
   var stamp = hosoStampCreate();
   var rec = {
@@ -490,8 +497,8 @@ function createHoSoRelation(data) {
     RELATION_TYPE: rt,
     STATUS: st,
     HO_SO_ID: ctx,
-    RELATED_TABLE: data.RELATED_TABLE != null ? String(data.RELATED_TABLE) : '',
-    RELATED_RECORD_ID: data.RELATED_RECORD_ID != null ? String(data.RELATED_RECORD_ID) : '',
+    RELATED_TABLE: relTable,
+    RELATED_RECORD_ID: relId,
     NOTE: data.NOTE || '',
     START_DATE: data.START_DATE || '',
     END_DATE: data.END_DATE || '',

@@ -13,7 +13,7 @@ File attachments for tasks.
 | # | Column | Type | Required | Notes |
 |---|--------|------|----------|-------|
 | 1 | ID | Text | Yes | Unique key |
-| 2 | TASK_ID | Text | Yes | Ref TASK_MAIN |
+| 2 | TASK_ID | Text | Yes | FK → `TASK_MAIN.ID` (parent PK; not `TASK_MAIN.TASK_ID`) |
 | 3 | FILE_NAME | Text | No | Original filename |
 | 4 | FILE_URL | Text | No | URL |
 | 5 | DRIVE_FILE_ID | Text | No | Drive file ID |

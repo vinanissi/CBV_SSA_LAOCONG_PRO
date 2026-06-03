@@ -102,8 +102,10 @@ Core task table. Links to organizational unit (DON_VI), task type (MASTER_CODE),
 
 ## Child Tables
 
-| Child | Ref | Parent |
-|-------|-----|--------|
-| TASK_CHECKLIST | TASK_ID | TASK_MAIN |
-| TASK_ATTACHMENT | TASK_ID | TASK_MAIN |
-| TASK_UPDATE_LOG | TASK_ID | TASK_MAIN |
+| Child | FK column | Parent key |
+|-------|-----------|------------|
+| TASK_CHECKLIST | TASK_ID | TASK_MAIN.**ID** |
+| TASK_ATTACHMENT | TASK_ID | TASK_MAIN.**ID** |
+| TASK_UPDATE_LOG | TASK_ID | TASK_MAIN.**ID** |
+
+See `03_SHARED/TASK_KEY_CONTRACT.md` — no physical `TASK_MAIN.TASK_ID` column.

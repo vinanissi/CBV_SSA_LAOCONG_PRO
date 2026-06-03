@@ -8,11 +8,23 @@ Core task table. Non-hybrid final design. Links to DON_VI, MASTER_CODE (TASK_TYP
 
 ---
 
+## Key contract (locked)
+
+| Role | Column | Notes |
+|------|--------|-------|
+| **Physical primary key** | `ID` | Canonical parent key for all child `TASK_ID` FKs |
+| Display / business code | `TASK_CODE` | Not a foreign-key target |
+| Runtime DTO | `taskId` | API/GAS/FE field name; **value = `ID`** |
+
+**There is no `TASK_MAIN.TASK_ID` column.** Child tables store the parent id in their own `TASK_ID` column referencing `TASK_MAIN.ID`. See `03_SHARED/TASK_KEY_CONTRACT.md`.
+
+---
+
 ## Columns (Canonical Order)
 
 | # | Column | Type | Required | Notes |
 |---|--------|------|----------|-------|
-| 1 | ID | Text | Yes | Unique key |
+| 1 | ID | Text | Yes | Unique key (physical PK; maps to runtime `taskId`) |
 | 2 | TASK_CODE | Text | No | Display code |
 | 3 | TITLE | Text | Yes | Task name |
 | 4 | DESCRIPTION | Text | No | Task details |

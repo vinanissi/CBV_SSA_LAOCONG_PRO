@@ -33,7 +33,7 @@ MASTER_CODE (TASK_TYPE via TASK_TYPE_ID)
 | 3 | TASK_MAIN contains DON_VI_ID | Task organizational ownership |
 | 4 | TASK_MAIN contains TASK_TYPE_ID | Ref MASTER_CODE (MASTER_GROUP=TASK_TYPE) |
 | 5 | TASK_MAIN contains OWNER_ID and REPORTER_ID | Ref USER_DIRECTORY |
-| 6 | Checklist, attachment, update log are child tables | TASK_ID → TASK_MAIN |
+| 6 | Checklist, attachment, update log are child tables | Child `TASK_ID` → `TASK_MAIN.ID` (DTO: `taskId`) |
 | 7 | GAS is the real workflow validator | assertActiveUserId, validateTaskTransition |
 
 ---
@@ -46,10 +46,10 @@ MASTER_CODE (TASK_TYPE via TASK_TYPE_ID)
 | TASK_MAIN | TASK_TYPE_ID | MASTER_CODE | MASTER_GROUP=TASK_TYPE |
 | TASK_MAIN | OWNER_ID | USER_DIRECTORY | Assignee |
 | TASK_MAIN | REPORTER_ID | USER_DIRECTORY | Reporter/creator |
-| TASK_CHECKLIST | TASK_ID | TASK_MAIN | Child |
+| TASK_CHECKLIST | TASK_ID | TASK_MAIN.**ID** | Child FK |
 | TASK_CHECKLIST | DONE_BY | USER_DIRECTORY | Who marked done |
-| TASK_ATTACHMENT | TASK_ID | TASK_MAIN | Child |
-| TASK_UPDATE_LOG | TASK_ID | TASK_MAIN | Child |
+| TASK_ATTACHMENT | TASK_ID | TASK_MAIN.**ID** | Child FK |
+| TASK_UPDATE_LOG | TASK_ID | TASK_MAIN.**ID** | Child FK |
 | TASK_UPDATE_LOG | ACTOR_ID | USER_DIRECTORY | Who performed action |
 
 **Removed:** TASK_MAIN.HTX_ID, USER_DIRECTORY.HTX_ID. See DEPRECATED_OLD_DESIGN_ITEMS.md.
@@ -59,8 +59,8 @@ MASTER_CODE (TASK_TYPE via TASK_TYPE_ID)
 ## 4. Child Table Hierarchy
 
 ```
-TASK_MAIN
-├── TASK_CHECKLIST (TASK_ID)
-├── TASK_ATTACHMENT (TASK_ID)
-└── TASK_UPDATE_LOG (TASK_ID)
+TASK_MAIN (PK: ID)
+├── TASK_CHECKLIST.TASK_ID → ID
+├── TASK_ATTACHMENT.TASK_ID → ID
+└── TASK_UPDATE_LOG.TASK_ID → ID
 ```

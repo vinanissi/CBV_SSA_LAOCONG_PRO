@@ -135,6 +135,7 @@ export interface RuntimeUser {
   flags: RuntimeUserFlags;
 }
 
+/** taskId = TASK_MAIN.ID (physical PK). Child sheet column TASK_ID references this value. */
 export interface TaskItem {
   taskId: string;
   title: string;

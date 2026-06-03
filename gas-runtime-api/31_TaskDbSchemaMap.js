@@ -1,5 +1,7 @@
 /**
  * PHASE_TASK_GS_01 — Schema map from existing headers (read-only validation).
+ * TASK_MAIN physical PK = ID only (no TASK_MAIN.TASK_ID). Child TASK_ID → TASK_MAIN.ID.
+ * See 03_SHARED/TASK_KEY_CONTRACT.md
  */
 
 var CBV_TASK_DB_EXPECTED = {
